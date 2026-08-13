@@ -6,6 +6,8 @@ import com.transportlogistics.app.trip.application.ports.in.TripUseCase;
 import com.transportlogistics.app.trip.application.ports.out.TripRepository;
 import com.transportlogistics.app.trip.application.ports.out.VehicleEligibilityPort;
 import com.transportlogistics.app.trip.application.ports.out.DriverEligibilityPort;
+import com.transportlogistics.app.trip.application.ports.out.TripHistoryRepository;
+import com.transportlogistics.app.trip.application.ports.out.TripTransaction;
 import com.transportlogistics.app.trip.application.service.TripService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -14,8 +16,9 @@ import org.springframework.context.annotation.Configuration;
 class TripConfig {
     @Bean
     TripUseCase tripUseCase(TripRepository r, VehicleEligibilityPort vehicleEligibility,
-                            DriverEligibilityPort driverEligibility) {
-        return new TripService(r, vehicleEligibility, driverEligibility);
+                            DriverEligibilityPort driverEligibility, TripHistoryRepository history,
+                            TripTransaction transactions) {
+        return new TripService(r, vehicleEligibility, driverEligibility, history, transactions);
     }
 
     @Bean

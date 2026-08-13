@@ -9,6 +9,11 @@ public interface VehicleAvailabilityUseCase {
     VehicleAvailability evaluate(Query query);
 
     record Query(UUID vehicleId, OffsetDateTime from, OffsetDateTime to, UUID requiredVehicleTypeId,
-                 Double requiredCapacityKg, UUID excludeTripId) {
+                 Double requiredCapacityKg, UUID excludeTripId, boolean checkAllocationConflicts,
+                 boolean lockVehicle) {
+        public Query(UUID vehicleId, OffsetDateTime from, OffsetDateTime to, UUID requiredVehicleTypeId,
+                     Double requiredCapacityKg, UUID excludeTripId) {
+            this(vehicleId, from, to, requiredVehicleTypeId, requiredCapacityKg, excludeTripId, true, false);
+        }
     }
 }

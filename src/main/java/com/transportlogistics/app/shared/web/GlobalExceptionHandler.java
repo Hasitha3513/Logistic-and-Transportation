@@ -1,6 +1,7 @@
 package com.transportlogistics.app.shared.web;
 
 import com.transportlogistics.app.shared.domain.NotFoundException;
+import com.transportlogistics.app.shared.domain.ConflictException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -16,6 +17,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(NotFoundException.class)
     ResponseEntity<ApiError> notFound(NotFoundException ex, HttpServletRequest request) {
         return error(HttpStatus.NOT_FOUND, "NOT_FOUND", ex.getMessage(), request, List.of());
+    }
+
+    @ExceptionHandler(ConflictException.class)
+    ResponseEntity<ApiError> conflict(ConflictException ex, HttpServletRequest request) {
+        return error(HttpStatus.CONFLICT, "ALLOCATION_CONFLICT", ex.getMessage(), request, List.of());
     }
 
     @ExceptionHandler(IllegalArgumentException.class)

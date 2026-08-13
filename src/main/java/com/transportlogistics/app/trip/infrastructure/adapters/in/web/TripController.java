@@ -3,6 +3,7 @@ package com.transportlogistics.app.trip.infrastructure.adapters.in.web;
 import com.transportlogistics.app.trip.application.ports.in.TripUseCase;
 import com.transportlogistics.app.trip.domain.model.Trip;
 import com.transportlogistics.app.trip.domain.model.TripCommand;
+import com.transportlogistics.app.trip.domain.model.TripHistoryEntry;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.http.ResponseEntity;
@@ -12,6 +13,7 @@ import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.security.Principal;
 
 @RestController
 class TripController {
@@ -85,8 +87,9 @@ class TripController {
     }
 
     @PostMapping("/trips/{id}/assign-vehicle")
-    Trip assignVehicle(@PathVariable UUID id, @RequestBody Map<String, UUID> r) {
-        return trips.assignVehicle(id, r.values().stream().findFirst().orElseThrow());
+    Trip assignVehicle(@PathVariable UUID id, @Valid @RequestBody VehicleAssignmentRequest request,
+                       Principal principal) {
+        return trips.assignVehicle(id, request.vehicleId(), principal == null ? "system" : principal.getName());
     }
 
     @PostMapping("/trips/{id}/unassign-vehicle")
@@ -105,9 +108,8 @@ class TripController {
     }
 
     @GetMapping("/trips/{id}/status-history")
-    List<Map<String, Object>> history(@PathVariable UUID id) {
-        var t = trips.get(id);
-        return List.of(Map.of("tripId", id, "status", t.status(), "at", t.updatedAt()));
+    List<TripHistoryEntry> history(@PathVariable UUID id) {
+        return trips.history(id);
     }
 
     record TripRequest(UUID customerId, UUID departmentId, UUID projectId, UUID routeId, String priority,
@@ -117,7 +119,7 @@ class TripController {
                        Integer passengerCount, String customerInstructions, String notes) {
     }
 
-    record AssignmentRequest(@NotNull UUID id) {
+    record VehicleAssignmentRequest(@NotNull UUID vehicleId) {
     }
 
     record DriverAssignmentRequest(@NotNull UUID driverId, String requiredLicenseClass) {

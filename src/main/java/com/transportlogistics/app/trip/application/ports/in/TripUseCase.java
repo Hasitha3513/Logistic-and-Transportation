@@ -2,6 +2,7 @@ package com.transportlogistics.app.trip.application.ports.in;
 
 import com.transportlogistics.app.trip.domain.model.Trip;
 import com.transportlogistics.app.trip.domain.model.TripCommand;
+import com.transportlogistics.app.trip.domain.model.TripHistoryEntry;
 
 import java.util.List;
 import java.util.UUID;
@@ -17,11 +18,13 @@ public interface TripUseCase {
 
     Trip transition(UUID id, TripCommand cmd);
 
-    Trip assignVehicle(UUID id, UUID vehicleId);
+    Trip assignVehicle(UUID id, UUID vehicleId, String actor);
 
     Trip assignDriver(UUID id, UUID driverId, String requiredLicenseClass);
 
     Trip unassignVehicle(UUID id);
 
     Trip unassignDriver(UUID id);
+
+    List<TripHistoryEntry> history(UUID id);
 }
