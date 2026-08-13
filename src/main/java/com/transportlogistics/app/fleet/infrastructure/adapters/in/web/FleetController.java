@@ -1,11 +1,14 @@
 package com.transportlogistics.app.fleet.infrastructure.adapters.in.web;
 
 import com.transportlogistics.app.fleet.application.ports.in.DriverUseCase;
+import com.transportlogistics.app.fleet.application.ports.in.DriverLicenseUseCase;
 import com.transportlogistics.app.fleet.application.ports.in.VehicleCategoryUseCase;
 import com.transportlogistics.app.fleet.application.ports.in.VehicleTypeUseCase;
 import com.transportlogistics.app.fleet.application.ports.in.VehicleUseCase;
 import com.transportlogistics.app.fleet.application.ports.in.VehicleDocumentUseCase;
 import com.transportlogistics.app.fleet.domain.model.Driver;
+import com.transportlogistics.app.fleet.domain.model.DriverLicense;
+import com.transportlogistics.app.fleet.domain.model.DriverLicenseStatus;
 import com.transportlogistics.app.fleet.domain.model.Vehicle;
 import com.transportlogistics.app.fleet.domain.model.VehicleCategory;
 import com.transportlogistics.app.fleet.domain.model.VehicleType;
@@ -28,14 +31,16 @@ import java.util.UUID;
 @RestController
 public class FleetController {
     private final DriverUseCase drivers;
+    private final DriverLicenseUseCase licenses;
     private final VehicleUseCase vehicles;
     private final VehicleCategoryUseCase categories;
     private final VehicleTypeUseCase types;
     private final VehicleDocumentUseCase documents;
 
-    FleetController(DriverUseCase d, VehicleUseCase v, VehicleCategoryUseCase c, VehicleTypeUseCase t,
-                    VehicleDocumentUseCase documents) {
+    FleetController(DriverUseCase d, DriverLicenseUseCase licenses, VehicleUseCase v, VehicleCategoryUseCase c,
+                    VehicleTypeUseCase t, VehicleDocumentUseCase documents) {
         drivers = d;
+        this.licenses = licenses;
         vehicles = v;
         categories = c;
         types = t;
@@ -70,33 +75,44 @@ public class FleetController {
 
     @GetMapping("/drivers/{id}/availability")
     AvailabilityResponse driverAvailability(@PathVariable UUID id, @RequestParam OffsetDateTime from, @RequestParam OffsetDateTime to, @RequestParam(required = false) UUID excludeTripId) {
-        var d = drivers.get(id);
-        return new AvailabilityResponse(d.active() && "AVAILABLE".equalsIgnoreCase(d.status()), d.active() ? "STATUS_CHECK" : "INACTIVE");
+        var availability = drivers.availability(id, null, from.toLocalDate());
+        return new AvailabilityResponse(availability.available(), availability.reason());
     }
 
     @GetMapping("/drivers/available")
     List<Driver> availableDrivers(@RequestParam OffsetDateTime from, @RequestParam OffsetDateTime to, @RequestParam(required = false) String requiredLicenseClass) {
-        return drivers.list().stream().filter(d -> d.active() && "AVAILABLE".equalsIgnoreCase(d.status())).toList();
+        return drivers.list().stream()
+                .filter(driver -> drivers.availability(driver.id(), requiredLicenseClass, from.toLocalDate()).available())
+                .toList();
     }
 
     @GetMapping("/drivers/{driverId}/licenses")
-    List<Map<String, Object>> listLicenses(@PathVariable UUID driverId) {
-        return List.of();
+    List<DriverLicense> listLicenses(@PathVariable UUID driverId) {
+        return licenses.list(driverId);
     }
 
     @PostMapping("/drivers/{driverId}/licenses")
-    ResponseEntity<Map<String, Object>> createLicense(@PathVariable UUID driverId, @RequestBody Map<String, Object> body) {
-        return ResponseEntity.status(201).body(body);
+    ResponseEntity<DriverLicense> createLicense(@PathVariable UUID driverId,
+                                                @Valid @RequestBody DriverLicenseRequest request,
+                                                Principal principal) {
+        var command = new DriverLicenseUseCase.CreateCommand(request.licenseNumber(), request.licenseClass(),
+                request.issueDate(), request.expiryDate(), request.status(), request.active());
+        return ResponseEntity.status(201).body(licenses.create(driverId, command, actor(principal)));
     }
 
-    @PutMapping("/drivers/{driverId}/licenses/{licenseId}")
-    Map<String, Object> updateLicense(@PathVariable UUID driverId, @PathVariable UUID licenseId, @RequestBody Map<String, Object> body) {
-        return body;
+    @PatchMapping("/drivers/{driverId}/licenses/{licenseId}")
+    DriverLicense updateLicense(@PathVariable UUID driverId, @PathVariable UUID licenseId,
+                                @RequestBody DriverLicensePatchRequest request, Principal principal) {
+        var command = new DriverLicenseUseCase.UpdateCommand(request.licenseNumber(), request.licenseClass(),
+                request.issueDate(), request.expiryDate(), request.status(), request.active());
+        return licenses.update(driverId, licenseId, command, actor(principal));
     }
 
     @DeleteMapping("/drivers/{driverId}/licenses/{licenseId}")
-    MessageResponse deleteLicense(@PathVariable UUID driverId, @PathVariable UUID licenseId) {
-        return new MessageResponse("License deleted");
+    ResponseEntity<Void> deleteLicense(@PathVariable UUID driverId, @PathVariable UUID licenseId,
+                                       Principal principal) {
+        licenses.delete(driverId, licenseId, actor(principal));
+        return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/vehicles")
@@ -221,6 +237,15 @@ public class FleetController {
 
     record DriverRequest(@NotBlank String employeeNumber, @NotBlank String firstName, @NotBlank String lastName,
                          String phone, @Email String email, String status, Boolean active) {
+    }
+
+    record DriverLicenseRequest(@NotBlank String licenseNumber, @NotBlank String licenseClass,
+                                @NotNull LocalDate issueDate, @NotNull LocalDate expiryDate,
+                                DriverLicenseStatus status, Boolean active) {
+    }
+
+    record DriverLicensePatchRequest(String licenseNumber, String licenseClass, LocalDate issueDate,
+                                     LocalDate expiryDate, DriverLicenseStatus status, Boolean active) {
     }
 
     record VehicleRequest(@NotBlank String registrationNumber, String chassisNumber, String engineNumber,

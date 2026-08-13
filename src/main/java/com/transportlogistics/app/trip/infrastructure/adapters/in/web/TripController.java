@@ -95,8 +95,8 @@ class TripController {
     }
 
     @PostMapping("/trips/{id}/assign-driver")
-    Trip assignDriver(@PathVariable UUID id, @RequestBody Map<String, UUID> r) {
-        return trips.assignDriver(id, r.values().stream().findFirst().orElseThrow());
+    Trip assignDriver(@PathVariable UUID id, @Valid @RequestBody DriverAssignmentRequest request) {
+        return trips.assignDriver(id, request.driverId(), request.requiredLicenseClass());
     }
 
     @PostMapping("/trips/{id}/unassign-driver")
@@ -118,6 +118,9 @@ class TripController {
     }
 
     record AssignmentRequest(@NotNull UUID id) {
+    }
+
+    record DriverAssignmentRequest(@NotNull UUID driverId, String requiredLicenseClass) {
     }
 
     record ReasonRequest(String reason) {

@@ -4,6 +4,7 @@ import com.transportlogistics.app.shared.domain.NotFoundException;
 import com.transportlogistics.app.trip.application.ports.in.TripUseCase;
 import com.transportlogistics.app.trip.application.ports.out.TripRepository;
 import com.transportlogistics.app.trip.application.ports.out.VehicleEligibilityPort;
+import com.transportlogistics.app.trip.application.ports.out.DriverEligibilityPort;
 import com.transportlogistics.app.trip.domain.model.Trip;
 import com.transportlogistics.app.trip.domain.model.TripCommand;
 
@@ -15,10 +16,12 @@ import java.util.UUID;
 public final class TripService implements TripUseCase {
     private final TripRepository repo;
     private final VehicleEligibilityPort vehicleEligibility;
+    private final DriverEligibilityPort driverEligibility;
 
-    public TripService(TripRepository r, VehicleEligibilityPort vehicleEligibility) {
+    public TripService(TripRepository r, VehicleEligibilityPort vehicleEligibility, DriverEligibilityPort driverEligibility) {
         repo = r;
         this.vehicleEligibility = vehicleEligibility;
+        this.driverEligibility = driverEligibility;
     }
 
     public Trip create(Trip t) {
@@ -44,8 +47,9 @@ public final class TripService implements TripUseCase {
         return repo.save(copy(t, t.status(), v, t.driverId(), t.actualStartTime(), t.actualEndTime(), t.startOdometerKm(), t.endOdometerKm(), t.completionRemarks()));
     }
 
-    public Trip assignDriver(UUID id, UUID d) {
+    public Trip assignDriver(UUID id, UUID d, String requiredLicenseClass) {
         var t = get(id);
+        driverEligibility.assertEligible(d, requiredLicenseClass, t.requestedStartTime().toLocalDate());
         return repo.save(copy(t, t.status(), t.vehicleId(), d, t.actualStartTime(), t.actualEndTime(), t.startOdometerKm(), t.endOdometerKm(), t.completionRemarks()));
     }
 
@@ -54,7 +58,9 @@ public final class TripService implements TripUseCase {
     }
 
     public Trip unassignDriver(UUID id) {
-        return assignDriver(id, null);
+        var t = get(id);
+        return repo.save(copy(t, t.status(), t.vehicleId(), null, t.actualStartTime(), t.actualEndTime(),
+                t.startOdometerKm(), t.endOdometerKm(), t.completionRemarks()));
     }
 
     public Trip transition(UUID id, TripCommand c) {
