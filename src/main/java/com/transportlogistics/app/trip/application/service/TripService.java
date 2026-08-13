@@ -3,18 +3,22 @@ package com.transportlogistics.app.trip.application.service;
 import com.transportlogistics.app.shared.domain.NotFoundException;
 import com.transportlogistics.app.trip.application.ports.in.TripUseCase;
 import com.transportlogistics.app.trip.application.ports.out.TripRepository;
+import com.transportlogistics.app.trip.application.ports.out.VehicleEligibilityPort;
 import com.transportlogistics.app.trip.domain.model.Trip;
 import com.transportlogistics.app.trip.domain.model.TripCommand;
 
+import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
 
 public final class TripService implements TripUseCase {
     private final TripRepository repo;
+    private final VehicleEligibilityPort vehicleEligibility;
 
-    public TripService(TripRepository r) {
+    public TripService(TripRepository r, VehicleEligibilityPort vehicleEligibility) {
         repo = r;
+        this.vehicleEligibility = vehicleEligibility;
     }
 
     public Trip create(Trip t) {
@@ -36,6 +40,7 @@ public final class TripService implements TripUseCase {
 
     public Trip assignVehicle(UUID id, UUID v) {
         var t = get(id);
+        vehicleEligibility.assertEligible(v, t.requestedStartTime().toLocalDate());
         return repo.save(copy(t, t.status(), v, t.driverId(), t.actualStartTime(), t.actualEndTime(), t.startOdometerKm(), t.endOdometerKm(), t.completionRemarks()));
     }
 
@@ -62,8 +67,10 @@ public final class TripService implements TripUseCase {
                     repo.save(copy(t, "APPROVED", t.vehicleId(), t.driverId(), t.actualStartTime(), t.actualEndTime(), t.startOdometerKm(), t.endOdometerKm(), t.completionRemarks()));
             case TripCommand.Reject x ->
                     repo.save(copy(t, "REJECTED", t.vehicleId(), t.driverId(), t.actualStartTime(), t.actualEndTime(), t.startOdometerKm(), t.endOdometerKm(), x.reason()));
-            case TripCommand.Dispatch x ->
-                    repo.save(copy(t, "DISPATCHED", t.vehicleId(), t.driverId(), t.actualStartTime(), t.actualEndTime(), t.startOdometerKm(), t.endOdometerKm(), t.completionRemarks()));
+            case TripCommand.Dispatch x -> {
+                if (t.vehicleId() != null) vehicleEligibility.assertEligible(t.vehicleId(), LocalDate.now());
+                yield repo.save(copy(t, "DISPATCHED", t.vehicleId(), t.driverId(), t.actualStartTime(), t.actualEndTime(), t.startOdometerKm(), t.endOdometerKm(), t.completionRemarks()));
+            }
             case TripCommand.Start x ->
                     repo.save(copy(t, "IN_PROGRESS", t.vehicleId(), t.driverId(), now, t.actualEndTime(), x.odometerKm(), t.endOdometerKm(), t.completionRemarks()));
             case TripCommand.Complete x ->
