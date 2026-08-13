@@ -6,13 +6,15 @@ import com.transportlogistics.app.identity.domain.model.User;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import org.springframework.http.HttpStatus;
+import jakarta.validation.constraints.Size;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
+import java.util.Set;
 
 @RestController
 public class IdentityController {
@@ -24,45 +26,49 @@ public class IdentityController {
 
     @PostMapping("/auth/login")
     ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest r) {
-        var u = useCase.findByUsername(r.username()).orElseThrow(() -> new IllegalArgumentException("Invalid credentials"));
-        return ResponseEntity.ok(new AuthResponse("development-token-" + u.id(), "development-refresh-" + u.id(), "Bearer", 3600));
+        return ResponseEntity.ok(AuthResponse.from(useCase.login(r.username(), r.password())));
     }
 
     @PostMapping("/auth/refresh")
     ResponseEntity<AuthResponse> refresh(@Valid @RequestBody RefreshTokenRequest r) {
-        return ResponseEntity.ok(new AuthResponse("refreshed-token", "refreshed-token", "Bearer", 3600));
+        return ResponseEntity.ok(AuthResponse.from(useCase.refresh(r.refreshToken())));
     }
 
     @PostMapping("/auth/logout")
-    ResponseEntity<MessageResponse> logout() {
+    ResponseEntity<MessageResponse> logout(@Valid @RequestBody RefreshTokenRequest request) {
+        useCase.logout(request.refreshToken());
         return ResponseEntity.ok(new MessageResponse("Logged out"));
     }
 
     @GetMapping("/auth/me")
-    ResponseEntity<User> me() {
-        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
+    UserResponse me(Authentication authentication) {
+        return UserResponse.from(useCase.currentUser(authentication.getName()));
     }
 
     @PostMapping("/users")
-    ResponseEntity<User> createUser(@Valid @RequestBody UserRequest r) {
+    ResponseEntity<UserResponse> createUser(@Valid @RequestBody UserRequest r) {
         var now = OffsetDateTime.now();
-        return ResponseEntity.status(201).body(useCase.createUser(new User(UUID.randomUUID(), r.username(), r.email(), r.password() == null ? "{noop}change-me" : r.password(), r.firstName(), r.lastName(), r.phone(), r.active() == null || r.active(), now, now)));
+        var user = new User(UUID.randomUUID(), r.username(), r.email(), null, r.firstName(), r.lastName(), r.phone(),
+                r.active() == null || r.active(), now, now, Set.of());
+        return ResponseEntity.status(201).body(UserResponse.from(useCase.createUser(user, r.password(), r.roleIds())));
     }
 
     @GetMapping("/users/{id}")
-    User getUser(@PathVariable UUID id) {
-        return useCase.getUser(id);
+    UserResponse getUser(@PathVariable UUID id) {
+        return UserResponse.from(useCase.getUser(id));
     }
 
     @GetMapping("/users")
-    List<User> listUsers() {
-        return useCase.listUsers();
+    List<UserResponse> listUsers() {
+        return useCase.listUsers().stream().map(UserResponse::from).toList();
     }
 
     @PutMapping("/users/{id}")
-    User updateUser(@PathVariable UUID id, @Valid @RequestBody UserRequest r) {
+    UserResponse updateUser(@PathVariable UUID id, @Valid @RequestBody UserRequest r) {
         var old = useCase.getUser(id);
-        return useCase.updateUser(id, new User(id, r.username(), r.email(), r.password() == null ? old.passwordHash() : r.password(), r.firstName(), r.lastName(), r.phone(), r.active() == null ? old.active() : r.active(), old.createdAt(), OffsetDateTime.now()));
+        var updated = new User(id, r.username(), r.email(), null, r.firstName(), r.lastName(), r.phone(),
+                r.active() == null ? old.active() : r.active(), old.createdAt(), OffsetDateTime.now(), old.roles());
+        return UserResponse.from(useCase.updateUser(id, updated, r.password(), r.roleIds()));
     }
 
     @DeleteMapping("/users/{id}")
@@ -73,7 +79,8 @@ public class IdentityController {
 
     @PostMapping("/roles")
     ResponseEntity<Role> createRole(@Valid @RequestBody RoleRequest r) {
-        return ResponseEntity.status(201).body(useCase.createRole(new Role(UUID.randomUUID(), r.name(), r.description(), r.active() == null || r.active())));
+        return ResponseEntity.status(201).body(useCase.createRole(new Role(UUID.randomUUID(), r.name(), r.description(),
+                r.active() == null || r.active(), r.permissions())));
     }
 
     @GetMapping("/roles")
@@ -88,7 +95,7 @@ public class IdentityController {
 
     @PutMapping("/roles/{id}")
     Role updateRole(@PathVariable UUID id, @Valid @RequestBody RoleRequest r) {
-        return useCase.updateRole(id, new Role(id, r.name(), r.description(), r.active() == null || r.active()));
+        return useCase.updateRole(id, new Role(id, r.name(), r.description(), r.active() == null || r.active(), r.permissions()));
     }
 
     @DeleteMapping("/roles/{id}")
@@ -104,15 +111,28 @@ public class IdentityController {
     }
 
     record AuthResponse(String accessToken, String refreshToken, String tokenType, long expiresIn) {
+        static AuthResponse from(com.transportlogistics.app.identity.domain.model.AuthTokens tokens) {
+            return new AuthResponse(tokens.accessToken(), tokens.refreshToken(), tokens.tokenType(), tokens.expiresIn());
+        }
     }
 
     record MessageResponse(String message) {
     }
 
-    record UserRequest(@NotBlank String username, @Email @NotBlank String email, String password,
-                       @NotBlank String firstName, @NotBlank String lastName, String phone, Boolean active) {
+    record UserRequest(@NotBlank String username, @Email @NotBlank String email, @Size(min = 12) String password,
+                       @NotBlank String firstName, @NotBlank String lastName, String phone, Boolean active,
+                       Set<UUID> roleIds) {
     }
 
-    record RoleRequest(@NotBlank String name, String description, Boolean active) {
+    record RoleRequest(@NotBlank String name, String description, Boolean active, Set<@NotBlank String> permissions) {
+    }
+
+    record UserResponse(UUID id, String username, String email, String firstName, String lastName, String phone,
+                        boolean active, OffsetDateTime createdAt, OffsetDateTime updatedAt, Set<String> roles,
+                        Set<String> permissions) {
+        static UserResponse from(User user) {
+            return new UserResponse(user.id(), user.username(), user.email(), user.firstName(), user.lastName(),
+                    user.phone(), user.active(), user.createdAt(), user.updatedAt(), user.roleNames(), user.permissions());
+        }
     }
 }

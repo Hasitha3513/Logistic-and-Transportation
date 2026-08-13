@@ -11,3 +11,6 @@ spring:
       hibernate:
         jdbc:
           time_zone: UTC
+security:
+  jwt:
+    secret: ${JWT_SECRET}
