@@ -4,6 +4,5 @@ import java.time.OffsetDateTime;
 import java.util.UUID;
 
 public interface DriverEligibilityPort {
-    void assertEligible(UUID driverId, String requiredLicenseClass, OffsetDateTime from, OffsetDateTime to,
-                        UUID excludeTripId);
+    void assertEligible(UUID driverId, String requiredLicenseClass, OffsetDateTime from, OffsetDateTime to);
 }

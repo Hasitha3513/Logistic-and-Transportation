@@ -5,6 +5,5 @@ import java.util.UUID;
 
 /** Public fleet contract used when a trip assigns a driver. */
 public interface DriverAssignmentEligibility {
-    void assertEligible(UUID driverId, String requiredLicenseClass, OffsetDateTime from, OffsetDateTime to,
-                        UUID excludeTripId);
+    void assertEligible(UUID driverId, String requiredLicenseClass, OffsetDateTime from, OffsetDateTime to);
 }

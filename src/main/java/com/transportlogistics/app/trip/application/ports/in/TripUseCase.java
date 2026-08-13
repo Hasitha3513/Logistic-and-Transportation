@@ -20,7 +20,7 @@ public interface TripUseCase {
 
     Trip assignVehicle(UUID id, UUID vehicleId, String actor);
 
-    Trip assignDriver(UUID id, UUID driverId, String requiredLicenseClass);
+    Trip assignDriver(UUID id, UUID driverId, String requiredLicenseClass, String actor);
 
     Trip unassignVehicle(UUID id);
 

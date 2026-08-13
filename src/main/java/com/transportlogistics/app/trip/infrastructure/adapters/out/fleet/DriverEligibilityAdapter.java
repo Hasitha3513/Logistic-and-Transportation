@@ -16,8 +16,7 @@ class DriverEligibilityAdapter implements DriverEligibilityPort {
     }
 
     @Override
-    public void assertEligible(UUID driverId, String requiredLicenseClass, OffsetDateTime from, OffsetDateTime to,
-                               UUID excludeTripId) {
-        fleet.assertEligible(driverId, requiredLicenseClass, from, to, excludeTripId);
+    public void assertEligible(UUID driverId, String requiredLicenseClass, OffsetDateTime from, OffsetDateTime to) {
+        fleet.assertEligible(driverId, requiredLicenseClass, from, to);
     }
 }
