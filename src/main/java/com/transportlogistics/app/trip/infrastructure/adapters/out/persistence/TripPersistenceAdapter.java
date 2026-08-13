@@ -4,6 +4,7 @@ import com.transportlogistics.app.trip.application.ports.out.TripRepository;
 import com.transportlogistics.app.trip.domain.model.Trip;
 import org.springframework.stereotype.Component;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -28,5 +29,14 @@ class TripPersistenceAdapter implements TripRepository {
 
     public List<Trip> findAll() {
         return repo.findAll().stream().map(mapper::toDomain).toList();
+    }
+
+    @Override
+    public boolean hasOverlappingVehicleAllocation(UUID vehicleId, OffsetDateTime from, OffsetDateTime to,
+                                                   UUID excludeTripId) {
+        var count = excludeTripId == null
+                ? repo.countOverlaps(vehicleId, from, to)
+                : repo.countOverlapsExcluding(vehicleId, from, to, excludeTripId);
+        return count > 0;
     }
 }

@@ -4,7 +4,7 @@ import com.transportlogistics.app.fleet.VehicleDispatchEligibility;
 import com.transportlogistics.app.trip.application.ports.out.VehicleEligibilityPort;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Component
@@ -16,7 +16,8 @@ class VehicleEligibilityAdapter implements VehicleEligibilityPort {
     }
 
     @Override
-    public void assertEligible(UUID vehicleId, LocalDate onDate) {
-        fleet.assertEligible(vehicleId, onDate);
+    public void assertEligible(UUID vehicleId, OffsetDateTime from, OffsetDateTime to, UUID requiredVehicleTypeId,
+                               Double requiredCapacityKg, UUID excludeTripId) {
+        fleet.assertEligible(vehicleId, from, to, requiredVehicleTypeId, requiredCapacityKg, excludeTripId);
     }
 }

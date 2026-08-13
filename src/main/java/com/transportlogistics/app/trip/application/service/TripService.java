@@ -43,7 +43,8 @@ public final class TripService implements TripUseCase {
 
     public Trip assignVehicle(UUID id, UUID v) {
         var t = get(id);
-        vehicleEligibility.assertEligible(v, t.requestedStartTime().toLocalDate());
+        vehicleEligibility.assertEligible(v, t.requestedStartTime(), t.requestedEndTime(),
+                t.requiredVehicleTypeId(), t.requiredCapacityKg(), t.id());
         return repo.save(copy(t, t.status(), v, t.driverId(), t.actualStartTime(), t.actualEndTime(), t.startOdometerKm(), t.endOdometerKm(), t.completionRemarks()));
     }
 
@@ -74,7 +75,8 @@ public final class TripService implements TripUseCase {
             case TripCommand.Reject x ->
                     repo.save(copy(t, "REJECTED", t.vehicleId(), t.driverId(), t.actualStartTime(), t.actualEndTime(), t.startOdometerKm(), t.endOdometerKm(), x.reason()));
             case TripCommand.Dispatch x -> {
-                if (t.vehicleId() != null) vehicleEligibility.assertEligible(t.vehicleId(), LocalDate.now());
+                if (t.vehicleId() != null) vehicleEligibility.assertEligible(t.vehicleId(), t.requestedStartTime(),
+                        t.requestedEndTime(), t.requiredVehicleTypeId(), t.requiredCapacityKg(), t.id());
                 yield repo.save(copy(t, "DISPATCHED", t.vehicleId(), t.driverId(), t.actualStartTime(), t.actualEndTime(), t.startOdometerKm(), t.endOdometerKm(), t.completionRemarks()));
             }
             case TripCommand.Start x ->

@@ -29,7 +29,7 @@ class FleetControllerDriverLicenseTest {
     void setUp() {
         licenses = mock(DriverLicenseUseCase.class);
         var controller = new FleetController(mock(DriverUseCase.class), licenses, mock(VehicleUseCase.class),
-                mock(VehicleCategoryUseCase.class), mock(VehicleTypeUseCase.class),
+                mock(VehicleAvailabilityUseCase.class), mock(VehicleCategoryUseCase.class), mock(VehicleTypeUseCase.class),
                 mock(VehicleDocumentUseCase.class));
         mvc = MockMvcBuilders.standaloneSetup(controller).setControllerAdvice(new GlobalExceptionHandler()).build();
         driverId = UUID.randomUUID();

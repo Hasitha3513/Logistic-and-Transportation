@@ -28,7 +28,8 @@ class TripServiceVehicleEligibilityTest {
         service.assignVehicle(trip.id(), trip.vehicleId());
         service.transition(trip.id(), new TripCommand.Dispatch());
 
-        verify(eligibility, times(2)).assertEligible(eq(trip.vehicleId()), any());
+        verify(eligibility, times(2)).assertEligible(trip.vehicleId(), trip.requestedStartTime(),
+                trip.requestedEndTime(), trip.requiredVehicleTypeId(), trip.requiredCapacityKg(), trip.id());
     }
 
     @Test
@@ -38,7 +39,7 @@ class TripServiceVehicleEligibilityTest {
         var trip = trip();
         when(repository.findById(trip.id())).thenReturn(Optional.of(trip));
         doThrow(new IllegalArgumentException("MANDATORY_DOCUMENT_EXPIRED"))
-                .when(eligibility).assertEligible(eq(trip.vehicleId()), any());
+                .when(eligibility).assertEligible(eq(trip.vehicleId()), any(), any(), any(), any(), eq(trip.id()));
         var service = new TripService(repository, eligibility, mock(DriverEligibilityPort.class));
 
         assertThrows(IllegalArgumentException.class, () -> service.assignVehicle(trip.id(), trip.vehicleId()));
