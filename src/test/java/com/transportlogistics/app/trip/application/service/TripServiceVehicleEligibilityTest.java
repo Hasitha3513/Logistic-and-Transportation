@@ -2,6 +2,7 @@ package com.transportlogistics.app.trip.application.service;
 
 import com.transportlogistics.app.trip.application.ports.out.TripRepository;
 import com.transportlogistics.app.trip.application.ports.out.VehicleEligibilityPort;
+import com.transportlogistics.app.trip.application.ports.out.DriverEligibilityPort;
 import com.transportlogistics.app.trip.domain.model.Trip;
 import com.transportlogistics.app.trip.domain.model.TripCommand;
 import org.junit.jupiter.api.Test;
@@ -22,7 +23,7 @@ class TripServiceVehicleEligibilityTest {
         var trip = trip();
         when(repository.findById(trip.id())).thenReturn(Optional.of(trip));
         when(repository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
-        var service = new TripService(repository, eligibility);
+        var service = new TripService(repository, eligibility, mock(DriverEligibilityPort.class));
 
         service.assignVehicle(trip.id(), trip.vehicleId());
         service.transition(trip.id(), new TripCommand.Dispatch());
@@ -38,7 +39,7 @@ class TripServiceVehicleEligibilityTest {
         when(repository.findById(trip.id())).thenReturn(Optional.of(trip));
         doThrow(new IllegalArgumentException("MANDATORY_DOCUMENT_EXPIRED"))
                 .when(eligibility).assertEligible(eq(trip.vehicleId()), any());
-        var service = new TripService(repository, eligibility);
+        var service = new TripService(repository, eligibility, mock(DriverEligibilityPort.class));
 
         assertThrows(IllegalArgumentException.class, () -> service.assignVehicle(trip.id(), trip.vehicleId()));
         verify(repository, never()).save(any());
