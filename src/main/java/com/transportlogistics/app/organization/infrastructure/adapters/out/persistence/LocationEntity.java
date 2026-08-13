@@ -1,0 +1,36 @@
+package com.transportlogistics.app.organization.infrastructure.adapters.out.persistence;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+import java.util.UUID;
+
+@Entity
+@Table(name = "location")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+class LocationEntity {
+    @Id
+    @Column(name = "id")
+    private UUID id;
+    @Column(name = "code")
+    private String code;
+    @Column(name = "name")
+    private String name;
+    @Column(name = "address")
+    private String address;
+    @Column(name = "latitude")
+    private Double latitude;
+    @Column(name = "longitude")
+    private Double longitude;
+    @Column(name = "active")
+    private boolean active;
+}

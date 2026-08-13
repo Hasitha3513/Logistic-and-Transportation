@@ -1,0 +1,26 @@
+spring:
+  application:
+    name: transport-logistics-modulith
+  profiles:
+    default: h2
+  threads:
+    virtual:
+      enabled: true
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    enabled: true
+server:
+  port: 8080
+  servlet:
+    context-path: /api
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,modulith
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
