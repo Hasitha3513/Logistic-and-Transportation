@@ -26,6 +26,7 @@ class RoutePersistenceAdapter implements RouteRepository {
         e.setPlannedDistanceKm(v.plannedDistanceKm());
         e.setEstimatedDurationMinutes(v.estimatedDurationMinutes());
         e.setActive(v.active());
+        e.setStopLocationIds(v.stopLocationIds());
         return map(repo.save(e));
     }
 
@@ -37,7 +38,12 @@ class RoutePersistenceAdapter implements RouteRepository {
         return repo.findAll().stream().map(this::map).toList();
     }
 
+    public List<Route> search(String query, UUID originLocationId, UUID destinationLocationId, Boolean active) {
+        return repo.search(query, originLocationId, destinationLocationId, active).stream().map(this::map).toList();
+    }
+
     private Route map(RouteEntity e) {
-        return new Route(e.getId(), e.getCode(), e.getName(), e.getOriginLocationId(), e.getDestinationLocationId(), e.getPlannedDistanceKm(), e.getEstimatedDurationMinutes(), e.isActive());
+        return new Route(e.getId(), e.getCode(), e.getName(), e.getOriginLocationId(), e.getDestinationLocationId(),
+                e.getPlannedDistanceKm(), e.getEstimatedDurationMinutes(), e.isActive(), e.getStopLocationIds());
     }
 }
