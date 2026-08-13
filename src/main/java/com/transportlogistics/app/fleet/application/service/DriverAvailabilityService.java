@@ -28,7 +28,8 @@ public final class DriverAvailabilityService implements DriverAvailabilityUseCas
         if (query.from() == null || query.to() == null || !query.from().isBefore(query.to())) {
             throw new IllegalArgumentException("Availability period must have from before to");
         }
-        var driver = drivers.findById(query.driverId())
+        var driver = (query.lockDriver() ? drivers.findByIdForUpdate(query.driverId())
+                : drivers.findById(query.driverId()))
                 .orElseThrow(() -> new NotFoundException("Driver not found: " + query.driverId()));
         var reasons = new ArrayList<DriverAvailability.Reason>();
 
@@ -55,7 +56,8 @@ public final class DriverAvailabilityService implements DriverAvailabilityUseCas
             add(reasons, REQUIRED_LICENSE_CLASS_MISSING,
                     "Driver lacks a valid active license of the required class for the requested period");
         }
-        if (assignments.hasOverlap(driver.id(), query.from(), query.to(), query.excludeTripId())) {
+        if (query.checkAssignmentConflicts()
+                && assignments.hasOverlap(driver.id(), query.from(), query.to(), query.excludeTripId())) {
             add(reasons, OVERLAPPING_ASSIGNMENT, "Driver has an overlapping trip assignment");
         }
         return DriverAvailability.from(reasons);

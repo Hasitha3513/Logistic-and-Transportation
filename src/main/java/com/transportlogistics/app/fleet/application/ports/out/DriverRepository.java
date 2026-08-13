@@ -11,5 +11,7 @@ public interface DriverRepository {
 
     Optional<Driver> findById(UUID id);
 
+    Optional<Driver> findByIdForUpdate(UUID id);
+
     List<Driver> findAll();
 }

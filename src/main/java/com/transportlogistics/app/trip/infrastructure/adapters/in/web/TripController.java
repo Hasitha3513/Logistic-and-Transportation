@@ -6,6 +6,7 @@ import com.transportlogistics.app.trip.domain.model.TripCommand;
 import com.transportlogistics.app.trip.domain.model.TripHistoryEntry;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotBlank;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -98,8 +99,10 @@ class TripController {
     }
 
     @PostMapping("/trips/{id}/assign-driver")
-    Trip assignDriver(@PathVariable UUID id, @Valid @RequestBody DriverAssignmentRequest request) {
-        return trips.assignDriver(id, request.driverId(), request.requiredLicenseClass());
+    Trip assignDriver(@PathVariable UUID id, @Valid @RequestBody DriverAssignmentRequest request,
+                      Principal principal) {
+        return trips.assignDriver(id, request.driverId(), request.requiredLicenseClass(),
+                principal == null ? "system" : principal.getName());
     }
 
     @PostMapping("/trips/{id}/unassign-driver")
@@ -122,7 +125,7 @@ class TripController {
     record VehicleAssignmentRequest(@NotNull UUID vehicleId) {
     }
 
-    record DriverAssignmentRequest(@NotNull UUID driverId, String requiredLicenseClass) {
+    record DriverAssignmentRequest(@NotNull UUID driverId, @NotBlank String requiredLicenseClass) {
     }
 
     record ReasonRequest(String reason) {
