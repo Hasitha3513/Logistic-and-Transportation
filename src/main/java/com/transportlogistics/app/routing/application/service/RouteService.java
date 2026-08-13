@@ -27,12 +27,21 @@ public final class RouteService implements RouteUseCase {
         return repo.findAll();
     }
 
+    public List<Route> search(String query, UUID originLocationId, UUID destinationLocationId, Boolean active) {
+        var normalizedQuery = query == null || query.isBlank() ? null : query.trim();
+        if (normalizedQuery == null && originLocationId == null && destinationLocationId == null && active == null) {
+            return list();
+        }
+        return repo.search(normalizedQuery, originLocationId, destinationLocationId, active);
+    }
+
     public Route update(UUID id, Route value) {
         return repo.save(value);
     }
 
     public void deactivate(UUID id) {
         var v = get(id);
-        repo.save(new Route(v.id(), v.code(), v.name(), v.originLocationId(), v.destinationLocationId(), v.plannedDistanceKm(), v.estimatedDurationMinutes(), false));
+        repo.save(new Route(v.id(), v.code(), v.name(), v.originLocationId(), v.destinationLocationId(),
+                v.plannedDistanceKm(), v.estimatedDurationMinutes(), false, v.stopLocationIds()));
     }
 }

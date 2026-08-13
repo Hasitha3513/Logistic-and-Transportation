@@ -12,4 +12,6 @@ public interface RouteRepository {
     Optional<Route> findById(UUID id);
 
     List<Route> findAll();
+
+    List<Route> search(String query, UUID originLocationId, UUID destinationLocationId, Boolean active);
 }
