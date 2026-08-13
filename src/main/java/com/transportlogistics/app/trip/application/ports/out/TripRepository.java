@@ -16,4 +16,7 @@ public interface TripRepository {
 
     boolean hasOverlappingVehicleAllocation(UUID vehicleId, OffsetDateTime from, OffsetDateTime to,
                                             UUID excludeTripId);
+
+    boolean hasOverlappingDriverAssignment(UUID driverId, OffsetDateTime from, OffsetDateTime to,
+                                           UUID excludeTripId);
 }

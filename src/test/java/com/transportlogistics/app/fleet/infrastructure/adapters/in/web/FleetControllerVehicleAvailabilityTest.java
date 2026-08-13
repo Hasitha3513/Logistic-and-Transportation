@@ -22,7 +22,8 @@ class FleetControllerVehicleAvailabilityTest {
         var result = new VehicleAvailability(false, List.of(
                 new VehicleAvailability.Reason(OVERLAPPING_ALLOCATION, "Vehicle has an overlapping trip allocation")));
         when(availability.evaluate(any())).thenReturn(result);
-        var controller = new FleetController(mock(DriverUseCase.class), mock(DriverLicenseUseCase.class),
+        var controller = new FleetController(mock(DriverUseCase.class), mock(DriverAvailabilityUseCase.class),
+                mock(DriverLicenseUseCase.class),
                 mock(VehicleUseCase.class), availability, mock(VehicleCategoryUseCase.class),
                 mock(VehicleTypeUseCase.class), mock(VehicleDocumentUseCase.class));
         MockMvc mvc = MockMvcBuilders.standaloneSetup(controller).build();

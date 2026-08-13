@@ -39,4 +39,13 @@ class TripPersistenceAdapter implements TripRepository {
                 : repo.countOverlapsExcluding(vehicleId, from, to, excludeTripId);
         return count > 0;
     }
+
+    @Override
+    public boolean hasOverlappingDriverAssignment(UUID driverId, OffsetDateTime from, OffsetDateTime to,
+                                                  UUID excludeTripId) {
+        var count = excludeTripId == null
+                ? repo.countDriverOverlaps(driverId, from, to)
+                : repo.countDriverOverlapsExcluding(driverId, from, to, excludeTripId);
+        return count > 0;
+    }
 }

@@ -1,6 +1,7 @@
 package com.transportlogistics.app.fleet.infrastructure.adapters.in.web;
 
 import com.transportlogistics.app.fleet.application.ports.in.DriverUseCase;
+import com.transportlogistics.app.fleet.application.ports.in.DriverAvailabilityUseCase;
 import com.transportlogistics.app.fleet.application.ports.in.DriverLicenseUseCase;
 import com.transportlogistics.app.fleet.application.ports.in.VehicleCategoryUseCase;
 import com.transportlogistics.app.fleet.application.ports.in.VehicleTypeUseCase;
@@ -8,6 +9,7 @@ import com.transportlogistics.app.fleet.application.ports.in.VehicleUseCase;
 import com.transportlogistics.app.fleet.application.ports.in.VehicleAvailabilityUseCase;
 import com.transportlogistics.app.fleet.application.ports.in.VehicleDocumentUseCase;
 import com.transportlogistics.app.fleet.domain.model.Driver;
+import com.transportlogistics.app.fleet.domain.model.DriverAvailability;
 import com.transportlogistics.app.fleet.domain.model.DriverLicense;
 import com.transportlogistics.app.fleet.domain.model.DriverLicenseStatus;
 import com.transportlogistics.app.fleet.domain.model.Vehicle;
@@ -33,6 +35,7 @@ import java.util.UUID;
 @RestController
 public class FleetController {
     private final DriverUseCase drivers;
+    private final DriverAvailabilityUseCase driverAvailability;
     private final DriverLicenseUseCase licenses;
     private final VehicleUseCase vehicles;
     private final VehicleAvailabilityUseCase vehicleAvailability;
@@ -40,10 +43,12 @@ public class FleetController {
     private final VehicleTypeUseCase types;
     private final VehicleDocumentUseCase documents;
 
-    FleetController(DriverUseCase d, DriverLicenseUseCase licenses, VehicleUseCase v,
+    FleetController(DriverUseCase d, DriverAvailabilityUseCase driverAvailability,
+                    DriverLicenseUseCase licenses, VehicleUseCase v,
                     VehicleAvailabilityUseCase vehicleAvailability, VehicleCategoryUseCase c,
                     VehicleTypeUseCase t, VehicleDocumentUseCase documents) {
         drivers = d;
+        this.driverAvailability = driverAvailability;
         this.licenses = licenses;
         vehicles = v;
         this.vehicleAvailability = vehicleAvailability;
@@ -79,15 +84,19 @@ public class FleetController {
     }
 
     @GetMapping("/drivers/{id}/availability")
-    AvailabilityResponse driverAvailability(@PathVariable UUID id, @RequestParam OffsetDateTime from, @RequestParam OffsetDateTime to, @RequestParam(required = false) UUID excludeTripId) {
-        var availability = drivers.availability(id, null, from.toLocalDate());
-        return new AvailabilityResponse(availability.available(), availability.reason());
+    DriverAvailability driverAvailability(@PathVariable UUID id, @RequestParam OffsetDateTime from,
+                                          @RequestParam OffsetDateTime to,
+                                          @RequestParam(required = false) String requiredLicenseClass,
+                                          @RequestParam(required = false) UUID excludeTripId) {
+        return driverAvailability.evaluate(new DriverAvailabilityUseCase.Query(id, from, to,
+                requiredLicenseClass, excludeTripId));
     }
 
     @GetMapping("/drivers/available")
     List<Driver> availableDrivers(@RequestParam OffsetDateTime from, @RequestParam OffsetDateTime to, @RequestParam(required = false) String requiredLicenseClass) {
         return drivers.list().stream()
-                .filter(driver -> drivers.availability(driver.id(), requiredLicenseClass, from.toLocalDate()).available())
+                .filter(driver -> driverAvailability.evaluate(new DriverAvailabilityUseCase.Query(driver.id(), from,
+                        to, requiredLicenseClass, null)).available())
                 .toList();
     }
 

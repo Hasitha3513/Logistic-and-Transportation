@@ -28,7 +28,8 @@ class FleetControllerVehicleDocumentTest {
     @BeforeEach
     void setUp() {
         documents = mock(VehicleDocumentUseCase.class);
-        var controller = new FleetController(mock(DriverUseCase.class), mock(DriverLicenseUseCase.class),
+        var controller = new FleetController(mock(DriverUseCase.class), mock(DriverAvailabilityUseCase.class),
+                mock(DriverLicenseUseCase.class),
                 mock(VehicleUseCase.class), mock(VehicleAvailabilityUseCase.class),
                 mock(VehicleCategoryUseCase.class), mock(VehicleTypeUseCase.class), documents);
         mvc = MockMvcBuilders.standaloneSetup(controller).setControllerAdvice(new GlobalExceptionHandler()).build();

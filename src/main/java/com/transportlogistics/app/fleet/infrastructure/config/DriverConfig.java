@@ -1,22 +1,38 @@
 package com.transportlogistics.app.fleet.infrastructure.config;
 
 import com.transportlogistics.app.fleet.DriverAssignmentEligibility;
+import com.transportlogistics.app.fleet.DriverAssignmentAvailability;
+import com.transportlogistics.app.fleet.application.ports.in.DriverAvailabilityUseCase;
 import com.transportlogistics.app.fleet.application.ports.in.DriverUseCase;
 import com.transportlogistics.app.fleet.application.ports.out.DriverLicenseRepository;
 import com.transportlogistics.app.fleet.application.ports.out.DriverRepository;
 import com.transportlogistics.app.fleet.application.service.DriverService;
+import com.transportlogistics.app.fleet.application.service.DriverAvailabilityService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
 class DriverConfig {
     @Bean
-    DriverUseCase driverUseCase(DriverRepository repo, DriverLicenseRepository licenses) {
-        return new DriverService(repo, licenses);
+    DriverUseCase driverUseCase(DriverRepository repo) {
+        return new DriverService(repo);
     }
 
     @Bean
-    DriverAssignmentEligibility driverAssignmentEligibility(DriverUseCase drivers) {
-        return drivers::assertAvailableForAssignment;
+    DriverAvailabilityUseCase driverAvailabilityUseCase(DriverRepository drivers, DriverLicenseRepository licenses,
+                                                         DriverAssignmentAvailability assignments) {
+        return new DriverAvailabilityService(drivers, licenses, assignments);
+    }
+
+    @Bean
+    DriverAssignmentEligibility driverAssignmentEligibility(DriverAvailabilityUseCase availability) {
+        return (driverId, requiredClass, from, to, excludeTripId) -> {
+            var result = availability.evaluate(new DriverAvailabilityUseCase.Query(driverId, from, to,
+                    requiredClass, excludeTripId));
+            if (!result.available()) {
+                var codes = result.reasons().stream().map(reason -> reason.code().name()).toList();
+                throw new IllegalArgumentException("Driver is unavailable for assignment: " + codes);
+            }
+        };
     }
 }
