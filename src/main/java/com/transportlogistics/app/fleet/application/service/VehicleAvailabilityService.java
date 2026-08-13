@@ -31,7 +31,8 @@ public final class VehicleAvailabilityService implements VehicleAvailabilityUseC
         if (query.requiredCapacityKg() != null && query.requiredCapacityKg() < 0) {
             throw new IllegalArgumentException("Required capacity cannot be negative");
         }
-        var vehicle = vehicles.findById(query.vehicleId())
+        var vehicle = (query.lockVehicle() ? vehicles.findByIdForUpdate(query.vehicleId())
+                : vehicles.findById(query.vehicleId()))
                 .orElseThrow(() -> new NotFoundException("Vehicle not found: " + query.vehicleId()));
         var reasons = new ArrayList<VehicleAvailability.Reason>();
 
@@ -56,7 +57,8 @@ public final class VehicleAvailabilityService implements VehicleAvailabilityUseC
                 && (vehicle.capacityKg() == null || vehicle.capacityKg() < query.requiredCapacityKg())) {
             add(reasons, INSUFFICIENT_CAPACITY, "Vehicle capacity is below the required capacity");
         }
-        if (allocations.hasOverlap(vehicle.id(), query.from(), query.to(), query.excludeTripId())) {
+        if (query.checkAllocationConflicts()
+                && allocations.hasOverlap(vehicle.id(), query.from(), query.to(), query.excludeTripId())) {
             add(reasons, OVERLAPPING_ALLOCATION, "Vehicle has an overlapping trip allocation");
         }
         return VehicleAvailability.from(reasons);

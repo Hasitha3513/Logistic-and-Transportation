@@ -40,6 +40,10 @@ class VehiclePersistenceAdapter implements VehicleRepository {
         return repo.findById(id).map(this::map);
     }
 
+    public Optional<Vehicle> findByIdForUpdate(UUID id) {
+        return repo.findByIdForUpdate(id).map(this::map);
+    }
+
     public List<Vehicle> findAll() {
         return repo.findAll().stream().map(this::map).toList();
     }

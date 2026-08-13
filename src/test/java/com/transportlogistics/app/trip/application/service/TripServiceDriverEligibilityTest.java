@@ -3,12 +3,15 @@ package com.transportlogistics.app.trip.application.service;
 import com.transportlogistics.app.trip.application.ports.out.DriverEligibilityPort;
 import com.transportlogistics.app.trip.application.ports.out.TripRepository;
 import com.transportlogistics.app.trip.application.ports.out.VehicleEligibilityPort;
+import com.transportlogistics.app.trip.application.ports.out.TripHistoryRepository;
+import com.transportlogistics.app.trip.application.ports.out.TripTransaction;
 import com.transportlogistics.app.trip.domain.model.Trip;
 import org.junit.jupiter.api.Test;
 
 import java.time.OffsetDateTime;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Supplier;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -22,7 +25,7 @@ class TripServiceDriverEligibilityTest {
         var trip = trip();
         when(repository.findById(trip.id())).thenReturn(Optional.of(trip));
         when(repository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
-        var service = new TripService(repository, mock(VehicleEligibilityPort.class), eligibility);
+        var service = service(repository, eligibility);
 
         var assigned = service.assignDriver(trip.id(), trip.driverId(), "B");
         verify(eligibility).assertEligible(trip.driverId(), "B", trip.requestedStartTime(),
@@ -42,7 +45,7 @@ class TripServiceDriverEligibilityTest {
         when(repository.findById(trip.id())).thenReturn(Optional.of(trip));
         doThrow(new IllegalArgumentException("REQUIRED_LICENSE_CLASS_MISSING_OR_EXPIRED"))
                 .when(eligibility).assertEligible(eq(trip.driverId()), eq("C"), any(), any(), eq(trip.id()));
-        var service = new TripService(repository, mock(VehicleEligibilityPort.class), eligibility);
+        var service = service(repository, eligibility);
 
         assertThrows(IllegalArgumentException.class,
                 () -> service.assignDriver(trip.id(), trip.driverId(), "C"));
@@ -54,5 +57,15 @@ class TripServiceDriverEligibilityTest {
         return new Trip(UUID.randomUUID(), "TRIP-1", null, null, null, null, "NORMAL", "APPROVED",
                 UUID.randomUUID(), UUID.randomUUID(), now.plusDays(1), now.plusDays(2), null, null, null, null,
                 null, null, null, UUID.randomUUID(), null, null, null, null, null, now, now);
+    }
+
+    private TripService service(TripRepository repository, DriverEligibilityPort eligibility) {
+        return new TripService(repository, mock(VehicleEligibilityPort.class), eligibility,
+                mock(TripHistoryRepository.class), new TripTransaction() {
+                    @Override
+                    public <T> T execute(Supplier<T> operation) {
+                        return operation.get();
+                    }
+                });
     }
 }

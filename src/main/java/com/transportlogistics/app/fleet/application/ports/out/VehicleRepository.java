@@ -11,5 +11,7 @@ public interface VehicleRepository {
 
     Optional<Vehicle> findById(UUID id);
 
+    Optional<Vehicle> findByIdForUpdate(UUID id);
+
     List<Vehicle> findAll();
 }
