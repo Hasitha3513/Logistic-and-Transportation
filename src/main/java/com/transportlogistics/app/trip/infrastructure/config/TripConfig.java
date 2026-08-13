@@ -1,5 +1,6 @@
 package com.transportlogistics.app.trip.infrastructure.config;
 
+import com.transportlogistics.app.trip.VehicleAllocationLookup;
 import com.transportlogistics.app.trip.application.ports.in.TripUseCase;
 import com.transportlogistics.app.trip.application.ports.out.TripRepository;
 import com.transportlogistics.app.trip.application.ports.out.VehicleEligibilityPort;
@@ -14,5 +15,10 @@ class TripConfig {
     TripUseCase tripUseCase(TripRepository r, VehicleEligibilityPort vehicleEligibility,
                             DriverEligibilityPort driverEligibility) {
         return new TripService(r, vehicleEligibility, driverEligibility);
+    }
+
+    @Bean
+    VehicleAllocationLookup vehicleAllocationLookup(TripRepository trips) {
+        return trips::hasOverlappingVehicleAllocation;
     }
 }

@@ -5,11 +5,13 @@ import com.transportlogistics.app.fleet.application.ports.in.DriverLicenseUseCas
 import com.transportlogistics.app.fleet.application.ports.in.VehicleCategoryUseCase;
 import com.transportlogistics.app.fleet.application.ports.in.VehicleTypeUseCase;
 import com.transportlogistics.app.fleet.application.ports.in.VehicleUseCase;
+import com.transportlogistics.app.fleet.application.ports.in.VehicleAvailabilityUseCase;
 import com.transportlogistics.app.fleet.application.ports.in.VehicleDocumentUseCase;
 import com.transportlogistics.app.fleet.domain.model.Driver;
 import com.transportlogistics.app.fleet.domain.model.DriverLicense;
 import com.transportlogistics.app.fleet.domain.model.DriverLicenseStatus;
 import com.transportlogistics.app.fleet.domain.model.Vehicle;
+import com.transportlogistics.app.fleet.domain.model.VehicleAvailability;
 import com.transportlogistics.app.fleet.domain.model.VehicleCategory;
 import com.transportlogistics.app.fleet.domain.model.VehicleType;
 import com.transportlogistics.app.fleet.domain.model.VehicleDocument;
@@ -33,15 +35,18 @@ public class FleetController {
     private final DriverUseCase drivers;
     private final DriverLicenseUseCase licenses;
     private final VehicleUseCase vehicles;
+    private final VehicleAvailabilityUseCase vehicleAvailability;
     private final VehicleCategoryUseCase categories;
     private final VehicleTypeUseCase types;
     private final VehicleDocumentUseCase documents;
 
-    FleetController(DriverUseCase d, DriverLicenseUseCase licenses, VehicleUseCase v, VehicleCategoryUseCase c,
+    FleetController(DriverUseCase d, DriverLicenseUseCase licenses, VehicleUseCase v,
+                    VehicleAvailabilityUseCase vehicleAvailability, VehicleCategoryUseCase c,
                     VehicleTypeUseCase t, VehicleDocumentUseCase documents) {
         drivers = d;
         this.licenses = licenses;
         vehicles = v;
+        this.vehicleAvailability = vehicleAvailability;
         categories = c;
         types = t;
         this.documents = documents;
@@ -142,14 +147,26 @@ public class FleetController {
     }
 
     @GetMapping("/vehicles/{id}/availability")
-    AvailabilityResponse vehicleAvailability(@PathVariable UUID id, @RequestParam OffsetDateTime from, @RequestParam OffsetDateTime to, @RequestParam(required = false) UUID excludeTripId) {
-        var availability = vehicles.availability(id, from.toLocalDate());
-        return new AvailabilityResponse(availability.available(), availability.reason());
+    VehicleAvailability vehicleAvailability(@PathVariable UUID id, @RequestParam OffsetDateTime from,
+                                            @RequestParam OffsetDateTime to,
+                                            @RequestParam(required = false) UUID requiredVehicleTypeId,
+                                            @RequestParam(required = false) Double requiredCapacityKg,
+                                            @RequestParam(required = false) UUID excludeTripId) {
+        return vehicleAvailability.evaluate(new VehicleAvailabilityUseCase.Query(id, from, to,
+                requiredVehicleTypeId, requiredCapacityKg, excludeTripId));
     }
 
     @GetMapping("/vehicles/available")
-    List<Vehicle> availableVehicles(@RequestParam OffsetDateTime from, @RequestParam OffsetDateTime to, @RequestParam(required = false) UUID vehicleTypeId, @RequestParam(required = false) UUID categoryId, @RequestParam(required = false) Double minimumCapacityKg) {
-        return vehicles.list().stream().filter(v -> vehicles.availability(v.id(), from.toLocalDate()).available()).filter(v -> vehicleTypeId == null || vehicleTypeId.equals(v.typeId())).filter(v -> categoryId == null || categoryId.equals(v.categoryId())).filter(v -> minimumCapacityKg == null || (v.capacityKg() != null && v.capacityKg() >= minimumCapacityKg)).toList();
+    List<Vehicle> availableVehicles(@RequestParam OffsetDateTime from, @RequestParam OffsetDateTime to,
+                                    @RequestParam(required = false) UUID vehicleTypeId,
+                                    @RequestParam(required = false) UUID categoryId,
+                                    @RequestParam(required = false) Double minimumCapacityKg,
+                                    @RequestParam(required = false) UUID excludeTripId) {
+        return vehicles.list().stream()
+                .filter(vehicle -> vehicleAvailability.evaluate(new VehicleAvailabilityUseCase.Query(vehicle.id(),
+                        from, to, vehicleTypeId, minimumCapacityKg, excludeTripId)).available())
+                .filter(vehicle -> categoryId == null || categoryId.equals(vehicle.categoryId()))
+                .toList();
     }
 
     @GetMapping("/vehicles/{vehicleId}/documents")
