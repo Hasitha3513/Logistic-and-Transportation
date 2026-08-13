@@ -63,8 +63,10 @@ class TripController {
     }
 
     @PostMapping("/trips/{id}/dispatch")
-    Trip dispatch(@PathVariable UUID id, @RequestBody(required = false) Map<String, Object> body) {
-        return trips.transition(id, new TripCommand.Dispatch());
+    Trip dispatch(@PathVariable UUID id, @RequestBody(required = false) DispatchRequest request,
+                  Principal principal) {
+        return trips.dispatch(id, principal == null ? "system" : principal.getName(),
+                request == null ? null : request.remarks());
     }
 
     @PostMapping("/trips/{id}/start")
@@ -135,5 +137,8 @@ class TripController {
     }
 
     record CompleteRequest(Double endOdometerKm, String completionRemarks) {
+    }
+
+    record DispatchRequest(String remarks) {
     }
 }

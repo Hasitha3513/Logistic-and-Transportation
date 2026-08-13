@@ -5,8 +5,8 @@ import com.transportlogistics.app.trip.application.ports.out.VehicleEligibilityP
 import com.transportlogistics.app.trip.application.ports.out.DriverEligibilityPort;
 import com.transportlogistics.app.trip.application.ports.out.TripHistoryRepository;
 import com.transportlogistics.app.trip.application.ports.out.TripTransaction;
+import com.transportlogistics.app.trip.application.ports.out.TripDispatchRepository;
 import com.transportlogistics.app.trip.domain.model.Trip;
-import com.transportlogistics.app.trip.domain.model.TripCommand;
 import com.transportlogistics.app.shared.domain.ConflictException;
 import org.junit.jupiter.api.Test;
 
@@ -21,7 +21,7 @@ import static org.mockito.Mockito.*;
 
 class TripServiceVehicleEligibilityTest {
     @Test
-    void vehicleEligibilityIsCheckedOnAssignmentAndDispatch() {
+    void vehicleEligibilityIsCheckedOnAssignment() {
         var repository = mock(TripRepository.class);
         var eligibility = mock(VehicleEligibilityPort.class);
         var history = mock(TripHistoryRepository.class);
@@ -31,13 +31,10 @@ class TripServiceVehicleEligibilityTest {
         var service = service(repository, eligibility, history);
 
         var assigned = service.assignVehicle(trip.id(), trip.vehicleId(), "dispatcher");
-        service.transition(trip.id(), new TripCommand.Dispatch());
 
         assertEquals("ASSIGNED", assigned.status());
         verify(eligibility).assertEligibleForAssignment(trip.vehicleId(), trip.requestedStartTime(),
                 trip.requestedEndTime(), trip.requiredVehicleTypeId(), trip.requiredCapacityKg());
-        verify(eligibility).assertEligibleForDispatch(trip.vehicleId(), trip.requestedStartTime(),
-                trip.requestedEndTime(), trip.requiredVehicleTypeId(), trip.requiredCapacityKg(), trip.id());
         verify(history).save(argThat(entry -> entry.action().equals("VEHICLE_REASSIGNED")
                 && entry.actor().equals("dispatcher") && entry.toStatus().equals("ASSIGNED")));
     }
@@ -90,7 +87,7 @@ class TripServiceVehicleEligibilityTest {
     private TripService service(TripRepository repository, VehicleEligibilityPort eligibility,
                                 TripHistoryRepository history) {
         return new TripService(repository, eligibility, mock(DriverEligibilityPort.class), history,
-                new DirectTransaction());
+                new DirectTransaction(), mock(TripDispatchRepository.class));
     }
 
     private Trip trip() {

@@ -5,6 +5,7 @@ import com.transportlogistics.app.trip.application.ports.out.TripRepository;
 import com.transportlogistics.app.trip.application.ports.out.VehicleEligibilityPort;
 import com.transportlogistics.app.trip.application.ports.out.TripHistoryRepository;
 import com.transportlogistics.app.trip.application.ports.out.TripTransaction;
+import com.transportlogistics.app.trip.application.ports.out.TripDispatchRepository;
 import com.transportlogistics.app.trip.domain.model.Trip;
 import com.transportlogistics.app.shared.domain.ConflictException;
 import org.junit.jupiter.api.Test;
@@ -108,6 +109,6 @@ class TripServiceDriverEligibilityTest {
                     public <T> T execute(Supplier<T> operation) {
                         return operation.get();
                     }
-                });
+                }, mock(TripDispatchRepository.class));
     }
 }

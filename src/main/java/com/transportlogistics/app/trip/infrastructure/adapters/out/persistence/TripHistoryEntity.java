@@ -31,6 +31,8 @@ class TripHistoryEntity {
     private UUID vehicleId;
     @Column(name = "driver_id")
     private UUID driverId;
+    @Column(name = "license_class")
+    private String licenseClass;
     @Column(name = "actor", nullable = false)
     private String actor;
     @Column(name = "details")

@@ -8,9 +8,11 @@ import com.transportlogistics.app.trip.application.ports.out.VehicleEligibilityP
 import com.transportlogistics.app.trip.application.ports.out.DriverEligibilityPort;
 import com.transportlogistics.app.trip.application.ports.out.TripHistoryRepository;
 import com.transportlogistics.app.trip.application.ports.out.TripTransaction;
+import com.transportlogistics.app.trip.application.ports.out.TripDispatchRepository;
 import com.transportlogistics.app.trip.domain.model.Trip;
 import com.transportlogistics.app.trip.domain.model.TripCommand;
 import com.transportlogistics.app.trip.domain.model.TripHistoryEntry;
+import com.transportlogistics.app.trip.domain.model.TripDispatchRecord;
 
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -22,15 +24,17 @@ public final class TripService implements TripUseCase {
     private final DriverEligibilityPort driverEligibility;
     private final TripHistoryRepository history;
     private final TripTransaction transactions;
+    private final TripDispatchRepository dispatches;
 
     public TripService(TripRepository r, VehicleEligibilityPort vehicleEligibility,
                        DriverEligibilityPort driverEligibility, TripHistoryRepository history,
-                       TripTransaction transactions) {
+                       TripTransaction transactions, TripDispatchRepository dispatches) {
         repo = r;
         this.vehicleEligibility = vehicleEligibility;
         this.driverEligibility = driverEligibility;
         this.history = history;
         this.transactions = transactions;
+        this.dispatches = dispatches;
     }
 
     public Trip create(Trip t) {
@@ -69,7 +73,7 @@ public final class TripService implements TripUseCase {
                     trip.actualEndTime(), trip.startOdometerKm(), trip.endOdometerKm(), trip.completionRemarks(), now));
             history.save(new TripHistoryEntry(UUID.randomUUID(), trip.id(), trip.status(), assigned.status(),
                     trip.vehicleId() == null ? "VEHICLE_ASSIGNED" : "VEHICLE_REASSIGNED", vehicleId,
-                    null, auditActor, "Vehicle allocation recorded", now));
+                    null, null, auditActor, "Vehicle allocation recorded", now));
             return assigned;
         });
     }
@@ -96,7 +100,8 @@ public final class TripService implements TripUseCase {
                     trip.actualEndTime(), trip.startOdometerKm(), trip.endOdometerKm(), trip.completionRemarks(), now));
             history.save(new TripHistoryEntry(UUID.randomUUID(), trip.id(), trip.status(), assigned.status(),
                     trip.driverId() == null ? "DRIVER_ASSIGNED" : "DRIVER_REASSIGNED", trip.vehicleId(), driverId,
-                    auditActor, "Driver assignment recorded for license class " + requiredLicenseClass.trim(), now));
+                    requiredLicenseClass.trim().toUpperCase(), auditActor,
+                    "Driver assignment recorded for license class " + requiredLicenseClass.trim(), now));
             return assigned;
         });
     }
@@ -109,7 +114,8 @@ public final class TripService implements TripUseCase {
             var unassigned = repo.save(copy(trip, "APPROVED", null, trip.driverId(), trip.actualStartTime(),
                     trip.actualEndTime(), trip.startOdometerKm(), trip.endOdometerKm(), trip.completionRemarks(), now));
             history.save(new TripHistoryEntry(UUID.randomUUID(), trip.id(), trip.status(), unassigned.status(),
-                    "VEHICLE_UNASSIGNED", trip.vehicleId(), null, "system", "Vehicle allocation removed", now));
+                    "VEHICLE_UNASSIGNED", trip.vehicleId(), null, null, "system",
+                    "Vehicle allocation removed", now));
             return unassigned;
         });
     }
@@ -123,7 +129,7 @@ public final class TripService implements TripUseCase {
             var unassigned = repo.save(copy(trip, nextStatus, trip.vehicleId(), null, trip.actualStartTime(),
                     trip.actualEndTime(), trip.startOdometerKm(), trip.endOdometerKm(), trip.completionRemarks(), now));
             history.save(new TripHistoryEntry(UUID.randomUUID(), trip.id(), trip.status(), unassigned.status(),
-                    "DRIVER_UNASSIGNED", trip.vehicleId(), trip.driverId(), "system",
+                    "DRIVER_UNASSIGNED", trip.vehicleId(), trip.driverId(), null, "system",
                     "Driver assignment removed", now));
             return unassigned;
         });
@@ -139,11 +145,7 @@ public final class TripService implements TripUseCase {
                     repo.save(copy(t, "APPROVED", t.vehicleId(), t.driverId(), t.actualStartTime(), t.actualEndTime(), t.startOdometerKm(), t.endOdometerKm(), t.completionRemarks()));
             case TripCommand.Reject x ->
                     repo.save(copy(t, "REJECTED", t.vehicleId(), t.driverId(), t.actualStartTime(), t.actualEndTime(), t.startOdometerKm(), t.endOdometerKm(), x.reason()));
-            case TripCommand.Dispatch x -> {
-                if (t.vehicleId() != null) vehicleEligibility.assertEligibleForDispatch(t.vehicleId(), t.requestedStartTime(),
-                        t.requestedEndTime(), t.requiredVehicleTypeId(), t.requiredCapacityKg(), t.id());
-                yield repo.save(copy(t, "DISPATCHED", t.vehicleId(), t.driverId(), t.actualStartTime(), t.actualEndTime(), t.startOdometerKm(), t.endOdometerKm(), t.completionRemarks()));
-            }
+            case TripCommand.Dispatch x -> dispatch(id, "system", null);
             case TripCommand.Start x ->
                     repo.save(copy(t, "IN_PROGRESS", t.vehicleId(), t.driverId(), now, t.actualEndTime(), x.odometerKm(), t.endOdometerKm(), t.completionRemarks()));
             case TripCommand.Complete x ->
@@ -155,6 +157,41 @@ public final class TripService implements TripUseCase {
         };
     }
 
+    public Trip dispatch(UUID id, String actor, String remarks) {
+        var dispatchedBy = actor == null || actor.isBlank() ? "system" : actor.trim();
+        return transactions.execute(() -> {
+            var trip = get(id);
+            requireDispatchState(trip);
+            var licenseClass = history.findCurrentDriverLicenseClass(trip.id(), trip.driverId())
+                    .orElseThrow(() -> new IllegalArgumentException(
+                            "Assigned driver license class is required for dispatch"));
+
+            vehicleEligibility.assertEligibleForAssignment(trip.vehicleId(), trip.requestedStartTime(),
+                    trip.requestedEndTime(), trip.requiredVehicleTypeId(), trip.requiredCapacityKg());
+            if (repo.hasOverlappingVehicleAllocation(trip.vehicleId(), trip.requestedStartTime(),
+                    trip.requestedEndTime(), trip.id())) {
+                throw new ConflictException("Vehicle has a conflicting allocation");
+            }
+
+            driverEligibility.assertEligible(trip.driverId(), licenseClass, trip.requestedStartTime(),
+                    trip.requestedEndTime());
+            if (repo.hasOverlappingDriverAssignment(trip.driverId(), trip.requestedStartTime(),
+                    trip.requestedEndTime(), trip.id())) {
+                throw new ConflictException("Driver has a conflicting assignment");
+            }
+
+            var now = OffsetDateTime.now();
+            var dispatched = repo.save(copy(trip, "DISPATCHED", trip.vehicleId(), trip.driverId(),
+                    trip.actualStartTime(), trip.actualEndTime(), trip.startOdometerKm(), trip.endOdometerKm(),
+                    trip.completionRemarks(), now));
+            dispatches.save(new TripDispatchRecord(trip.id(), now, dispatchedBy, remarks));
+            history.save(new TripHistoryEntry(UUID.randomUUID(), trip.id(), trip.status(), dispatched.status(),
+                    "TRIP_DISPATCHED", trip.vehicleId(), trip.driverId(), licenseClass, dispatchedBy,
+                    remarks == null || remarks.isBlank() ? "Trip dispatched" : remarks.trim(), now));
+            return dispatched;
+        });
+    }
+
     public List<TripHistoryEntry> history(UUID id) {
         get(id);
         return history.findByTripId(id);
@@ -163,6 +200,18 @@ public final class TripService implements TripUseCase {
     private void requireAssignmentState(Trip trip) {
         if (!"APPROVED".equals(trip.status()) && !"ASSIGNED".equals(trip.status())) {
             throw new IllegalArgumentException("Resource assignment requires an APPROVED or ASSIGNED trip");
+        }
+    }
+
+    private void requireDispatchState(Trip trip) {
+        if (!"ASSIGNED".equals(trip.status())) {
+            throw new IllegalArgumentException("Dispatch requires an ASSIGNED trip");
+        }
+        if (trip.vehicleId() == null) {
+            throw new IllegalArgumentException("An assigned vehicle is required for dispatch");
+        }
+        if (trip.driverId() == null) {
+            throw new IllegalArgumentException("An assigned driver is required for dispatch");
         }
     }
 
