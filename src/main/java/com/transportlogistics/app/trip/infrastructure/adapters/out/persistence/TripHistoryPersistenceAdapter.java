@@ -25,6 +25,7 @@ class TripHistoryPersistenceAdapter implements TripHistoryRepository {
         entity.setAction(entry.action());
         entity.setVehicleId(entry.vehicleId());
         entity.setDriverId(entry.driverId());
+        entity.setLicenseClass(entry.licenseClass());
         entity.setActor(entry.actor());
         entity.setDetails(entry.details());
         entity.setOccurredAt(entry.occurredAt());
@@ -36,9 +37,16 @@ class TripHistoryPersistenceAdapter implements TripHistoryRepository {
         return repository.findByTripIdOrderByOccurredAtAsc(tripId).stream().map(this::map).toList();
     }
 
+    @Override
+    public java.util.Optional<String> findCurrentDriverLicenseClass(UUID tripId, UUID driverId) {
+        return repository.findFirstByTripIdAndDriverIdAndLicenseClassIsNotNullAndActionInOrderByOccurredAtDesc(
+                tripId, driverId, List.of("DRIVER_ASSIGNED", "DRIVER_REASSIGNED"))
+                .map(TripHistoryEntity::getLicenseClass);
+    }
+
     private TripHistoryEntry map(TripHistoryEntity entity) {
         return new TripHistoryEntry(entity.getId(), entity.getTripId(), entity.getFromStatus(),
-                entity.getToStatus(), entity.getAction(), entity.getVehicleId(), entity.getDriverId(), entity.getActor(),
-                entity.getDetails(), entity.getOccurredAt());
+                entity.getToStatus(), entity.getAction(), entity.getVehicleId(), entity.getDriverId(),
+                entity.getLicenseClass(), entity.getActor(), entity.getDetails(), entity.getOccurredAt());
     }
 }

@@ -18,6 +18,8 @@ public interface TripUseCase {
 
     Trip transition(UUID id, TripCommand cmd);
 
+    Trip dispatch(UUID id, String actor, String remarks);
+
     Trip assignVehicle(UUID id, UUID vehicleId, String actor);
 
     Trip assignDriver(UUID id, UUID driverId, String requiredLicenseClass, String actor);
