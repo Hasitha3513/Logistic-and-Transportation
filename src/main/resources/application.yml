@@ -1,6 +1,8 @@
 spring:
   application:
     name: transport-logistics-modulith
+  autoconfigure:
+    exclude: org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration
   profiles:
     default: h2
   threads:
@@ -24,3 +26,8 @@ management:
 springdoc:
   swagger-ui:
     path: /swagger-ui.html
+security:
+  jwt:
+    issuer: transport-logistics-modulith
+    access-token-ttl: PT15M
+    refresh-token-ttl: P30D
