@@ -8,7 +8,6 @@ import com.transportlogistics.app.trip.application.ports.out.DriverEligibilityPo
 import com.transportlogistics.app.trip.domain.model.Trip;
 import com.transportlogistics.app.trip.domain.model.TripCommand;
 
-import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -50,7 +49,8 @@ public final class TripService implements TripUseCase {
 
     public Trip assignDriver(UUID id, UUID d, String requiredLicenseClass) {
         var t = get(id);
-        driverEligibility.assertEligible(d, requiredLicenseClass, t.requestedStartTime().toLocalDate());
+        driverEligibility.assertEligible(d, requiredLicenseClass, t.requestedStartTime(), t.requestedEndTime(),
+                t.id());
         return repo.save(copy(t, t.status(), t.vehicleId(), d, t.actualStartTime(), t.actualEndTime(), t.startOdometerKm(), t.endOdometerKm(), t.completionRemarks()));
     }
 

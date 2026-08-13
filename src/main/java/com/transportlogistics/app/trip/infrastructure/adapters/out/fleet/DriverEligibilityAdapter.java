@@ -4,7 +4,7 @@ import com.transportlogistics.app.fleet.DriverAssignmentEligibility;
 import com.transportlogistics.app.trip.application.ports.out.DriverEligibilityPort;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Component
@@ -16,7 +16,8 @@ class DriverEligibilityAdapter implements DriverEligibilityPort {
     }
 
     @Override
-    public void assertEligible(UUID driverId, String requiredLicenseClass, LocalDate onDate) {
-        fleet.assertEligible(driverId, requiredLicenseClass, onDate);
+    public void assertEligible(UUID driverId, String requiredLicenseClass, OffsetDateTime from, OffsetDateTime to,
+                               UUID excludeTripId) {
+        fleet.assertEligible(driverId, requiredLicenseClass, from, to, excludeTripId);
     }
 }

@@ -28,4 +28,26 @@ interface TripJpaRepository extends JpaRepository<TripEntity, UUID> {
             """)
     long countOverlapsExcluding(@Param("vehicleId") UUID vehicleId, @Param("from") OffsetDateTime from,
                                 @Param("to") OffsetDateTime to, @Param("excludeTripId") UUID excludeTripId);
+
+    @Query("""
+            select count(t) from TripEntity t
+            where t.driverId = :driverId
+              and t.status not in ('CANCELLED', 'COMPLETED', 'CLOSED', 'REJECTED')
+              and t.requestedStartTime < :to
+              and t.requestedEndTime > :from
+            """)
+    long countDriverOverlaps(@Param("driverId") UUID driverId, @Param("from") OffsetDateTime from,
+                             @Param("to") OffsetDateTime to);
+
+    @Query("""
+            select count(t) from TripEntity t
+            where t.driverId = :driverId
+              and t.id <> :excludeTripId
+              and t.status not in ('CANCELLED', 'COMPLETED', 'CLOSED', 'REJECTED')
+              and t.requestedStartTime < :to
+              and t.requestedEndTime > :from
+            """)
+    long countDriverOverlapsExcluding(@Param("driverId") UUID driverId, @Param("from") OffsetDateTime from,
+                                      @Param("to") OffsetDateTime to,
+                                      @Param("excludeTripId") UUID excludeTripId);
 }

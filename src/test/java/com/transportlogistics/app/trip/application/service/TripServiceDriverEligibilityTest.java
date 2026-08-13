@@ -25,7 +25,8 @@ class TripServiceDriverEligibilityTest {
         var service = new TripService(repository, mock(VehicleEligibilityPort.class), eligibility);
 
         var assigned = service.assignDriver(trip.id(), trip.driverId(), "B");
-        verify(eligibility).assertEligible(trip.driverId(), "B", trip.requestedStartTime().toLocalDate());
+        verify(eligibility).assertEligible(trip.driverId(), "B", trip.requestedStartTime(),
+                trip.requestedEndTime(), trip.id());
         assertEquals(trip.driverId(), assigned.driverId());
 
         reset(eligibility);
@@ -40,7 +41,7 @@ class TripServiceDriverEligibilityTest {
         var trip = trip();
         when(repository.findById(trip.id())).thenReturn(Optional.of(trip));
         doThrow(new IllegalArgumentException("REQUIRED_LICENSE_CLASS_MISSING_OR_EXPIRED"))
-                .when(eligibility).assertEligible(eq(trip.driverId()), eq("C"), any());
+                .when(eligibility).assertEligible(eq(trip.driverId()), eq("C"), any(), any(), eq(trip.id()));
         var service = new TripService(repository, mock(VehicleEligibilityPort.class), eligibility);
 
         assertThrows(IllegalArgumentException.class,

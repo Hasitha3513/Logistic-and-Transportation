@@ -38,4 +38,9 @@ public record DriverLicense(UUID id, UUID driverId, String licenseNumber, String
                 && (requiredClass == null || requiredClass.isBlank()
                 || licenseClass.equalsIgnoreCase(requiredClass.trim()));
     }
+
+    public boolean isValidForPeriod(String requiredClass, LocalDate from, LocalDate to) {
+        return active && !issueDate.isAfter(from) && !expiryDate.isBefore(to)
+                && licenseClass.equalsIgnoreCase(requiredClass.trim());
+    }
 }
