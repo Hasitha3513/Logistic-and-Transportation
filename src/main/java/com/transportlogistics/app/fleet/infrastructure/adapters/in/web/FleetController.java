@@ -4,10 +4,13 @@ import com.transportlogistics.app.fleet.application.ports.in.DriverUseCase;
 import com.transportlogistics.app.fleet.application.ports.in.VehicleCategoryUseCase;
 import com.transportlogistics.app.fleet.application.ports.in.VehicleTypeUseCase;
 import com.transportlogistics.app.fleet.application.ports.in.VehicleUseCase;
+import com.transportlogistics.app.fleet.application.ports.in.VehicleDocumentUseCase;
 import com.transportlogistics.app.fleet.domain.model.Driver;
 import com.transportlogistics.app.fleet.domain.model.Vehicle;
 import com.transportlogistics.app.fleet.domain.model.VehicleCategory;
 import com.transportlogistics.app.fleet.domain.model.VehicleType;
+import com.transportlogistics.app.fleet.domain.model.VehicleDocument;
+import com.transportlogistics.app.fleet.domain.model.VehicleDocumentStatus;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -15,6 +18,8 @@ import jakarta.validation.constraints.NotNull;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
+import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
@@ -26,12 +31,15 @@ public class FleetController {
     private final VehicleUseCase vehicles;
     private final VehicleCategoryUseCase categories;
     private final VehicleTypeUseCase types;
+    private final VehicleDocumentUseCase documents;
 
-    FleetController(DriverUseCase d, VehicleUseCase v, VehicleCategoryUseCase c, VehicleTypeUseCase t) {
+    FleetController(DriverUseCase d, VehicleUseCase v, VehicleCategoryUseCase c, VehicleTypeUseCase t,
+                    VehicleDocumentUseCase documents) {
         drivers = d;
         vehicles = v;
         categories = c;
         types = t;
+        this.documents = documents;
     }
 
     @PostMapping("/drivers")
@@ -119,33 +127,40 @@ public class FleetController {
 
     @GetMapping("/vehicles/{id}/availability")
     AvailabilityResponse vehicleAvailability(@PathVariable UUID id, @RequestParam OffsetDateTime from, @RequestParam OffsetDateTime to, @RequestParam(required = false) UUID excludeTripId) {
-        var v = vehicles.get(id);
-        return new AvailabilityResponse(v.active() && "AVAILABLE".equalsIgnoreCase(v.operationalStatus()), v.active() ? "STATUS_CHECK" : "INACTIVE");
+        var availability = vehicles.availability(id, from.toLocalDate());
+        return new AvailabilityResponse(availability.available(), availability.reason());
     }
 
     @GetMapping("/vehicles/available")
     List<Vehicle> availableVehicles(@RequestParam OffsetDateTime from, @RequestParam OffsetDateTime to, @RequestParam(required = false) UUID vehicleTypeId, @RequestParam(required = false) UUID categoryId, @RequestParam(required = false) Double minimumCapacityKg) {
-        return vehicles.list().stream().filter(v -> v.active() && "AVAILABLE".equalsIgnoreCase(v.operationalStatus())).filter(v -> vehicleTypeId == null || vehicleTypeId.equals(v.typeId())).filter(v -> categoryId == null || categoryId.equals(v.categoryId())).filter(v -> minimumCapacityKg == null || (v.capacityKg() != null && v.capacityKg() >= minimumCapacityKg)).toList();
+        return vehicles.list().stream().filter(v -> vehicles.availability(v.id(), from.toLocalDate()).available()).filter(v -> vehicleTypeId == null || vehicleTypeId.equals(v.typeId())).filter(v -> categoryId == null || categoryId.equals(v.categoryId())).filter(v -> minimumCapacityKg == null || (v.capacityKg() != null && v.capacityKg() >= minimumCapacityKg)).toList();
     }
 
     @GetMapping("/vehicles/{vehicleId}/documents")
-    List<DocumentResponse> docs(@PathVariable UUID vehicleId) {
-        return List.of();
+    List<VehicleDocument> docs(@PathVariable UUID vehicleId) {
+        return documents.list(vehicleId);
     }
 
     @PostMapping("/vehicles/{vehicleId}/documents")
-    ResponseEntity<DocumentResponse> createDoc(@PathVariable UUID vehicleId, @Valid @RequestBody DocumentRequest r) {
-        return ResponseEntity.status(201).body(new DocumentResponse(UUID.randomUUID(), vehicleId, r.documentType(), r.documentNumber()));
+    ResponseEntity<VehicleDocument> createDoc(@PathVariable UUID vehicleId, @Valid @RequestBody DocumentRequest r,
+                                               Principal principal) {
+        var command = new VehicleDocumentUseCase.CreateCommand(r.documentType(), r.documentNumber(), r.issueDate(),
+                r.expiryDate(), r.fileReference(), Boolean.TRUE.equals(r.mandatoryForDispatch()), r.status(), r.active());
+        return ResponseEntity.status(201).body(documents.create(vehicleId, command, actor(principal)));
     }
 
-    @PutMapping("/vehicles/{vehicleId}/documents/{documentId}")
-    DocumentResponse updateDoc(@PathVariable UUID vehicleId, @PathVariable UUID documentId, @Valid @RequestBody DocumentRequest r) {
-        return new DocumentResponse(documentId, vehicleId, r.documentType(), r.documentNumber());
+    @PatchMapping("/vehicles/{vehicleId}/documents/{documentId}")
+    VehicleDocument updateDoc(@PathVariable UUID vehicleId, @PathVariable UUID documentId,
+                              @RequestBody DocumentPatchRequest r, Principal principal) {
+        var command = new VehicleDocumentUseCase.UpdateCommand(r.documentType(), r.documentNumber(), r.issueDate(),
+                r.expiryDate(), r.fileReference(), r.mandatoryForDispatch(), r.status(), r.active());
+        return documents.update(vehicleId, documentId, command, actor(principal));
     }
 
     @DeleteMapping("/vehicles/{vehicleId}/documents/{documentId}")
-    MessageResponse deleteDoc(@PathVariable UUID vehicleId, @PathVariable UUID documentId) {
-        return new MessageResponse("Vehicle document deleted");
+    ResponseEntity<Void> deleteDoc(@PathVariable UUID vehicleId, @PathVariable UUID documentId, Principal principal) {
+        documents.delete(vehicleId, documentId, actor(principal));
+        return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/vehicle-categories")
@@ -227,9 +242,17 @@ public class FleetController {
     record MessageResponse(String message) {
     }
 
-    record DocumentRequest(@NotBlank String documentType, @NotBlank String documentNumber) {
+    private String actor(Principal principal) {
+        return principal == null ? "system" : principal.getName();
     }
 
-    record DocumentResponse(UUID id, UUID vehicleId, String documentType, String documentNumber) {
+    record DocumentRequest(@NotBlank String documentType, @NotBlank String documentNumber, LocalDate issueDate,
+                           LocalDate expiryDate, String fileReference, Boolean mandatoryForDispatch,
+                           VehicleDocumentStatus status, Boolean active) {
+    }
+
+    record DocumentPatchRequest(String documentType, String documentNumber, LocalDate issueDate,
+                                LocalDate expiryDate, String fileReference, Boolean mandatoryForDispatch,
+                                VehicleDocumentStatus status, Boolean active) {
     }
 }
