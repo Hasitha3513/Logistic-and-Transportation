@@ -62,6 +62,26 @@ npm run dev
 
 The development frontend uses `/api`, proxied by Vite to `http://localhost:8080`.
 
+## Docker Compose
+
+The Compose stack runs PostgreSQL, the backend, and the production-built frontend behind an Nginx `/api` reverse proxy.
+
+```powershell
+Copy-Item .env.docker.example .env
+# Edit .env and fill POSTGRES_PASSWORD, JWT_SECRET, and APP_ADMIN_PASSWORD.
+docker compose up --build -d
+docker compose ps
+```
+
+Open `http://localhost:5173` and sign in with `APP_ADMIN_USERNAME` and `APP_ADMIN_PASSWORD` from `.env`. The administrator bootstrap is opt-in and restricted to the explicit `docker` profile. Flyway creates the PostgreSQL schema automatically; the database is persisted in the `postgres-data` volume.
+
+```powershell
+docker compose logs -f backend frontend
+docker compose down
+```
+
+`docker compose down` preserves PostgreSQL data. Use `docker compose down --volumes` only when you intentionally want to delete the local database and start again from an empty schema.
+
 ## URLs
 
 - Backend: `http://localhost:8080`
