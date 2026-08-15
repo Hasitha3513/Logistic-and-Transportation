@@ -1,5 +1,6 @@
 package com.transportlogistics.app.identity.infrastructure.config;
 
+import com.transportlogistics.app.identity.AuthenticatedUserLookup;
 import com.transportlogistics.app.identity.application.ports.in.IdentityUseCase;
 import com.transportlogistics.app.identity.application.ports.out.IdentityRepository;
 import com.transportlogistics.app.identity.application.service.IdentityService;
@@ -19,6 +20,12 @@ class IdentityConfig {
                                     JwtProperties properties, Clock clock) {
         return new IdentityService(repository, passwords, accessTokens, refreshTokens,
                 properties.refreshTokenTtl(), clock);
+    }
+
+    @Bean
+    AuthenticatedUserLookup authenticatedUserLookup(IdentityUseCase identities) {
+        return username -> identities.findByUsername(username)
+                .map(user -> new AuthenticatedUserLookup.AuthenticatedUser(user.id(), user.username()));
     }
 
     @Bean

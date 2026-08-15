@@ -39,7 +39,7 @@ class IdentityPersistenceAdapter implements IdentityRepository {
         e.setActive(v.active());
         e.setCreatedAt(v.createdAt());
         e.setUpdatedAt(v.updatedAt());
-        return user(users.save(e));
+        return user(users.saveAndFlush(e));
     }
 
     @Transactional
@@ -68,7 +68,7 @@ class IdentityPersistenceAdapter implements IdentityRepository {
         e.setName(v.name());
         e.setDescription(v.description());
         e.setActive(v.active());
-        var saved = roles.save(e);
+        var saved = roles.saveAndFlush(e);
         replaceRolePermissions(saved.getId(), v.permissions());
         return role(saved);
     }

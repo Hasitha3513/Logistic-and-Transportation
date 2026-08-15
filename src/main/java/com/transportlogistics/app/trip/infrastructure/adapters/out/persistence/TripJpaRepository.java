@@ -1,13 +1,20 @@
 package com.transportlogistics.app.trip.infrastructure.adapters.out.persistence;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+
+import jakarta.persistence.LockModeType;
 
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
 interface TripJpaRepository extends JpaRepository<TripEntity, UUID> {
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select t from TripEntity t where t.id = :id")
+    java.util.Optional<TripEntity> findByIdForUpdate(@Param("id") UUID id);
+
     @Query("""
             select count(t) from TripEntity t
             where t.vehicleId = :vehicleId

@@ -10,6 +10,7 @@ import com.transportlogistics.app.trip.domain.model.Trip;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -19,6 +20,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static com.transportlogistics.app.support.ReferenceFixtures.*;
 
 @SpringBootTest
 class ConcurrentVehicleAssignmentIntegrationTest {
@@ -26,14 +28,18 @@ class ConcurrentVehicleAssignmentIntegrationTest {
     @Autowired TripRepository tripRepository;
     @Autowired VehicleRepository vehicles;
     @Autowired TripHistoryRepository history;
+    @Autowired JdbcTemplate jdbc;
 
     @Test
     void concurrentOverlappingAssignmentsAllowExactlyOneAllocation() throws Exception {
         var vehicle = vehicle();
+        vehicleHierarchy(jdbc, vehicle);
         vehicles.save(vehicle);
         var start = OffsetDateTime.parse("2026-06-01T08:00:00Z");
         var first = trip("TRIP-CON-A-" + suffix(), start, start.plusHours(3));
         var second = trip("TRIP-CON-B-" + suffix(), start.plusHours(1), start.plusHours(4));
+        tripLocations(jdbc, first);
+        tripLocations(jdbc, second);
         tripRepository.save(first);
         tripRepository.save(second);
 
@@ -53,7 +59,8 @@ class ConcurrentVehicleAssignmentIntegrationTest {
         var persisted = List.of(tripRepository.findById(first.id()).orElseThrow(),
                 tripRepository.findById(second.id()).orElseThrow());
         assertEquals(1, persisted.stream().filter(t -> vehicle.id().equals(t.vehicleId())).count());
-        assertEquals(1, persisted.stream().filter(t -> "ASSIGNED".equals(t.status())).count());
+        assertEquals(0, persisted.stream().filter(t -> "ASSIGNED".equals(t.status())).count());
+        assertEquals(2, persisted.stream().filter(t -> "APPROVED".equals(t.status())).count());
         assertEquals(1, history.findByTripId(first.id()).size() + history.findByTripId(second.id()).size());
     }
 

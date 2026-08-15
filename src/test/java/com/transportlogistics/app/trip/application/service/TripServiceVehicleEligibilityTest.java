@@ -32,11 +32,11 @@ class TripServiceVehicleEligibilityTest {
 
         var assigned = service.assignVehicle(trip.id(), trip.vehicleId(), "dispatcher");
 
-        assertEquals("ASSIGNED", assigned.status());
+        assertEquals("APPROVED", assigned.status());
         verify(eligibility).assertEligibleForAssignment(trip.vehicleId(), trip.requestedStartTime(),
                 trip.requestedEndTime(), trip.requiredVehicleTypeId(), trip.requiredCapacityKg());
         verify(history).save(argThat(entry -> entry.action().equals("VEHICLE_REASSIGNED")
-                && entry.actor().equals("dispatcher") && entry.toStatus().equals("ASSIGNED")));
+                && entry.actor().equals("dispatcher") && entry.toStatus().equals("APPROVED")));
     }
 
     @Test
@@ -79,7 +79,7 @@ class TripServiceVehicleEligibilityTest {
         var eligibility = mock(VehicleEligibilityPort.class);
         var service = service(repository, eligibility, mock(TripHistoryRepository.class));
 
-        assertThrows(IllegalArgumentException.class,
+        assertThrows(ConflictException.class,
                 () -> service.assignVehicle(trip.id(), trip.vehicleId(), "dispatcher"));
         verifyNoInteractions(eligibility);
     }

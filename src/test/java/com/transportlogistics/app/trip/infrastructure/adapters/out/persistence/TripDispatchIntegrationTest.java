@@ -11,12 +11,14 @@ import com.transportlogistics.app.trip.domain.model.Trip;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static com.transportlogistics.app.support.ReferenceFixtures.*;
 
 @SpringBootTest
 class TripDispatchIntegrationTest {
@@ -26,15 +28,18 @@ class TripDispatchIntegrationTest {
     @Autowired VehicleRepository vehicles;
     @Autowired DriverRepository drivers;
     @Autowired DriverLicenseRepository licenses;
+    @Autowired JdbcTemplate jdbc;
 
     @Test
     void persistsDispatchMetadataAfterFreshVehicleAndDriverValidation() {
         var vehicle = vehicle();
         var driver = driver();
+        vehicleHierarchy(jdbc, vehicle);
         vehicles.save(vehicle);
         drivers.save(driver);
         licenses.save(license(driver.id()));
         var trip = trip();
+        tripLocations(jdbc, trip);
         tripRepository.save(trip);
 
         trips.assignVehicle(trip.id(), vehicle.id(), "allocator");

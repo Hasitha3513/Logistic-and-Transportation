@@ -34,7 +34,7 @@ class TripServiceDriverEligibilityTest {
         verify(eligibility).assertEligible(trip.driverId(), "B", trip.requestedStartTime(),
                 trip.requestedEndTime());
         assertEquals(trip.driverId(), assigned.driverId());
-        assertEquals("ASSIGNED", assigned.status());
+        assertEquals("APPROVED", assigned.status());
         verify(history).save(argThat(entry -> entry.action().equals("DRIVER_REASSIGNED")
                 && entry.driverId().equals(trip.driverId()) && entry.actor().equals("dispatcher")));
 
@@ -83,7 +83,7 @@ class TripServiceDriverEligibilityTest {
         var eligibility = mock(DriverEligibilityPort.class);
         var service = service(repository, eligibility, mock(TripHistoryRepository.class));
 
-        assertThrows(IllegalArgumentException.class,
+        assertThrows(ConflictException.class,
                 () -> service.assignDriver(submitted.id(), submitted.driverId(), "B", "dispatcher"));
         assertThrows(IllegalArgumentException.class,
                 () -> service.assignDriver(submitted.id(), submitted.driverId(), " ", "dispatcher"));

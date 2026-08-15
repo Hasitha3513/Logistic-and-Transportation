@@ -26,9 +26,11 @@ class TripController {
 
     @PostMapping("/trips")
     ResponseEntity<Trip> create(@Valid @RequestBody TripRequest r) {
-        var now = OffsetDateTime.now();
-        var t = new Trip(UUID.randomUUID(), "TRIP-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase(), r.customerId(), r.departmentId(), r.projectId(), r.routeId(), r.priority() == null ? "NORMAL" : r.priority(), "DRAFT", r.originLocationId(), r.destinationLocationId(), r.requestedStartTime(), r.requestedEndTime(), r.requiredVehicleTypeId(), r.requiredCapacityKg(), r.cargoDescription(), r.passengerCount(), r.customerInstructions(), r.notes(), null, null, null, null, null, null, null, now, now);
-        return ResponseEntity.status(201).body(trips.create(t));
+        var command = new TripUseCase.CreateCommand(r.customerId(), r.departmentId(), r.projectId(), r.routeId(),
+                r.priority(), r.originLocationId(), r.destinationLocationId(), r.requestedStartTime(),
+                r.requestedEndTime(), r.requiredVehicleTypeId(), r.requiredCapacityKg(), r.cargoDescription(),
+                r.passengerCount(), r.customerInstructions(), r.notes());
+        return ResponseEntity.status(201).body(trips.create(command));
     }
 
     @GetMapping("/trips")
@@ -44,22 +46,23 @@ class TripController {
     @PutMapping("/trips/{id}")
     Trip update(@PathVariable UUID id, @Valid @RequestBody TripRequest r) {
         var old = trips.get(id);
-        return trips.update(id, new Trip(id, old.tripNumber(), r.customerId(), r.departmentId(), r.projectId(), r.routeId(), r.priority() == null ? old.priority() : r.priority(), old.status(), r.originLocationId(), r.destinationLocationId(), r.requestedStartTime(), r.requestedEndTime(), r.requiredVehicleTypeId(), r.requiredCapacityKg(), r.cargoDescription(), r.passengerCount(), r.customerInstructions(), r.notes(), old.vehicleId(), old.driverId(), old.actualStartTime(), old.actualEndTime(), old.startOdometerKm(), old.endOdometerKm(), old.completionRemarks(), old.createdAt(), OffsetDateTime.now()));
+        return trips.update(id, new Trip(id, old.tripNumber(), r.customerId(), r.departmentId(), r.projectId(), r.routeId(), r.priority() == null ? old.priority() : r.priority(), old.status(), r.originLocationId(), r.destinationLocationId(), r.requestedStartTime(), r.requestedEndTime(), r.requiredVehicleTypeId(), r.requiredCapacityKg(), r.cargoDescription(), r.passengerCount(), r.customerInstructions(), r.notes(), old.vehicleId(), old.driverId(), old.actualStartTime(), old.actualEndTime(), old.startOdometerKm(), old.endOdometerKm(), old.completionRemarks(), old.createdAt(), old.updatedAt()));
     }
 
     @PostMapping("/trips/{id}/submit")
-    Trip submit(@PathVariable UUID id) {
-        return trips.transition(id, new TripCommand.Submit());
+    Trip submit(@PathVariable UUID id, Principal principal) {
+        return trips.transition(id, new TripCommand.Submit(), actor(principal));
     }
 
     @PostMapping("/trips/{id}/approve")
-    Trip approve(@PathVariable UUID id, @RequestBody(required = false) Map<String, Object> body) {
-        return trips.transition(id, new TripCommand.Approve());
+    Trip approve(@PathVariable UUID id, @RequestBody(required = false) Map<String, Object> body,
+                 Principal principal) {
+        return trips.transition(id, new TripCommand.Approve(), actor(principal));
     }
 
     @PostMapping("/trips/{id}/reject")
-    Trip reject(@PathVariable UUID id, @RequestBody(required = false) ReasonRequest r) {
-        return trips.transition(id, new TripCommand.Reject(r == null ? null : r.reason()));
+    Trip reject(@PathVariable UUID id, @RequestBody(required = false) ReasonRequest r, Principal principal) {
+        return trips.transition(id, new TripCommand.Reject(r == null ? null : r.reason()), actor(principal));
     }
 
     @PostMapping("/trips/{id}/dispatch")
@@ -70,23 +73,24 @@ class TripController {
     }
 
     @PostMapping("/trips/{id}/start")
-    Trip start(@PathVariable UUID id, @RequestBody(required = false) StartRequest r) {
-        return trips.transition(id, new TripCommand.Start(r == null ? null : r.startOdometerKm()));
+    Trip start(@PathVariable UUID id, @RequestBody(required = false) StartRequest r, Principal principal) {
+        return trips.transition(id, new TripCommand.Start(r == null ? null : r.startOdometerKm()), actor(principal));
     }
 
     @PostMapping("/trips/{id}/complete")
-    Trip complete(@PathVariable UUID id, @RequestBody(required = false) CompleteRequest r) {
-        return trips.transition(id, new TripCommand.Complete(r == null ? null : r.endOdometerKm(), r == null ? null : r.completionRemarks()));
+    Trip complete(@PathVariable UUID id, @RequestBody(required = false) CompleteRequest r, Principal principal) {
+        return trips.transition(id, new TripCommand.Complete(r == null ? null : r.endOdometerKm(),
+                r == null ? null : r.completionRemarks()), actor(principal));
     }
 
     @PostMapping("/trips/{id}/close")
-    Trip close(@PathVariable UUID id) {
-        return trips.transition(id, new TripCommand.Close());
+    Trip close(@PathVariable UUID id, Principal principal) {
+        return trips.transition(id, new TripCommand.Close(), actor(principal));
     }
 
     @PostMapping("/trips/{id}/cancel")
-    Trip cancel(@PathVariable UUID id, @RequestBody(required = false) ReasonRequest r) {
-        return trips.transition(id, new TripCommand.Cancel(r == null ? null : r.reason()));
+    Trip cancel(@PathVariable UUID id, @RequestBody(required = false) ReasonRequest r, Principal principal) {
+        return trips.transition(id, new TripCommand.Cancel(r == null ? null : r.reason()), actor(principal));
     }
 
     @PostMapping("/trips/{id}/assign-vehicle")
@@ -96,8 +100,8 @@ class TripController {
     }
 
     @PostMapping("/trips/{id}/unassign-vehicle")
-    Trip unassignVehicle(@PathVariable UUID id) {
-        return trips.unassignVehicle(id);
+    Trip unassignVehicle(@PathVariable UUID id, Principal principal) {
+        return trips.unassignVehicle(id, actor(principal));
     }
 
     @PostMapping("/trips/{id}/assign-driver")
@@ -107,9 +111,15 @@ class TripController {
                 principal == null ? "system" : principal.getName());
     }
 
+    @PostMapping("/trips/{id}/assign-route")
+    Trip assignRoute(@PathVariable UUID id, @Valid @RequestBody RouteAssignmentRequest request,
+                     Principal principal) {
+        return trips.assignRoute(id, request.routeId(), actor(principal));
+    }
+
     @PostMapping("/trips/{id}/unassign-driver")
-    Trip unassignDriver(@PathVariable UUID id) {
-        return trips.unassignDriver(id);
+    Trip unassignDriver(@PathVariable UUID id, Principal principal) {
+        return trips.unassignDriver(id, actor(principal));
     }
 
     @GetMapping("/trips/{id}/status-history")
@@ -130,6 +140,9 @@ class TripController {
     record DriverAssignmentRequest(@NotNull UUID driverId, @NotBlank String requiredLicenseClass) {
     }
 
+    record RouteAssignmentRequest(@NotNull UUID routeId) {
+    }
+
     record ReasonRequest(String reason) {
     }
 
@@ -140,5 +153,9 @@ class TripController {
     }
 
     record DispatchRequest(String remarks) {
+    }
+
+    private String actor(Principal principal) {
+        return principal == null ? null : principal.getName();
     }
 }

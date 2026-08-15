@@ -83,6 +83,65 @@ class DriverAvailabilityServiceTest {
     }
 
     @Test
+    void validLicenseIsNotInvalidatedByDifferentExpiredLicense() {
+        when(licenses.findActiveByDriverId(driverId)).thenReturn(List.of(
+                validLicense("B"),
+                license("B", from.toLocalDate().minusYears(1), from.toLocalDate().minusDays(1))));
+
+        var result = evaluate("B", null);
+
+        assertTrue(result.available());
+        assertTrue(result.reasons().isEmpty());
+    }
+
+    @Test
+    void compatibleExpiredLicenseAndIncompatibleValidLicenseAreIneligible() {
+        when(licenses.findActiveByDriverId(driverId)).thenReturn(List.of(
+                license("B", from.toLocalDate().minusYears(1), from.toLocalDate().minusDays(1)),
+                validLicense("C")));
+
+        var result = evaluate("B", null);
+
+        assertFalse(result.available());
+        assertTrue(result.hasReason(LICENSE_EXPIRED));
+        assertTrue(result.hasReason(REQUIRED_LICENSE_CLASS_MISSING));
+    }
+
+    @Test
+    void multipleValidLicensesAreEligibleWhenOneMatchesRequiredClass() {
+        when(licenses.findActiveByDriverId(driverId)).thenReturn(List.of(
+                validLicense("C"), validLicense("B")));
+
+        var result = evaluate("B", null);
+
+        assertTrue(result.available());
+    }
+
+    @Test
+    void matchingLicenseThatExpiresDuringRequestedPeriodIsIneligible() {
+        to = from.plusDays(2);
+        when(licenses.findActiveByDriverId(driverId)).thenReturn(List.of(
+                license("B", from.toLocalDate().minusYears(1), from.toLocalDate().plusDays(1))));
+
+        var result = evaluate("B", null);
+
+        assertFalse(result.available());
+        assertTrue(result.hasReason(LICENSE_EXPIRED));
+        assertTrue(result.hasReason(REQUIRED_LICENSE_CLASS_MISSING));
+    }
+
+    @Test
+    void nonActiveMatchingLicenseDoesNotInvalidateValidMatchingLicense() {
+        // The current MVP status model represents suspended/revoked-like non-active states as INACTIVE.
+        when(licenses.findActiveByDriverId(driverId)).thenReturn(List.of(
+                inactiveLicense("B"), validLicense("B")));
+
+        var result = evaluate("B", null);
+
+        assertTrue(result.available());
+    }
+
+    @Test
     void rejectsMissingRequiredLicenseClass() {
         var result = evaluate("C", null);
         assertFalse(result.available());
@@ -140,5 +199,12 @@ class DriverAvailabilityServiceTest {
         var now = OffsetDateTime.parse("2026-01-01T00:00:00Z");
         return new DriverLicense(UUID.randomUUID(), driverId, "DL-" + UUID.randomUUID(), licenseClass,
                 issueDate, expiryDate, DriverLicenseStatus.ACTIVE, true, now, now, "tester", "tester");
+    }
+
+    private DriverLicense inactiveLicense(String licenseClass) {
+        var now = OffsetDateTime.parse("2026-01-01T00:00:00Z");
+        return new DriverLicense(UUID.randomUUID(), driverId, "DL-" + UUID.randomUUID(), licenseClass,
+                from.toLocalDate().minusYears(1), to.toLocalDate().plusYears(1), DriverLicenseStatus.INACTIVE,
+                false, now, now, "tester", "tester");
     }
 }

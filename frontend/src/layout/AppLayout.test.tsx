@@ -1,0 +1,116 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { App as AntApp, ConfigProvider } from 'antd';
+import { HttpResponse, http } from 'msw';
+import { MemoryRouter } from 'react-router-dom';
+import App from '../App';
+import { AuthProvider } from '../auth/AuthContext';
+import type { CurrentUser } from '../auth/types';
+import { appTheme } from '../app/theme/theme';
+import { server } from '../test/server';
+
+const operator: CurrentUser = {
+  id: 'd5880745-1a9f-4f7f-bdc8-ff3e257962f1',
+  username: 'alex.operator',
+  email: 'alex@example.com',
+  firstName: 'Alex',
+  lastName: 'Morgan',
+  active: true,
+  roles: ['OPERATIONS'],
+  permissions: ['DASHBOARD_VIEW', 'VEHICLE_VIEW', 'DRIVER_VIEW', 'TRIP_VIEW'],
+};
+
+const administrator: CurrentUser = {
+  ...operator,
+  firstName: 'Local',
+  lastName: 'Administrator',
+  roles: ['LOCAL_MVP_ADMIN'],
+  permissions: [
+    'DASHBOARD_VIEW', 'VEHICLE_VIEW', 'VEHICLE_CREATE', 'VEHICLE_UPDATE',
+    'VEHICLE_STATUS_UPDATE', 'VEHICLE_DOCUMENT_MANAGE',
+  ],
+};
+
+function renderApp(user: CurrentUser = operator, route = '/') {
+  server.use(
+    http.get('*/auth/me', () => HttpResponse.json(user)),
+    http.get('*/dashboard/operations', () => HttpResponse.json({ date: '2026-08-15', status: 'READY' })),
+  );
+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  return render(
+    <ConfigProvider theme={appTheme}>
+      <AntApp>
+        <QueryClientProvider client={queryClient}>
+          <MemoryRouter initialEntries={[route]}>
+            <AuthProvider><App /></AuthProvider>
+          </MemoryRouter>
+        </QueryClientProvider>
+      </AntApp>
+    </ConfigProvider>,
+  );
+}
+
+describe('AppLayout', () => {
+  it('renders the enterprise shell and current user', async () => {
+    renderApp();
+
+    expect(await screen.findByText('TransportOps')).toBeInTheDocument();
+    expect(screen.getByText('Alex Morgan')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Dashboard', level: 2 })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /collapse navigation/i })).toBeInTheDocument();
+  });
+
+  it('shows only navigation authorized by backend permissions', async () => {
+    renderApp();
+
+    await screen.findByText('TransportOps');
+    expect(screen.getByText('Fleet')).toBeInTheDocument();
+    expect(screen.getAllByText('Drivers').length).toBeGreaterThan(0);
+    expect(screen.getByText('Trips')).toBeInTheDocument();
+    expect(screen.queryByText('Routes')).not.toBeInTheDocument();
+    expect(screen.queryByText('Administration')).not.toBeInTheDocument();
+  });
+
+  it('renders route title and breadcrumbs for permitted module pages', async () => {
+    server.use(http.get('*/vehicles', () => HttpResponse.json([])));
+    renderApp(operator, '/fleet/vehicles');
+
+    expect(await screen.findByRole('heading', { name: 'Vehicles', level: 2 })).toBeInTheDocument();
+    expect(screen.getByText('Vehicle registry')).toBeInTheDocument();
+    await waitFor(() => expect(screen.getAllByText('Fleet').length).toBeGreaterThan(0));
+  });
+
+  it('shows the signed-in actor roles and business permissions', async () => {
+    const user = userEvent.setup();
+    renderApp(administrator);
+
+    await user.click(await screen.findByRole('button', { name: /Local Administrator/i }));
+    await user.click(await screen.findByText('Access & permissions'));
+
+    expect(await screen.findByText('LOCAL MVP ADMIN')).toBeInTheDocument();
+    expect(screen.getByText('VEHICLE DOCUMENT MANAGE')).toBeInTheDocument();
+    expect(screen.getByText('Backend authorization remains authoritative')).toBeInTheDocument();
+  });
+
+  it('opens complete vehicle and compliance details for an authorized administrator', async () => {
+    const user = userEvent.setup();
+    const vehicle = {
+      id: '32000000-0000-0000-0000-000000000001', registrationNumber: 'WP-CAB-1201',
+      manufacturer: 'Isuzu', model: 'NPR', capacityKg: 5500, operationalStatus: 'AVAILABLE', active: true,
+    };
+    server.use(
+      http.get('*/vehicles', () => HttpResponse.json([vehicle])),
+      http.get(`*/vehicles/${vehicle.id}`, () => HttpResponse.json(vehicle)),
+      http.get(`*/vehicles/${vehicle.id}/documents`, () => HttpResponse.json([{ id: 'doc-1', documentNumber: 'INS-WP-1201', status: 'ACTIVE' }])),
+    );
+    renderApp(administrator, '/fleet/vehicles');
+
+    expect(await screen.findByText('Full management access')).toBeInTheDocument();
+    await user.click(await screen.findByRole('button', { name: /view details/i }));
+
+    expect(await screen.findByText('Vehicle registry details')).toBeInTheDocument();
+    expect(screen.getByText('INS-WP-1201')).toBeInTheDocument();
+    expect(screen.getByText('Vehicle documents')).toBeInTheDocument();
+  });
+});

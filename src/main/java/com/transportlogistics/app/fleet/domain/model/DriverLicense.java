@@ -40,7 +40,17 @@ public record DriverLicense(UUID id, UUID driverId, String licenseNumber, String
     }
 
     public boolean isValidForPeriod(String requiredClass, LocalDate from, LocalDate to) {
-        return active && !issueDate.isAfter(from) && !expiryDate.isBefore(to)
-                && licenseClass.equalsIgnoreCase(requiredClass.trim());
+        return isActiveForAssignment()
+                && !issueDate.isAfter(from) && !expiryDate.isBefore(to)
+                && isCompatibleWith(requiredClass);
+    }
+
+    public boolean isActiveForAssignment() {
+        return active && status == DriverLicenseStatus.ACTIVE;
+    }
+
+    public boolean isCompatibleWith(String requiredClass) {
+        return requiredClass == null || requiredClass.isBlank()
+                || licenseClass.equalsIgnoreCase(requiredClass.trim());
     }
 }

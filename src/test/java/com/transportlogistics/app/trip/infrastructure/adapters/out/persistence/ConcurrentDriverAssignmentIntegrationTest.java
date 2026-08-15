@@ -13,6 +13,7 @@ import com.transportlogistics.app.trip.domain.model.Trip;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
@@ -23,6 +24,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static com.transportlogistics.app.support.ReferenceFixtures.tripLocations;
 
 @SpringBootTest
 class ConcurrentDriverAssignmentIntegrationTest {
@@ -31,6 +33,7 @@ class ConcurrentDriverAssignmentIntegrationTest {
     @Autowired DriverRepository drivers;
     @Autowired DriverLicenseRepository licenses;
     @Autowired TripHistoryRepository history;
+    @Autowired JdbcTemplate jdbc;
 
     @Test
     void concurrentOverlappingAssignmentsAllowExactlyOneDriverAssignment() throws Exception {
@@ -40,6 +43,8 @@ class ConcurrentDriverAssignmentIntegrationTest {
         var start = OffsetDateTime.parse("2026-06-01T08:00:00Z");
         var first = trip("TRIP-DRV-A-" + suffix(), start, start.plusHours(3));
         var second = trip("TRIP-DRV-B-" + suffix(), start.plusHours(1), start.plusHours(4));
+        tripLocations(jdbc, first);
+        tripLocations(jdbc, second);
         tripRepository.save(first);
         tripRepository.save(second);
 
@@ -59,7 +64,8 @@ class ConcurrentDriverAssignmentIntegrationTest {
         var persisted = List.of(tripRepository.findById(first.id()).orElseThrow(),
                 tripRepository.findById(second.id()).orElseThrow());
         assertEquals(1, persisted.stream().filter(t -> driver.id().equals(t.driverId())).count());
-        assertEquals(1, persisted.stream().filter(t -> "ASSIGNED".equals(t.status())).count());
+        assertEquals(0, persisted.stream().filter(t -> "ASSIGNED".equals(t.status())).count());
+        assertEquals(2, persisted.stream().filter(t -> "APPROVED".equals(t.status())).count());
         var entries = java.util.stream.Stream.concat(history.findByTripId(first.id()).stream(),
                 history.findByTripId(second.id()).stream()).toList();
         assertEquals(1, entries.size());
