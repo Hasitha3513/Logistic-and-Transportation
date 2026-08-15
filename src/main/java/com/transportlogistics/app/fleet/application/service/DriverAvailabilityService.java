@@ -5,9 +5,11 @@ import com.transportlogistics.app.fleet.application.ports.in.DriverAvailabilityU
 import com.transportlogistics.app.fleet.application.ports.out.DriverLicenseRepository;
 import com.transportlogistics.app.fleet.application.ports.out.DriverRepository;
 import com.transportlogistics.app.fleet.domain.model.DriverAvailability;
+import com.transportlogistics.app.fleet.domain.model.DriverLicense;
 import com.transportlogistics.app.shared.domain.NotFoundException;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import static com.transportlogistics.app.fleet.domain.model.DriverAvailability.Code.*;
 
@@ -41,26 +43,43 @@ public final class DriverAvailabilityService implements DriverAvailabilityUseCas
         var activeLicenses = licenses.findActiveByDriverId(driver.id());
         if (activeLicenses.isEmpty()) {
             add(reasons, LICENSE_MISSING, "Driver has no active license");
-        } else {
-            if (activeLicenses.stream().anyMatch(license -> license.issueDate().isAfter(query.from().toLocalDate()))) {
-                add(reasons, LICENSE_NOT_YET_VALID, "An active license is not valid at the requested start");
-            }
-            if (activeLicenses.stream().anyMatch(license -> license.expiryDate().isBefore(query.to().toLocalDate()))) {
-                add(reasons, LICENSE_EXPIRED, "An active license expires before the requested period ends");
-            }
         }
 
-        if (query.requiredLicenseClass() != null && !query.requiredLicenseClass().isBlank()
-                && activeLicenses.stream().noneMatch(license -> license.isValidForPeriod(
-                query.requiredLicenseClass(), query.from().toLocalDate(), query.to().toLocalDate()))) {
-            add(reasons, REQUIRED_LICENSE_CLASS_MISSING,
-                    "Driver lacks a valid active license of the required class for the requested period");
-        }
+        addLicenseReasonsWhenNoneQualifies(reasons, activeLicenses, query);
         if (query.checkAssignmentConflicts()
                 && assignments.hasOverlap(driver.id(), query.from(), query.to(), query.excludeTripId())) {
             add(reasons, OVERLAPPING_ASSIGNMENT, "Driver has an overlapping trip assignment");
         }
         return DriverAvailability.from(reasons);
+    }
+
+    private void addLicenseReasonsWhenNoneQualifies(ArrayList<DriverAvailability.Reason> reasons,
+                                                     List<DriverLicense> candidateLicenses,
+                                                     Query query) {
+        var requestedFrom = query.from().toLocalDate();
+        var requestedTo = query.to().toLocalDate();
+        if (candidateLicenses.stream().anyMatch(license -> license.isValidForPeriod(
+                query.requiredLicenseClass(), requestedFrom, requestedTo))) {
+            return;
+        }
+
+        var applicableLicenses = candidateLicenses.stream()
+                .filter(DriverLicense::isActiveForAssignment)
+                .filter(license -> license.isCompatibleWith(query.requiredLicenseClass()))
+                .toList();
+
+        if (applicableLicenses.stream().anyMatch(license -> license.issueDate().isAfter(requestedFrom))) {
+            add(reasons, LICENSE_NOT_YET_VALID,
+                    "No applicable active license is valid at the requested start");
+        }
+        if (applicableLicenses.stream().anyMatch(license -> license.expiryDate().isBefore(requestedTo))) {
+            add(reasons, LICENSE_EXPIRED,
+                    "No applicable active license remains valid through the requested period");
+        }
+        if (query.requiredLicenseClass() != null && !query.requiredLicenseClass().isBlank()) {
+            add(reasons, REQUIRED_LICENSE_CLASS_MISSING,
+                    "Driver lacks a valid active license of the required class for the requested period");
+        }
     }
 
     private void add(ArrayList<DriverAvailability.Reason> reasons, DriverAvailability.Code code, String message) {

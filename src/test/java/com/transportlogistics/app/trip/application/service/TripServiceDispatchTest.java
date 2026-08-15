@@ -59,26 +59,26 @@ class TripServiceDispatchTest {
     @Test
     void rejectsWrongTripStatus() {
         givenTrip(trip("APPROVED", trip.vehicleId(), trip.driverId()));
-        assertRejected(IllegalArgumentException.class);
+        assertRejected(ConflictException.class);
         verifyNoInteractions(vehicles, drivers, dispatches);
     }
 
     @Test
     void rejectsMissingVehicleAssignment() {
         givenTrip(trip("ASSIGNED", null, trip.driverId()));
-        assertRejected(IllegalArgumentException.class);
+        assertRejected(ConflictException.class);
     }
 
     @Test
     void rejectsMissingDriverAssignment() {
         givenTrip(trip("ASSIGNED", trip.vehicleId(), null));
-        assertRejected(IllegalArgumentException.class);
+        assertRejected(ConflictException.class);
     }
 
     @Test
     void rejectsMissingAssignedLicenseClass() {
         when(history.findCurrentDriverLicenseClass(trip.id(), trip.driverId())).thenReturn(Optional.empty());
-        assertRejected(IllegalArgumentException.class);
+        assertRejected(ConflictException.class);
     }
 
     @Test

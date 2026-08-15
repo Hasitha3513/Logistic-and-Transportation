@@ -3,6 +3,7 @@ package com.transportlogistics.app.fleet.infrastructure.config;
 import com.transportlogistics.app.fleet.VehicleDispatchEligibility;
 import com.transportlogistics.app.fleet.VehicleAssignmentEligibility;
 import com.transportlogistics.app.fleet.VehicleAllocationAvailability;
+import com.transportlogistics.app.fleet.VehicleFuelContextLookup;
 import com.transportlogistics.app.fleet.application.ports.in.VehicleAvailabilityUseCase;
 import com.transportlogistics.app.fleet.application.ports.in.VehicleUseCase;
 import com.transportlogistics.app.fleet.application.ports.out.VehicleDocumentRepository;
@@ -12,11 +13,21 @@ import com.transportlogistics.app.fleet.application.service.VehicleAvailabilityS
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.math.BigDecimal;
+
 @Configuration
 class VehicleConfig {
     @Bean
     VehicleUseCase vehicleUseCase(VehicleRepository repo) {
         return new VehicleService(repo);
+    }
+
+    @Bean
+    VehicleFuelContextLookup vehicleFuelContextLookup(VehicleRepository vehicles) {
+        return vehicleId -> vehicles.findById(vehicleId).map(vehicle ->
+                new VehicleFuelContextLookup.VehicleFuelContext(vehicle.id(), vehicle.registrationNumber(),
+                        vehicle.active(), vehicle.operationalStatus(), decimal(vehicle.currentOdometerKm()),
+                        decimal(vehicle.engineHours())));
     }
 
     @Bean
@@ -48,5 +59,9 @@ class VehicleConfig {
                 throw new IllegalArgumentException("Vehicle is ineligible for assignment: " + codes);
             }
         };
+    }
+
+    private static BigDecimal decimal(Double value) {
+        return value == null ? null : BigDecimal.valueOf(value);
     }
 }

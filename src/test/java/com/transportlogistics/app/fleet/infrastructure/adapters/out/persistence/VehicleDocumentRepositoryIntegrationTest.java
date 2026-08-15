@@ -8,6 +8,7 @@ import com.transportlogistics.app.fleet.domain.model.VehicleDocumentStatus;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
@@ -15,18 +16,22 @@ import java.time.OffsetDateTime;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static com.transportlogistics.app.support.ReferenceFixtures.vehicleHierarchy;
 
 @SpringBootTest
 @Transactional
 class VehicleDocumentRepositoryIntegrationTest {
     @Autowired VehicleRepository vehicles;
     @Autowired VehicleDocumentRepository documents;
+    @Autowired JdbcTemplate jdbc;
 
     @Test
     void persistsQueriesAndRetainsSoftDeletedDocument() {
         var vehicleId = UUID.randomUUID();
-        vehicles.save(new Vehicle(vehicleId, "REG-" + vehicleId, null, null, UUID.randomUUID(), UUID.randomUUID(),
-                null, null, 2025, "COMPANY_OWNED", "AVAILABLE", null, null, 1000d, true));
+        var vehicle = new Vehicle(vehicleId, "REG-" + vehicleId, null, null, UUID.randomUUID(), UUID.randomUUID(),
+                null, null, 2025, "COMPANY_OWNED", "AVAILABLE", null, null, 1000d, true);
+        vehicleHierarchy(jdbc, vehicle);
+        vehicles.save(vehicle);
         var now = OffsetDateTime.now();
         var documentId = UUID.randomUUID();
         var saved = documents.save(new VehicleDocument(documentId, vehicleId, "INSURANCE", "POL-55",

@@ -27,6 +27,11 @@ class TripPersistenceAdapter implements TripRepository {
         return repo.findById(id).map(mapper::toDomain);
     }
 
+    @Override
+    public Optional<Trip> findByIdForUpdate(UUID id) {
+        return repo.findByIdForUpdate(id).map(mapper::toDomain);
+    }
+
     public List<Trip> findAll() {
         return repo.findAll().stream().map(mapper::toDomain).toList();
     }

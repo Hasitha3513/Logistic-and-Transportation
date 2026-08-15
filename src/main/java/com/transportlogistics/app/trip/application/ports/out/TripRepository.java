@@ -12,6 +12,8 @@ public interface TripRepository {
 
     Optional<Trip> findById(UUID id);
 
+    Optional<Trip> findByIdForUpdate(UUID id);
+
     List<Trip> findAll();
 
     boolean hasOverlappingVehicleAllocation(UUID vehicleId, OffsetDateTime from, OffsetDateTime to,
