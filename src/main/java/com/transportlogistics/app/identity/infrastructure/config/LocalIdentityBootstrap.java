@@ -15,7 +15,7 @@ import java.util.Set;
 import java.util.UUID;
 
 @Component
-@Profile("h2")
+@Profile({"h2", "docker"})
 @ConditionalOnProperty(name = "app.dev.identity-bootstrap.enabled", havingValue = "true")
 class LocalIdentityBootstrap implements ApplicationRunner {
     private static final Set<String> MVP_PERMISSIONS = Set.of(

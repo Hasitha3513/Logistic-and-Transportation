@@ -1,0 +1,68 @@
+name: transport-logistics
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-transport_logistics}
+      POSTGRES_USER: ${POSTGRES_USER:-transport_app}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in your environment or .env file}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      SPRING_PROFILES_ACTIVE: postgres,docker
+      DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-transport_logistics}
+      DB_USERNAME: ${POSTGRES_USER:-transport_app}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in your environment or .env file}
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET to a random value of at least 32 bytes}
+      DEV_IDENTITY_BOOTSTRAP_ENABLED: "true"
+      DEV_IDENTITY_USERNAME: ${APP_ADMIN_USERNAME:-admin}
+      DEV_IDENTITY_PASSWORD: ${APP_ADMIN_PASSWORD:?Set APP_ADMIN_PASSWORD to at least 12 characters}
+      DEV_IDENTITY_EMAIL: ${APP_ADMIN_EMAIL:-admin@localhost.test}
+      DB_POOL_MIN: 1
+      DB_POOL_MAX: 10
+    ports:
+      - "${BACKEND_PORT:-8080}:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "http://localhost:8080/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 45s
+    init: true
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "${FRONTEND_PORT:-5173}:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+volumes:
+  postgres-data:
