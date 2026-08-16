@@ -2,16 +2,16 @@
 
 ## Requirements traceability constraint
 
-The current Phase 2 request authoritatively maps Fuel Issue to **US-31**. Other story identifiers remain **UNMAPPED — consolidated source unavailable** and must not be invented.
+The current Phase 2 requests authoritatively map Fuel Issue to **US-31** and Manage Fuel Purchases to **US-32**. Later story identifiers remain deferred unless separately authorized.
 
-Phase 2 implementation must not begin until the entry gates in [phase-2-entry-criteria.md](phase-2-entry-criteria.md) are satisfied.
+US-31 and US-32 are explicit user-authorized vertical slices. Remaining Phase 2 work still follows the entry gates in [phase-2-entry-criteria.md](phase-2-entry-criteria.md).
 
 ## Epic backlog
 
 | Epic | User Story ID | Actor | Feature | Priority | Dependencies | Backend module | REST API area | Principal database entities | Frontend page | Delivery order |
 |---|---|---|---|---|---|---|---|---|---:|
 | EP-201 Fuel Management | UNMAPPED — source unavailable | Fleet administrator | Fuel types, vendors and bunker master data | Must | Phase 1 release | `fuel` | `/fuel/types`, `/fuel/vendors`, `/fuel/bunkers` | fuel_type, fuel_vendor, bunker | Fuel configuration | 1 |
-| EP-201 Fuel Management | UNMAPPED — source unavailable | Fuel officer | Record fuel purchases and bunker receipts | Must | Fuel reference data | `fuel` | `/fuel/purchases`, `/fuel/bunkers/{id}/receipts` | fuel_purchase, bunker_stock_ledger | Fuel purchases | 2 |
+| EP-201 Fuel Management | US-32 — IMPLEMENTED | Fuel manager | Vendor prices, purchase invoices, receipt variance and reconciliation | Must | US-31 fuel foundation; organization vendor boundary | `fuel`, `organization` | `/fuel-purchases`, `/fuel-prices`, `/vendors` | vendor, fuel_price, fuel_purchase, fuel_purchase_history | Fuel purchases and prices | Delivered |
 | EP-201 Fuel Management | US-31 — IMPLEMENTED | Fleet operator | Issue fuel against vehicle, driver and trip | Must | Phase 1 trip/fleet public interfaces | `fuel` | `/fuel-issues`, `/fuel-stations` | fuel_issue, fuel_issue_history, fuel_station, fuel_limit_policy | Fuel issues | Delivered |
 | EP-201 Fuel Management | UNMAPPED — source unavailable | Fleet manager | Fuel cards and controlled allocations | Should | Fuel issue workflow | `fuel` | `/fuel/cards`, `/fuel/allocations` | fuel_card, fuel_card_assignment, fuel_allocation | Fuel cards | 4 |
 | EP-201 Fuel Management | UNMAPPED — source unavailable | Auditor | Reconciliation, consumption and variance reporting | Should | Purchases and issues | `fuel`, `reporting` | `/reports/fuel/**` | reporting projections; fuel ledgers | Fuel reports | 5 |
@@ -43,7 +43,7 @@ The following matrix makes every requested Phase 2 feature explicit. The slice r
 | Epic | User Story ID | Actor | Feature | Priority | Dependency | Backend module | Expected REST API area | Expected DB entities/projections | Frontend page | Implementation slice |
 |---|---|---|---|---|---|---|---|---|---|---:|
 | EP-201 | US-31 — IMPLEMENTED | Fuel officer | Fuel Issue | Must | Phase 1 fleet/trip/identity public interfaces | `fuel` | `/fuel-issues`, `/fuel-stations` | fuel_issue, fuel_issue_history, fuel_station, fuel_limit_policy | Fuel issues | Delivered |
-| EP-201 | UNMAPPED — source unavailable | Fuel officer | Fuel Purchase | Must | Fuel reference data | `fuel` | `/fuel/purchases` | fuel_purchase, bunker_stock_ledger | Fuel purchases | 2 |
+| EP-201 | US-32 — IMPLEMENTED | Fuel manager | Fuel Purchase | Must | Vendor and fuel station references | `fuel`, `organization` | `/fuel-purchases`, `/fuel-prices`, `/vendors` | vendor, fuel_price, fuel_purchase, fuel_purchase_history | Fuel purchases and prices | Delivered |
 | EP-201 | UNMAPPED — source unavailable | Fleet manager | Mileage & KM Tracking | Must | Trip/vehicle public events | `fuel` | `/fuel/consumption` | fuel_mileage_reading/projection | Fuel consumption | 3 |
 | EP-201 | UNMAPPED — source unavailable | Fleet manager | Fuel Cost per Trip | Should | Fuel issues and trip linkage | `fuel`, `reporting` | `/reports/fuel/trip-costs` | trip_fuel_cost_projection | Fuel reports | 5 |
 | EP-201 | UNMAPPED — source unavailable | Fleet administrator | Fuel Cards | Should | Fuel issue controls | `fuel` | `/fuel/cards` | fuel_card, fuel_card_assignment | Fuel cards | 4 |
@@ -159,9 +159,11 @@ Each slice includes domain behavior, ports, service, persistence, migration, RES
 
 | Order | Epic | Vertical slice | Dependencies | Backend/API | Frontend | Database | Priority |
 |---:|---|---|---|---|---|---|---|
+| Delivered exception | EP-201 | US-31 trip-linked Fuel Issue | Phase 1 fleet/trip/identity interfaces | Fuel issue lifecycle and station lookup | Fuel issue list/create/detail | V11 fuel issue, history, station, policy | Delivered |
+| Delivered | EP-201 | US-32 vendor pricing and Fuel Purchase | US-31 station; organization vendor boundary | Purchase lifecycle, pricing, receipt variance, reconciliation | Purchase list/editor/details and prices | V12 vendor, prices, purchases, history | Delivered |
 | 1 | EP-201 | Fuel reference foundations | Phase 2 gates | Fuel type/vendor/bunker CRUD | Fuel configuration pages | V-next reference tables | Must |
 | 2 | EP-201 | Purchase and bunker receipt ledger | Slice 1 | Purchase/receipt commands and stock query | Purchase entry and stock view | Purchase and immutable ledger | Must |
-| 3 | EP-201 | Trip-linked fuel issue | Slice 2; trip/fleet interfaces | Issue command with reference and balance validation | Issue form and history | Issue and ledger entries | Must |
+| 3 | EP-201 | Bunker-ledger integration for issued fuel | Slice 2; delivered US-31 issue workflow | Post issue movements to the immutable stock ledger without redefining US-31 | Stock impact on issue details | Issue-to-ledger reference and stock movement | Must |
 | 4 | EP-201 | Fuel card controls | Slice 3 | Card assignment/allocation APIs | Card administration | Card and allocation tables | Should |
 | 5 | EP-201 | Fuel reconciliation report | Slices 2–4 | Reporting projection/API | Consumption/variance report | Projection or optimized views | Should |
 | 6 | EP-202 | Freight order and cargo capture | Phase 2 gates | Freight/cargo aggregate API | Freight list/editor | Freight and cargo tables | Must |
@@ -181,4 +183,4 @@ Each slice includes domain behavior, ports, service, persistence, migration, RES
 | 20 | EP-205 | Trip route plans and revisions | Slice 19; trip interface | Plan/generate/revise APIs | Plan builder/revision view | Plan/stop/revision tables | Must |
 | 21 | EP-205 | Planned-versus-actual analytics | EP-203 slice 13; slice 20 | Route performance report | Route analytics | Performance projection | Should |
 
-The first Phase 2 slice, **US-31 Fuel Issue**, is implemented. The next slice must be selected from an authoritative user-story request; US-32 through US-38 remain explicitly deferred and no purchase, stock-ledger, card, analytics, or reconciliation behavior is implied by US-31.
+The first two Phase 2 slices, **US-31 Fuel Issue** and **US-32 Manage Fuel Purchases**, are implemented. US-32 deliberately stops at organization-owned vendor maintenance, expected-price catalogue, invoice/receipt variance, and reconciliation; it does not create a bunker ledger or accounting integration. The exact next recommended slice is **US-33 Mileage & KM Tracking enhancements**, but implementation must wait for an authoritative US-33 contract. US-34 through US-38 remain deferred.

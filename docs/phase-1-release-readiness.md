@@ -2,7 +2,9 @@
 
 ## Decision
 
-**NOT READY for production sign-off.** All code-owned CRITICAL/HIGH findings identified by the release audit are closed. The remaining release gate is a clean PostgreSQL V1–V10 migration, application startup, and concurrency run. The local PostgreSQL 18 service is reachable on port 5433 but no usable audit credentials were available; Docker Desktop's service is stopped and cannot be started with the current OS privileges. H2 evidence is not presented as a substitute for PostgreSQL evidence.
+**NOT READY for production sign-off.** All code-owned CRITICAL/HIGH functional findings identified by the release audit are closed. No PostgreSQL listener is available on ports 5432 or 5433, no database credentials are exported, and the local Docker service is stopped. The mandatory clean PostgreSQL V1–V10 migration, startup, happy-path, and concurrency run therefore remains blocked. H2 evidence is not presented as a substitute for PostgreSQL evidence.
+
+Current branch `agent/fuel-issue-us31` at `1ea7ae5` already contains the separately requested post-Phase-1 US-31 Fuel Issue implementation and V11. It must not be tagged as the pure Phase 1 artifact. A dedicated Phase 1 release branch/commit containing the Phase 1 closure work through V10 is required before `v1.0.0-mvp` is created.
 
 The recommended release tag remains `v1.0.0-mvp` after that gate is closed and the supported Java 21 build is reproduced.
 
@@ -10,24 +12,36 @@ The recommended release tag remains `v1.0.0-mvp` after that gate is closed and t
 
 | Area | Command/check | Result | Evidence |
 |---|---|---|---|
-| Backend build | `mvn clean verify` | PASS | 43 suites; 140 tests; 0 failures, errors, or skips. |
+| Backend build | `mvn clean verify` | PASS | 47 suites; 160 tests; 0 failures, errors, or skips. |
 | Spring context | Context/integration suites | PASS | Packaged application also started successfully. |
 | Spring Modulith | `ApplicationModulesTest` | PASS | Module-boundary verification passed. Host JDK 26 generated ArchUnit fallback warnings; project targets Java 21. |
-| Flyway/H2 | Packaged JAR against empty in-memory H2 | PASS | V1–V10 validated and applied from an empty schema. |
+| Flyway/H2 | Packaged JAR against empty in-memory H2 | PASS | Current HEAD validated and applied V1–V11 from an empty schema; Phase 1 is V1–V10 and V11 is US-31. |
 | JPA | Repository/concurrency suites and `ddl-auto=validate` startup | PASS | Entity/schema validation and persistence integrations passed. |
-| PostgreSQL | Fresh V1–V10 and concurrency | BLOCKED | PostgreSQL 18 listens on 5433; credentials unavailable. Docker service unavailable. |
-| OpenAPI | Generated `/api/v3/api-docs` | PASS | Contract loads and includes `POST /trips/{id}/assign-route`. |
+| PostgreSQL | Fresh V1–V10 and concurrency | BLOCKED | No listener on 5432/5433, no exported credentials, and Docker service is stopped. |
+| OpenAPI | Generated `/api/v3/api-docs` | PASS | Contract loads with 62 current-HEAD paths and includes `POST /trips/{id}/assign-route`. |
 | Frontend lint | `npm run lint` | PASS | ESLint completed with zero warnings. |
-| Frontend tests | `npm run test` | PASS | 7 files; 29/29 tests, including route assignment. |
-| Frontend build | `npm run build` | PASS | 5,055 modules; bundle-size warning only. |
+| Frontend tests | `npm run test` | PASS | 8 files; 39/39 tests. Explicit bounded async/test timeouts stabilize Ant Design/jsdom integration tests on slower hosts. |
+| Frontend build | `npm run build` | PASS | 5,059 modules; 1,646.93 kB JS (511.25 kB gzip); bundle-size warning only. |
+
+## Outstanding findings by severity
+
+| Severity | Finding | Release effect | Required action |
+|---|---|---|---|
+| CRITICAL | None identified. | — | — |
+| HIGH | Fresh PostgreSQL migration/startup/happy-path/concurrency evidence is unavailable. | Blocks release authorization and the Phase 2 entry gate. | Provision a disposable PostgreSQL instance and execute the final gate below. |
+| HIGH | Current HEAD includes post-Phase-1 US-31/V11 in the same commit as Phase 1 closure changes. | A `v1.0.0-mvp` tag on current HEAD would contain out-of-scope Phase 2 behavior. | Curate and review a Phase-1-only release commit through V10 before tagging. |
+| MEDIUM | Verification ran on host Java 26 while compiling with `--release 21`; ArchUnit logged Java-26 fallback warnings. | Supported runtime reproduction is incomplete. | Repeat the release build and startup on Java 21. |
+| MEDIUM | Reporting placeholders, missing trip/running logs, and the absence of a maintenance aggregate require formal product acceptance or deferral. | Product scope sign-off remains open. | Record explicit release-owner decisions. |
+| MEDIUM | Token storage, CORS/same-origin, Swagger exposure, secrets, backup/restore, monitoring, and rollback remain deployment decisions. | Operations/security sign-off remains open. | Complete the deployment checklist in the target environment. |
+| LOW | The frontend production chunk exceeds Vite's 500 kB warning threshold. | Performance warning only; build succeeds. | Accept for MVP or schedule code splitting. |
 
 ## Packaged-JAR smoke result
 
-A fresh H2 run used the opt-in local identity and sample-data bootstraps. The actual HTTP flow created vehicle category/type, vehicle, mandatory document, driver, licence, and route; created and submitted a trip; approved it; assigned vehicle, driver, and route; dispatched, started, completed, and closed it.
+A fresh H2 run used the opt-in local identity and sample-data bootstraps. The actual HTTP flow found a valid vehicle with mandatory documents, a driver with a compatible licence, and a route; it then submitted the sample draft trip, approved it, assigned vehicle, driver, and route, dispatched, started, completed, and closed it.
 
 - Health: `UP`
 - Authenticated actor: `release.admin` with the local MVP-admin permission set
-- Audit trip: `97f840ed-aaec-4ce9-8539-cae33593ad08`
+- Audit trip: `60000000-0000-0000-0000-000000000001` (`TRIP-DEMO-001` on the fresh in-memory run)
 - Final state: `CLOSED`
 - Route, vehicle, and driver assignments: persisted
 - Status/history entries: 9
@@ -60,7 +74,7 @@ A fresh H2 run used the opt-in local identity and sample-data bootstraps. The ac
 | Unauthorized approval returns 403 before mutation | PASS — security integration coverage |
 | Invalid lifecycle transition rejected | PASS — domain/service/controller integration coverage |
 
-The first smoke-client attempt serialized location UUIDs as JSON arrays due to a PowerShell wrapping error. Spring rejected the malformed requests with 400 before trip creation. The corrected script used terminating HTTP errors and completed the entire flow.
+The first driver-assignment attempt requested class `C`; the driver owned an active `HEAVY` licence, so the backend returned 400 with `REQUIRED_LICENSE_CLASS_MISSING` and did not assign the driver. Repeating the command with the coherent `HEAVY` requirement completed the flow. Early dispatch/start/complete/close attempts returned 409 without advancing the trip, providing live invalid-transition evidence.
 
 ## Closed release blockers
 
@@ -100,7 +114,7 @@ Remaining database limitations:
 - Driver licences model `ACTIVE`, `INACTIVE`, and `DELETED`, not distinct `SUSPENDED`/`REVOKED` states.
 - Browser tokens use `localStorage`; production acceptance or hardening is required.
 - Production CORS/same-origin, Swagger exposure, secrets, monitoring, backup, and rollback are deployment decisions still requiring sign-off.
-- The frontend production chunk is approximately 1.63 MB (507 kB gzip) and triggers Vite's size warning.
+- The frontend production chunk is approximately 1.65 MB (511 kB gzip) and triggers Vite's size warning.
 
 ## Final release gate
 
@@ -112,4 +126,4 @@ Provision a disposable PostgreSQL database and credentials, then:
 4. retain migration/schema/history evidence and validate V10 against production-like data;
 5. reproduce the build with Java 21 and complete operational/security/product sign-offs.
 
-When those checks pass, update this document to READY, create the release commit, and create the annotated `v1.0.0-mvp` tag. Do not begin Phase 2 implementation before the entry criteria and authoritative US-01–US-87 mapping are approved.
+When those checks pass, update this document to READY, curate a Phase-1-only release commit through V10, and create the annotated `v1.0.0-mvp` tag on that commit. US-31 already exists on the current feature branch as a prior explicit exception; no further Phase 2 slice should begin before the entry criteria and authoritative story mapping are approved.

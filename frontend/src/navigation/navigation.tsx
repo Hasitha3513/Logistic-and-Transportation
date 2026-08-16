@@ -72,7 +72,11 @@ export const navigation: NavigationItem[] = [
     key: 'fuel',
     label: 'Fuel Management',
     icon: <ThunderboltOutlined />,
-    children: [{ key: 'fuel-issues', label: 'Fuel Issues', path: '/fuel/issues', permission: 'FUEL_ISSUE_VIEW' }],
+    children: [
+      { key: 'fuel-issues', label: 'Fuel Issues', path: '/fuel/issues', permission: 'FUEL_ISSUE_VIEW' },
+      { key: 'fuel-purchases', label: 'Fuel Purchases', path: '/fuel/purchases', permission: 'FUEL_PURCHASE_VIEW' },
+      { key: 'fuel-prices', label: 'Fuel Prices', path: '/fuel/prices', permission: 'FUEL_PRICE_VIEW' },
+    ],
   },
   {
     key: 'administration',

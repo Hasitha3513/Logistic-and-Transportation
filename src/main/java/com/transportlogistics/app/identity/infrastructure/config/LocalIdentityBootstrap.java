@@ -24,11 +24,18 @@ class LocalIdentityBootstrap implements ApplicationRunner {
             "VEHICLE_DOCUMENT_MANAGE", "VEHICLE_AVAILABILITY_VIEW",
             "DRIVER_VIEW", "DRIVER_CREATE", "DRIVER_UPDATE", "DRIVER_LICENSE_MANAGE", "DRIVER_AVAILABILITY_VIEW",
             "ROUTE_VIEW", "ROUTE_CREATE", "ROUTE_UPDATE",
+            "CUSTOMER_VIEW", "CUSTOMER_CREATE", "CUSTOMER_UPDATE",
+            "DEPARTMENT_VIEW", "DEPARTMENT_CREATE", "DEPARTMENT_UPDATE",
+            "LOCATION_VIEW", "LOCATION_CREATE", "LOCATION_UPDATE",
+            "PROJECT_VIEW", "PROJECT_CREATE", "PROJECT_UPDATE",
             "TRIP_VIEW", "TRIP_CREATE", "TRIP_UPDATE", "TRIP_SUBMIT", "TRIP_APPROVE", "TRIP_REJECT",
             "TRIP_ASSIGN_VEHICLE", "TRIP_ASSIGN_DRIVER", "TRIP_ASSIGN_ROUTE", "TRIP_DISPATCH", "TRIP_START",
             "TRIP_COMPLETE", "TRIP_CLOSE", "TRIP_CANCEL", "REPORT_VIEW", "DASHBOARD_VIEW",
             "FUEL_ISSUE_VIEW", "FUEL_ISSUE_CREATE", "FUEL_ISSUE_UPDATE", "FUEL_ISSUE_SUBMIT",
-            "FUEL_ISSUE_AUTHORIZE", "FUEL_ISSUE_ISSUE", "FUEL_ISSUE_CANCEL");
+            "FUEL_ISSUE_AUTHORIZE", "FUEL_ISSUE_ISSUE", "FUEL_ISSUE_CANCEL",
+            "FUEL_PURCHASE_VIEW", "FUEL_PURCHASE_CREATE", "FUEL_PURCHASE_UPDATE", "FUEL_PURCHASE_SUBMIT",
+            "FUEL_PURCHASE_APPROVE", "FUEL_PURCHASE_RECEIVE", "FUEL_PURCHASE_RECONCILE", "FUEL_PURCHASE_CANCEL",
+            "FUEL_PRICE_VIEW", "FUEL_PRICE_MANAGE");
 
     private final IdentityUseCase identities;
     private final Environment environment;
@@ -42,12 +49,15 @@ class LocalIdentityBootstrap implements ApplicationRunner {
     public void run(ApplicationArguments arguments) {
         var username = required("app.dev.identity-bootstrap.username");
         var password = required("app.dev.identity-bootstrap.password");
-        if (identities.findByUsername(username).isPresent()) return;
+        var existingUser = identities.findByUsername(username);
 
         var role = identities.listRoles().stream().filter(candidate -> candidate.name().equals("LOCAL_MVP_ADMIN"))
-                .findFirst().orElseGet(() -> identities.createRole(new Role(UUID.randomUUID(), "LOCAL_MVP_ADMIN",
-                        "Opt-in local Phase 1 administrator with all MVP business permissions", true,
+                .findFirst().map(existing -> identities.updateRole(existing.id(), new Role(existing.id(), existing.name(),
+                        "Opt-in local administrator with all implemented business permissions", true, MVP_PERMISSIONS)))
+                .orElseGet(() -> identities.createRole(new Role(UUID.randomUUID(), "LOCAL_MVP_ADMIN",
+                        "Opt-in local administrator with all implemented business permissions", true,
                         MVP_PERMISSIONS)));
+        if (existingUser.isPresent()) return;
         var now = OffsetDateTime.now();
         identities.createUser(new User(UUID.randomUUID(), username,
                         environment.getProperty("app.dev.identity-bootstrap.email", "local.operator@example.test"), null,

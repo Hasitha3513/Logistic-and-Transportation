@@ -14,6 +14,10 @@ import { useAuth } from './auth/AuthContext';
 import FuelIssueListPage from './fuel/FuelIssueListPage';
 import FuelIssueEditorPage from './fuel/FuelIssueEditorPage';
 import FuelIssueDetailsPage from './fuel/FuelIssueDetailsPage';
+import FuelPurchaseListPage from './fuel/FuelPurchaseListPage';
+import FuelPurchaseEditorPage from './fuel/FuelPurchaseEditorPage';
+import FuelPurchaseDetailsPage from './fuel/FuelPurchaseDetailsPage';
+import FuelPricePage from './fuel/FuelPricePage';
 
 function ProtectedRoute() {
   const { user, isLoading } = useAuth();
@@ -29,6 +33,8 @@ function HomePage() {
   if (hasPermission('ROUTE_VIEW')) return <Navigate to="/routes" replace />;
   if (hasPermission('TRIP_VIEW')) return <Navigate to="/trips" replace />;
   if (hasPermission('FUEL_ISSUE_VIEW')) return <Navigate to="/fuel/issues" replace />;
+  if (hasPermission('FUEL_PURCHASE_VIEW')) return <Navigate to="/fuel/purchases" replace />;
+  if (hasPermission('FUEL_PRICE_VIEW')) return <Navigate to="/fuel/prices" replace />;
   if (hasPermission('IDENTITY_MANAGE')) return <Navigate to="/administration/users" replace />;
   return <Navigate to="/workspace" replace />;
 }
@@ -52,6 +58,11 @@ export default function App() {
         <Route path="fuel/issues/new" element={<FuelIssueEditorPage />} />
         <Route path="fuel/issues/:fuelIssueId/edit" element={<FuelIssueEditorPage />} />
         <Route path="fuel/issues/:fuelIssueId" element={<FuelIssueDetailsPage />} />
+        <Route path="fuel/purchases" element={<FuelPurchaseListPage />} />
+        <Route path="fuel/purchases/new" element={<FuelPurchaseEditorPage />} />
+        <Route path="fuel/purchases/:fuelPurchaseId/edit" element={<FuelPurchaseEditorPage />} />
+        <Route path="fuel/purchases/:fuelPurchaseId" element={<FuelPurchaseDetailsPage />} />
+        <Route path="fuel/prices" element={<FuelPricePage />} />
         <Route path="administration/users" element={<ResourceListPage {...resourcePages.users} />} />
         <Route path="administration/roles" element={<ResourceListPage {...resourcePages.roles} />} />
         <Route path="workspace" element={<ModulePage eyebrow="Operations" title="Workspace" description="Select an available module from the navigation." icon={<DashboardOutlined />} />} />

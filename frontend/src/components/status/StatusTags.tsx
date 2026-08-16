@@ -65,6 +65,12 @@ const FUEL_ISSUE_STATUS: PresentationMap = {
   CANCELLED: { color: 'volcano', label: 'Cancelled' },
 };
 
+const FUEL_PURCHASE_STATUS: PresentationMap = {
+  DRAFT: { color: 'default', label: 'Draft' }, SUBMITTED: { color: 'processing', label: 'Submitted' },
+  APPROVED: { color: 'cyan', label: 'Approved' }, RECEIVED: { color: 'gold', label: 'Received' },
+  RECONCILED: { color: 'success', label: 'Reconciled' }, CANCELLED: { color: 'volcano', label: 'Cancelled' },
+};
+
 function presentation(value: string | null | undefined, mapping: PresentationMap): StatusPresentation {
   const normalized = value?.trim().toUpperCase() || 'UNKNOWN';
   return mapping[normalized] ?? {
@@ -106,4 +112,8 @@ export function PriorityTag({ priority, ...props }: { priority?: string | null }
 
 export function FuelIssueStatusTag({ status, ...props }: { status?: string | null } & Omit<TagProps, 'color' | 'children'>) {
   return <PresentationTag {...props} value={status} mapping={FUEL_ISSUE_STATUS} />;
+}
+
+export function FuelPurchaseStatusTag({ status, ...props }: { status?: string | null } & Omit<TagProps, 'color' | 'children'>) {
+  return <PresentationTag {...props} value={status} mapping={FUEL_PURCHASE_STATUS} />;
 }

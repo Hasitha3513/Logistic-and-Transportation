@@ -5,10 +5,16 @@ import com.transportlogistics.app.fleet.application.ports.in.DriverUseCase;
 import com.transportlogistics.app.fleet.application.ports.in.VehicleUseCase;
 import com.transportlogistics.app.fuel.application.ports.in.FuelIssueUseCase;
 import com.transportlogistics.app.fuel.application.ports.in.FuelStationUseCase;
+import com.transportlogistics.app.fuel.application.ports.in.FuelPurchaseUseCase;
 import com.transportlogistics.app.fuel.domain.model.FuelIssue;
 import com.transportlogistics.app.fuel.domain.model.FuelIssueStatus;
 import com.transportlogistics.app.fuel.domain.model.FuelStation;
 import com.transportlogistics.app.fuel.domain.model.FuelStationType;
+import com.transportlogistics.app.organization.application.ports.in.CustomerUseCase;
+import com.transportlogistics.app.organization.application.ports.in.DepartmentUseCase;
+import com.transportlogistics.app.organization.application.ports.in.LocationUseCase;
+import com.transportlogistics.app.organization.application.ports.in.ProjectUseCase;
+import com.transportlogistics.app.organization.application.ports.in.VendorUseCase;
 import com.transportlogistics.app.routing.application.ports.in.RouteUseCase;
 import com.transportlogistics.app.trip.application.ports.in.TripUseCase;
 import org.junit.jupiter.api.BeforeEach;
@@ -36,6 +42,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
@@ -46,7 +53,13 @@ class BusinessAuthorizationIntegrationTest {
             "TRIP_APPROVE", "TRIP_REJECT", "TRIP_DISPATCH", "TRIP_START", "TRIP_COMPLETE",
             "TRIP_ASSIGN_ROUTE",
             "VEHICLE_CREATE", "DRIVER_CREATE", "ROUTE_CREATE", "REPORT_VIEW", "DASHBOARD_VIEW",
+            "CUSTOMER_VIEW", "CUSTOMER_CREATE", "CUSTOMER_UPDATE",
+            "DEPARTMENT_VIEW", "DEPARTMENT_CREATE", "DEPARTMENT_UPDATE",
+            "LOCATION_VIEW", "LOCATION_CREATE", "LOCATION_UPDATE",
+            "PROJECT_VIEW", "PROJECT_CREATE", "PROJECT_UPDATE",
             "FUEL_ISSUE_AUTHORIZE",
+            "FUEL_PURCHASE_APPROVE",
+            "FUEL_PRICE_VIEW",
             "IDENTITY_MANAGE");
 
     @Autowired MockMvc mvc;
@@ -60,6 +73,12 @@ class BusinessAuthorizationIntegrationTest {
     @MockBean RouteUseCase routes;
     @MockBean FuelIssueUseCase fuelIssues;
     @MockBean FuelStationUseCase fuelStations;
+    @MockBean FuelPurchaseUseCase fuelPurchases;
+    @MockBean CustomerUseCase customers;
+    @MockBean DepartmentUseCase departments;
+    @MockBean LocationUseCase locations;
+    @MockBean ProjectUseCase projects;
+    @MockBean VendorUseCase vendors;
 
     @BeforeEach
     void seedActors() {
@@ -88,6 +107,10 @@ class BusinessAuthorizationIntegrationTest {
                 now, null, now, now));
         when(fuelStations.get(stationId)).thenReturn(new FuelStation(stationId, "AUTH", "Authorization Station",
                 FuelStationType.INTERNAL, true, null, null));
+        var purchaseId = UUID.fromString("a2000000-0000-0000-0000-000000000001");
+        var vendorId = UUID.fromString("a3000000-0000-0000-0000-000000000001");
+        when(fuelPurchases.approve(eq(purchaseId), any(), eq("permitted"))).thenReturn(purchase(purchaseId, vendorId));
+        when(fuelPurchases.vendor(vendorId)).thenReturn(new FuelPurchaseUseCase.VendorReference(vendorId, "V-1", "Vendor", true));
     }
 
     @Test
@@ -104,7 +127,8 @@ class BusinessAuthorizationIntegrationTest {
             mvc.perform(withBearer(request, token)).andExpect(status().isForbidden());
         }
 
-        verifyNoInteractions(trips, vehicles, drivers, routes, fuelIssues, fuelStations);
+        verifyNoInteractions(trips, vehicles, drivers, routes, fuelIssues, fuelStations, fuelPurchases,
+                customers, departments, locations, projects, vendors);
     }
 
     @Test
@@ -120,7 +144,21 @@ class BusinessAuthorizationIntegrationTest {
         verify(vehicles).create(any());
         verify(drivers).create(any());
         verify(routes).create(any());
+        verify(customers).create(any());
+        verify(customers).update(any(), any());
+        verify(customers).list();
+        verify(departments).create(any());
+        verify(departments).update(any(), any());
+        verify(departments).list();
+        verify(locations).create(any());
+        verify(locations).update(any(), any());
+        verify(locations).list();
+        verify(projects).create(any());
+        verify(projects).update(any(), any());
+        verify(projects).list();
+        verify(vendors).list(null);
         verify(fuelIssues).authorize(any(), any(), eq("permitted"));
+        verify(fuelPurchases).approve(any(), any(), eq("permitted"));
     }
 
     @Test
@@ -161,8 +199,39 @@ class BusinessAuthorizationIntegrationTest {
                          "destinationLocationId":"%s","plannedDistanceKm":10,"estimatedDurationMinutes":30,
                          "stops":[]}
                         """.formatted(originId, destinationId)),
+                post("/customers").contentType(MediaType.APPLICATION_JSON).content("""
+                        {"code":"AUTH-CUSTOMER","name":"Authorization Customer"}
+                        """),
+                put("/customers/{id}", UUID.randomUUID()).contentType(MediaType.APPLICATION_JSON).content("""
+                        {"code":"AUTH-CUSTOMER","name":"Updated Authorization Customer"}
+                        """),
+                get("/customers"),
+                post("/departments").contentType(MediaType.APPLICATION_JSON).content("""
+                        {"code":"AUTH-DEPARTMENT","name":"Authorization Department"}
+                        """),
+                put("/departments/{id}", UUID.randomUUID()).contentType(MediaType.APPLICATION_JSON).content("""
+                        {"code":"AUTH-DEPARTMENT","name":"Updated Authorization Department"}
+                        """),
+                get("/departments"),
+                post("/locations").contentType(MediaType.APPLICATION_JSON).content("""
+                        {"code":"AUTH-LOCATION","name":"Authorization Location"}
+                        """),
+                put("/locations/{id}", UUID.randomUUID()).contentType(MediaType.APPLICATION_JSON).content("""
+                        {"code":"AUTH-LOCATION","name":"Updated Authorization Location"}
+                        """),
+                get("/locations"),
+                post("/projects").contentType(MediaType.APPLICATION_JSON).content("""
+                        {"code":"AUTH-PROJECT","name":"Authorization Project"}
+                        """),
+                put("/projects/{id}", UUID.randomUUID()).contentType(MediaType.APPLICATION_JSON).content("""
+                        {"code":"AUTH-PROJECT","name":"Updated Authorization Project"}
+                        """),
+                get("/projects"),
+                get("/vendors"),
                 post("/fuel-issues/{id}/authorize", UUID.randomUUID()).contentType(MediaType.APPLICATION_JSON)
                         .content("{\"comment\":\"Approved by fuel manager\"}"),
+                post("/fuel-purchases/{id}/approve", UUID.fromString("a2000000-0000-0000-0000-000000000001"))
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"comment\":\"Approved\"}"),
                 get("/reports/trips").param("fromDate", "2026-01-01").param("toDate", "2026-01-31"),
                 get("/dashboard/operations"));
     }
@@ -193,5 +262,15 @@ class BusinessAuthorizationIntegrationTest {
                 """, userId, username, username + "@example.com", passwords.encode(PASSWORD), "Test", "Actor", null,
                 true, now, now);
         jdbc.update("INSERT INTO app_user_role (user_id, role_id) VALUES (?, ?)", userId, roleId);
+    }
+
+    private com.transportlogistics.app.fuel.domain.model.FuelPurchase purchase(UUID id, UUID vendorId) {
+        var now = OffsetDateTime.parse("2026-01-01T00:00:00Z");
+        return new com.transportlogistics.app.fuel.domain.model.FuelPurchase(id, "FP-2026-000001", vendorId,
+                null, "DIESEL", now.toLocalDate(), "INV-1", now.toLocalDate(), new BigDecimal("10"),
+                new BigDecimal("2"), new BigDecimal("20.00"), BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO,
+                new BigDecimal("20.00"), "LKR", com.transportlogistics.app.fuel.domain.model.FuelPurchaseStatus.APPROVED,
+                com.transportlogistics.app.fuel.domain.model.ReconciliationStatus.PENDING, null, null, null, null,
+                null, null, null, UUID.randomUUID(), now, null, null, null, null, null, UUID.randomUUID(), now, now);
     }
 }

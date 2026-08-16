@@ -28,10 +28,10 @@ services:
       DB_USERNAME: ${POSTGRES_USER:-transport_app}
       DB_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in your environment or .env file}
       JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET to a random value of at least 32 bytes}
-      DEV_IDENTITY_BOOTSTRAP_ENABLED: "true"
-      DEV_IDENTITY_USERNAME: ${APP_ADMIN_USERNAME:-admin}
-      DEV_IDENTITY_PASSWORD: ${APP_ADMIN_PASSWORD:?Set APP_ADMIN_PASSWORD to at least 12 characters}
-      DEV_IDENTITY_EMAIL: ${APP_ADMIN_EMAIL:-admin@localhost.test}
+      APP_DEV_IDENTITY_BOOTSTRAP_ENABLED: "true"
+      APP_DEV_IDENTITY_BOOTSTRAP_USERNAME: ${APP_ADMIN_USERNAME:-admin}
+      APP_DEV_IDENTITY_BOOTSTRAP_PASSWORD: ${APP_ADMIN_PASSWORD:?Set APP_ADMIN_PASSWORD to at least 12 characters}
+      APP_DEV_IDENTITY_BOOTSTRAP_EMAIL: ${APP_ADMIN_EMAIL:-admin@localhost.test}
       DB_POOL_MIN: 1
       DB_POOL_MAX: 10
     ports:
@@ -58,7 +58,7 @@ services:
       backend:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/healthz"]
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://127.0.0.1/healthz"]
       interval: 10s
       timeout: 5s
       retries: 10
