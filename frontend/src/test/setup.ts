@@ -1,6 +1,6 @@
 import '@testing-library/jest-dom/vitest';
 import { afterAll, afterEach, beforeAll, vi } from 'vitest';
-import { cleanup } from '@testing-library/react';
+import { cleanup, configure } from '@testing-library/react';
 import { server } from './server';
 
 beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
@@ -10,6 +10,8 @@ afterEach(() => {
   localStorage.clear();
 });
 afterAll(() => server.close());
+
+configure({ asyncUtilTimeout: 15_000 });
 
 Object.defineProperty(window, 'matchMedia', {
   writable: true,

@@ -2,6 +2,8 @@
 
 Phase 1 Transport & Logistics Management System implemented as a Java 21 modular monolith with a React/Ant Design operator frontend.
 
+Release boundary: Phase 1 ends at Flyway V10. The current feature branch also contains the separately requested post-Phase-1 US-31 Fuel Issue slice in the `fuel` module at V11; do not use current HEAD as a pure Phase 1 tag target.
+
 ## Architecture
 
 - Java 21, Spring Boot 3.2.12, Spring Modulith 1.2.12, Maven

@@ -5,7 +5,7 @@ Status recorded on 2026-08-15. Checked items were actually executed against the 
 ## Startup and security
 
 - [x] Backend starts on `8080` with context path `/api`.
-- [x] Flyway applies V1–V9 to a fresh H2 database.
+- [x] Flyway applies all current migrations V1–V11 to a fresh H2 database; the Phase 1 boundary is V10 and V11 is the already-present US-31 slice.
 - [x] `/api/health` returns 200.
 - [x] `/api/v3/api-docs` returns 200.
 - [x] Frontend starts on `5173` and proxies `/api` correctly.
@@ -39,7 +39,7 @@ Status recorded on 2026-08-15. Checked items were actually executed against the 
 - [x] API: `DISPATCHED -> IN_PROGRESS` with start odometer.
 - [x] API: `IN_PROGRESS -> COMPLETED` with end odometer and remarks.
 - [x] API: `COMPLETED -> CLOSED`.
-- [x] API/UI: eight lifecycle and assignment history entries are returned and rendered.
+- [x] API/UI: nine lifecycle and assignment history entries are returned and rendered, including explicit route assignment.
 - [x] API: blank rejection reason returns 400; valid rejection reaches `REJECTED`.
 - [x] API: blank cancellation reason returns 400; valid cancellation reaches `CANCELLED`.
 - [x] API: duplicate/invalid lifecycle transition returns 409 with a business code.
@@ -48,12 +48,11 @@ Status recorded on 2026-08-15. Checked items were actually executed against the 
 
 ## Manual/remaining UI work
 
-- [ ] UI vehicle/category/type CRUD — blocked: current routes render `ModulePage` placeholders.
-- [ ] UI vehicle document CRUD — blocked: no fleet management screen is implemented.
-- [ ] UI driver CRUD and licence CRUD — blocked: current driver route is a placeholder.
-- [ ] UI route CRUD/ordered-stop editing — blocked: current route page is a placeholder.
-- [ ] UI trip creation/editing — blocked: only list and details pages exist.
-- [ ] Dedicated route assignment action — backend has no `/trips/{id}/assign-route`; route is supplied on create/update.
+- [x] UI vehicle/category/type CRUD and vehicle document management.
+- [x] UI driver CRUD and licence management.
+- [x] UI route CRUD and ordered-stop editing.
+- [x] UI trip creation/editing.
+- [x] Dedicated route assignment action through `/trips/{id}/assign-route`.
 - [ ] Trip operational log — backend endpoint/model is absent.
 - [ ] Trip exception log/interruption — backend feature is absent beyond reject/cancel history.
 - [ ] Real reporting totals and alerts — reporting endpoints currently return READY/empty placeholder data.

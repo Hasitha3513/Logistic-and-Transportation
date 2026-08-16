@@ -6,6 +6,12 @@ spring:
     hikari:
       maximum-pool-size: ${DB_POOL_MAX:10}
       minimum-idle: ${DB_POOL_MIN:2}
+  flyway:
+    placeholders:
+      vehicleReadingSourceIdentityIndex: >-
+        CREATE UNIQUE INDEX uq_vehicle_reading_source
+        ON vehicle_reading(vehicle_id, reading_type, source_type, source_reference_id)
+        WHERE source_reference_id IS NOT NULL AND correction_of_reading_id IS NULL
   jpa:
     properties:
       hibernate:

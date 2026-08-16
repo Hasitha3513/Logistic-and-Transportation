@@ -1,6 +1,6 @@
 # Phase 1 API Contract
 
-This document freezes the implemented Phase 1 HTTP surface as of migration V10. Paths are relative to the `/api` servlet context. JSON uses ISO-8601 strings for `LocalDate` and `OffsetDateTime`, UUID strings for identifiers, and the shared `ApiError` shape for errors.
+This document freezes the implemented Phase 1 HTTP surface as of migration V10. Paths are relative to the `/api` servlet context. JSON uses ISO-8601 strings for `LocalDate` and `OffsetDateTime`, UUID strings for identifiers, and the shared `ApiError` shape for errors. Current feature-branch OpenAPI also contains post-Phase-1 US-31/V11 fuel endpoints; they are intentionally excluded from this Phase 1 contract.
 
 ## Common behavior
 

@@ -5,13 +5,13 @@
 - Java 21 (the project compiles on newer JDKs, but Spring Modulith/ArchUnit verification is noisy and incomplete on JDK 26).
 - Maven 3.9.x. The repository's current `mvnw` and `mvnw.cmd` are shims and `.mvn/wrapper` is absent, so use an installed `mvn` until the wrapper is repaired.
 - Node.js 22 and npm 11 (the verified workstation used Node 22.14.0 and npm 11.6.2).
-- PostgreSQL is optional. The default `h2` profile uses an in-memory database and needs no separate database process.
+- PostgreSQL is optional for direct workstation development. The default `h2` profile uses an in-memory database and needs no separate database process; the Docker Compose workflow runs PostgreSQL automatically.
 
 ## Backend configuration
 
 The backend listens on `http://localhost:8080` with servlet context path `/api`.
 
-For H2 development, set a non-production JWT secret and opt in to a temporary local identity. The bootstrap is disabled by default, is H2-only, and never contains a committed password.
+For H2 development, set a non-production JWT secret and opt in to a temporary local identity. The bootstrap is disabled by default, runs only under the explicit `h2` or `docker` profile, and never contains a committed effective password.
 
 ```powershell
 $env:JWT_SECRET = "<choose-a-random-secret-of-at-least-32-bytes>"
@@ -23,7 +23,7 @@ $env:DEV_SAMPLE_DATA_ENABLED = "true"
 mvn spring-boot:run
 ```
 
-The first H2 startup applies Flyway migrations V1 through V10 and creates the opt-in local user with the `LOCAL_MVP_ADMIN` role and all Phase 1 business permissions. `DEV_SAMPLE_DATA_ENABLED=true` additionally loads a development-only Phase 1 dataset containing customers, locations, fleet categories and types, vehicles and documents, drivers and licences, routes, and trips spanning the main lifecycle statuses. Both bootstraps are disabled by default and H2-only. H2 is in-memory, so the data and user disappear when the backend stops.
+The first H2 startup applies all migrations present on the checked-out branch (currently V1 through V11; Phase 1 ends at V10 and V11 is US-31) and creates the opt-in local user with the local administrator permission set. `DEV_SAMPLE_DATA_ENABLED=true` additionally loads a development-only dataset containing customers, locations, fleet categories and types, vehicles and documents, drivers and licences, routes, and trips spanning the main lifecycle statuses. Both bootstraps are disabled by default. Sample data remains H2-only; the administrator bootstrap is also available under the explicit `docker` profile. H2 is in-memory, so its data and user disappear when the backend stops.
 
 For PostgreSQL, create the database using your normal PostgreSQL administration tooling, then start with environment variables (do not commit their values):
 
@@ -36,7 +36,7 @@ $env:JWT_SECRET = "<production-quality-secret>"
 mvn spring-boot:run
 ```
 
-There is no Docker Compose file in this repository. PostgreSQL must therefore be started locally or supplied externally. The H2-only identity bootstrap does not run for PostgreSQL; provision the first production administrator through an approved deployment/identity provisioning process.
+For a complete local container stack, copy `.env.docker.example` to `.env`, fill the required password/secret values, and run `docker compose up --build -d`. Compose starts PostgreSQL, activates the `postgres,docker` backend profiles, applies Flyway migrations, creates the explicitly configured local administrator, and serves the frontend on port 5173. The `docker` bootstrap is for local Compose only; production PostgreSQL deployments must provision the first administrator through an approved identity process.
 
 ## Backend verification
 

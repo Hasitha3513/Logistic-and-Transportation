@@ -80,6 +80,27 @@ class SecurityConfig {
                         .requestMatchers(HttpMethod.PUT, "/routes/*").hasAuthority("ROUTE_UPDATE")
                         .requestMatchers(HttpMethod.DELETE, "/routes/*").hasAuthority("ROUTE_UPDATE")
 
+                        .requestMatchers(HttpMethod.GET, "/customers", "/customers/*")
+                        .hasAuthority("CUSTOMER_VIEW")
+                        .requestMatchers(HttpMethod.POST, "/customers").hasAuthority("CUSTOMER_CREATE")
+                        .requestMatchers(HttpMethod.PUT, "/customers/*").hasAuthority("CUSTOMER_UPDATE")
+                        .requestMatchers(HttpMethod.DELETE, "/customers/*").hasAuthority("CUSTOMER_UPDATE")
+                        .requestMatchers(HttpMethod.GET, "/departments", "/departments/*")
+                        .hasAuthority("DEPARTMENT_VIEW")
+                        .requestMatchers(HttpMethod.POST, "/departments").hasAuthority("DEPARTMENT_CREATE")
+                        .requestMatchers(HttpMethod.PUT, "/departments/*").hasAuthority("DEPARTMENT_UPDATE")
+                        .requestMatchers(HttpMethod.DELETE, "/departments/*").hasAuthority("DEPARTMENT_UPDATE")
+                        .requestMatchers(HttpMethod.GET, "/locations", "/locations/*")
+                        .hasAuthority("LOCATION_VIEW")
+                        .requestMatchers(HttpMethod.POST, "/locations").hasAuthority("LOCATION_CREATE")
+                        .requestMatchers(HttpMethod.PUT, "/locations/*").hasAuthority("LOCATION_UPDATE")
+                        .requestMatchers(HttpMethod.DELETE, "/locations/*").hasAuthority("LOCATION_UPDATE")
+                        .requestMatchers(HttpMethod.GET, "/projects", "/projects/*")
+                        .hasAuthority("PROJECT_VIEW")
+                        .requestMatchers(HttpMethod.POST, "/projects").hasAuthority("PROJECT_CREATE")
+                        .requestMatchers(HttpMethod.PUT, "/projects/*").hasAuthority("PROJECT_UPDATE")
+                        .requestMatchers(HttpMethod.DELETE, "/projects/*").hasAuthority("PROJECT_UPDATE")
+
                         .requestMatchers(HttpMethod.GET, "/trips", "/trips/*", "/trips/*/status-history")
                         .hasAuthority("TRIP_VIEW")
                         .requestMatchers(HttpMethod.POST, "/trips").hasAuthority("TRIP_CREATE")
@@ -111,10 +132,27 @@ class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/fuel-stations").hasAuthority("FUEL_ISSUE_CREATE")
                         .requestMatchers(HttpMethod.PUT, "/fuel-stations/*").hasAuthority("FUEL_ISSUE_UPDATE")
 
+                        .requestMatchers(HttpMethod.GET, "/fuel-purchases", "/fuel-purchases/*",
+                                "/fuel-purchases/*/history").hasAuthority("FUEL_PURCHASE_VIEW")
+                        .requestMatchers(HttpMethod.POST, "/fuel-purchases").hasAuthority("FUEL_PURCHASE_CREATE")
+                        .requestMatchers(HttpMethod.PUT, "/fuel-purchases/*").hasAuthority("FUEL_PURCHASE_UPDATE")
+                        .requestMatchers(HttpMethod.POST, "/fuel-purchases/*/submit").hasAuthority("FUEL_PURCHASE_SUBMIT")
+                        .requestMatchers(HttpMethod.POST, "/fuel-purchases/*/approve").hasAuthority("FUEL_PURCHASE_APPROVE")
+                        .requestMatchers(HttpMethod.POST, "/fuel-purchases/*/receive").hasAuthority("FUEL_PURCHASE_RECEIVE")
+                        .requestMatchers(HttpMethod.POST, "/fuel-purchases/*/reconcile").hasAuthority("FUEL_PURCHASE_RECONCILE")
+                        .requestMatchers(HttpMethod.POST, "/fuel-purchases/*/cancel").hasAuthority("FUEL_PURCHASE_CANCEL")
+                        .requestMatchers(HttpMethod.GET, "/fuel-prices", "/vendors", "/vendors/*")
+                        .hasAuthority("FUEL_PRICE_VIEW")
+                        .requestMatchers(HttpMethod.POST, "/fuel-prices", "/vendors").hasAuthority("FUEL_PRICE_MANAGE")
+                        .requestMatchers(HttpMethod.PUT, "/fuel-prices/*", "/vendors/*").hasAuthority("FUEL_PRICE_MANAGE")
+                        .requestMatchers(HttpMethod.DELETE, "/vendors/*").hasAuthority("FUEL_PRICE_MANAGE")
+
                         .requestMatchers(HttpMethod.GET, "/dashboard/**").hasAuthority("DASHBOARD_VIEW")
                         .requestMatchers(HttpMethod.GET, "/reports/**").hasAuthority("REPORT_VIEW")
                         .requestMatchers("/vehicles/**", "/drivers/**", "/vehicle-categories/**", "/vehicle-types/**",
-                                "/routes/**", "/trips/**", "/fuel-issues/**", "/fuel-stations/**",
+                                "/routes/**", "/customers/**", "/departments/**", "/locations/**", "/projects/**",
+                                "/trips/**", "/fuel-issues/**", "/fuel-stations/**",
+                                "/fuel-purchases/**", "/fuel-prices/**", "/vendors/**",
                                 "/dashboard/**", "/reports/**").denyAll()
                         .anyRequest().authenticated())
                 .addFilterBefore(jwt, UsernamePasswordAuthenticationFilter.class)

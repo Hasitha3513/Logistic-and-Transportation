@@ -39,7 +39,7 @@ Login → vehicle category/type → vehicle → mandatory document → driver �
 
 Negative tests cover expired compliance records, inactive/maintenance resources, overlap conflicts, unauthorized commands, invalid lifecycle transitions, reasons, and odometer validation. H2 concurrent vehicle, driver, and lifecycle tests allow exactly one conflicting mutation.
 
-Final verification: backend `mvn clean verify` passed 140/140 tests across 43 suites; frontend lint passed, Vitest passed 29/29 tests across 7 files, and the production build passed. The packaged-JAR smoke trip `97f840ed-aaec-4ce9-8539-cae33593ad08` reached `CLOSED` with 9 ordered history entries.
+Final verification: backend `mvn clean verify` passed 160/160 tests across 47 suites; frontend lint passed, Vitest passed 39/39 tests across 8 files, and the production build passed. The fresh packaged-JAR smoke trip `TRIP-DEMO-001` reached `CLOSED` with 9 ordered history entries. These current-HEAD checks also exercise the already-present post-Phase-1 V11 migration; the Phase 1 release boundary itself remains V10.
 
 ## Known Limitations
 
@@ -51,7 +51,7 @@ Final verification: backend `mvn clean verify` passed 140/140 tests across 43 su
 
 ## Deferred Features
 
-- Fuel management
+- Fuel Purchase, bunker/stock ledger, fuel cards, reconciliation, and analytics. US-31 Fuel Issue already exists on a post-Phase-1 feature branch and is not part of the Phase 1 release artifact.
 - Freight and cargo management
 - GPS and real-time tracking
 - Delivery management and proof of delivery
@@ -76,3 +76,21 @@ Latest Phase 1 migration: `V10__phase1_release_integrity.sql`.
 Recommended identifier: `v1.0.0-mvp`.
 
 Current state: **NOT READY** until the clean PostgreSQL migration and PostgreSQL concurrency gate pass. No tag has been created or pushed.
+
+Do not tag the current `agent/fuel-issue-us31` HEAD as Phase 1 because it contains US-31/V11. Create the tag only from a reviewed Phase-1-only release commit through V10.
+
+## Release Commands
+
+After a reviewed Phase-1-only branch named `release/phase-1-mvp` exists, the release owner should run:
+
+```powershell
+git switch release/phase-1-mvp
+git status --short
+git log -1 --oneline
+git tag --list v1.0.0-mvp
+git tag -a v1.0.0-mvp -m "Phase 1 MVP"
+git push origin release/phase-1-mvp
+git push origin v1.0.0-mvp
+```
+
+`git status --short` must be empty, the inspected commit must contain migrations only through V10, and `git tag --list v1.0.0-mvp` must return no existing tag before the tag command is run. No tag or tag push was executed during this audit.
