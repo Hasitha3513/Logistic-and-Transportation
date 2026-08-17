@@ -90,7 +90,7 @@ class VehicleReadingPersistenceAdapter implements VehicleReadingRepository {
         var pageable = PageRequest.of(query.page(), query.limit(), Sort.by(
                 Sort.Order.desc("recordedAt"), Sort.Order.desc("receivedAt"), Sort.Order.desc("createdAt")));
         Specification<VehicleReadingEntity> specification = (root, ignored, builder) ->
-                builder.equal(root.get("vehicleId"), query.vehicleId());
+                query.vehicleId() != null ? builder.equal(root.get("vehicleId"), query.vehicleId()) : builder.conjunction();
         if (query.readingType() != null) {
             specification = specification.and((root, ignored, builder) ->
                     builder.equal(root.get("readingType"), query.readingType()));

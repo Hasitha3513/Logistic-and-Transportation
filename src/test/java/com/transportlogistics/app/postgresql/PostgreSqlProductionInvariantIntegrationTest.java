@@ -99,9 +99,9 @@ class PostgreSqlProductionInvariantIntegrationTest extends PostgreSqlIntegration
         flyway.validate();
         var applied = List.of(flyway.info().applied());
 
-        assertEquals(16, applied.size());
-        assertEquals("16", applied.getLast().getVersion().getVersion());
-        assertEquals("16", jdbc.queryForObject(
+        assertEquals(17, applied.size());
+        assertEquals("17", applied.getLast().getVersion().getVersion());
+        assertEquals("17", jdbc.queryForObject(
                 "SELECT version FROM flyway_schema_history WHERE success = TRUE ORDER BY installed_rank DESC LIMIT 1",
                 String.class));
         assertTrue(entityManagerFactory.isOpen());
