@@ -37,6 +37,12 @@ class FuelIssuePersistenceAdapter implements FuelIssueRepository {
     }
 
     @Override
+    public java.util.List<FuelIssue> findByTripId(UUID tripId) {
+        if (tripId == null) return java.util.List.of();
+        return repository.findByTripIdOrderByIssueDateTimeAsc(tripId).stream().map(this::map).toList();
+    }
+
+    @Override
     public FuelIssueUseCase.PageResult<FuelIssue> search(FuelIssueUseCase.SearchQuery request) {
         var specification = (org.springframework.data.jpa.domain.Specification<FuelIssueEntity>) (root, query, builder) -> {
             var predicates = new ArrayList<Predicate>();

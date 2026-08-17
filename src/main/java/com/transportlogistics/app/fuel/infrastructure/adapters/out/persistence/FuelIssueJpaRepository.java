@@ -15,5 +15,7 @@ interface FuelIssueJpaRepository extends JpaRepository<FuelIssueEntity, UUID>, J
     @Query("select issue from FuelIssueEntity issue where issue.id = :id")
     Optional<FuelIssueEntity> findByIdForUpdate(@Param("id") UUID id);
 
+    java.util.List<FuelIssueEntity> findByTripIdOrderByIssueDateTimeAsc(UUID tripId);
+
     boolean existsByVoucherNumber(String voucherNumber);
 }
