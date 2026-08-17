@@ -1,18 +1,11 @@
 package com.transportlogistics.app.organization.infrastructure.adapters.in.web;
 
-import com.transportlogistics.app.organization.application.ports.in.CustomerUseCase;
-import com.transportlogistics.app.organization.application.ports.in.DepartmentUseCase;
-import com.transportlogistics.app.organization.application.ports.in.LocationUseCase;
-import com.transportlogistics.app.organization.application.ports.in.ProjectUseCase;
-import com.transportlogistics.app.organization.application.ports.in.VendorUseCase;
-import com.transportlogistics.app.organization.domain.model.Customer;
-import com.transportlogistics.app.organization.domain.model.Department;
-import com.transportlogistics.app.organization.domain.model.Location;
-import com.transportlogistics.app.organization.domain.model.Project;
-import com.transportlogistics.app.organization.domain.model.Vendor;
+import com.transportlogistics.app.organization.application.ports.in.*;
+import com.transportlogistics.app.organization.domain.model.*;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,21 +13,13 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
+@RequiredArgsConstructor
 public class OrganizationController {
     private final CustomerUseCase customers;
     private final DepartmentUseCase departments;
     private final LocationUseCase locations;
     private final ProjectUseCase projects;
     private final VendorUseCase vendors;
-
-    OrganizationController(CustomerUseCase c, DepartmentUseCase d, LocationUseCase l, ProjectUseCase p,
-                           VendorUseCase v) {
-        customers = c;
-        departments = d;
-        locations = l;
-        projects = p;
-        vendors = v;
-    }
 
     @PostMapping("/customers")
     ResponseEntity<Customer> createCustomer(@Valid @RequestBody CustomerRequest r) {

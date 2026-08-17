@@ -22,10 +22,13 @@ import com.transportlogistics.app.shared.domain.BusinessRuleException;
 import com.transportlogistics.app.shared.domain.NotFoundException;
 
 import java.math.BigDecimal;
+import com.transportlogistics.app.fuel.application.ports.out.FuelVehicleReadingPort;
 import java.time.Clock;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
@@ -44,6 +47,7 @@ public final class FuelIssueService implements FuelIssueUseCase {
     private final FuelVoucherGenerator vouchers;
     private final FuelTransaction transactions;
     private final FuelEventPublisher events;
+    private final FuelVehicleReadingPort readings;
     private final Clock clock;
     private final FuelIssuePolicy policy = new FuelIssuePolicy();
 
@@ -52,6 +56,15 @@ public final class FuelIssueService implements FuelIssueUseCase {
                             VehicleFuelContextPort vehicles, TripFuelContextPort trips, FuelActorPort actors,
                             FuelVoucherGenerator vouchers, FuelTransaction transactions, FuelEventPublisher events,
                             Clock clock) {
+        this(issues, history, stations, limits, vehicles, trips, actors, vouchers, transactions, events,
+                noOpFuelVehicleReadingPort(), clock);
+    }
+
+    public FuelIssueService(FuelIssueRepository issues, FuelIssueHistoryRepository history,
+                            FuelStationRepository stations, FuelLimitPolicyRepository limits,
+                            VehicleFuelContextPort vehicles, TripFuelContextPort trips, FuelActorPort actors,
+                            FuelVoucherGenerator vouchers, FuelTransaction transactions, FuelEventPublisher events,
+                            FuelVehicleReadingPort readings, Clock clock) {
         this.issues = issues;
         this.history = history;
         this.stations = stations;
@@ -62,6 +75,7 @@ public final class FuelIssueService implements FuelIssueUseCase {
         this.vouchers = vouchers;
         this.transactions = transactions;
         this.events = events;
+        this.readings = readings == null ? noOpFuelVehicleReadingPort() : readings;
         this.clock = clock;
     }
 
@@ -135,6 +149,7 @@ public final class FuelIssueService implements FuelIssueUseCase {
             var now = OffsetDateTime.now(clock);
             var saved = issues.save(copy(current, FuelIssueStatus.ISSUED, current.authorizedBy(),
                     current.authorizationDateTime(), now));
+            readings.record(saved.vehicleId(), saved.id(), saved.odometer(), saved.engineHours(), now, actor.id());
             append(saved, current.status(), saved.status(), "ISSUED", actor, "Fuel issued", now);
             events.publish(new FuelIssued(saved.id(), saved.voucherNumber(), saved.vehicleId(), saved.tripId(),
                     saved.quantity(), now));
@@ -278,5 +293,9 @@ public final class FuelIssueService implements FuelIssueUseCase {
 
     private String trim(String value) {
         return value == null || value.isBlank() ? null : value.trim();
+    }
+
+    private static FuelVehicleReadingPort noOpFuelVehicleReadingPort() {
+        return (vehicleId, fuelIssueId, odometer, engineHours, recordedAt, actorId) -> { };
     }
 }

@@ -7,6 +7,8 @@ import java.util.UUID;
 
 interface VendorJpaRepository extends JpaRepository<VendorEntity, UUID> {
     boolean existsByCodeAndIdNot(String code, UUID id);
+
     List<VendorEntity> findAllByActiveOrderByName(boolean active);
+
     List<VendorEntity> findAllByOrderByName();
 }

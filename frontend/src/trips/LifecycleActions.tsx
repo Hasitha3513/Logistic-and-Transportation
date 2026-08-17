@@ -66,10 +66,19 @@ export default function LifecycleActions({ trip, hasPermission }: LifecycleActio
       (await api.post<Trip>(`/trips/${trip.id}/${lifecycleAction}`, body ?? {})).data,
     onSuccess: async (updated) => {
       queryClient.setQueryData(['trip', trip.id], updated);
-      await Promise.all([
+      const invalidations: Promise<unknown>[] = [
         queryClient.invalidateQueries({ queryKey: ['trip', trip.id, 'status-history'] }),
         queryClient.invalidateQueries({ queryKey: ['trips'] }),
-      ]);
+      ];
+      const vehicleId = updated.vehicleId ?? trip.vehicleId;
+      if (vehicleId) {
+        invalidations.push(
+          queryClient.invalidateQueries({ queryKey: ['vehicles'] }),
+          queryClient.invalidateQueries({ queryKey: ['vehicle', vehicleId, 'readings'] }),
+          queryClient.invalidateQueries({ queryKey: ['vehicle', vehicleId, 'readings', 'latest'] }),
+        );
+      }
+      await Promise.all(invalidations);
       void message.success(`Trip ${updated.status.replaceAll('_', ' ').toLowerCase()}`);
       setAction(undefined);
     },

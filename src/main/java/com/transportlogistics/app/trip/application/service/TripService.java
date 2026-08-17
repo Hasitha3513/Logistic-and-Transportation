@@ -16,6 +16,8 @@ import com.transportlogistics.app.trip.domain.model.TripDispatchRecord;
 import com.transportlogistics.app.trip.domain.model.TripHistoryEntry;
 import com.transportlogistics.app.trip.domain.model.TripLifecyclePolicy;
 
+import com.transportlogistics.app.trip.application.ports.out.TripActorPort;
+import com.transportlogistics.app.trip.application.ports.out.TripVehicleReadingPort;
 import java.time.Clock;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
@@ -31,6 +33,8 @@ public final class TripService implements TripUseCase {
     private final TripHistoryRepository history;
     private final TripTransaction transactions;
     private final TripDispatchRepository dispatches;
+    private final TripVehicleReadingPort readings;
+    private final TripActorPort actors;
     private final Clock clock;
     private final TripLifecyclePolicy lifecycle = new TripLifecyclePolicy();
 
@@ -38,20 +42,29 @@ public final class TripService implements TripUseCase {
                        DriverEligibilityPort driverEligibility, TripHistoryRepository history,
                        TripTransaction transactions, TripDispatchRepository dispatches) {
         this(repo, vehicleEligibility, driverEligibility, noOpRouteEligibility(), history, transactions, dispatches,
-                Clock.systemUTC());
+                noOpVehicleReadingPort(), noOpActorPort(), Clock.systemUTC());
     }
 
     public TripService(TripRepository repo, VehicleEligibilityPort vehicleEligibility,
                        DriverEligibilityPort driverEligibility, TripHistoryRepository history,
                        TripTransaction transactions, TripDispatchRepository dispatches, Clock clock) {
         this(repo, vehicleEligibility, driverEligibility, noOpRouteEligibility(), history, transactions, dispatches,
-                clock);
+                noOpVehicleReadingPort(), noOpActorPort(), clock);
     }
 
     public TripService(TripRepository repo, VehicleEligibilityPort vehicleEligibility,
                        DriverEligibilityPort driverEligibility, RouteEligibilityPort routeEligibility,
                        TripHistoryRepository history, TripTransaction transactions,
                        TripDispatchRepository dispatches, Clock clock) {
+        this(repo, vehicleEligibility, driverEligibility, routeEligibility, history, transactions, dispatches,
+                noOpVehicleReadingPort(), noOpActorPort(), clock);
+    }
+
+    public TripService(TripRepository repo, VehicleEligibilityPort vehicleEligibility,
+                       DriverEligibilityPort driverEligibility, RouteEligibilityPort routeEligibility,
+                       TripHistoryRepository history, TripTransaction transactions,
+                       TripDispatchRepository dispatches, TripVehicleReadingPort readings,
+                       TripActorPort actors, Clock clock) {
         this.repo = repo;
         this.vehicleEligibility = vehicleEligibility;
         this.driverEligibility = driverEligibility;
@@ -59,6 +72,8 @@ public final class TripService implements TripUseCase {
         this.history = history;
         this.transactions = transactions;
         this.dispatches = dispatches;
+        this.readings = readings == null ? noOpVehicleReadingPort() : readings;
+        this.actors = actors == null ? noOpActorPort() : actors;
         this.clock = clock;
     }
 
@@ -236,6 +251,14 @@ public final class TripService implements TripUseCase {
             var occurredAt = now();
             lifecycle.validateTransition(trip, command, actor, occurredAt);
             var auditActor = actor(actor);
+            var actorId = resolveActorId(auditActor);
+
+            if (command instanceof TripCommand.Start start) {
+                readings.recordTripStart(trip.vehicleId(), trip.id(), start.odometerKm(), occurredAt, actorId);
+            } else if (command instanceof TripCommand.Complete complete) {
+                readings.recordTripEnd(trip.vehicleId(), trip.id(), complete.odometerKm(), occurredAt, actorId);
+            }
+
             var changed = apply(trip, command, occurredAt);
             var saved = repo.save(changed);
             history.save(new TripHistoryEntry(UUID.randomUUID(), trip.id(), trip.status(), saved.status(),
@@ -355,6 +378,24 @@ public final class TripService implements TripUseCase {
         if (trip.routeId() != null) {
             routeEligibility.assertAssignable(trip.routeId(), trip.originLocationId(), trip.destinationLocationId());
         }
+    }
+
+    private UUID resolveActorId(String actor) {
+        return actors.resolveActorId(actor);
+    }
+
+    private static TripVehicleReadingPort noOpVehicleReadingPort() {
+        return new TripVehicleReadingPort() {
+            @Override public void recordTripStart(UUID vehicleId, UUID tripId, Double odometerKm, OffsetDateTime occurredAt, UUID actorId) {}
+            @Override public void recordTripEnd(UUID vehicleId, UUID tripId, Double odometerKm, OffsetDateTime occurredAt, UUID actorId) {}
+        };
+    }
+
+    private static TripActorPort noOpActorPort() {
+        return new TripActorPort() {
+            @Override public java.util.Optional<Actor> find(String username) { return java.util.Optional.empty(); }
+            @Override public UUID resolveActorId(String username) { return UUID.fromString("00000000-0000-0000-0000-000000000001"); }
+        };
     }
 
     private static RouteEligibilityPort noOpRouteEligibility() {

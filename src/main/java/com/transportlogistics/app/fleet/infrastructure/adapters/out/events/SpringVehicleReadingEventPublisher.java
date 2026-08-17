@@ -1,5 +1,7 @@
 package com.transportlogistics.app.fleet.infrastructure.adapters.out.events;
 
+import com.transportlogistics.app.fleet.VehicleMeterResetRecorded;
+import com.transportlogistics.app.fleet.VehicleReadingCorrected;
 import com.transportlogistics.app.fleet.VehicleReadingRecorded;
 import com.transportlogistics.app.fleet.application.ports.out.VehicleReadingEventPublisher;
 import org.springframework.context.ApplicationEventPublisher;
@@ -17,6 +19,20 @@ class SpringVehicleReadingEventPublisher implements VehicleReadingEventPublisher
 
     @Override
     public void publishAfterCommit(VehicleReadingRecorded event) {
+        publish(event);
+    }
+
+    @Override
+    public void publishAfterCommit(VehicleReadingCorrected event) {
+        publish(event);
+    }
+
+    @Override
+    public void publishAfterCommit(VehicleMeterResetRecorded event) {
+        publish(event);
+    }
+
+    private void publish(Object event) {
         if (!TransactionSynchronizationManager.isSynchronizationActive()) {
             events.publishEvent(event);
             return;

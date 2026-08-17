@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Alert, App as AntApp, Button, Card, Descriptions, Drawer, Flex, Space, Spin, Table, Tag, Typography, type TableColumnsType } from 'antd';
 import { api } from '../api/client';
 import { useAuth } from '../auth/AuthContext';
+import VehicleReadingsSection from '../fleet/VehicleReadingsSection';
 import ResourceEditorModal, { type ResourceField, type ResourceValues } from './ResourceEditorModal';
 
 type ResourceRecord = Record<string, unknown> & { id: string };
@@ -146,7 +147,7 @@ export default function ResourceListPage({ endpoint, queryKey, title, descriptio
       </Card>
       <Drawer
         title={`${title} details`}
-        width={620}
+        width={760}
         open={Boolean(selected)}
         onClose={() => setSelected(undefined)}
         destroyOnHidden
@@ -184,6 +185,9 @@ export default function ResourceListPage({ endpoint, queryKey, title, descriptio
                     items={Object.entries(record).map(([key, value]) => ({ key, label: fieldLabel(key), children: detailValue(value) }))} />
                 </Card>)}
               </Card>
+            )}
+            {endpoint === '/vehicles' && selected?.id && (
+              <VehicleReadingsSection vehicleId={selected.id} />
             )}
           </Flex>
         )}

@@ -9,7 +9,10 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 class VendorConfig {
-    @Bean VendorUseCase vendorUseCase(VendorRepository vendors) { return new VendorService(vendors); }
+    @Bean
+    VendorUseCase vendorUseCase(VendorRepository vendors) {
+        return new VendorService(vendors);
+    }
 
     @Bean
     VendorLookup vendorLookup(VendorUseCase vendors) {

@@ -33,5 +33,7 @@ public interface VehicleReadingRepository {
 
     Optional<VehicleReading> findByIdempotencyKey(String idempotencyKey);
 
+    Optional<VehicleReading> findCorrection(UUID originalReadingId);
+
     VehicleReadingUseCase.PageResult<VehicleReading> search(VehicleReadingUseCase.SearchQuery query);
 }

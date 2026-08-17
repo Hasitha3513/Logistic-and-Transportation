@@ -2,6 +2,7 @@ package com.transportlogistics.app.identity.infrastructure.adapters.out.persiste
 
 import com.transportlogistics.app.identity.application.ports.out.RefreshTokenStore;
 import com.transportlogistics.app.identity.domain.model.IssuedRefreshToken;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,13 +17,10 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Component
+@RequiredArgsConstructor
 class RefreshTokenPersistenceAdapter implements RefreshTokenStore {
     private static final SecureRandom RANDOM = new SecureRandom();
     private final RefreshTokenJpaRepository repository;
-
-    RefreshTokenPersistenceAdapter(RefreshTokenJpaRepository repository) {
-        this.repository = repository;
-    }
 
     @Override
     @Transactional

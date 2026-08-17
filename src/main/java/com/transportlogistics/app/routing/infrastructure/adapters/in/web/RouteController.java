@@ -7,6 +7,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,12 +15,9 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
+@RequiredArgsConstructor
 class RouteController {
     private final RouteUseCase routes;
-
-    RouteController(RouteUseCase r) {
-        routes = r;
-    }
 
     @PostMapping("/routes")
     ResponseEntity<Route> create(@Valid @RequestBody RouteRequest r) {

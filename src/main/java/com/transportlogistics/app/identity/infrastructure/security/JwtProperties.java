@@ -20,4 +20,14 @@ public record JwtProperties(String secret, String issuer, Duration accessTokenTt
             throw new IllegalArgumentException("security.jwt.refresh-token-ttl must be positive");
         }
     }
+
+    @Override
+    public String toString() {
+        return "JwtProperties[" +
+                "secret=***" +
+                ", issuer=" + issuer +
+                ", accessTokenTtl=" + accessTokenTtl +
+                ", refreshTokenTtl=" + refreshTokenTtl +
+                ']';
+    }
 }

@@ -8,7 +8,10 @@ import java.util.UUID;
 
 public interface VendorRepository {
     Vendor save(Vendor vendor);
+
     Optional<Vendor> findById(UUID id);
+
     List<Vendor> findAll(Boolean active);
+
     boolean existsByCode(String code, UUID excludingId);
 }

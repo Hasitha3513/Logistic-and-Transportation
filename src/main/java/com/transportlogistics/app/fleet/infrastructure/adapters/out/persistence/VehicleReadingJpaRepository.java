@@ -86,4 +86,5 @@ interface VehicleReadingJpaRepository extends JpaRepository<VehicleReadingEntity
 
     Optional<VehicleReadingEntity> findByIdempotencyKey(String idempotencyKey);
 
+    Optional<VehicleReadingEntity> findByCorrectionOfReadingId(UUID originalReadingId);
 }

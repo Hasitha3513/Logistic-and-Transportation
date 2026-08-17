@@ -35,7 +35,8 @@ class LocalIdentityBootstrap implements ApplicationRunner {
             "FUEL_ISSUE_AUTHORIZE", "FUEL_ISSUE_ISSUE", "FUEL_ISSUE_CANCEL",
             "FUEL_PURCHASE_VIEW", "FUEL_PURCHASE_CREATE", "FUEL_PURCHASE_UPDATE", "FUEL_PURCHASE_SUBMIT",
             "FUEL_PURCHASE_APPROVE", "FUEL_PURCHASE_RECEIVE", "FUEL_PURCHASE_RECONCILE", "FUEL_PURCHASE_CANCEL",
-            "FUEL_PRICE_VIEW", "FUEL_PRICE_MANAGE");
+            "FUEL_PRICE_VIEW", "FUEL_PRICE_MANAGE",
+            "VEHICLE_READING_VIEW", "VEHICLE_READING_CREATE", "VEHICLE_READING_CORRECT", "VEHICLE_READING_RESET_METER");
 
     private final IdentityUseCase identities;
     private final Environment environment;

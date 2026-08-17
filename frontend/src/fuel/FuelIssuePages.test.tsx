@@ -117,7 +117,7 @@ describe('Fuel Issue MVP pages', () => {
   it('renders issued records read-only', async () => {
     handlers(['FUEL_ISSUE_VIEW', 'FUEL_ISSUE_UPDATE', 'FUEL_ISSUE_CANCEL'], { ...baseIssue, status: 'ISSUED' });
     renderAt('/fuel/issues/fuel-1');
-    expect(await screen.findByText('This operational record is read-only and retained for audit.')).toBeInTheDocument();
+    expect(await screen.findByText(/This operational record is read-only/)).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Edit' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Cancel' })).not.toBeInTheDocument();
   });
@@ -127,5 +127,38 @@ describe('Fuel Issue MVP pages', () => {
     renderAt('/fuel/issues');
     expect(await screen.findByText('Select an available module from the navigation.')).toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'Fuel issues' })).not.toBeInTheDocument();
+  });
+
+  it('invalidates vehicle queries and shows reading note on successful fuel issue', async () => {
+    let currentIssue = { ...baseIssue, status: 'AUTHORIZED', odometer: 10050, engineHours: 45.0, vehicle: { id: 'veh-99' } };
+    handlers(['FUEL_ISSUE_VIEW', 'FUEL_ISSUE_ISSUE'], currentIssue);
+    server.use(
+      http.get('*/fuel-issues/:id', () => HttpResponse.json(currentIssue)),
+      http.post('*/fuel-issues/:id/issue', () => {
+        currentIssue = { ...currentIssue, status: 'ISSUED' };
+        return HttpResponse.json(currentIssue);
+      }),
+    );
+    const user = userEvent.setup();
+    renderAt('/fuel/issues/fuel-1');
+    await user.click(await screen.findByRole('button', { name: /Record issue/ }));
+    await user.click(screen.getByRole('button', { name: 'OK' }));
+    expect(await screen.findByText(/Authoritative vehicle readings were recorded in the Fleet ledger/i)).toBeInTheDocument();
+  });
+
+  it('displays chronology conflict error when fuel issue reading is rejected by backend', async () => {
+    const issueWithReadings = { ...baseIssue, status: 'AUTHORIZED', odometer: 9500, vehicle: { id: 'veh-99' } };
+    handlers(['FUEL_ISSUE_VIEW', 'FUEL_ISSUE_ISSUE'], issueWithReadings);
+    server.use(http.post('*/fuel-issues/:id/issue', () =>
+      HttpResponse.json({
+        code: 'VEHICLE_READING_DECREASE',
+        message: 'Fuel issue odometer conflicts with a later accepted vehicle reading.',
+      }, { status: 409 }),
+    ));
+    const user = userEvent.setup();
+    renderAt('/fuel/issues/fuel-1');
+    await user.click(await screen.findByRole('button', { name: /Record issue/ }));
+    await user.click(screen.getByRole('button', { name: 'OK' }));
+    expect(await screen.findByText('Fuel issue odometer conflicts with a later accepted vehicle reading.')).toBeInTheDocument();
   });
 });

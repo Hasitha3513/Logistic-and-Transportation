@@ -7,22 +7,20 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.OffsetDateTime;
 import java.util.List;
-import java.util.UUID;
 import java.util.Set;
+import java.util.UUID;
 
 @RestController
+@RequiredArgsConstructor
 public class IdentityController {
     private final IdentityUseCase useCase;
-
-    IdentityController(IdentityUseCase u) {
-        useCase = u;
-    }
 
     @PostMapping("/auth/login")
     ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest r) {
@@ -105,14 +103,27 @@ public class IdentityController {
     }
 
     record LoginRequest(@NotBlank String username, @NotBlank String password) {
+        @Override
+        public String toString() {
+            return "LoginRequest[username=" + username + ", password=***]";
+        }
     }
 
     record RefreshTokenRequest(@NotBlank String refreshToken) {
+        @Override
+        public String toString() {
+            return "RefreshTokenRequest[refreshToken=***]";
+        }
     }
 
     record AuthResponse(String accessToken, String refreshToken, String tokenType, long expiresIn) {
         static AuthResponse from(com.transportlogistics.app.identity.domain.model.AuthTokens tokens) {
             return new AuthResponse(tokens.accessToken(), tokens.refreshToken(), tokens.tokenType(), tokens.expiresIn());
+        }
+
+        @Override
+        public String toString() {
+            return "AuthResponse[accessToken=***, refreshToken=***, tokenType=" + tokenType + ", expiresIn=" + expiresIn + "]";
         }
     }
 
@@ -122,6 +133,11 @@ public class IdentityController {
     record UserRequest(@NotBlank String username, @Email @NotBlank String email, @Size(min = 12) String password,
                        @NotBlank String firstName, @NotBlank String lastName, String phone, Boolean active,
                        Set<UUID> roleIds) {
+        @Override
+        public String toString() {
+            return "UserRequest[username=" + username + ", email=" + email + ", password=***, firstName=" + firstName +
+                    ", lastName=" + lastName + ", phone=" + phone + ", active=" + active + ", roleIds=" + roleIds + "]";
+        }
     }
 
     record RoleRequest(@NotBlank String name, String description, Boolean active, Set<@NotBlank String> permissions) {

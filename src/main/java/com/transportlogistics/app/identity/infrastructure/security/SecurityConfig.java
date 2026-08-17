@@ -1,5 +1,8 @@
 package com.transportlogistics.app.identity.infrastructure.security;
 
+import io.swagger.v3.oas.models.Components;
+import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.security.SecurityScheme;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -10,9 +13,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import io.swagger.v3.oas.models.OpenAPI;
-import io.swagger.v3.oas.models.Components;
-import io.swagger.v3.oas.models.security.SecurityScheme;
 
 @Configuration
 @EnableConfigurationProperties(JwtProperties.class)
@@ -45,6 +45,15 @@ class SecurityConfig {
 
                         .requestMatchers(HttpMethod.GET, "/vehicles/available", "/vehicles/*/availability")
                         .hasAuthority("VEHICLE_AVAILABILITY_VIEW")
+                        .requestMatchers(HttpMethod.GET, "/vehicles/*/readings", "/vehicles/*/readings/latest",
+                                "/vehicles/*/meter-resets", "/vehicles/*/mileage")
+                        .hasAuthority("VEHICLE_READING_VIEW")
+                        .requestMatchers(HttpMethod.POST, "/vehicles/*/readings/*/correct")
+                        .hasAuthority("VEHICLE_READING_CORRECT")
+                        .requestMatchers(HttpMethod.POST, "/vehicles/*/readings")
+                        .hasAuthority("VEHICLE_READING_CREATE")
+                        .requestMatchers(HttpMethod.POST, "/vehicles/*/meter-resets")
+                        .hasAuthority("VEHICLE_READING_RESET_METER")
                         .requestMatchers(HttpMethod.GET, "/vehicles", "/vehicles/*", "/vehicles/*/documents",
                                 "/vehicle-categories/**", "/vehicle-types/**")
                         .hasAuthority("VEHICLE_VIEW")

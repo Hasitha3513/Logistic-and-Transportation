@@ -2,18 +2,16 @@ package com.transportlogistics.app.trip.infrastructure.adapters.out.persistence;
 
 import com.transportlogistics.app.trip.application.ports.out.TripHistoryRepository;
 import com.transportlogistics.app.trip.domain.model.TripHistoryEntry;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.UUID;
 
 @Component
+@RequiredArgsConstructor
 class TripHistoryPersistenceAdapter implements TripHistoryRepository {
     private final TripHistoryJpaRepository repository;
-
-    TripHistoryPersistenceAdapter(TripHistoryJpaRepository repository) {
-        this.repository = repository;
-    }
 
     @Override
     public TripHistoryEntry save(TripHistoryEntry entry) {
@@ -40,7 +38,7 @@ class TripHistoryPersistenceAdapter implements TripHistoryRepository {
     @Override
     public java.util.Optional<String> findCurrentDriverLicenseClass(UUID tripId, UUID driverId) {
         return repository.findFirstByTripIdAndDriverIdAndLicenseClassIsNotNullAndActionInOrderByOccurredAtDesc(
-                tripId, driverId, List.of("DRIVER_ASSIGNED", "DRIVER_REASSIGNED"))
+                        tripId, driverId, List.of("DRIVER_ASSIGNED", "DRIVER_REASSIGNED"))
                 .map(TripHistoryEntity::getLicenseClass);
     }
 

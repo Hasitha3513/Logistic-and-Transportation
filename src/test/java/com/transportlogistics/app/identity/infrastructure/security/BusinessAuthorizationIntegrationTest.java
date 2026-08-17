@@ -82,6 +82,8 @@ class BusinessAuthorizationIntegrationTest {
 
     @BeforeEach
     void seedActors() {
+        jdbc.update("DELETE FROM vehicle_meter_reset");
+        jdbc.update("DELETE FROM vehicle_reading");
         jdbc.update("DELETE FROM refresh_token");
         jdbc.update("DELETE FROM app_user_role");
         jdbc.update("DELETE FROM app_role_permission");

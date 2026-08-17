@@ -1,7 +1,6 @@
 package com.transportlogistics.app.routing.infrastructure.adapters.out.persistence;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -15,7 +14,6 @@ import java.util.UUID;
 @Getter
 @Setter
 @NoArgsConstructor
-@AllArgsConstructor
 class RouteEntity {
     @Id
     @Column(name = "id")
@@ -39,4 +37,18 @@ class RouteEntity {
     @OrderColumn(name = "stop_order")
     @Column(name = "location_id", nullable = false)
     private List<UUID> stopLocationIds = new ArrayList<>();
+
+    public RouteEntity(UUID id, String code, String name, UUID originLocationId, UUID destinationLocationId,
+                       Double plannedDistanceKm, Integer estimatedDurationMinutes, boolean active,
+                       List<UUID> stopLocationIds) {
+        this.id = id;
+        this.code = code;
+        this.name = name;
+        this.originLocationId = originLocationId;
+        this.destinationLocationId = destinationLocationId;
+        this.plannedDistanceKm = plannedDistanceKm;
+        this.estimatedDurationMinutes = estimatedDurationMinutes;
+        this.active = active;
+        this.stopLocationIds = stopLocationIds != null ? stopLocationIds : new ArrayList<>();
+    }
 }

@@ -81,6 +81,11 @@ class VehicleReadingPersistenceAdapter implements VehicleReadingRepository {
     }
 
     @Override
+    public Optional<VehicleReading> findCorrection(UUID originalReadingId) {
+        return repository.findByCorrectionOfReadingId(originalReadingId).map(this::map);
+    }
+
+    @Override
     public VehicleReadingUseCase.PageResult<VehicleReading> search(VehicleReadingUseCase.SearchQuery query) {
         var pageable = PageRequest.of(query.page(), query.limit(), Sort.by(
                 Sort.Order.desc("recordedAt"), Sort.Order.desc("receivedAt"), Sort.Order.desc("createdAt")));

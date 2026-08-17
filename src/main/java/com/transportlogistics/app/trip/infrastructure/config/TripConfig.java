@@ -12,6 +12,8 @@ import com.transportlogistics.app.trip.application.ports.out.TripHistoryReposito
 import com.transportlogistics.app.trip.application.ports.out.TripTransaction;
 import com.transportlogistics.app.trip.application.ports.out.TripDispatchRepository;
 import com.transportlogistics.app.trip.application.service.TripService;
+import com.transportlogistics.app.trip.application.ports.out.TripActorPort;
+import com.transportlogistics.app.trip.application.ports.out.TripVehicleReadingPort;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -23,9 +25,10 @@ class TripConfig {
     TripUseCase tripUseCase(TripRepository r, VehicleEligibilityPort vehicleEligibility,
                             DriverEligibilityPort driverEligibility, RouteEligibilityPort routeEligibility,
                             TripHistoryRepository history,
-                            TripTransaction transactions, TripDispatchRepository dispatches) {
+                            TripTransaction transactions, TripDispatchRepository dispatches,
+                            TripVehicleReadingPort readings, TripActorPort actors) {
         return new TripService(r, vehicleEligibility, driverEligibility, routeEligibility, history, transactions, dispatches,
-                Clock.systemUTC());
+                readings, actors, Clock.systemUTC());
     }
 
     @Bean

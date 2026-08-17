@@ -110,4 +110,91 @@ describe('LifecycleActions', () => {
 
     await waitFor(() => expect(request).toEqual({ action: 'complete', body: { endOdometerKm: 10720, completionRemarks: 'Delivered intact' } }));
   });
+
+  it('invalidates vehicle reading queries on successful trip start', async () => {
+    const user = userEvent.setup();
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries');
+    const trip = { ...baseTrip, status: 'DISPATCHED', vehicleId: 'veh-123' };
+
+    server.use(http.post('*/trips/:tripId/start', () => HttpResponse.json({ ...trip, status: 'IN_PROGRESS' })));
+
+    render(
+      <ConfigProvider theme={appTheme}>
+        <AntApp>
+          <QueryClientProvider client={queryClient}>
+            <LifecycleActions trip={trip} hasPermission={(p) => p === 'TRIP_START'} />
+          </QueryClientProvider>
+        </AntApp>
+      </ConfigProvider>,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Start trip' }));
+    const dialog = screen.getByRole('dialog');
+    await user.type(within(dialog).getByRole('spinbutton', { name: 'Start odometer (km)' }), '10600');
+    await user.click(within(dialog).getByRole('button', { name: 'Start trip' }));
+
+    await waitFor(() => {
+      expect(invalidateSpy).toHaveBeenCalledWith(expect.objectContaining({ queryKey: ['vehicle', 'veh-123', 'readings'] }));
+      expect(invalidateSpy).toHaveBeenCalledWith(expect.objectContaining({ queryKey: ['vehicle', 'veh-123', 'readings', 'latest'] }));
+    });
+  });
+
+  it('renders backend chronology conflict error when start reading is rejected', async () => {
+    const user = userEvent.setup();
+    const trip = { ...baseTrip, status: 'DISPATCHED' };
+
+    server.use(http.post('*/trips/:tripId/start', () =>
+      HttpResponse.json({
+        code: 'VEHICLE_READING_CHRONOLOGY_CONFLICT',
+        message: 'Recorded odometer conflicts with a later vehicle reading.',
+      }, { status: 409 }),
+    ));
+
+    render(
+      <ConfigProvider theme={appTheme}>
+        <AntApp>
+          <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
+            <LifecycleActions trip={trip} hasPermission={(p) => p === 'TRIP_START'} />
+          </QueryClientProvider>
+        </AntApp>
+      </ConfigProvider>,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Start trip' }));
+    const dialog = screen.getByRole('dialog');
+    await user.type(within(dialog).getByRole('spinbutton', { name: 'Start odometer (km)' }), '9500');
+    await user.click(within(dialog).getByRole('button', { name: 'Start trip' }));
+
+    expect(await within(dialog).findByText(/Recorded odometer conflicts with a later vehicle reading/i)).toBeInTheDocument();
+  });
+
+  it('renders backend decrease error when complete reading is lower than previous', async () => {
+    const user = userEvent.setup();
+    const trip = { ...baseTrip, status: 'IN_PROGRESS' };
+
+    server.use(http.post('*/trips/:tripId/complete', () =>
+      HttpResponse.json({
+        code: 'VEHICLE_READING_DECREASE',
+        message: 'Reading is below the previous value; use the approved meter-reset workflow if the meter changed',
+      }, { status: 409 }),
+    ));
+
+    render(
+      <ConfigProvider theme={appTheme}>
+        <AntApp>
+          <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
+            <LifecycleActions trip={trip} hasPermission={(p) => p === 'TRIP_COMPLETE'} />
+          </QueryClientProvider>
+        </AntApp>
+      </ConfigProvider>,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Complete trip' }));
+    const dialog = screen.getByRole('dialog');
+    await user.type(within(dialog).getByRole('spinbutton', { name: 'End odometer (km)' }), '10400');
+    await user.click(within(dialog).getByRole('button', { name: 'Complete trip' }));
+
+    expect(await within(dialog).findByText(/Reading is below the previous value/i)).toBeInTheDocument();
+  });
 });

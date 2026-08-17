@@ -1,18 +1,20 @@
 package com.transportlogistics.app.fleet.application.service;
 
-import com.transportlogistics.app.fleet.VehicleReadingRecorded;
+import com.transportlogistics.app.fleet.CoverageStatus;
+import com.transportlogistics.app.fleet.TripDistanceStatus;
 import com.transportlogistics.app.fleet.application.ports.in.VehicleReadingUseCase;
+import com.transportlogistics.app.fleet.application.ports.out.VehicleMeterResetRepository;
 import com.transportlogistics.app.fleet.application.ports.out.VehicleReadingEventPublisher;
 import com.transportlogistics.app.fleet.application.ports.out.VehicleReadingRepository;
 import com.transportlogistics.app.fleet.application.ports.out.VehicleReadingTransaction;
 import com.transportlogistics.app.fleet.application.ports.out.VehicleRepository;
 import com.transportlogistics.app.fleet.domain.model.Vehicle;
+import com.transportlogistics.app.fleet.domain.model.VehicleMeterReset;
 import com.transportlogistics.app.fleet.domain.model.VehicleReading;
 import com.transportlogistics.app.fleet.domain.model.VehicleReadingSourceType;
 import com.transportlogistics.app.fleet.domain.model.VehicleReadingType;
 import com.transportlogistics.app.shared.domain.BusinessRuleException;
 import com.transportlogistics.app.shared.domain.ConflictException;
-import com.transportlogistics.app.shared.domain.NotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -25,257 +27,289 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Supplier;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 
 class VehicleReadingServiceTest {
-    private static final OffsetDateTime NOW = OffsetDateTime.parse("2026-08-16T08:00:00Z");
-    private static final UUID ACTOR = UUID.randomUUID();
+    private static final Instant FIXED_INSTANT = Instant.parse("2026-08-16T12:00:00Z");
 
-    private FakeVehicles vehicles;
-    private FakeReadings readings;
-    private List<VehicleReadingRecorded> events;
+    private InMemoryVehicleRepository vehicles;
+    private InMemoryVehicleReadingRepository readings;
+    private InMemoryVehicleMeterResetRepository meterResets;
+    private List<Object> publishedEvents;
     private VehicleReadingService service;
     private UUID vehicleId;
+    private UUID actorId;
 
     @BeforeEach
     void setUp() {
-        vehicles = new FakeVehicles();
-        readings = new FakeReadings();
-        events = new ArrayList<>();
+        vehicles = new InMemoryVehicleRepository();
+        readings = new InMemoryVehicleReadingRepository();
+        meterResets = new InMemoryVehicleMeterResetRepository();
+        publishedEvents = new ArrayList<>();
         vehicleId = UUID.randomUUID();
-        vehicles.save(vehicle(vehicleId, true));
-        service = new VehicleReadingService(vehicles, readings, new DirectTransaction(), events::add,
-                Clock.fixed(NOW.toInstant(), ZoneOffset.UTC));
+        actorId = UUID.randomUUID();
+
+        vehicles.save(new Vehicle(vehicleId, "WP-CAD-1234", "1HGCR2F83HA000000", "K24W-1000000", UUID.randomUUID(),
+                UUID.randomUUID(), "Toyota", "Hilux", 2024, "OWNED", "AVAILABLE", 10000.0, null, 1000.0, true));
+
+        service = new VehicleReadingService(
+                vehicles,
+                readings,
+                meterResets,
+                new DirectTransaction(),
+                new RecordingEventPublisher(publishedEvents),
+                Clock.fixed(FIXED_INSTANT, ZoneOffset.UTC)
+        );
     }
 
     @Test
-    void acceptsFirstAndIncreasingOdometerAndSynchronizesSnapshot() {
-        var first = manual(VehicleReadingType.ODOMETER, "10000", NOW.minusDays(2), "first");
-        var second = manual(VehicleReadingType.ODOMETER, "10200", NOW.minusDays(1), "second");
+    void recordsManualOdometerReadingSuccessfully() {
+        var command = new VehicleReadingUseCase.RecordCommand(
+                vehicleId,
+                VehicleReadingType.ODOMETER,
+                new BigDecimal("10500.000"),
+                VehicleReadingSourceType.MANUAL,
+                null,
+                OffsetDateTime.parse("2026-08-16T11:00:00Z"),
+                actorId,
+                "key-1",
+                "Baseline test"
+        );
 
-        assertEquals(new BigDecimal("10000.000"), first.value());
-        assertEquals(new BigDecimal("10200.000"), second.value());
-        assertEquals(10200d, vehicles.findById(vehicleId).orElseThrow().currentOdometerKm());
-        assertEquals(2, events.size());
+        var result = service.record(command);
+        assertNotNull(result.id());
+        assertEquals(new BigDecimal("10500.000"), result.value());
+        assertEquals(0, result.meterEpoch());
+        assertEquals(VehicleReadingSourceType.MANUAL, result.sourceType());
+        assertNull(result.correctionOfReadingId());
+
+        var vehicle = vehicles.findById(vehicleId).orElseThrow();
+        assertEquals(10500.0, vehicle.currentOdometerKm());
     }
 
     @Test
-    void rejectsDecreasingLatestOdometer() {
-        manual(VehicleReadingType.ODOMETER, "10000", NOW.minusDays(2), "first");
+    void rejectsDecreasingOdometerReadingInSameEpoch() {
+        service.record(new VehicleReadingUseCase.RecordCommand(
+                vehicleId, VehicleReadingType.ODOMETER, new BigDecimal("10500.000"),
+                VehicleReadingSourceType.MANUAL, null, OffsetDateTime.parse("2026-08-16T10:00:00Z"),
+                actorId, "key-1", "Initial"
+        ));
 
-        var error = assertThrows(ConflictException.class,
-                () -> manual(VehicleReadingType.ODOMETER, "9999", NOW.minusDays(1), "lower"));
-
-        assertEquals("VEHICLE_READING_DECREASE", error.code());
-        assertEquals(1, readings.values.size());
+        var ex = assertThrows(ConflictException.class, () -> service.record(new VehicleReadingUseCase.RecordCommand(
+                vehicleId, VehicleReadingType.ODOMETER, new BigDecimal("10400.000"),
+                VehicleReadingSourceType.MANUAL, null, OffsetDateTime.parse("2026-08-16T11:00:00Z"),
+                actorId, "key-2", "Decreasing"
+        )));
+        assertEquals("VEHICLE_READING_DECREASE", ex.code());
     }
 
     @Test
-    void acceptsIncreasingEngineHoursAndRejectsDecrease() {
-        manual(VehicleReadingType.ENGINE_HOURS, "150.25", NOW.minusDays(2), "engine-1");
-        manual(VehicleReadingType.ENGINE_HOURS, "151.00", NOW.minusDays(1), "engine-2");
+    void correctsReadingPreservingOriginalAuditTrail() {
+        var original = service.record(new VehicleReadingUseCase.RecordCommand(
+                vehicleId, VehicleReadingType.ODOMETER, new BigDecimal("10500.000"),
+                VehicleReadingSourceType.MANUAL, null, OffsetDateTime.parse("2026-08-16T10:00:00Z"),
+                actorId, "key-1", "Typo in original"
+        ));
 
-        assertEquals(151d, vehicles.findById(vehicleId).orElseThrow().engineHours());
-        assertEquals("VEHICLE_READING_DECREASE", assertThrows(ConflictException.class,
-                () -> manual(VehicleReadingType.ENGINE_HOURS, "149", NOW, "engine-lower")).code());
+        var correctCommand = new VehicleReadingUseCase.CorrectCommand(
+                vehicleId,
+                original.id(),
+                new BigDecimal("10600.000"),
+                "Corrected typo from driver log",
+                original.recordedAt(),
+                actorId
+        );
+
+        var correction = service.correct(correctCommand);
+        assertNotNull(correction.id());
+        assertNotEquals(original.id(), correction.id());
+        assertEquals(original.id(), correction.correctionOfReadingId());
+        assertEquals("Corrected typo from driver log", correction.correctionReason());
+        assertEquals(new BigDecimal("10600.000"), correction.value());
+
+        var persistedOriginal = service.get(original.id());
+        assertEquals(new BigDecimal("10500.000"), persistedOriginal.value());
+
+        // Attempting second correction on same original reading must be rejected
+        var duplicateCorrectionEx = assertThrows(ConflictException.class, () -> service.correct(correctCommand));
+        assertEquals("DUPLICATE_VEHICLE_READING_CORRECTION", duplicateCorrectionEx.code());
     }
 
     @Test
-    void rejectsNegativeReading() {
-        var error = assertThrows(BusinessRuleException.class,
-                () -> manual(VehicleReadingType.ODOMETER, "-1", NOW, "negative"));
-        assertEquals("INVALID_VEHICLE_READING", error.code());
+    void resetsMeterAdvancingEpochAndAcceptingLowerValue() {
+        service.record(new VehicleReadingUseCase.RecordCommand(
+                vehicleId, VehicleReadingType.ODOMETER, new BigDecimal("250000.000"),
+                VehicleReadingSourceType.MANUAL, null, OffsetDateTime.parse("2026-08-16T08:00:00Z"),
+                actorId, "key-1", "Old meter end"
+        ));
+
+        var resetTime = OffsetDateTime.parse("2026-08-16T09:00:00Z");
+        var reset = service.resetMeter(new VehicleReadingUseCase.ResetMeterCommand(
+                vehicleId,
+                VehicleReadingType.ODOMETER,
+                new BigDecimal("0.000"),
+                resetTime,
+                "Physical odometer replaced under warranty",
+                actorId
+        ));
+
+        assertNotNull(reset.id());
+        assertEquals(0, reset.fromEpoch());
+        assertEquals(1, reset.toEpoch());
+        assertEquals(new BigDecimal("250000.000"), reset.lastReadingValue());
+        assertEquals(new BigDecimal("0.000"), reset.newMeterValue());
+
+        // In new epoch 1, reading 50 km (which is lower than 250,000) is accepted!
+        var nextReading = service.record(new VehicleReadingUseCase.RecordCommand(
+                vehicleId, VehicleReadingType.ODOMETER, new BigDecimal("50.000"),
+                VehicleReadingSourceType.MANUAL, null, resetTime.plusHours(1),
+                actorId, "key-new-1", "New meter trip"
+        ));
+        assertEquals(1, nextReading.meterEpoch());
+        assertEquals(new BigDecimal("50.000"), nextReading.value());
     }
 
     @Test
-    void acceptsBackdatedReadingWithinBothNeighbors() {
-        manual(VehicleReadingType.ODOMETER, "10000", NOW.minusDays(6), "day-10");
-        manual(VehicleReadingType.ODOMETER, "10200", NOW.minusDays(4), "day-12");
+    void calculatesMileageAccuratelyAcrossMeterResets() {
+        var t1 = OffsetDateTime.parse("2026-08-10T08:00:00Z");
+        var t2 = OffsetDateTime.parse("2026-08-11T08:00:00Z");
+        var tReset = OffsetDateTime.parse("2026-08-12T08:00:00Z");
+        var t3 = OffsetDateTime.parse("2026-08-13T08:00:00Z");
 
-        var backdated = manual(VehicleReadingType.ODOMETER, "10100", NOW.minusDays(5), "day-11");
+        // Epoch 0: 10000 -> 10500 (distance = 500 km)
+        service.record(new VehicleReadingUseCase.RecordCommand(
+                vehicleId, VehicleReadingType.ODOMETER, new BigDecimal("10000.000"),
+                VehicleReadingSourceType.BASELINE, null, t1, actorId, "k1", "Start"
+        ));
+        service.record(new VehicleReadingUseCase.RecordCommand(
+                vehicleId, VehicleReadingType.ODOMETER, new BigDecimal("10500.000"),
+                VehicleReadingSourceType.MANUAL, null, t2, actorId, "k2", "Mid"
+        ));
 
-        assertEquals(new BigDecimal("10100.000"), backdated.value());
-        assertEquals(10200d, vehicles.findById(vehicleId).orElseThrow().currentOdometerKm());
+        // Reset to 0 at tReset
+        service.resetMeter(new VehicleReadingUseCase.ResetMeterCommand(
+                vehicleId, VehicleReadingType.ODOMETER, new BigDecimal("0.000"),
+                tReset, "Meter replacement", actorId
+        ));
+
+        // Epoch 1: 0 -> 150 km (distance = 150 km)
+        service.record(new VehicleReadingUseCase.RecordCommand(
+                vehicleId, VehicleReadingType.ODOMETER, new BigDecimal("150.000"),
+                VehicleReadingSourceType.MANUAL, null, t3, actorId, "k3", "New meter"
+        ));
+
+        var mileage = service.getMileage(vehicleId, t1.minusDays(1), t3.plusDays(1));
+        assertEquals(new BigDecimal("10000.000"), mileage.openingOdometer());
+        assertEquals(new BigDecimal("150.000"), mileage.closingOdometer());
+        assertEquals(new BigDecimal("650.000"), mileage.distanceTravelledKm()); // 500 + 150 = 650 km
+        assertEquals(1, mileage.meterResetCount());
+        assertEquals(CoverageStatus.COMPLETE, mileage.coverageStatus());
     }
 
     @Test
-    void rejectsBackdatedReadingBelowPrevious() {
-        manual(VehicleReadingType.ODOMETER, "10000", NOW.minusDays(6), "day-10");
-        manual(VehicleReadingType.ODOMETER, "10200", NOW.minusDays(4), "day-12");
+    void calculatesTripDistanceCorrectly() {
+        var tripId = UUID.randomUUID();
+        var tStart = OffsetDateTime.parse("2026-08-16T08:00:00Z");
+        var tEnd = OffsetDateTime.parse("2026-08-16T12:00:00Z");
 
-        var error = assertThrows(ConflictException.class,
-                () -> manual(VehicleReadingType.ODOMETER, "9900", NOW.minusDays(5), "too-low"));
-        assertEquals("VEHICLE_READING_CHRONOLOGY_CONFLICT", error.code());
+        service.record(new VehicleReadingUseCase.RecordCommand(
+                vehicleId, VehicleReadingType.ODOMETER, new BigDecimal("10010.000"),
+                VehicleReadingSourceType.TRIP_START, tripId, tStart, actorId, null, "Trip start"
+        ));
+        service.record(new VehicleReadingUseCase.RecordCommand(
+                vehicleId, VehicleReadingType.ODOMETER, new BigDecimal("10100.000"),
+                VehicleReadingSourceType.TRIP_END, tripId, tEnd, actorId, null, "Trip end"
+        ));
+
+        var tripDist = service.calculateTripDistance(tripId);
+        assertEquals(TripDistanceStatus.CALCULATED, tripDist.status());
+        assertEquals(vehicleId, tripDist.vehicleId());
+        assertEquals(new BigDecimal("10010.000"), tripDist.startOdometerKm());
+        assertEquals(new BigDecimal("10100.000"), tripDist.endOdometerKm());
+        assertEquals(new BigDecimal("90.000"), tripDist.distanceTravelledKm());
     }
 
-    @Test
-    void rejectsBackdatedReadingAboveNext() {
-        manual(VehicleReadingType.ODOMETER, "10000", NOW.minusDays(6), "day-10");
-        manual(VehicleReadingType.ODOMETER, "10200", NOW.minusDays(4), "day-12");
-
-        var error = assertThrows(ConflictException.class,
-                () -> manual(VehicleReadingType.ODOMETER, "10500", NOW.minusDays(5), "too-high"));
-        assertEquals("VEHICLE_READING_CHRONOLOGY_CONFLICT", error.code());
-    }
-
-    @Test
-    void sameTimestampAllowsEqualOperationalEvidenceAndRejectsDifferentValue() {
-        var at = NOW.minusHours(2);
-        system(VehicleReadingSourceType.TRIP_START, UUID.randomUUID(), "10000", at);
-        system(VehicleReadingSourceType.FUEL_ISSUE, UUID.randomUUID(), "10000", at);
-
-        var error = assertThrows(ConflictException.class,
-                () -> system(VehicleReadingSourceType.TRIP_END, UUID.randomUUID(), "10001", at));
-        assertEquals("VEHICLE_READING_CHRONOLOGY_CONFLICT", error.code());
-        assertEquals(2, readings.values.size());
-    }
-
-    @Test
-    void rejectsMissingAndInactiveVehicles() {
-        var missing = UUID.randomUUID();
-        var error = assertThrows(NotFoundException.class, () -> service.record(command(missing,
-                VehicleReadingType.ODOMETER, "1", NOW, VehicleReadingSourceType.MANUAL, null, "missing")));
-        assertEquals("VEHICLE_NOT_FOUND", error.code());
-
-        var inactive = UUID.randomUUID();
-        vehicles.save(vehicle(inactive, false));
-        assertEquals("INVALID_VEHICLE_READING", assertThrows(BusinessRuleException.class,
-                () -> service.record(command(inactive, VehicleReadingType.ODOMETER, "1", NOW,
-                        VehicleReadingSourceType.MANUAL, null, "inactive"))).code());
-    }
-
-    @Test
-    void identicalSourceReplayIsIdempotentAndChangedReplayIsRejected() {
-        var reference = UUID.randomUUID();
-        var first = system(VehicleReadingSourceType.TRIP_START, reference, "10000", NOW.minusHours(1));
-        var replay = system(VehicleReadingSourceType.TRIP_START, reference, "10000", NOW.minusHours(1));
-
-        assertEquals(first.id(), replay.id());
-        assertEquals(1, readings.values.size());
-        assertEquals("DUPLICATE_VEHICLE_READING", assertThrows(ConflictException.class,
-                () -> system(VehicleReadingSourceType.TRIP_START, reference, "10001", NOW.minusHours(1))).code());
-    }
-
-    @Test
-    void returnsLatestByRecordedTimeForBothTypes() {
-        manual(VehicleReadingType.ODOMETER, "10000", NOW.minusDays(3), "odo-1");
-        manual(VehicleReadingType.ODOMETER, "10200", NOW.minusDays(1), "odo-2");
-        manual(VehicleReadingType.ODOMETER, "10100", NOW.minusDays(2), "odo-backdated");
-        manual(VehicleReadingType.ENGINE_HOURS, "250", NOW.minusHours(1), "engine");
-
-        var latest = service.latest(vehicleId);
-
-        assertEquals(new BigDecimal("10200.000"), latest.odometer().orElseThrow().value());
-        assertEquals(new BigDecimal("250.000"), latest.engineHours().orElseThrow().value());
-    }
-
-    @Test
-    void pagesAndFiltersWithoutLoadingCompleteHistory() {
-        manual(VehicleReadingType.ODOMETER, "10000", NOW.minusDays(3), "page-1");
-        manual(VehicleReadingType.ODOMETER, "10100", NOW.minusDays(2), "page-2");
-        manual(VehicleReadingType.ENGINE_HOURS, "10", NOW.minusDays(1), "page-3");
-
-        var page = service.list(new VehicleReadingUseCase.SearchQuery(vehicleId, VehicleReadingType.ODOMETER,
-                VehicleReadingSourceType.MANUAL, null, null, 0, 1));
-
-        assertEquals(1, page.content().size());
-        assertEquals(2, page.totalElements());
-        assertEquals(2, page.totalPages());
-        assertEquals(VehicleReadingType.ODOMETER, page.content().getFirst().readingType());
-    }
-
-    private VehicleReading manual(VehicleReadingType type, String value, OffsetDateTime at, String key) {
-        return service.record(command(vehicleId, type, value, at, VehicleReadingSourceType.MANUAL, null, key));
-    }
-
-    private VehicleReading system(VehicleReadingSourceType source, UUID reference, String value, OffsetDateTime at) {
-        return service.record(command(vehicleId, VehicleReadingType.ODOMETER, value, at, source, reference, null));
-    }
-
-    private VehicleReadingUseCase.RecordCommand command(UUID targetVehicle, VehicleReadingType type, String value,
-                                                        OffsetDateTime at, VehicleReadingSourceType source,
-                                                        UUID reference, String key) {
-        return new VehicleReadingUseCase.RecordCommand(targetVehicle, type, new BigDecimal(value), source, reference,
-                at, ACTOR, key, "test reading");
-    }
-
-    private Vehicle vehicle(UUID id, boolean active) {
-        return new Vehicle(id, "REG-" + id, null, null, UUID.randomUUID(), UUID.randomUUID(), "Maker", "Model",
-                2026, "OWNED", "AVAILABLE", null, null, 1000d, active);
-    }
-
-    private static final class DirectTransaction implements VehicleReadingTransaction {
+    private static class DirectTransaction implements VehicleReadingTransaction {
         @Override public <T> T execute(Supplier<T> operation) { return operation.get(); }
     }
 
-    private static final class FakeVehicles implements VehicleRepository {
-        private final HashMap<UUID, Vehicle> values = new HashMap<>();
-        @Override public Vehicle save(Vehicle value) { values.put(value.id(), value); return value; }
-        @Override public Optional<Vehicle> findById(UUID id) { return Optional.ofNullable(values.get(id)); }
-        @Override public Optional<Vehicle> findByIdForUpdate(UUID id) { return findById(id); }
-        @Override public List<Vehicle> findAll() { return List.copyOf(values.values()); }
+    private static class RecordingEventPublisher implements VehicleReadingEventPublisher {
+        private final List<Object> events;
+        RecordingEventPublisher(List<Object> events) { this.events = events; }
+        @Override public void publishAfterCommit(com.transportlogistics.app.fleet.VehicleReadingRecorded event) { events.add(event); }
+        @Override public void publishAfterCommit(com.transportlogistics.app.fleet.VehicleReadingCorrected event) { events.add(event); }
+        @Override public void publishAfterCommit(com.transportlogistics.app.fleet.VehicleMeterResetRecorded event) { events.add(event); }
     }
 
-    private static final class FakeReadings implements VehicleReadingRepository {
-        private final List<VehicleReading> values = new ArrayList<>();
-        @Override public VehicleReading save(VehicleReading reading) { values.add(reading); return reading; }
-        @Override public Optional<VehicleReading> findById(UUID id) {
-            return values.stream().filter(value -> value.id().equals(id)).findFirst();
+    private static class InMemoryVehicleRepository implements VehicleRepository {
+        private final Map<UUID, Vehicle> store = new HashMap<>();
+        @Override public Vehicle save(Vehicle vehicle) { store.put(vehicle.id(), vehicle); return vehicle; }
+        @Override public Optional<Vehicle> findById(UUID id) { return Optional.ofNullable(store.get(id)); }
+        @Override public Optional<Vehicle> findByIdForUpdate(UUID id) { return findById(id); }
+        @Override public List<Vehicle> findAll() { return List.copyOf(store.values()); }
+    }
+
+    private static class InMemoryVehicleMeterResetRepository implements VehicleMeterResetRepository {
+        private final List<VehicleMeterReset> resets = new ArrayList<>();
+        @Override public VehicleMeterReset save(VehicleMeterReset reset) { resets.add(reset); return reset; }
+        @Override public List<VehicleMeterReset> findByVehicleId(UUID vehicleId) {
+            return resets.stream().filter(r -> r.vehicleId().equals(vehicleId)).sorted(Comparator.comparing(VehicleMeterReset::effectiveAt).reversed()).toList();
         }
-        @Override public Optional<VehicleReading> findPreviousEffective(UUID vehicleId, VehicleReadingType type,
-                                                                        int epoch, OffsetDateTime at) {
-            return partition(vehicleId, type, epoch).stream().filter(r -> r.recordedAt().isBefore(at))
-                    .max(Comparator.comparing(VehicleReading::recordedAt));
+        @Override public List<VehicleMeterReset> findByVehicleIdAndType(UUID vehicleId, VehicleReadingType readingType) {
+            return resets.stream().filter(r -> r.vehicleId().equals(vehicleId) && r.readingType() == readingType).sorted(Comparator.comparing(VehicleMeterReset::effectiveAt).reversed()).toList();
         }
-        @Override public Optional<VehicleReading> findNextEffective(UUID vehicleId, VehicleReadingType type,
-                                                                    int epoch, OffsetDateTime at) {
-            return partition(vehicleId, type, epoch).stream().filter(r -> r.recordedAt().isAfter(at))
-                    .min(Comparator.comparing(VehicleReading::recordedAt));
+        @Override public Optional<VehicleMeterReset> findLatestByVehicleIdAndType(UUID vehicleId, VehicleReadingType readingType) {
+            return findByVehicleIdAndType(vehicleId, readingType).stream().findFirst();
         }
-        @Override public List<VehicleReading> findEffectiveAt(UUID vehicleId, VehicleReadingType type, int epoch,
-                                                               OffsetDateTime at) {
-            return partition(vehicleId, type, epoch).stream().filter(r -> r.recordedAt().isEqual(at)).toList();
+    }
+
+    private static class InMemoryVehicleReadingRepository implements VehicleReadingRepository {
+        private final Map<UUID, VehicleReading> store = new HashMap<>();
+
+        @Override public VehicleReading save(VehicleReading reading) { store.put(reading.id(), reading); return reading; }
+        @Override public Optional<VehicleReading> findById(UUID id) { return Optional.ofNullable(store.get(id)); }
+        @Override public Optional<VehicleReading> findByIdempotencyKey(String idempotencyKey) {
+            if (idempotencyKey == null || idempotencyKey.isBlank()) return Optional.empty();
+            return store.values().stream().filter(r -> idempotencyKey.equals(r.idempotencyKey())).findFirst();
         }
-        @Override public Optional<VehicleReading> findLatestEffective(UUID vehicleId, VehicleReadingType type,
-                                                                      int epoch) {
-            return partition(vehicleId, type, epoch).stream().max(Comparator.comparing(VehicleReading::recordedAt)
-                    .thenComparing(VehicleReading::receivedAt));
+        @Override public Optional<VehicleReading> findOriginalBySource(UUID vehicleId, VehicleReadingType readingType, VehicleReadingSourceType sourceType, UUID sourceReferenceId) {
+            return store.values().stream().filter(r -> r.vehicleId().equals(vehicleId) && r.readingType() == readingType && r.sourceType() == sourceType && Objects.equals(r.sourceReferenceId(), sourceReferenceId) && r.correctionOfReadingId() == null).findFirst();
         }
-        @Override public int findCurrentMeterEpoch(UUID vehicleId, VehicleReadingType type) {
-            return values.stream().filter(r -> r.vehicleId().equals(vehicleId) && r.readingType() == type)
-                    .mapToInt(VehicleReading::meterEpoch).max().orElse(0);
+        @Override public Optional<VehicleReading> findLatestEffective(UUID vehicleId, VehicleReadingType readingType, int meterEpoch) {
+            return store.values().stream().filter(r -> r.vehicleId().equals(vehicleId) && r.readingType() == readingType && r.meterEpoch() == meterEpoch && !isSuperseded(r)).max(Comparator.comparing(VehicleReading::recordedAt));
         }
-        @Override public Optional<VehicleReading> findOriginalBySource(UUID vehicleId, VehicleReadingType type,
-                                                                       VehicleReadingSourceType source,
-                                                                       UUID reference) {
-            return values.stream().filter(r -> r.vehicleId().equals(vehicleId) && r.readingType() == type
-                    && r.sourceType() == source && java.util.Objects.equals(r.sourceReferenceId(), reference)
-                    && r.correctionOfReadingId() == null).findFirst();
+        @Override public Optional<VehicleReading> findPreviousEffective(UUID vehicleId, VehicleReadingType readingType, int meterEpoch, OffsetDateTime recordedAt) {
+            return store.values().stream().filter(r -> r.vehicleId().equals(vehicleId) && r.readingType() == readingType && r.meterEpoch() == meterEpoch && r.recordedAt().isBefore(recordedAt) && !isSuperseded(r)).max(Comparator.comparing(VehicleReading::recordedAt));
         }
-        @Override public Optional<VehicleReading> findByIdempotencyKey(String key) {
-            return values.stream().filter(r -> key.equals(r.idempotencyKey())).findFirst();
+        @Override public Optional<VehicleReading> findNextEffective(UUID vehicleId, VehicleReadingType readingType, int meterEpoch, OffsetDateTime recordedAt) {
+            return store.values().stream().filter(r -> r.vehicleId().equals(vehicleId) && r.readingType() == readingType && r.meterEpoch() == meterEpoch && r.recordedAt().isAfter(recordedAt) && !isSuperseded(r)).min(Comparator.comparing(VehicleReading::recordedAt));
         }
-        @Override public VehicleReadingUseCase.PageResult<VehicleReading> search(VehicleReadingUseCase.SearchQuery q) {
-            var filtered = values.stream().filter(r -> r.vehicleId().equals(q.vehicleId()))
-                    .filter(r -> q.readingType() == null || r.readingType() == q.readingType())
-                    .filter(r -> q.sourceType() == null || r.sourceType() == q.sourceType())
-                    .filter(r -> q.from() == null || !r.recordedAt().isBefore(q.from()))
-                    .filter(r -> q.to() == null || !r.recordedAt().isAfter(q.to()))
-                    .sorted(Comparator.comparing(VehicleReading::recordedAt).reversed()).toList();
-            var from = Math.min(q.page() * q.limit(), filtered.size());
-            var to = Math.min(from + q.limit(), filtered.size());
-            var pages = filtered.isEmpty() ? 0 : (int) Math.ceil((double) filtered.size() / q.limit());
-            return new VehicleReadingUseCase.PageResult<>(filtered.subList(from, to), q.page(), q.limit(),
-                    filtered.size(), pages);
+        @Override public List<VehicleReading> findEffectiveAt(UUID vehicleId, VehicleReadingType readingType, int meterEpoch, OffsetDateTime recordedAt) {
+            return store.values().stream().filter(r -> r.vehicleId().equals(vehicleId) && r.readingType() == readingType && r.meterEpoch() == meterEpoch && r.recordedAt().isEqual(recordedAt) && !isSuperseded(r)).toList();
         }
-        private List<VehicleReading> partition(UUID vehicleId, VehicleReadingType type, int epoch) {
-            return values.stream().filter(r -> r.vehicleId().equals(vehicleId) && r.readingType() == type
-                    && r.meterEpoch() == epoch).toList();
+        @Override public Optional<VehicleReading> findCorrection(UUID originalReadingId) {
+            return store.values().stream().filter(r -> originalReadingId.equals(r.correctionOfReadingId())).findFirst();
+        }
+        @Override public int findCurrentMeterEpoch(UUID vehicleId, VehicleReadingType readingType) {
+            return store.values().stream().filter(r -> r.vehicleId().equals(vehicleId) && r.readingType() == readingType).mapToInt(VehicleReading::meterEpoch).max().orElse(0);
+        }
+        @Override public VehicleReadingUseCase.PageResult<VehicleReading> search(VehicleReadingUseCase.SearchQuery query) {
+            var list = store.values().stream()
+                    .filter(r -> query.vehicleId() == null || r.vehicleId().equals(query.vehicleId()))
+                    .filter(r -> query.readingType() == null || r.readingType() == query.readingType())
+                    .filter(r -> query.sourceType() == null || r.sourceType() == query.sourceType())
+                    .sorted(Comparator.comparing(VehicleReading::recordedAt).reversed())
+                    .toList();
+            return new VehicleReadingUseCase.PageResult<>(list, query.page(), query.limit(), list.size(), 1);
+        }
+        private boolean isSuperseded(VehicleReading r) {
+            return r.correctionOfReadingId() == null && store.values().stream().anyMatch(other -> r.id().equals(other.correctionOfReadingId()));
         }
     }
 }

@@ -185,4 +185,57 @@ class FuelIssueServiceTest {
         var error = assertThrows(BusinessRuleException.class, action::run);
         assertEquals(expected, error.code());
     }
+
+    @Test
+    void issueRecordsAuthoritativeVehicleReading() {
+        var readings = mock(FuelVehicleReadingPort.class);
+        var actors = mock(FuelActorPort.class);
+        var vouchers = mock(FuelVoucherGenerator.class);
+        var transaction = mock(FuelTransaction.class);
+        when(transaction.execute(any())).thenAnswer(invocation ->
+                ((java.util.function.Supplier<?>) invocation.getArgument(0)).get());
+        when(actors.find("operator")).thenReturn(Optional.of(new FuelActorPort.Actor(actorId, "operator")));
+        when(issues.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+        var fuelService = new FuelIssueService(issues, history, stations, limits, vehicles, trips, actors, vouchers,
+                transaction, events, readings, Clock.fixed(Instant.parse("2026-08-15T00:00:00Z"), ZoneOffset.UTC));
+
+        var issueId = UUID.randomUUID();
+        var authorized = withStatus(new FuelIssue(issueId, "FUEL-2026-000001", vehicleId, null, null, "DIESEL",
+                new BigDecimal("50"), null, null, stationId, new BigDecimal("10500"), new BigDecimal("150"),
+                time(), FuelIssueStatus.AUTHORIZED, actorId, actorId, time(), null, time(), time()), FuelIssueStatus.AUTHORIZED);
+        when(issues.findByIdForUpdate(issueId)).thenReturn(Optional.of(authorized));
+
+        var issued = fuelService.issue(issueId, "operator");
+        assertEquals(FuelIssueStatus.ISSUED, issued.status());
+
+        verify(readings).record(eq(vehicleId), eq(issueId), eq(new BigDecimal("10500")), eq(new BigDecimal("150")),
+                eq(time()), eq(actorId));
+    }
+
+    @Test
+    void readingRejectionPreventsFuelIssuance() {
+        var readings = mock(FuelVehicleReadingPort.class);
+        var actors = mock(FuelActorPort.class);
+        var vouchers = mock(FuelVoucherGenerator.class);
+        var transaction = mock(FuelTransaction.class);
+        when(transaction.execute(any())).thenAnswer(invocation ->
+                ((java.util.function.Supplier<?>) invocation.getArgument(0)).get());
+        when(actors.find("operator")).thenReturn(Optional.of(new FuelActorPort.Actor(actorId, "operator")));
+        when(issues.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+        doThrow(new ConflictException("VEHICLE_READING_DECREASE", "Decreasing odometer"))
+                .when(readings).record(any(), any(), any(), any(), any(), any());
+
+        var fuelService = new FuelIssueService(issues, history, stations, limits, vehicles, trips, actors, vouchers,
+                transaction, events, readings, Clock.fixed(Instant.parse("2026-08-15T00:00:00Z"), ZoneOffset.UTC));
+
+        var issueId = UUID.randomUUID();
+        var authorized = withStatus(new FuelIssue(issueId, "FUEL-2026-000001", vehicleId, null, null, "DIESEL",
+                new BigDecimal("50"), null, null, stationId, new BigDecimal("9000"), null,
+                time(), FuelIssueStatus.AUTHORIZED, actorId, actorId, time(), null, time(), time()), FuelIssueStatus.AUTHORIZED);
+        when(issues.findByIdForUpdate(issueId)).thenReturn(Optional.of(authorized));
+
+        assertThrows(ConflictException.class, () -> fuelService.issue(issueId, "operator"));
+    }
 }
