@@ -39,7 +39,7 @@ class LocalIdentityBootstrapIntegrationTest {
                 .andExpect(jsonPath("$.firstName").value("Local"))
                 .andExpect(jsonPath("$.lastName").value("Administrator"))
                 .andExpect(jsonPath("$.roles[0]").value("LOCAL_MVP_ADMIN"))
-                .andExpect(jsonPath("$.permissions.length()").value(61))
+                .andExpect(jsonPath("$.permissions.length()").value(65))
                 .andExpect(jsonPath("$.permissions").value(org.hamcrest.Matchers.hasItem("CUSTOMER_UPDATE")))
                 .andExpect(jsonPath("$.permissions").value(org.hamcrest.Matchers.hasItem("DEPARTMENT_UPDATE")))
                 .andExpect(jsonPath("$.permissions").value(org.hamcrest.Matchers.hasItem("LOCATION_UPDATE")))
@@ -48,6 +48,10 @@ class LocalIdentityBootstrapIntegrationTest {
                 .andExpect(jsonPath("$.permissions").value(org.hamcrest.Matchers.hasItem("FUEL_PURCHASE_APPROVE")))
                 .andExpect(jsonPath("$.permissions").value(org.hamcrest.Matchers.hasItem("FUEL_PURCHASE_RECONCILE")))
                 .andExpect(jsonPath("$.permissions").value(org.hamcrest.Matchers.hasItem("FUEL_PRICE_MANAGE")))
+                .andExpect(jsonPath("$.permissions").value(org.hamcrest.Matchers.hasItem("VEHICLE_READING_VIEW")))
+                .andExpect(jsonPath("$.permissions").value(org.hamcrest.Matchers.hasItem("VEHICLE_READING_CREATE")))
+                .andExpect(jsonPath("$.permissions").value(org.hamcrest.Matchers.hasItem("VEHICLE_READING_CORRECT")))
+                .andExpect(jsonPath("$.permissions").value(org.hamcrest.Matchers.hasItem("VEHICLE_READING_RESET_METER")))
                 .andExpect(jsonPath("$.permissions").isArray());
     }
 }

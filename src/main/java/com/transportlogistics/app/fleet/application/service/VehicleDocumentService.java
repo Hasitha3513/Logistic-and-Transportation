@@ -103,7 +103,7 @@ public final class VehicleDocumentService implements VehicleDocumentUseCase {
                         VehicleDocumentStatus currentStatus, boolean currentActive) {
         if (requestedStatus == null && requestedActive == null) return new State(currentStatus, currentActive);
         var status = requestedStatus != null ? requestedStatus
-                : Boolean.TRUE.equals(requestedActive) ? VehicleDocumentStatus.ACTIVE : VehicleDocumentStatus.INACTIVE;
+                : requestedActive ? VehicleDocumentStatus.ACTIVE : VehicleDocumentStatus.INACTIVE;
         var active = requestedActive != null ? requestedActive : status == VehicleDocumentStatus.ACTIVE;
         if (active != (status == VehicleDocumentStatus.ACTIVE)) {
             throw new IllegalArgumentException("Active flag must match document status");

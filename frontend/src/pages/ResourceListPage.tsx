@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Alert, App as AntApp, Button, Card, Descriptions, Drawer, Flex, Space, Spin, Table, Tag, Typography, type TableColumnsType } from 'antd';
 import { api } from '../api/client';
 import { useAuth } from '../auth/AuthContext';
+import VehicleReadingsSection from '../fleet/VehicleReadingsSection';
 import ResourceEditorModal, { type ResourceField, type ResourceValues } from './ResourceEditorModal';
 
 type ResourceRecord = Record<string, unknown> & { id: string };
@@ -146,7 +147,7 @@ export default function ResourceListPage({ endpoint, queryKey, title, descriptio
       </Card>
       <Drawer
         title={`${title} details`}
-        width={620}
+        width={760}
         open={Boolean(selected)}
         onClose={() => setSelected(undefined)}
         destroyOnHidden
@@ -158,6 +159,12 @@ export default function ResourceListPage({ endpoint, queryKey, title, descriptio
             <Descriptions bordered size="small" column={1} items={Object.entries(detail).map(([key, value]) => ({
               key, label: fieldLabel(key), children: detailValue(value),
             }))} />
+            {endpoint === '/vehicles' && (
+              <VehicleReadingsSection
+                vehicleId={String(detail.id)}
+                vehicleRegistration={String(detail.registrationNumber || '')}
+              />
+            )}
             {relatedEndpoint && (
               <Card size="small" title={endpoint === '/vehicles' ? 'Vehicle documents' : 'Driver licences'}
                 extra={relatedConfig && hasPermission(relatedConfig.permission) ? <Button size="small" type="primary" icon={<PlusOutlined />}

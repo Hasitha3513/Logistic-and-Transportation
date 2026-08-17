@@ -29,7 +29,10 @@ public final class FuelPriceService implements FuelPriceUseCase {
         this.clock = clock;
     }
 
-    @Override public FuelPrice create(Command command) { return save(UUID.randomUUID(), command, null, OffsetDateTime.now(clock)); }
+    @Override
+    public FuelPrice create(Command command) {
+        return save(UUID.randomUUID(), command, null, OffsetDateTime.now(clock));
+    }
 
     @Override
     public FuelPrice update(UUID id, Command command) {
@@ -52,7 +55,10 @@ public final class FuelPriceService implements FuelPriceUseCase {
         return prices.save(price);
     }
 
-    @Override public FuelPrice get(UUID id) { return prices.findById(id).orElseThrow(() -> new NotFoundException("FUEL_PRICE_NOT_FOUND", "Fuel price not found: " + id)); }
+    @Override
+    public FuelPrice get(UUID id) {
+        return prices.findById(id).orElseThrow(() -> new NotFoundException("FUEL_PRICE_NOT_FOUND", "Fuel price not found: " + id));
+    }
 
     @Override
     public List<FuelPrice> list(UUID vendorId, String fuelType, Boolean active, LocalDate effectiveOn) {
@@ -61,18 +67,23 @@ public final class FuelPriceService implements FuelPriceUseCase {
 
     private void requireActiveVendor(UUID vendorId) {
         var vendor = vendors.find(vendorId).orElseThrow(() -> new BusinessRuleException("FUEL_VENDOR_NOT_FOUND", "Vendor not found: " + vendorId));
-        if (!vendor.active()) throw new BusinessRuleException("FUEL_VENDOR_INACTIVE", "Inactive vendor cannot be used for fuel pricing");
+        if (!vendor.active())
+            throw new BusinessRuleException("FUEL_VENDOR_INACTIVE", "Inactive vendor cannot be used for fuel pricing");
     }
 
     private String normalize(String value) {
-        if (value == null || value.isBlank()) throw new BusinessRuleException("FUEL_TYPE_REQUIRED", "Fuel type is required");
+        if (value == null || value.isBlank())
+            throw new BusinessRuleException("FUEL_TYPE_REQUIRED", "Fuel type is required");
         return value.trim().toUpperCase(Locale.ROOT);
     }
 
     private String normalizeCurrency(String value) {
-        if (value == null || !value.trim().matches("[A-Za-z]{3}")) throw new BusinessRuleException("FUEL_CURRENCY_REQUIRED", "Currency must be a three-letter code");
+        if (value == null || !value.trim().matches("[A-Za-z]{3}"))
+            throw new BusinessRuleException("FUEL_CURRENCY_REQUIRED", "Currency must be a three-letter code");
         return value.trim().toUpperCase(Locale.ROOT);
     }
 
-    private String normalizeNullable(String value) { return value == null || value.isBlank() ? null : value.trim().toUpperCase(Locale.ROOT); }
+    private String normalizeNullable(String value) {
+        return value == null || value.isBlank() ? null : value.trim().toUpperCase(Locale.ROOT);
+    }
 }

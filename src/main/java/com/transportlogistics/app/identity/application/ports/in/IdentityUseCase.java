@@ -1,13 +1,13 @@
 package com.transportlogistics.app.identity.application.ports.in;
 
+import com.transportlogistics.app.identity.domain.model.AuthTokens;
 import com.transportlogistics.app.identity.domain.model.Role;
 import com.transportlogistics.app.identity.domain.model.User;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.Set;
-import com.transportlogistics.app.identity.domain.model.AuthTokens;
+import java.util.UUID;
 
 public interface IdentityUseCase {
     User createUser(User user, String rawPassword, Set<UUID> roleIds);

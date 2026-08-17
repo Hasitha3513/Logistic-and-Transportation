@@ -16,11 +16,18 @@ import java.util.UUID;
 @Setter
 @NoArgsConstructor
 class VendorEntity {
-    @Id UUID id;
-    @Column(nullable = false, unique = true, length = 40) String code;
-    @Column(nullable = false, length = 160) String name;
-    @Column(name = "contact_person", length = 160) String contactPerson;
-    @Column(length = 40) String phone;
-    @Column(length = 160) String email;
-    @Column(nullable = false) boolean active;
+    @Id
+    private UUID id;
+    @Column(nullable = false, unique = true, length = 40)
+    private String code;
+    @Column(nullable = false, length = 160)
+    private String name;
+    @Column(name = "contact_person", length = 160)
+    private String contactPerson;
+    @Column(length = 40)
+    private String phone;
+    @Column(length = 160)
+    private String email;
+    @Column(nullable = false)
+    private boolean active;
 }

@@ -3,6 +3,7 @@ package com.transportlogistics.app.fuel.infrastructure.adapters.out.persistence;
 import com.transportlogistics.app.fuel.application.ports.out.FuelPriceRepository;
 import com.transportlogistics.app.fuel.domain.model.FuelPrice;
 import jakarta.persistence.criteria.Predicate;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
@@ -14,13 +15,20 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Component
+@RequiredArgsConstructor
 class FuelPricePersistenceAdapter implements FuelPriceRepository {
     private static final LocalDate MAX_DATE = LocalDate.of(9999, 12, 31);
     private final FuelPriceJpaRepository repository;
-    FuelPricePersistenceAdapter(FuelPriceJpaRepository repository) { this.repository = repository; }
 
-    @Override public FuelPrice save(FuelPrice price) { return map(repository.save(entity(price))); }
-    @Override public Optional<FuelPrice> findById(UUID id) { return repository.findById(id).map(this::map); }
+    @Override
+    public FuelPrice save(FuelPrice price) {
+        return map(repository.save(entity(price)));
+    }
+
+    @Override
+    public Optional<FuelPrice> findById(UUID id) {
+        return repository.findById(id).map(this::map);
+    }
 
     @Override
     public List<FuelPrice> find(UUID vendorId, String fuelType, Boolean active, LocalDate effectiveOn) {
@@ -56,9 +64,21 @@ class FuelPricePersistenceAdapter implements FuelPriceRepository {
     }
 
     private FuelPriceEntity entity(FuelPrice price) {
-        var e = new FuelPriceEntity(); e.setId(price.id()); e.setVendorId(price.vendorId()); e.setFuelType(price.fuelType());
-        e.setEffectiveFrom(price.effectiveFrom()); e.setEffectiveTo(price.effectiveTo()); e.setUnitPrice(price.unitPrice());
-        e.setCurrencyCode(price.currencyCode()); e.setActive(price.active()); e.setCreatedAt(price.createdAt()); e.setUpdatedAt(price.updatedAt()); return e;
+        var e = new FuelPriceEntity();
+        e.setId(price.id());
+        e.setVendorId(price.vendorId());
+        e.setFuelType(price.fuelType());
+        e.setEffectiveFrom(price.effectiveFrom());
+        e.setEffectiveTo(price.effectiveTo());
+        e.setUnitPrice(price.unitPrice());
+        e.setCurrencyCode(price.currencyCode());
+        e.setActive(price.active());
+        e.setCreatedAt(price.createdAt());
+        e.setUpdatedAt(price.updatedAt());
+        return e;
     }
-    private FuelPrice map(FuelPriceEntity e) { return new FuelPrice(e.getId(), e.getVendorId(), e.getFuelType(), e.getEffectiveFrom(), e.getEffectiveTo(), e.getUnitPrice(), e.getCurrencyCode(), e.isActive(), e.getCreatedAt(), e.getUpdatedAt()); }
+
+    private FuelPrice map(FuelPriceEntity e) {
+        return new FuelPrice(e.getId(), e.getVendorId(), e.getFuelType(), e.getEffectiveFrom(), e.getEffectiveTo(), e.getUnitPrice(), e.getCurrencyCode(), e.isActive(), e.getCreatedAt(), e.getUpdatedAt());
+    }
 }

@@ -2,14 +2,15 @@ package com.transportlogistics.app.identity.infrastructure.config;
 
 import com.transportlogistics.app.identity.AuthenticatedUserLookup;
 import com.transportlogistics.app.identity.application.ports.in.IdentityUseCase;
-import com.transportlogistics.app.identity.application.ports.out.IdentityRepository;
-import com.transportlogistics.app.identity.application.service.IdentityService;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 import com.transportlogistics.app.identity.application.ports.out.AccessTokenService;
+import com.transportlogistics.app.identity.application.ports.out.IdentityRepository;
 import com.transportlogistics.app.identity.application.ports.out.PasswordHasher;
 import com.transportlogistics.app.identity.application.ports.out.RefreshTokenStore;
+import com.transportlogistics.app.identity.application.service.IdentityService;
 import com.transportlogistics.app.identity.infrastructure.security.JwtProperties;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
 import java.time.Clock;
 
 @Configuration

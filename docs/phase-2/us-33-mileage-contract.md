@@ -1,12 +1,16 @@
 # US-33 — Mileage & KM Tracking Contract
 
-Status: **US33-A foundation implemented; US33-B through US33-G remain planned**  
-Authority: [ADR-vehicle-reading-authority.md](../adr/ADR-vehicle-reading-authority.md)
+Status: **COMPLETED & VERIFIED (US33-A through US33-G including public queries, multi-epoch calculation engine, REST APIs, and UI)**  
+Authority: [ADR-vehicle-reading-authority.md](../adr/ADR-vehicle-reading-authority.md)  
+Acceptance: [us-33-acceptance.md](us-33-acceptance.md)
 
-US33-A implements the Fleet domain model, chronology policy, application/output ports, future public recorder boundary,
+US33-A implements the Fleet domain model, chronology policy, application/output ports, public recorder boundary,
 append-only persistence, latest/history queries, vehicle-lock concurrency, snapshot projection compatibility,
-`VehicleReadingRecorded`, Flyway V14, and H2/PostgreSQL verification. Per the approved slice plan, it does not expose
-REST endpoints or permissions and does not integrate Trip, Fuel, corrections, resets, or frontend UI.
+`VehicleReadingRecorded`, Flyway V14, and H2/PostgreSQL verification.
+US33-B integrates Trip execution (Start and Complete lifecycle transitions) with the Fleet-owned `VehicleReadingRecorder`.
+US33-C integrates Fuel Issue execution (`ISSUED` status transition) with the Fleet-owned `VehicleReadingRecorder` via inverted output ports and adapters, ensuring synchronous transactional consistency, audit resolution, and cache invalidation.
+US33-D implements the controlled append-only correction workflow, physical meter replacement / reset workflow (Flyway V15, `vehicle_meter_reset`), meter epoch tracking, REST endpoints, Spring Security authorization, and React UI in the vehicle drawer.
+US33-E completes the public query boundary (`VehicleMileageQuery`), multi-epoch distance and utilization engine, coverage determination (`CoverageStatus`), and frontend summary analytics tab.
 
 ## 1. User Story
 

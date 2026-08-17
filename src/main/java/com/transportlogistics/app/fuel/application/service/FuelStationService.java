@@ -22,7 +22,8 @@ public final class FuelStationService implements FuelStationUseCase {
     public FuelStation create(Command command) {
         validate(command);
         var code = command.code().trim().toUpperCase(Locale.ROOT);
-        if (stations.existsByCode(code, null)) throw new ConflictException("FUEL_STATION_CODE_EXISTS", "Fuel station code already exists");
+        if (stations.existsByCode(code, null))
+            throw new ConflictException("FUEL_STATION_CODE_EXISTS", "Fuel station code already exists");
         return stations.save(new FuelStation(UUID.randomUUID(), code, command.name().trim(), command.stationType(),
                 command.active() == null || command.active(), command.vendorId(), command.locationId()));
     }
@@ -32,7 +33,8 @@ public final class FuelStationService implements FuelStationUseCase {
         get(id);
         validate(command);
         var code = command.code().trim().toUpperCase(Locale.ROOT);
-        if (stations.existsByCode(code, id)) throw new ConflictException("FUEL_STATION_CODE_EXISTS", "Fuel station code already exists");
+        if (stations.existsByCode(code, id))
+            throw new ConflictException("FUEL_STATION_CODE_EXISTS", "Fuel station code already exists");
         return stations.save(new FuelStation(id, code, command.name().trim(), command.stationType(),
                 command.active() == null || command.active(), command.vendorId(), command.locationId()));
     }
@@ -48,8 +50,11 @@ public final class FuelStationService implements FuelStationUseCase {
     }
 
     private void validate(Command command) {
-        if (command.code() == null || command.code().isBlank()) throw new BusinessRuleException("FUEL_STATION_CODE_REQUIRED", "Fuel station code is required");
-        if (command.name() == null || command.name().isBlank()) throw new BusinessRuleException("FUEL_STATION_NAME_REQUIRED", "Fuel station name is required");
-        if (command.stationType() == null) throw new BusinessRuleException("FUEL_STATION_TYPE_REQUIRED", "Fuel station type is required");
+        if (command.code() == null || command.code().isBlank())
+            throw new BusinessRuleException("FUEL_STATION_CODE_REQUIRED", "Fuel station code is required");
+        if (command.name() == null || command.name().isBlank())
+            throw new BusinessRuleException("FUEL_STATION_NAME_REQUIRED", "Fuel station name is required");
+        if (command.stationType() == null)
+            throw new BusinessRuleException("FUEL_STATION_TYPE_REQUIRED", "Fuel station type is required");
     }
 }

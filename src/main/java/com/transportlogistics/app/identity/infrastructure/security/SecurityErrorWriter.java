@@ -5,6 +5,7 @@ import com.transportlogistics.app.shared.web.ApiError;
 import com.transportlogistics.app.shared.web.CorrelationIdFilter;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
@@ -14,12 +15,9 @@ import java.time.OffsetDateTime;
 import java.util.List;
 
 @Component
+@RequiredArgsConstructor
 class SecurityErrorWriter {
     private final ObjectMapper objectMapper;
-
-    SecurityErrorWriter(ObjectMapper objectMapper) {
-        this.objectMapper = objectMapper;
-    }
 
     void write(HttpServletRequest request, HttpServletResponse response, HttpStatus status, String code, String message)
             throws IOException {

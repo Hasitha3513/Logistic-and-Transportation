@@ -2,6 +2,7 @@ package com.transportlogistics.app.fuel.infrastructure.adapters.out.persistence;
 
 import com.transportlogistics.app.fuel.application.ports.out.FuelStationRepository;
 import com.transportlogistics.app.fuel.domain.model.FuelStation;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
 
@@ -10,12 +11,9 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Component
+@RequiredArgsConstructor
 class FuelStationPersistenceAdapter implements FuelStationRepository {
     private final FuelStationJpaRepository repository;
-
-    FuelStationPersistenceAdapter(FuelStationJpaRepository repository) {
-        this.repository = repository;
-    }
 
     @Override
     public FuelStation save(FuelStation station) {

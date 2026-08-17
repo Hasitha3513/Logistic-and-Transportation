@@ -2,6 +2,7 @@ package com.transportlogistics.app.organization.infrastructure.adapters.out.pers
 
 import com.transportlogistics.app.organization.application.ports.out.LocationRepository;
 import com.transportlogistics.app.organization.domain.model.Location;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -9,12 +10,9 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Component
+@RequiredArgsConstructor
 class LocationPersistenceAdapter implements LocationRepository {
     private final LocationJpaRepository repo;
-
-    LocationPersistenceAdapter(LocationJpaRepository repo) {
-        this.repo = repo;
-    }
 
     public Location save(Location v) {
         var e = new LocationEntity();

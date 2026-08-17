@@ -1,6 +1,8 @@
 package com.transportlogistics.app.shared.domain;
 
-/** A client-correctable business validation failure with a stable API error code. */
+/**
+ * A client-correctable business validation failure with a stable API error code.
+ */
 public class BusinessRuleException extends IllegalArgumentException {
     private final String code;
 

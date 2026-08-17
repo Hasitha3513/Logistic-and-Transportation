@@ -2,25 +2,15 @@ package com.transportlogistics.app.fuel.infrastructure.adapters.in.web;
 
 import com.transportlogistics.app.fuel.application.ports.in.FuelIssueUseCase;
 import com.transportlogistics.app.fuel.application.ports.in.FuelStationUseCase;
-import com.transportlogistics.app.fuel.domain.model.FuelIssue;
-import com.transportlogistics.app.fuel.domain.model.FuelIssueHistory;
-import com.transportlogistics.app.fuel.domain.model.FuelIssueStatus;
-import com.transportlogistics.app.fuel.domain.model.FuelStation;
-import com.transportlogistics.app.fuel.domain.model.FuelStationType;
+import com.transportlogistics.app.fuel.domain.model.*;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.security.Principal;
@@ -30,14 +20,10 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
+@RequiredArgsConstructor
 class FuelController {
     private final FuelIssueUseCase issues;
     private final FuelStationUseCase stations;
-
-    FuelController(FuelIssueUseCase issues, FuelStationUseCase stations) {
-        this.issues = issues;
-        this.stations = stations;
-    }
 
     @GetMapping("/fuel-issues")
     PageResponse<FuelIssueResponse> search(@RequestParam(defaultValue = "0") int page,

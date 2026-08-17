@@ -50,6 +50,20 @@ public final class ReferenceFixtures {
         locations(jdbc, trip.originLocationId(), trip.destinationLocationId());
     }
 
+    public static UUID appUser(JdbcTemplate jdbc, String username) {
+        var id = UUID.randomUUID();
+        return appUser(jdbc, id, username);
+    }
+
+    public static UUID appUser(JdbcTemplate jdbc, UUID id, String username) {
+        var now = java.time.OffsetDateTime.now();
+        jdbc.update("""
+                INSERT INTO app_user (id, username, email, password_hash, first_name, last_name, active, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """, id, username, username + "@example.test", "hash", "Test", "User", true, now, now);
+        return id;
+    }
+
     private static String code(String prefix, UUID id) {
         return prefix + "-" + shortId(id);
     }

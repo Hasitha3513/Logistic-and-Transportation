@@ -17,9 +17,12 @@ import java.util.UUID;
 @Setter
 @NoArgsConstructor
 class FuelLimitPolicyEntity {
-    @Id UUID id;
-    @Column(name = "vehicle_id") UUID vehicleId;
+    @Id
+    private UUID id;
+    @Column(name = "vehicle_id")
+    private UUID vehicleId;
     @Column(name = "maximum_quantity_per_issue", nullable = false, precision = 19, scale = 3)
-    BigDecimal maximumQuantityPerIssue;
-    @Column(nullable = false) boolean active;
+    private BigDecimal maximumQuantityPerIssue;
+    @Column(nullable = false)
+    private boolean active;
 }

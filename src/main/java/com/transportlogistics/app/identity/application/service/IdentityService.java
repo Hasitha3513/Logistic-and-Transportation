@@ -1,8 +1,8 @@
 package com.transportlogistics.app.identity.application.service;
 
 import com.transportlogistics.app.identity.application.ports.in.IdentityUseCase;
-import com.transportlogistics.app.identity.application.ports.out.IdentityRepository;
 import com.transportlogistics.app.identity.application.ports.out.AccessTokenService;
+import com.transportlogistics.app.identity.application.ports.out.IdentityRepository;
 import com.transportlogistics.app.identity.application.ports.out.PasswordHasher;
 import com.transportlogistics.app.identity.application.ports.out.RefreshTokenStore;
 import com.transportlogistics.app.identity.domain.AuthenticationFailedException;
@@ -11,14 +11,14 @@ import com.transportlogistics.app.identity.domain.model.Role;
 import com.transportlogistics.app.identity.domain.model.User;
 import com.transportlogistics.app.shared.domain.NotFoundException;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-import java.util.Set;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 
 public final class IdentityService implements IdentityUseCase {
     private final IdentityRepository repo;

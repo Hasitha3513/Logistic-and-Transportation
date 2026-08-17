@@ -4,7 +4,6 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -16,7 +15,6 @@ import java.util.UUID;
 @Getter
 @Setter
 @NoArgsConstructor
-@AllArgsConstructor
 class LocationEntity {
     @Id
     @Column(name = "id")
@@ -33,4 +31,14 @@ class LocationEntity {
     private Double longitude;
     @Column(name = "active")
     private boolean active;
+
+    public LocationEntity(UUID id, String code, String name, String address, Double latitude, Double longitude, boolean active) {
+        this.id = id;
+        this.code = code;
+        this.name = name;
+        this.address = address;
+        this.latitude = latitude;
+        this.longitude = longitude;
+        this.active = active;
+    }
 }

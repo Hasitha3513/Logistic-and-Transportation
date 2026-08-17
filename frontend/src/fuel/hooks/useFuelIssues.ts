@@ -50,7 +50,20 @@ export function useFuelAction(id: string, action: 'submit' | 'authorize' | 'issu
   const client = useQueryClient();
   return useMutation({
     mutationFn: async (body?: object) => (await api.post<FuelIssue>(`/fuel-issues/${id}/${action}`, body)).data,
-    onSuccess: async () => client.invalidateQueries({ queryKey: ['fuel-issues'] }),
+    onSuccess: async (updated) => {
+      const invalidations: Promise<unknown>[] = [
+        client.invalidateQueries({ queryKey: ['fuel-issues'] }),
+      ];
+      const vehicleId = updated?.vehicle?.id;
+      if (action === 'issue' && vehicleId) {
+        invalidations.push(
+          client.invalidateQueries({ queryKey: ['vehicles'] }),
+          client.invalidateQueries({ queryKey: ['vehicle', vehicleId, 'readings'] }),
+          client.invalidateQueries({ queryKey: ['vehicle', vehicleId, 'readings', 'latest'] }),
+        );
+      }
+      await Promise.all(invalidations);
+    },
   });
 }
 

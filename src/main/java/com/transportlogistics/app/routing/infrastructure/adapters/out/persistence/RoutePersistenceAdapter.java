@@ -2,6 +2,7 @@ package com.transportlogistics.app.routing.infrastructure.adapters.out.persisten
 
 import com.transportlogistics.app.routing.application.ports.out.RouteRepository;
 import com.transportlogistics.app.routing.domain.model.Route;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -9,12 +10,9 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Component
+@RequiredArgsConstructor
 class RoutePersistenceAdapter implements RouteRepository {
     private final RouteJpaRepository repo;
-
-    RoutePersistenceAdapter(RouteJpaRepository repo) {
-        this.repo = repo;
-    }
 
     public Route save(Route v) {
         var e = new RouteEntity();

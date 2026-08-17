@@ -22,6 +22,32 @@ class UserAuthorizationTest {
         assertThat(user(false, Set.of(role)).hasPermission("IDENTITY_MANAGE")).isFalse();
     }
 
+    @Test
+    void userToStringMasksPasswordHash() {
+        var user = user(true, Set.of());
+        var str = user.toString();
+        assertThat(str).contains("passwordHash=***");
+        assertThat(str).doesNotContain("hash");
+    }
+
+    @Test
+    void authTokensToStringMasksTokens() {
+        var tokens = new AuthTokens("secret-access-token", "secret-refresh-token", "Bearer", 3600);
+        var str = tokens.toString();
+        assertThat(str).contains("accessToken=***");
+        assertThat(str).contains("refreshToken=***");
+        assertThat(str).doesNotContain("secret-access-token");
+        assertThat(str).doesNotContain("secret-refresh-token");
+    }
+
+    @Test
+    void issuedRefreshTokenToStringMasksValue() {
+        var token = new IssuedRefreshToken("raw-refresh-token-value", OffsetDateTime.now());
+        var str = token.toString();
+        assertThat(str).contains("value=***");
+        assertThat(str).doesNotContain("raw-refresh-token-value");
+    }
+
     private User user(boolean active, Set<Role> roles) {
         var now = OffsetDateTime.parse("2026-01-01T00:00:00Z");
         return new User(UUID.randomUUID(), "operator", "operator@example.com", "hash", "Op", "Erator",

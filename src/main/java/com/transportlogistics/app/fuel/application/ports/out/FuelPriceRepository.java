@@ -9,8 +9,12 @@ import java.util.UUID;
 
 public interface FuelPriceRepository {
     FuelPrice save(FuelPrice price);
+
     Optional<FuelPrice> findById(UUID id);
+
     List<FuelPrice> find(UUID vendorId, String fuelType, Boolean active, LocalDate effectiveOn);
+
     boolean hasOverlappingActivePrice(UUID vendorId, String fuelType, LocalDate from, LocalDate to, UUID excludingId);
+
     Optional<FuelPrice> findEffective(UUID vendorId, String fuelType, LocalDate date);
 }

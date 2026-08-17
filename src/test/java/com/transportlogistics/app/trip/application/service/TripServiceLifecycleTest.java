@@ -31,17 +31,22 @@ class TripServiceLifecycleTest {
     private TripRepository repository;
     private VehicleEligibilityPort vehicles;
     private DriverEligibilityPort drivers;
+    private TripVehicleReadingPort vehicleReadings;
+    private TripActorPort actors;
     private TripHistoryRepository history;
     private CountingTransaction transactions;
     private TripService service;
     private AtomicReference<Trip> persisted;
     private ArrayList<TripHistoryEntry> audit;
+    private final UUID actorId = UUID.randomUUID();
 
     @BeforeEach
     void setUp() {
         repository = mock(TripRepository.class);
         vehicles = mock(VehicleEligibilityPort.class);
         drivers = mock(DriverEligibilityPort.class);
+        vehicleReadings = mock(TripVehicleReadingPort.class);
+        actors = mock(TripActorPort.class);
         history = mock(TripHistoryRepository.class);
         transactions = new CountingTransaction();
         persisted = new AtomicReference<>();
@@ -57,7 +62,10 @@ class TripServiceLifecycleTest {
             audit.add(entry);
             return entry;
         });
-        service = new TripService(repository, vehicles, drivers, history, transactions,
+        when(actors.find(any())).thenAnswer(invocation ->
+                Optional.of(new TripActorPort.Actor(actorId, invocation.getArgument(0))));
+        service = new TripService(repository, vehicles, drivers, mock(RouteEligibilityPort.class),
+                vehicleReadings, actors, history, transactions,
                 mock(TripDispatchRepository.class), Clock.fixed(INSTANT, ZoneOffset.UTC));
     }
 
@@ -184,7 +192,8 @@ class TripServiceLifecycleTest {
 
     @Test
     void dispatchedTripStartsOnceWithActualTimeOdometerAndAudit() {
-        var dispatched = trip("DISPATCHED", UUID.randomUUID(), UUID.randomUUID(), null, null);
+        var vehicleId = UUID.randomUUID();
+        var dispatched = trip("DISPATCHED", vehicleId, UUID.randomUUID(), null, null);
         given(dispatched);
 
         var started = service.transition(dispatched.id(), new TripCommand.Start(1250.0), "driver");
@@ -193,6 +202,8 @@ class TripServiceLifecycleTest {
         assertEquals(NOW, started.actualStartTime());
         assertEquals(1250.0, started.startOdometerKm());
         assertHistory("DISPATCHED", "IN_PROGRESS", "TRIP_STARTED", "driver");
+        verify(vehicleReadings).recordStart(vehicleId, dispatched.id(), 1250.0, null, NOW, actorId);
+
         var saveCount = mockingDetails(repository).getInvocations().stream()
                 .filter(invocation -> invocation.getMethod().getName().equals("save")).count();
         var duplicate = assertThrows(ConflictException.class,
@@ -200,6 +211,67 @@ class TripServiceLifecycleTest {
         assertEquals("TRIP_ALREADY_STARTED", duplicate.code());
         assertEquals(saveCount, mockingDetails(repository).getInvocations().stream()
                 .filter(invocation -> invocation.getMethod().getName().equals("save")).count());
+    }
+
+    @Test
+    void startWithOdometerAndEngineHoursRecordsBothFacts() {
+        var vehicleId = UUID.randomUUID();
+        var dispatched = trip("DISPATCHED", vehicleId, UUID.randomUUID(), null, null);
+        given(dispatched);
+
+        var started = service.transition(dispatched.id(), new TripCommand.Start(1250.0, 45.5), "driver");
+
+        assertEquals("IN_PROGRESS", started.status());
+        verify(vehicleReadings).recordStart(vehicleId, dispatched.id(), 1250.0, 45.5, NOW, actorId);
+    }
+
+    @Test
+    void startTripWithReadingRejectionRollsBackStateAndLeavesTripDispatched() {
+        var vehicleId = UUID.randomUUID();
+        var dispatched = trip("DISPATCHED", vehicleId, UUID.randomUUID(), null, null);
+        given(dispatched);
+
+        doThrow(new ConflictException("VEHICLE_READING_DECREASE", "Reading is below previous value"))
+                .when(vehicleReadings).recordStart(any(), any(), any(), any(), any(), any());
+
+        var error = assertThrows(ConflictException.class,
+                () -> service.transition(dispatched.id(), new TripCommand.Start(900.0), "driver"));
+
+        assertEquals("VEHICLE_READING_DECREASE", error.code());
+        assertSame(dispatched, persisted.get());
+        verify(repository, never()).save(any());
+        assertTrue(audit.isEmpty());
+    }
+
+    @Test
+    void completeWithOdometerAndEngineHoursRecordsBothFacts() {
+        var vehicleId = UUID.randomUUID();
+        var inProgress = trip("IN_PROGRESS", vehicleId, UUID.randomUUID(), NOW.minusHours(2), 1000.0);
+        given(inProgress);
+
+        var completed = service.transition(inProgress.id(), new TripCommand.Complete(1050.0, "Delivered", 48.0), "driver");
+
+        assertEquals("COMPLETED", completed.status());
+        assertEquals(1050.0, completed.endOdometerKm());
+        verify(vehicleReadings).recordComplete(vehicleId, inProgress.id(), 1050.0, 48.0, NOW, actorId);
+    }
+
+    @Test
+    void completeTripWithReadingRejectionRollsBackStateAndLeavesTripInProgress() {
+        var vehicleId = UUID.randomUUID();
+        var inProgress = trip("IN_PROGRESS", vehicleId, UUID.randomUUID(), NOW.minusHours(2), 1000.0);
+        given(inProgress);
+
+        doThrow(new ConflictException("VEHICLE_READING_CHRONOLOGY_CONFLICT", "Conflict with later reading"))
+                .when(vehicleReadings).recordComplete(any(), any(), any(), any(), any(), any());
+
+        var error = assertThrows(ConflictException.class,
+                () -> service.transition(inProgress.id(), new TripCommand.Complete(1050.0, "Delivered"), "driver"));
+
+        assertEquals("VEHICLE_READING_CHRONOLOGY_CONFLICT", error.code());
+        assertSame(inProgress, persisted.get());
+        verify(repository, never()).save(any());
+        assertTrue(audit.isEmpty());
     }
 
     @Test

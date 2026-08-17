@@ -54,8 +54,8 @@ public final class DriverAvailabilityService implements DriverAvailabilityUseCas
     }
 
     private void addLicenseReasonsWhenNoneQualifies(ArrayList<DriverAvailability.Reason> reasons,
-                                                     List<DriverLicense> candidateLicenses,
-                                                     Query query) {
+                                                    List<DriverLicense> candidateLicenses,
+                                                    Query query) {
         var requestedFrom = query.from().toLocalDate();
         var requestedTo = query.to().toLocalDate();
         if (candidateLicenses.stream().anyMatch(license -> license.isValidForPeriod(

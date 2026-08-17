@@ -2,6 +2,7 @@ package com.transportlogistics.app.organization.infrastructure.adapters.out.pers
 
 import com.transportlogistics.app.organization.application.ports.out.VendorRepository;
 import com.transportlogistics.app.organization.domain.model.Vendor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -9,12 +10,9 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Component
+@RequiredArgsConstructor
 class VendorPersistenceAdapter implements VendorRepository {
     private final VendorJpaRepository repository;
-
-    VendorPersistenceAdapter(VendorJpaRepository repository) {
-        this.repository = repository;
-    }
 
     @Override
     public Vendor save(Vendor vendor) {
@@ -29,7 +27,10 @@ class VendorPersistenceAdapter implements VendorRepository {
         return map(repository.save(entity));
     }
 
-    @Override public Optional<Vendor> findById(UUID id) { return repository.findById(id).map(this::map); }
+    @Override
+    public Optional<Vendor> findById(UUID id) {
+        return repository.findById(id).map(this::map);
+    }
 
     @Override
     public List<Vendor> findAll(Boolean active) {
@@ -37,7 +38,8 @@ class VendorPersistenceAdapter implements VendorRepository {
         return entities.stream().map(this::map).toList();
     }
 
-    @Override public boolean existsByCode(String code, UUID excludingId) {
+    @Override
+    public boolean existsByCode(String code, UUID excludingId) {
         return repository.existsByCodeAndIdNot(code, excludingId);
     }
 

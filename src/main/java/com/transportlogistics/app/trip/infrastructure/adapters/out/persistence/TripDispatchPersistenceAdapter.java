@@ -2,18 +2,16 @@ package com.transportlogistics.app.trip.infrastructure.adapters.out.persistence;
 
 import com.transportlogistics.app.trip.application.ports.out.TripDispatchRepository;
 import com.transportlogistics.app.trip.domain.model.TripDispatchRecord;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.Optional;
 import java.util.UUID;
 
 @Component
+@RequiredArgsConstructor
 class TripDispatchPersistenceAdapter implements TripDispatchRepository {
     private final TripDispatchJpaRepository repository;
-
-    TripDispatchPersistenceAdapter(TripDispatchJpaRepository repository) {
-        this.repository = repository;
-    }
 
     @Override
     public TripDispatchRecord save(TripDispatchRecord record) {

@@ -3,6 +3,7 @@ package com.transportlogistics.app.fleet.infrastructure.adapters.out.persistence
 import com.transportlogistics.app.fleet.application.ports.out.DriverLicenseRepository;
 import com.transportlogistics.app.fleet.domain.model.DriverLicense;
 import com.transportlogistics.app.fleet.domain.model.DriverLicenseStatus;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -10,12 +11,9 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Component
+@RequiredArgsConstructor
 class DriverLicensePersistenceAdapter implements DriverLicenseRepository {
     private final DriverLicenseJpaRepository repository;
-
-    DriverLicensePersistenceAdapter(DriverLicenseJpaRepository repository) {
-        this.repository = repository;
-    }
 
     @Override
     public DriverLicense save(DriverLicense license) {

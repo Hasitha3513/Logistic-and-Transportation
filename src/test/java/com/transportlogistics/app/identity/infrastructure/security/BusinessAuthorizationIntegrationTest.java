@@ -60,6 +60,7 @@ class BusinessAuthorizationIntegrationTest {
             "FUEL_ISSUE_AUTHORIZE",
             "FUEL_PURCHASE_APPROVE",
             "FUEL_PRICE_VIEW",
+            "VEHICLE_READING_VIEW", "VEHICLE_READING_CREATE", "VEHICLE_READING_CORRECT", "VEHICLE_READING_RESET_METER",
             "IDENTITY_MANAGE");
 
     @Autowired MockMvc mvc;
@@ -79,6 +80,10 @@ class BusinessAuthorizationIntegrationTest {
     @MockBean LocationUseCase locations;
     @MockBean ProjectUseCase projects;
     @MockBean VendorUseCase vendors;
+    @MockBean com.transportlogistics.app.fleet.application.ports.in.VehicleReadingUseCase vehicleReadings;
+    @MockBean com.transportlogistics.app.fleet.application.ports.out.VehicleReadingRepository vehicleReadingRepo;
+    @MockBean com.transportlogistics.app.fleet.VehicleReadingRecorder vehicleReadingRecorder;
+    @MockBean com.transportlogistics.app.fleet.VehicleMileageQuery vehicleMileageQuery;
 
     @BeforeEach
     void seedActors() {
@@ -111,6 +116,20 @@ class BusinessAuthorizationIntegrationTest {
         var vendorId = UUID.fromString("a3000000-0000-0000-0000-000000000001");
         when(fuelPurchases.approve(eq(purchaseId), any(), eq("permitted"))).thenReturn(purchase(purchaseId, vendorId));
         when(fuelPurchases.vendor(vendorId)).thenReturn(new FuelPurchaseUseCase.VendorReference(vendorId, "V-1", "Vendor", true));
+
+        var sampleReading = new com.transportlogistics.app.fleet.domain.model.VehicleReading(
+                UUID.randomUUID(), UUID.randomUUID(), com.transportlogistics.app.fleet.domain.model.VehicleReadingType.ODOMETER,
+                new BigDecimal("10000.000"), com.transportlogistics.app.fleet.domain.model.VehicleReadingUnit.KILOMETER,
+                0, com.transportlogistics.app.fleet.domain.model.VehicleReadingSourceType.MANUAL, null, now, now,
+                UUID.randomUUID(), null, null, "KEY-1", null, now);
+        when(vehicleReadings.list(any())).thenReturn(new com.transportlogistics.app.fleet.application.ports.in.VehicleReadingUseCase.PageResult<>(List.of(sampleReading), 0, 20, 1, 1));
+        when(vehicleReadings.record(any())).thenReturn(sampleReading);
+        when(vehicleReadings.correct(any())).thenReturn(sampleReading);
+        var sampleReset = new com.transportlogistics.app.fleet.domain.model.VehicleMeterReset(
+                UUID.randomUUID(), UUID.randomUUID(), com.transportlogistics.app.fleet.domain.model.VehicleReadingType.ODOMETER,
+                null, BigDecimal.ZERO.setScale(3), UUID.randomUUID(), BigDecimal.ZERO.setScale(3),
+                now, "Reset", UUID.randomUUID(), UUID.randomUUID(), null, now);
+        when(vehicleReadings.resetMeter(any())).thenReturn(sampleReset);
     }
 
     @Test
@@ -128,7 +147,7 @@ class BusinessAuthorizationIntegrationTest {
         }
 
         verifyNoInteractions(trips, vehicles, drivers, routes, fuelIssues, fuelStations, fuelPurchases,
-                customers, departments, locations, projects, vendors);
+                customers, departments, locations, projects, vendors, vehicleReadings);
     }
 
     @Test
@@ -159,6 +178,10 @@ class BusinessAuthorizationIntegrationTest {
         verify(vendors).list(null);
         verify(fuelIssues).authorize(any(), any(), eq("permitted"));
         verify(fuelPurchases).approve(any(), any(), eq("permitted"));
+        verify(vehicleReadings).list(any());
+        verify(vehicleReadings).record(any());
+        verify(vehicleReadings).correct(any());
+        verify(vehicleReadings).resetMeter(any());
     }
 
     @Test
@@ -176,6 +199,8 @@ class BusinessAuthorizationIntegrationTest {
         var typeId = UUID.randomUUID();
         var originId = UUID.randomUUID();
         var destinationId = UUID.randomUUID();
+        var vehicleId = UUID.randomUUID();
+        var readingId = UUID.randomUUID();
         return List.of(
                 post("/trips/{id}/approve", tripId),
                 post("/trips/{id}/reject", tripId).contentType(MediaType.APPLICATION_JSON)
@@ -233,7 +258,14 @@ class BusinessAuthorizationIntegrationTest {
                 post("/fuel-purchases/{id}/approve", UUID.fromString("a2000000-0000-0000-0000-000000000001"))
                         .contentType(MediaType.APPLICATION_JSON).content("{\"comment\":\"Approved\"}"),
                 get("/reports/trips").param("fromDate", "2026-01-01").param("toDate", "2026-01-31"),
-                get("/dashboard/operations"));
+                get("/dashboard/operations"),
+                get("/vehicles/{id}/readings", vehicleId),
+                post("/vehicles/{id}/readings", vehicleId).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"readingType\":\"ODOMETER\",\"value\":10000,\"recordedAt\":\"2026-08-16T08:00:00Z\"}"),
+                post("/vehicles/{id}/readings/{readingId}/correct", vehicleId, readingId).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"value\":10050,\"reason\":\"Fixed typo\"}"),
+                post("/vehicles/{id}/meter-resets", vehicleId).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"readingType\":\"ODOMETER\",\"newMeterValue\":0,\"effectiveAt\":\"2026-08-16T08:00:00Z\",\"reason\":\"Meter replaced\"}"));
     }
 
     private RequestBuilder withBearer(RequestBuilder request, String token) {

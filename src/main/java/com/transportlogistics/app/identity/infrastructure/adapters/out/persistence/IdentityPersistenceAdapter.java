@@ -3,29 +3,20 @@ package com.transportlogistics.app.identity.infrastructure.adapters.out.persiste
 import com.transportlogistics.app.identity.application.ports.out.IdentityRepository;
 import com.transportlogistics.app.identity.domain.model.Role;
 import com.transportlogistics.app.identity.domain.model.User;
-import org.springframework.stereotype.Component;
+import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-import java.util.Set;
-import java.util.HashSet;
-import java.util.Map;
+import java.util.*;
 
 @Component
+@RequiredArgsConstructor
 class IdentityPersistenceAdapter implements IdentityRepository {
     private final UserJpaRepository users;
     private final RoleJpaRepository roles;
     private final NamedParameterJdbcTemplate jdbc;
-
-    IdentityPersistenceAdapter(UserJpaRepository u, RoleJpaRepository r, NamedParameterJdbcTemplate jdbc) {
-        users = u;
-        roles = r;
-        this.jdbc = jdbc;
-    }
 
     public User saveUser(User v) {
         var e = new UserEntity();

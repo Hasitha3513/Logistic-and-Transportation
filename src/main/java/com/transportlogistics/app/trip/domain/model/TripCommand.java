@@ -13,10 +13,16 @@ public sealed interface TripCommand permits TripCommand.Submit, TripCommand.Appr
     record Dispatch() implements TripCommand {
     }
 
-    record Start(Double odometerKm) implements TripCommand {
+    record Start(Double odometerKm, Double engineHours) implements TripCommand {
+        public Start(Double odometerKm) {
+            this(odometerKm, null);
+        }
     }
 
-    record Complete(Double odometerKm, String remarks) implements TripCommand {
+    record Complete(Double odometerKm, String remarks, Double engineHours) implements TripCommand {
+        public Complete(Double odometerKm, String remarks) {
+            this(odometerKm, remarks, null);
+        }
     }
 
     record Close() implements TripCommand {

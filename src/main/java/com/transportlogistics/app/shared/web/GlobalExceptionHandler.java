@@ -1,14 +1,14 @@
 package com.transportlogistics.app.shared.web;
 
-import com.transportlogistics.app.shared.domain.NotFoundException;
-import com.transportlogistics.app.shared.domain.ConflictException;
 import com.transportlogistics.app.shared.domain.BusinessRuleException;
+import com.transportlogistics.app.shared.domain.ConflictException;
+import com.transportlogistics.app.shared.domain.NotFoundException;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import jakarta.servlet.http.HttpServletRequest;
 
 import java.time.OffsetDateTime;
 import java.util.List;

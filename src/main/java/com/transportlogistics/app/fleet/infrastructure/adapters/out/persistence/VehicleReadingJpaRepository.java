@@ -26,10 +26,10 @@ interface VehicleReadingJpaRepository extends JpaRepository<VehicleReadingEntity
             order by reading.recordedAt desc, reading.receivedAt desc, reading.createdAt desc
             """)
     List<VehicleReadingEntity> findPreviousEffective(@Param("vehicleId") UUID vehicleId,
-                                                      @Param("readingType") VehicleReadingType readingType,
-                                                      @Param("meterEpoch") int meterEpoch,
-                                                      @Param("recordedAt") OffsetDateTime recordedAt,
-                                                      Pageable pageable);
+                                                     @Param("readingType") VehicleReadingType readingType,
+                                                     @Param("meterEpoch") int meterEpoch,
+                                                     @Param("recordedAt") OffsetDateTime recordedAt,
+                                                     Pageable pageable);
 
     @Query("""
             select reading from VehicleReadingEntity reading
@@ -42,10 +42,10 @@ interface VehicleReadingJpaRepository extends JpaRepository<VehicleReadingEntity
             order by reading.recordedAt asc, reading.receivedAt asc, reading.createdAt asc
             """)
     List<VehicleReadingEntity> findNextEffective(@Param("vehicleId") UUID vehicleId,
-                                                  @Param("readingType") VehicleReadingType readingType,
-                                                  @Param("meterEpoch") int meterEpoch,
-                                                  @Param("recordedAt") OffsetDateTime recordedAt,
-                                                  Pageable pageable);
+                                                 @Param("readingType") VehicleReadingType readingType,
+                                                 @Param("meterEpoch") int meterEpoch,
+                                                 @Param("recordedAt") OffsetDateTime recordedAt,
+                                                 Pageable pageable);
 
     @Query("""
             select reading from VehicleReadingEntity reading
@@ -58,9 +58,9 @@ interface VehicleReadingJpaRepository extends JpaRepository<VehicleReadingEntity
             order by reading.receivedAt asc, reading.createdAt asc
             """)
     List<VehicleReadingEntity> findEffectiveAt(@Param("vehicleId") UUID vehicleId,
-                                                @Param("readingType") VehicleReadingType readingType,
-                                                @Param("meterEpoch") int meterEpoch,
-                                                @Param("recordedAt") OffsetDateTime recordedAt);
+                                               @Param("readingType") VehicleReadingType readingType,
+                                               @Param("meterEpoch") int meterEpoch,
+                                               @Param("recordedAt") OffsetDateTime recordedAt);
 
     @Query("""
             select reading from VehicleReadingEntity reading
@@ -72,9 +72,9 @@ interface VehicleReadingJpaRepository extends JpaRepository<VehicleReadingEntity
             order by reading.recordedAt desc, reading.receivedAt desc, reading.createdAt desc
             """)
     List<VehicleReadingEntity> findLatestEffective(@Param("vehicleId") UUID vehicleId,
-                                                    @Param("readingType") VehicleReadingType readingType,
-                                                    @Param("meterEpoch") int meterEpoch,
-                                                    Pageable pageable);
+                                                   @Param("readingType") VehicleReadingType readingType,
+                                                   @Param("meterEpoch") int meterEpoch,
+                                                   Pageable pageable);
 
     @Query("select coalesce(max(reading.meterEpoch), 0) from VehicleReadingEntity reading where reading.vehicleId = :vehicleId and reading.readingType = :readingType")
     int findCurrentMeterEpoch(@Param("vehicleId") UUID vehicleId,
@@ -86,4 +86,72 @@ interface VehicleReadingJpaRepository extends JpaRepository<VehicleReadingEntity
 
     Optional<VehicleReadingEntity> findByIdempotencyKey(String idempotencyKey);
 
+    Optional<VehicleReadingEntity> findByCorrectionOfReadingId(UUID correctionOfReadingId);
+
+    boolean existsByCorrectionOfReadingId(UUID correctionOfReadingId);
+
+    @Query("""
+            select reading from VehicleReadingEntity reading
+            where reading.vehicleId = :vehicleId
+              and reading.readingType = :readingType
+              and reading.recordedAt >= :from
+              and reading.recordedAt <= :to
+              and not exists (select correction.id from VehicleReadingEntity correction
+                              where correction.correctionOfReadingId = reading.id)
+            order by reading.meterEpoch asc, reading.recordedAt asc, reading.receivedAt asc
+            """)
+    List<VehicleReadingEntity> findEffectiveInPeriod(@Param("vehicleId") UUID vehicleId,
+                                                     @Param("readingType") VehicleReadingType readingType,
+                                                     @Param("from") OffsetDateTime from,
+                                                     @Param("to") OffsetDateTime to);
+
+    @Query("""
+            select reading from VehicleReadingEntity reading
+            where reading.vehicleId = :vehicleId
+              and reading.readingType = :readingType
+              and reading.recordedAt <= :from
+              and not exists (select correction.id from VehicleReadingEntity correction
+                              where correction.correctionOfReadingId = reading.id)
+            order by reading.recordedAt desc, reading.receivedAt desc, reading.createdAt desc
+            """)
+    List<VehicleReadingEntity> findOpeningEffective(@Param("vehicleId") UUID vehicleId,
+                                                    @Param("readingType") VehicleReadingType readingType,
+                                                    @Param("from") OffsetDateTime from,
+                                                    Pageable pageable);
+
+    @Query("""
+            select reading from VehicleReadingEntity reading
+            where reading.vehicleId = :vehicleId
+              and reading.readingType = :readingType
+              and reading.recordedAt <= :to
+              and not exists (select correction.id from VehicleReadingEntity correction
+                              where correction.correctionOfReadingId = reading.id)
+            order by reading.recordedAt desc, reading.receivedAt desc, reading.createdAt desc
+            """)
+    List<VehicleReadingEntity> findClosingEffective(@Param("vehicleId") UUID vehicleId,
+                                                    @Param("readingType") VehicleReadingType readingType,
+                                                    @Param("to") OffsetDateTime to,
+                                                    Pageable pageable);
+
+    @Query("""
+            select count(reading) from VehicleReadingEntity reading
+            where reading.vehicleId = :vehicleId
+              and reading.correctionOfReadingId is not null
+              and reading.recordedAt >= :from
+              and reading.recordedAt <= :to
+            """)
+    int countCorrectionsInPeriod(@Param("vehicleId") UUID vehicleId,
+                                 @Param("from") OffsetDateTime from,
+                                 @Param("to") OffsetDateTime to);
+
+    @Query("""
+            select reading from VehicleReadingEntity reading
+            where reading.vehicleId = :vehicleId
+              and reading.recordedAt >= :from
+              and reading.recordedAt <= :to
+            order by reading.recordedAt asc
+            """)
+    List<VehicleReadingEntity> findAllInPeriod(@Param("vehicleId") UUID vehicleId,
+                                               @Param("from") OffsetDateTime from,
+                                               @Param("to") OffsetDateTime to);
 }

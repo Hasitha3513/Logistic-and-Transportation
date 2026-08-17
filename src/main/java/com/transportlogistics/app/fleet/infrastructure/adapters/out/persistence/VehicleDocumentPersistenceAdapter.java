@@ -3,6 +3,7 @@ package com.transportlogistics.app.fleet.infrastructure.adapters.out.persistence
 import com.transportlogistics.app.fleet.application.ports.out.VehicleDocumentRepository;
 import com.transportlogistics.app.fleet.domain.model.VehicleDocument;
 import com.transportlogistics.app.fleet.domain.model.VehicleDocumentStatus;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -10,12 +11,9 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Component
+@RequiredArgsConstructor
 class VehicleDocumentPersistenceAdapter implements VehicleDocumentRepository {
     private final VehicleDocumentJpaRepository repository;
-
-    VehicleDocumentPersistenceAdapter(VehicleDocumentJpaRepository repository) {
-        this.repository = repository;
-    }
 
     @Override
     public VehicleDocument save(VehicleDocument document) {

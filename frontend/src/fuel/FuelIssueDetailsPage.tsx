@@ -47,7 +47,7 @@ export default function FuelIssueDetailsPage() {
     {issue.isError && <Alert type="error" showIcon message="Fuel issue could not be loaded" />}
     {errorMessage && <Alert type="error" showIcon message="Operation rejected" description={errorMessage} />}
     {current && <>
-      {current.status === 'ISSUED' && <Alert type="success" showIcon message="Fuel issued" description="This operational record is read-only and retained for audit." />}
+      {current.status === 'ISSUED' && <Alert type="success" showIcon message="Fuel issued" description={current.odometer != null || current.engineHours != null ? "This operational record is read-only. Authoritative vehicle readings were recorded in the Fleet ledger." : "This operational record is read-only and retained for audit."} />}
       <Card title="Overview" extra={<FuelIssueStatusTag status={current.status} />}><Descriptions bordered column={{ xs: 1, md: 2 }} items={[
         { key: 'voucher', label: 'Voucher', children: current.voucherNumber }, { key: 'date', label: 'Issue date', children: formatDate(current.issueDateTime) },
         { key: 'vehicle', label: 'Vehicle ID', children: current.vehicle.id }, { key: 'trip', label: 'Trip ID', children: current.trip?.id ?? '—' },
