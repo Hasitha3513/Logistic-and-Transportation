@@ -4,6 +4,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -15,6 +16,7 @@ import java.util.UUID;
 @Getter
 @Setter
 @NoArgsConstructor
+@AllArgsConstructor
 class VehicleCategoryEntity {
     @Id
     @Column(name = "id")
@@ -27,12 +29,4 @@ class VehicleCategoryEntity {
     private String description;
     @Column(name = "active")
     private boolean active;
-
-    public VehicleCategoryEntity(UUID id, String code, String name, String description, boolean active) {
-        this.id = id;
-        this.code = code;
-        this.name = name;
-        this.description = description;
-        this.active = active;
-    }
 }

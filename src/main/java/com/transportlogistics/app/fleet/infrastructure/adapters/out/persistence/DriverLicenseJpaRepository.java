@@ -8,7 +8,7 @@ import java.util.UUID;
 
 interface DriverLicenseJpaRepository extends JpaRepository<DriverLicenseEntity, UUID> {
     List<DriverLicenseEntity> findByDriverIdAndStatusNotOrderByCreatedAtDesc(UUID driverId,
-                                                                             DriverLicenseStatus status);
+                                                                            DriverLicenseStatus status);
 
     List<DriverLicenseEntity> findByDriverIdAndActiveTrue(UUID driverId);
 

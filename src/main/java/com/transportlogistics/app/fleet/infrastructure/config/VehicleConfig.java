@@ -1,15 +1,15 @@
 package com.transportlogistics.app.fleet.infrastructure.config;
 
-import com.transportlogistics.app.fleet.VehicleAllocationAvailability;
-import com.transportlogistics.app.fleet.VehicleAssignmentEligibility;
 import com.transportlogistics.app.fleet.VehicleDispatchEligibility;
+import com.transportlogistics.app.fleet.VehicleAssignmentEligibility;
+import com.transportlogistics.app.fleet.VehicleAllocationAvailability;
 import com.transportlogistics.app.fleet.VehicleFuelContextLookup;
 import com.transportlogistics.app.fleet.application.ports.in.VehicleAvailabilityUseCase;
 import com.transportlogistics.app.fleet.application.ports.in.VehicleUseCase;
 import com.transportlogistics.app.fleet.application.ports.out.VehicleDocumentRepository;
 import com.transportlogistics.app.fleet.application.ports.out.VehicleRepository;
-import com.transportlogistics.app.fleet.application.service.VehicleAvailabilityService;
 import com.transportlogistics.app.fleet.application.service.VehicleService;
+import com.transportlogistics.app.fleet.application.service.VehicleAvailabilityService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -17,10 +17,6 @@ import java.math.BigDecimal;
 
 @Configuration
 class VehicleConfig {
-    private static BigDecimal decimal(Double value) {
-        return value == null ? null : BigDecimal.valueOf(value);
-    }
-
     @Bean
     VehicleUseCase vehicleUseCase(VehicleRepository repo) {
         return new VehicleService(repo);
@@ -36,8 +32,8 @@ class VehicleConfig {
 
     @Bean
     VehicleAvailabilityUseCase vehicleAvailabilityUseCase(VehicleRepository vehicles,
-                                                          VehicleDocumentRepository documents,
-                                                          VehicleAllocationAvailability allocations) {
+                                                           VehicleDocumentRepository documents,
+                                                           VehicleAllocationAvailability allocations) {
         return new VehicleAvailabilityService(vehicles, documents, allocations);
     }
 
@@ -63,5 +59,9 @@ class VehicleConfig {
                 throw new IllegalArgumentException("Vehicle is ineligible for assignment: " + codes);
             }
         };
+    }
+
+    private static BigDecimal decimal(Double value) {
+        return value == null ? null : BigDecimal.valueOf(value);
     }
 }

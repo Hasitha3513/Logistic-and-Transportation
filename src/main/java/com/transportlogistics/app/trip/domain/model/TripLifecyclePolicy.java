@@ -1,15 +1,13 @@
 package com.transportlogistics.app.trip.domain.model;
 
-import com.transportlogistics.app.shared.domain.BusinessRuleException;
 import com.transportlogistics.app.shared.domain.ConflictException;
+import com.transportlogistics.app.shared.domain.BusinessRuleException;
 
 import java.time.OffsetDateTime;
 import java.util.Set;
 import java.util.UUID;
 
-/**
- * Authoritative policy for Phase 1 trip lifecycle and assignment-state semantics.
- */
+/** Authoritative policy for Phase 1 trip lifecycle and assignment-state semantics. */
 public final class TripLifecyclePolicy {
     public static final String DRAFT = "DRAFT";
     public static final String SUBMITTED = "SUBMITTED";
@@ -173,7 +171,6 @@ public final class TripLifecyclePolicy {
             throw conflict("TRIP_NOT_STARTABLE", "Start requires a DISPATCHED trip");
         }
         requireReading(start.odometerKm(), "Start odometer is required", "Start odometer cannot be negative");
-        validateOptionalReading(start.engineHours(), "Start engine hours cannot be negative");
     }
 
     private void validateComplete(Trip trip, TripCommand.Complete complete, OffsetDateTime now) {
@@ -187,15 +184,8 @@ public final class TripLifecyclePolicy {
             throw validation("INVALID_TRIP_PERIOD", "Trip actual end time cannot precede actual start time");
         }
         requireReading(complete.odometerKm(), "End odometer is required", "End odometer cannot be negative");
-        validateOptionalReading(complete.engineHours(), "End engine hours cannot be negative");
         if (trip.startOdometerKm() != null && complete.odometerKm() < trip.startOdometerKm()) {
             throw validation("INVALID_ODOMETER", "End odometer cannot be lower than start odometer");
-        }
-    }
-
-    private void validateOptionalReading(Double value, String negativeMessage) {
-        if (value != null && (!Double.isFinite(value) || value < 0)) {
-            throw validation("INVALID_ENGINE_HOURS", negativeMessage);
         }
     }
 

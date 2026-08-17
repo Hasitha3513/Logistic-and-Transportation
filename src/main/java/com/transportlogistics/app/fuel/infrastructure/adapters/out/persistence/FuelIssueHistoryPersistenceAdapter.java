@@ -2,16 +2,18 @@ package com.transportlogistics.app.fuel.infrastructure.adapters.out.persistence;
 
 import com.transportlogistics.app.fuel.application.ports.out.FuelIssueHistoryRepository;
 import com.transportlogistics.app.fuel.domain.model.FuelIssueHistory;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.UUID;
 
 @Component
-@RequiredArgsConstructor
 class FuelIssueHistoryPersistenceAdapter implements FuelIssueHistoryRepository {
     private final FuelIssueHistoryJpaRepository repository;
+
+    FuelIssueHistoryPersistenceAdapter(FuelIssueHistoryJpaRepository repository) {
+        this.repository = repository;
+    }
 
     @Override
     public FuelIssueHistory save(FuelIssueHistory history) {

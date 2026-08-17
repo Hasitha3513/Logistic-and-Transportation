@@ -4,7 +4,16 @@ import com.transportlogistics.app.fuel.FuelIssueAuthorized;
 import com.transportlogistics.app.fuel.FuelIssueCancelled;
 import com.transportlogistics.app.fuel.FuelIssued;
 import com.transportlogistics.app.fuel.application.ports.in.FuelIssueUseCase;
-import com.transportlogistics.app.fuel.application.ports.out.*;
+import com.transportlogistics.app.fuel.application.ports.out.FuelActorPort;
+import com.transportlogistics.app.fuel.application.ports.out.FuelEventPublisher;
+import com.transportlogistics.app.fuel.application.ports.out.FuelIssueHistoryRepository;
+import com.transportlogistics.app.fuel.application.ports.out.FuelIssueRepository;
+import com.transportlogistics.app.fuel.application.ports.out.FuelLimitPolicyRepository;
+import com.transportlogistics.app.fuel.application.ports.out.FuelStationRepository;
+import com.transportlogistics.app.fuel.application.ports.out.FuelTransaction;
+import com.transportlogistics.app.fuel.application.ports.out.FuelVoucherGenerator;
+import com.transportlogistics.app.fuel.application.ports.out.TripFuelContextPort;
+import com.transportlogistics.app.fuel.application.ports.out.VehicleFuelContextPort;
 import com.transportlogistics.app.fuel.domain.model.FuelIssue;
 import com.transportlogistics.app.fuel.domain.model.FuelIssueHistory;
 import com.transportlogistics.app.fuel.domain.model.FuelIssueStatus;
@@ -12,10 +21,14 @@ import com.transportlogistics.app.fuel.domain.service.FuelIssuePolicy;
 import com.transportlogistics.app.shared.domain.BusinessRuleException;
 import com.transportlogistics.app.shared.domain.NotFoundException;
 
+import java.math.BigDecimal;
+import com.transportlogistics.app.fuel.application.ports.out.FuelVehicleReadingPort;
 import java.time.Clock;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
@@ -31,10 +44,10 @@ public final class FuelIssueService implements FuelIssueUseCase {
     private final VehicleFuelContextPort vehicles;
     private final TripFuelContextPort trips;
     private final FuelActorPort actors;
-    private final FuelVehicleReadingPort vehicleReadings;
     private final FuelVoucherGenerator vouchers;
     private final FuelTransaction transactions;
     private final FuelEventPublisher events;
+    private final FuelVehicleReadingPort readings;
     private final Clock clock;
     private final FuelIssuePolicy policy = new FuelIssuePolicy();
 
@@ -43,15 +56,15 @@ public final class FuelIssueService implements FuelIssueUseCase {
                             VehicleFuelContextPort vehicles, TripFuelContextPort trips, FuelActorPort actors,
                             FuelVoucherGenerator vouchers, FuelTransaction transactions, FuelEventPublisher events,
                             Clock clock) {
-        this(issues, history, stations, limits, vehicles, trips, actors, noOpVehicleReadingPort(), vouchers,
-                transactions, events, clock);
+        this(issues, history, stations, limits, vehicles, trips, actors, vouchers, transactions, events,
+                noOpFuelVehicleReadingPort(), clock);
     }
 
     public FuelIssueService(FuelIssueRepository issues, FuelIssueHistoryRepository history,
                             FuelStationRepository stations, FuelLimitPolicyRepository limits,
                             VehicleFuelContextPort vehicles, TripFuelContextPort trips, FuelActorPort actors,
-                            FuelVehicleReadingPort vehicleReadings, FuelVoucherGenerator vouchers,
-                            FuelTransaction transactions, FuelEventPublisher events, Clock clock) {
+                            FuelVoucherGenerator vouchers, FuelTransaction transactions, FuelEventPublisher events,
+                            FuelVehicleReadingPort readings, Clock clock) {
         this.issues = issues;
         this.history = history;
         this.stations = stations;
@@ -59,16 +72,11 @@ public final class FuelIssueService implements FuelIssueUseCase {
         this.vehicles = vehicles;
         this.trips = trips;
         this.actors = actors;
-        this.vehicleReadings = vehicleReadings;
         this.vouchers = vouchers;
         this.transactions = transactions;
         this.events = events;
+        this.readings = readings == null ? noOpFuelVehicleReadingPort() : readings;
         this.clock = clock;
-    }
-
-    private static FuelVehicleReadingPort noOpVehicleReadingPort() {
-        return (vehicleId, fuelIssueId, odometerKm, engineHours, issueDateTime, actorId) -> {
-        };
     }
 
     @Override
@@ -138,11 +146,10 @@ public final class FuelIssueService implements FuelIssueUseCase {
             var current = locked(id);
             policy.requireIssuable(current);
             validateOperational(current);
-            vehicleReadings.recordIssue(current.vehicleId(), current.id(), current.odometer(),
-                    current.engineHours(), current.issueDateTime(), actor.id());
             var now = OffsetDateTime.now(clock);
             var saved = issues.save(copy(current, FuelIssueStatus.ISSUED, current.authorizedBy(),
                     current.authorizationDateTime(), now));
+            readings.record(saved.vehicleId(), saved.id(), saved.odometer(), saved.engineHours(), now, actor.id());
             append(saved, current.status(), saved.status(), "ISSUED", actor, "Fuel issued", now);
             events.publish(new FuelIssued(saved.id(), saved.voucherNumber(), saved.vehicleId(), saved.tripId(),
                     saved.quantity(), now));
@@ -210,6 +217,7 @@ public final class FuelIssueService implements FuelIssueUseCase {
         if (!station.active()) {
             throw new BusinessRuleException("FUEL_STATION_INACTIVE", "Inactive fuel station cannot issue fuel");
         }
+        validateReadings(issue, vehicle);
         validateTrip(issue);
         policy.enforceLimits(issue, limits.findApplicable(issue.vehicleId()));
     }
@@ -229,6 +237,19 @@ public final class FuelIssueService implements FuelIssueUseCase {
         if (issue.driverId() != null && (trip.driverId() == null || !trip.driverId().equals(issue.driverId()))) {
             throw new BusinessRuleException("FUEL_DRIVER_TRIP_MISMATCH",
                     "Fuel issue driver must match the driver assigned to the trip");
+        }
+    }
+
+    private void validateReadings(FuelIssue issue, VehicleFuelContextPort.VehicleContext vehicle) {
+        if (issue.odometer() != null && vehicle.currentOdometerKm() != null
+                && issue.odometer().compareTo(vehicle.currentOdometerKm()) < 0) {
+            throw new BusinessRuleException("INVALID_FUEL_ODOMETER",
+                    "Fuel issue odometer cannot be lower than the latest vehicle odometer");
+        }
+        if (issue.engineHours() != null && vehicle.engineHours() != null
+                && issue.engineHours().compareTo(vehicle.engineHours()) < 0) {
+            throw new BusinessRuleException("INVALID_FUEL_ENGINE_HOURS",
+                    "Fuel issue engine hours cannot be lower than the latest vehicle engine hours");
         }
     }
 
@@ -272,5 +293,9 @@ public final class FuelIssueService implements FuelIssueUseCase {
 
     private String trim(String value) {
         return value == null || value.isBlank() ? null : value.trim();
+    }
+
+    private static FuelVehicleReadingPort noOpFuelVehicleReadingPort() {
+        return (vehicleId, fuelIssueId, odometer, engineHours, recordedAt, actorId) -> { };
     }
 }

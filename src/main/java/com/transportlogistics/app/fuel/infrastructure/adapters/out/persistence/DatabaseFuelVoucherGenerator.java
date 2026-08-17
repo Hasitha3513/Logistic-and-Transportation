@@ -1,16 +1,18 @@
 package com.transportlogistics.app.fuel.infrastructure.adapters.out.persistence;
 
 import com.transportlogistics.app.fuel.application.ports.out.FuelVoucherGenerator;
-import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
 import java.util.Locale;
 
 @Component
-@RequiredArgsConstructor
 class DatabaseFuelVoucherGenerator implements FuelVoucherGenerator {
     private final JdbcTemplate jdbc;
+
+    DatabaseFuelVoucherGenerator(JdbcTemplate jdbc) {
+        this.jdbc = jdbc;
+    }
 
     @Override
     public String next(int year) {

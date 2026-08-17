@@ -7,6 +7,5 @@ import java.util.UUID;
 
 public interface FuelPurchaseHistoryRepository {
     FuelPurchaseHistory save(FuelPurchaseHistory history);
-
     List<FuelPurchaseHistory> findByPurchaseId(UUID fuelPurchaseId);
 }

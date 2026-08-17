@@ -100,7 +100,7 @@ public final class DriverLicenseService implements DriverLicenseUseCase {
                         DriverLicenseStatus currentStatus, boolean currentActive) {
         if (requestedStatus == null && requestedActive == null) return new State(currentStatus, currentActive);
         var status = requestedStatus != null ? requestedStatus
-                : requestedActive ? DriverLicenseStatus.ACTIVE : DriverLicenseStatus.INACTIVE;
+                : Boolean.TRUE.equals(requestedActive) ? DriverLicenseStatus.ACTIVE : DriverLicenseStatus.INACTIVE;
         var active = requestedActive != null ? requestedActive : status == DriverLicenseStatus.ACTIVE;
         if (active != (status == DriverLicenseStatus.ACTIVE)) {
             throw new IllegalArgumentException("Active flag must match license status");

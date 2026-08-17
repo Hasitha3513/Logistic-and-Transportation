@@ -9,10 +9,7 @@ import java.util.UUID;
 
 public interface VehicleMeterResetRepository {
     VehicleMeterReset save(VehicleMeterReset reset);
-
-    Optional<VehicleMeterReset> findById(UUID resetId);
-
     List<VehicleMeterReset> findByVehicleId(UUID vehicleId);
-
-    Optional<VehicleMeterReset> findLatestByVehicleIdAndReadingType(UUID vehicleId, VehicleReadingType readingType);
+    List<VehicleMeterReset> findByVehicleIdAndType(UUID vehicleId, VehicleReadingType readingType);
+    Optional<VehicleMeterReset> findLatestByVehicleIdAndType(UUID vehicleId, VehicleReadingType readingType);
 }

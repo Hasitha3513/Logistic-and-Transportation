@@ -6,8 +6,6 @@ import com.transportlogistics.app.fleet.VehicleReadingRecorded;
 
 public interface VehicleReadingEventPublisher {
     void publishAfterCommit(VehicleReadingRecorded event);
-
     void publishAfterCommit(VehicleReadingCorrected event);
-
     void publishAfterCommit(VehicleMeterResetRecorded event);
 }

@@ -1,18 +1,28 @@
 package com.transportlogistics.app.trip.application.service;
 
-import com.transportlogistics.app.shared.domain.BusinessRuleException;
 import com.transportlogistics.app.shared.domain.ConflictException;
 import com.transportlogistics.app.shared.domain.NotFoundException;
 import com.transportlogistics.app.trip.application.ports.in.TripUseCase;
-import com.transportlogistics.app.trip.application.ports.out.*;
-import com.transportlogistics.app.trip.domain.model.*;
+import com.transportlogistics.app.trip.application.ports.out.DriverEligibilityPort;
+import com.transportlogistics.app.trip.application.ports.out.RouteEligibilityPort;
+import com.transportlogistics.app.trip.application.ports.out.TripDispatchRepository;
+import com.transportlogistics.app.trip.application.ports.out.TripHistoryRepository;
+import com.transportlogistics.app.trip.application.ports.out.TripRepository;
+import com.transportlogistics.app.trip.application.ports.out.TripTransaction;
+import com.transportlogistics.app.trip.application.ports.out.VehicleEligibilityPort;
+import com.transportlogistics.app.trip.domain.model.Trip;
+import com.transportlogistics.app.trip.domain.model.TripCommand;
+import com.transportlogistics.app.trip.domain.model.TripDispatchRecord;
+import com.transportlogistics.app.trip.domain.model.TripHistoryEntry;
+import com.transportlogistics.app.trip.domain.model.TripLifecyclePolicy;
 
+import com.transportlogistics.app.trip.application.ports.out.TripActorPort;
+import com.transportlogistics.app.trip.application.ports.out.TripVehicleReadingPort;
 import java.time.Clock;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.UUID;
 
 public final class TripService implements TripUseCase {
@@ -20,99 +30,51 @@ public final class TripService implements TripUseCase {
     private final VehicleEligibilityPort vehicleEligibility;
     private final DriverEligibilityPort driverEligibility;
     private final RouteEligibilityPort routeEligibility;
-    private final TripVehicleReadingPort vehicleReadings;
-    private final TripActorPort actors;
     private final TripHistoryRepository history;
-    private final TripDistancePort distancePort;
     private final TripTransaction transactions;
     private final TripDispatchRepository dispatches;
+    private final TripVehicleReadingPort readings;
+    private final TripActorPort actors;
     private final Clock clock;
     private final TripLifecyclePolicy lifecycle = new TripLifecyclePolicy();
 
     public TripService(TripRepository repo, VehicleEligibilityPort vehicleEligibility,
                        DriverEligibilityPort driverEligibility, TripHistoryRepository history,
                        TripTransaction transactions, TripDispatchRepository dispatches) {
-        this(repo, vehicleEligibility, driverEligibility, noOpRouteEligibility(), noOpVehicleReadingPort(),
-                noOpActorPort(), noOpDistancePort(), history, transactions, dispatches, Clock.systemUTC());
+        this(repo, vehicleEligibility, driverEligibility, noOpRouteEligibility(), history, transactions, dispatches,
+                noOpVehicleReadingPort(), noOpActorPort(), Clock.systemUTC());
     }
 
     public TripService(TripRepository repo, VehicleEligibilityPort vehicleEligibility,
                        DriverEligibilityPort driverEligibility, TripHistoryRepository history,
                        TripTransaction transactions, TripDispatchRepository dispatches, Clock clock) {
-        this(repo, vehicleEligibility, driverEligibility, noOpRouteEligibility(), noOpVehicleReadingPort(),
-                noOpActorPort(), noOpDistancePort(), history, transactions, dispatches, clock);
+        this(repo, vehicleEligibility, driverEligibility, noOpRouteEligibility(), history, transactions, dispatches,
+                noOpVehicleReadingPort(), noOpActorPort(), clock);
     }
 
     public TripService(TripRepository repo, VehicleEligibilityPort vehicleEligibility,
                        DriverEligibilityPort driverEligibility, RouteEligibilityPort routeEligibility,
                        TripHistoryRepository history, TripTransaction transactions,
                        TripDispatchRepository dispatches, Clock clock) {
-        this(repo, vehicleEligibility, driverEligibility, routeEligibility, noOpVehicleReadingPort(),
-                noOpActorPort(), noOpDistancePort(), history, transactions, dispatches, clock);
+        this(repo, vehicleEligibility, driverEligibility, routeEligibility, history, transactions, dispatches,
+                noOpVehicleReadingPort(), noOpActorPort(), clock);
     }
 
     public TripService(TripRepository repo, VehicleEligibilityPort vehicleEligibility,
                        DriverEligibilityPort driverEligibility, RouteEligibilityPort routeEligibility,
-                       TripVehicleReadingPort vehicleReadings, TripActorPort actors,
                        TripHistoryRepository history, TripTransaction transactions,
-                       TripDispatchRepository dispatches, Clock clock) {
-        this(repo, vehicleEligibility, driverEligibility, routeEligibility, vehicleReadings, actors,
-                noOpDistancePort(), history, transactions, dispatches, clock);
-    }
-
-    public TripService(TripRepository repo, VehicleEligibilityPort vehicleEligibility,
-                       DriverEligibilityPort driverEligibility, RouteEligibilityPort routeEligibility,
-                       TripVehicleReadingPort vehicleReadings, TripActorPort actors,
-                       TripDistancePort distancePort,
-                       TripHistoryRepository history, TripTransaction transactions,
-                       TripDispatchRepository dispatches, Clock clock) {
+                       TripDispatchRepository dispatches, TripVehicleReadingPort readings,
+                       TripActorPort actors, Clock clock) {
         this.repo = repo;
         this.vehicleEligibility = vehicleEligibility;
         this.driverEligibility = driverEligibility;
         this.routeEligibility = routeEligibility;
-        this.vehicleReadings = vehicleReadings;
-        this.actors = actors;
-        this.distancePort = distancePort != null ? distancePort : noOpDistancePort();
         this.history = history;
         this.transactions = transactions;
         this.dispatches = dispatches;
+        this.readings = readings == null ? noOpVehicleReadingPort() : readings;
+        this.actors = actors == null ? noOpActorPort() : actors;
         this.clock = clock;
-    }
-
-    private static TripVehicleReadingPort noOpVehicleReadingPort() {
-        return new TripVehicleReadingPort() {
-            @Override
-            public void recordStart(UUID vehicleId, UUID tripId, Double odometerKm, Double engineHours,
-                                    OffsetDateTime actualStartTime, UUID actorId) {
-            }
-
-            @Override
-            public void recordComplete(UUID vehicleId, UUID tripId, Double odometerKm, Double engineHours,
-                                       OffsetDateTime actualEndTime, UUID actorId) {
-            }
-        };
-    }
-
-    private static TripActorPort noOpActorPort() {
-        return username -> Optional.of(new TripActorPort.Actor(UUID.randomUUID(), username));
-    }
-
-    private static RouteEligibilityPort noOpRouteEligibility() {
-        return (routeId, originLocationId, destinationLocationId) -> {
-        };
-    }
-
-    private static TripDistancePort noOpDistancePort() {
-        return (tripId, vehicleId) -> new TripDistancePort.DistanceResult(tripId, vehicleId, null, null, null, "UNAVAILABLE", false, "Trip distance port not configured");
-    }
-
-    @Override
-    public TripDistancePort.DistanceResult getDistance(UUID id) {
-        var trip = get(id);
-        if (trip.vehicleId() == null) {
-            return new TripDistancePort.DistanceResult(id, null, null, null, null, "UNAVAILABLE", false, "No vehicle assigned to trip");
-        }
-        return distancePort.getTripDistance(id, trip.vehicleId());
     }
 
     @Override
@@ -289,7 +251,14 @@ public final class TripService implements TripUseCase {
             var occurredAt = now();
             lifecycle.validateTransition(trip, command, actor, occurredAt);
             var auditActor = actor(actor);
-            recordReadings(trip, command, actor, occurredAt);
+            var actorId = resolveActorId(auditActor);
+
+            if (command instanceof TripCommand.Start start) {
+                readings.recordTripStart(trip.vehicleId(), trip.id(), start.odometerKm(), occurredAt, actorId);
+            } else if (command instanceof TripCommand.Complete complete) {
+                readings.recordTripEnd(trip.vehicleId(), trip.id(), complete.odometerKm(), occurredAt, actorId);
+            }
+
             var changed = apply(trip, command, occurredAt);
             var saved = repo.save(changed);
             history.save(new TripHistoryEntry(UUID.randomUUID(), trip.id(), trip.status(), saved.status(),
@@ -365,8 +334,7 @@ public final class TripService implements TripUseCase {
             case TripCommand.Cancel cancel -> copy(trip, target, trip.vehicleId(), trip.driverId(),
                     trip.actualStartTime(), trip.actualEndTime(), trip.startOdometerKm(), trip.endOdometerKm(),
                     cancel.reason().trim(), occurredAt);
-            case TripCommand.Dispatch ignored ->
-                    throw new IllegalStateException("Dispatch uses the hardened dispatch flow");
+            case TripCommand.Dispatch ignored -> throw new IllegalStateException("Dispatch uses the hardened dispatch flow");
         };
     }
 
@@ -412,37 +380,25 @@ public final class TripService implements TripUseCase {
         }
     }
 
-    private void recordReadings(Trip trip, TripCommand command, String actor, OffsetDateTime occurredAt) {
-        if (command instanceof TripCommand.Start(Double odometerKm, Double engineHours)) {
-            if (trip.vehicleId() == null) {
-                throw new ConflictException("ASSIGNMENT_INCOMPLETE", "Assigned vehicle is required to start a trip");
-            }
-            var actorId = actorId(actor);
-            vehicleReadings.recordStart(trip.vehicleId(), trip.id(), odometerKm, engineHours,
-                    occurredAt, actorId);
-        } else if (command instanceof TripCommand.Complete complete) {
-            if (trip.vehicleId() == null) {
-                throw new ConflictException("ASSIGNMENT_INCOMPLETE", "Assigned vehicle is required to complete a trip");
-            }
-            var actorId = actorId(actor);
-            vehicleReadings.recordComplete(trip.vehicleId(), trip.id(), complete.odometerKm(), complete.engineHours(),
-                    occurredAt, actorId);
-        }
+    private UUID resolveActorId(String actor) {
+        return actors.resolveActorId(actor);
     }
 
-    private UUID actorId(String username) {
-        if (username == null || username.isBlank()) {
-            throw new BusinessRuleException("TRIP_ACTOR_REQUIRED", "An authenticated actor is required");
-        }
-        var resolved = actors.find(username.trim());
-        if (resolved.isPresent()) {
-            return resolved.get().id();
-        }
-        try {
-            return UUID.fromString(username.trim());
-        } catch (IllegalArgumentException ignored) {
-            throw new BusinessRuleException("TRIP_ACTOR_NOT_FOUND",
-                    "Authenticated user could not be resolved: " + username.trim());
-        }
+    private static TripVehicleReadingPort noOpVehicleReadingPort() {
+        return new TripVehicleReadingPort() {
+            @Override public void recordTripStart(UUID vehicleId, UUID tripId, Double odometerKm, OffsetDateTime occurredAt, UUID actorId) {}
+            @Override public void recordTripEnd(UUID vehicleId, UUID tripId, Double odometerKm, OffsetDateTime occurredAt, UUID actorId) {}
+        };
+    }
+
+    private static TripActorPort noOpActorPort() {
+        return new TripActorPort() {
+            @Override public java.util.Optional<Actor> find(String username) { return java.util.Optional.empty(); }
+            @Override public UUID resolveActorId(String username) { return UUID.fromString("00000000-0000-0000-0000-000000000001"); }
+        };
+    }
+
+    private static RouteEligibilityPort noOpRouteEligibility() {
+        return (routeId, originLocationId, destinationLocationId) -> { };
     }
 }

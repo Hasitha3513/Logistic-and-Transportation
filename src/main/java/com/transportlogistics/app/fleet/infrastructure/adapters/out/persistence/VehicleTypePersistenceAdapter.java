@@ -2,7 +2,6 @@ package com.transportlogistics.app.fleet.infrastructure.adapters.out.persistence
 
 import com.transportlogistics.app.fleet.application.ports.out.VehicleTypeRepository;
 import com.transportlogistics.app.fleet.domain.model.VehicleType;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -10,9 +9,12 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Component
-@RequiredArgsConstructor
 class VehicleTypePersistenceAdapter implements VehicleTypeRepository {
     private final VehicleTypeJpaRepository repo;
+
+    VehicleTypePersistenceAdapter(VehicleTypeJpaRepository repo) {
+        this.repo = repo;
+    }
 
     public VehicleType save(VehicleType v) {
         var e = new VehicleTypeEntity();

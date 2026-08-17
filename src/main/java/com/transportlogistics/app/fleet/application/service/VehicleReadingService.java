@@ -1,9 +1,25 @@
 package com.transportlogistics.app.fleet.application.service;
 
-import com.transportlogistics.app.fleet.*;
+import com.transportlogistics.app.fleet.CoverageStatus;
+import com.transportlogistics.app.fleet.TripDistanceStatus;
+import com.transportlogistics.app.fleet.TripDistanceSummary;
+import com.transportlogistics.app.fleet.VehicleMeterResetRecorded;
+import com.transportlogistics.app.fleet.VehicleMileageQuery;
+import com.transportlogistics.app.fleet.VehicleMileageSummary;
+import com.transportlogistics.app.fleet.VehicleReadingCorrected;
+import com.transportlogistics.app.fleet.VehicleReadingRecorded;
+import com.transportlogistics.app.fleet.VehicleReadingRecorder;
 import com.transportlogistics.app.fleet.application.ports.in.VehicleReadingUseCase;
-import com.transportlogistics.app.fleet.application.ports.out.*;
-import com.transportlogistics.app.fleet.domain.model.*;
+import com.transportlogistics.app.fleet.application.ports.out.VehicleMeterResetRepository;
+import com.transportlogistics.app.fleet.application.ports.out.VehicleReadingEventPublisher;
+import com.transportlogistics.app.fleet.application.ports.out.VehicleReadingRepository;
+import com.transportlogistics.app.fleet.application.ports.out.VehicleReadingTransaction;
+import com.transportlogistics.app.fleet.application.ports.out.VehicleRepository;
+import com.transportlogistics.app.fleet.domain.model.Vehicle;
+import com.transportlogistics.app.fleet.domain.model.VehicleMeterReset;
+import com.transportlogistics.app.fleet.domain.model.VehicleReading;
+import com.transportlogistics.app.fleet.domain.model.VehicleReadingSourceType;
+import com.transportlogistics.app.fleet.domain.model.VehicleReadingType;
 import com.transportlogistics.app.fleet.domain.service.VehicleReadingChronologyPolicy;
 import com.transportlogistics.app.shared.domain.BusinessRuleException;
 import com.transportlogistics.app.shared.domain.ConflictException;
@@ -12,63 +28,47 @@ import com.transportlogistics.app.shared.domain.NotFoundException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Clock;
+import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 public final class VehicleReadingService implements VehicleReadingUseCase, VehicleReadingRecorder, VehicleMileageQuery {
     private static final int MAX_PAGE_SIZE = 100;
+    private static final BigDecimal MAX_SPEED_KM_PER_HOUR = new BigDecimal("200.0");
+    private static final BigDecimal MAX_DAILY_KM_JUMP = new BigDecimal("5000.0");
 
     private final VehicleRepository vehicles;
     private final VehicleReadingRepository readings;
-    private final VehicleMeterResetRepository resets;
+    private final VehicleMeterResetRepository meterResets;
     private final VehicleReadingTransaction transactions;
     private final VehicleReadingEventPublisher events;
     private final Clock clock;
     private final VehicleReadingChronologyPolicy chronology = new VehicleReadingChronologyPolicy();
 
     public VehicleReadingService(VehicleRepository vehicles, VehicleReadingRepository readings,
-                                 VehicleMeterResetRepository resets,
+                                 VehicleReadingTransaction transactions, VehicleReadingEventPublisher events,
+                                 Clock clock) {
+        this(vehicles, readings, noOpMeterResetRepository(), transactions, events, clock);
+    }
+
+    public VehicleReadingService(VehicleRepository vehicles, VehicleReadingRepository readings,
+                                 VehicleMeterResetRepository meterResets,
                                  VehicleReadingTransaction transactions, VehicleReadingEventPublisher events,
                                  Clock clock) {
         this.vehicles = vehicles;
         this.readings = readings;
-        this.resets = resets;
+        this.meterResets = meterResets == null ? noOpMeterResetRepository() : meterResets;
         this.transactions = transactions;
         this.events = events;
         this.clock = clock;
-    }
-
-    public VehicleReadingService(VehicleRepository vehicles, VehicleReadingRepository readings,
-                                 VehicleReadingTransaction transactions, VehicleReadingEventPublisher events,
-                                 Clock clock) {
-        this(vehicles, readings, null, transactions, events, clock);
-    }
-
-    private static boolean blank(String value) {
-        return value == null || value.isBlank();
-    }
-
-    private static void invalid(String message) {
-        throw new BusinessRuleException("INVALID_VEHICLE_READING", message);
-    }
-
-    private static com.transportlogistics.app.fleet.domain.model.VehicleReadingType domainType(ReadingType type) {
-        if (type == null) invalid("Reading type is required");
-        return com.transportlogistics.app.fleet.domain.model.VehicleReadingType.valueOf(type.name());
-    }
-
-    private static VehicleReadingSourceType domainSource(SourceType source) {
-        if (source == null) invalid("Reading source type is required");
-        return VehicleReadingSourceType.valueOf(source.name());
-    }
-
-    private static ReadingType publicType(com.transportlogistics.app.fleet.domain.model.VehicleReadingType type) {
-        return ReadingType.valueOf(type.name());
-    }
-
-    private static SourceType publicSource(VehicleReadingSourceType source) {
-        return SourceType.valueOf(source.name());
     }
 
     @Override
@@ -87,6 +87,12 @@ public final class VehicleReadingService implements VehicleReadingUseCase, Vehic
     public VehicleMeterReset resetMeter(ResetMeterCommand command) {
         if (command == null) invalid("Reset meter command is required");
         return transactions.execute(() -> resetMeterLocked(command));
+    }
+
+    @Override
+    public List<VehicleMeterReset> listMeterResets(UUID vehicleId) {
+        requireVehicle(vehicleId);
+        return meterResets.findByVehicleId(vehicleId);
     }
 
     @Override
@@ -121,198 +127,101 @@ public final class VehicleReadingService implements VehicleReadingUseCase, Vehic
     }
 
     @Override
-    public VehicleReadingUseCase.LatestReadings latest(UUID vehicleId) {
+    public LatestReadings latest(UUID vehicleId) {
         requireVehicle(vehicleId);
         var odometerEpoch = readings.findCurrentMeterEpoch(vehicleId, VehicleReadingType.ODOMETER);
         var engineEpoch = readings.findCurrentMeterEpoch(vehicleId, VehicleReadingType.ENGINE_HOURS);
-        return new VehicleReadingUseCase.LatestReadings(vehicleId,
+        return new LatestReadings(vehicleId,
                 readings.findLatestEffective(vehicleId, VehicleReadingType.ODOMETER, odometerEpoch),
                 readings.findLatestEffective(vehicleId, VehicleReadingType.ENGINE_HOURS, engineEpoch));
     }
 
     @Override
-    public java.util.List<VehicleMeterReset> listResets(UUID vehicleId) {
+    public VehicleMileageSummary getMileage(UUID vehicleId, OffsetDateTime from, OffsetDateTime to) {
         requireVehicle(vehicleId);
-        if (resets == null) return java.util.List.of();
-        return resets.findByVehicleId(vehicleId);
-    }
-
-    @Override
-    public VehicleMileageSummary mileageSummary(UUID vehicleId, OffsetDateTime from, OffsetDateTime to,
-                                                boolean includeSourceBreakdown) {
-        if (vehicleId == null) invalid("Vehicle id is required");
-        if (from == null) invalid("From timestamp is required");
-        if (to == null) invalid("To timestamp is required");
-        if (from.isAfter(to)) invalid("From timestamp cannot be after to timestamp");
-        requireVehicle(vehicleId);
-
-        var odoResult = calculateMetricAcrossEpochs(vehicleId, VehicleReadingType.ODOMETER, from, to);
-        var engResult = calculateMetricAcrossEpochs(vehicleId, VehicleReadingType.ENGINE_HOURS, from, to);
-
-        var allPeriodReadings = readings.findAllInPeriod(vehicleId, from, to);
-        int readingCount = allPeriodReadings.size();
-        int correctionCount = readings.countCorrectionsInPeriod(vehicleId, from, to);
-        int resetCount = (int) (resets != null ? resets.findByVehicleId(vehicleId).stream()
-                .filter(r -> !r.effectiveAt().isBefore(from) && !r.effectiveAt().isAfter(to))
-                .count() : 0);
-
-        OffsetDateTime firstReadingAt = allPeriodReadings.isEmpty() ? null : allPeriodReadings.getFirst().recordedAt();
-        OffsetDateTime lastReadingAt = allPeriodReadings.isEmpty() ? null : allPeriodReadings.getLast().recordedAt();
-
-        CoverageStatus coverage = odoResult.coverageStatus() != CoverageStatus.NO_DATA
-                ? odoResult.coverageStatus()
-                : engResult.coverageStatus();
-        String coverageReason = odoResult.coverageStatus() != CoverageStatus.NO_DATA
-                ? odoResult.reason()
-                : engResult.reason();
-
-        Map<VehicleReadingSourceType, Integer> sourceCounts = Map.of();
-        if (includeSourceBreakdown && !allPeriodReadings.isEmpty()) {
-            var counts = new EnumMap<VehicleReadingSourceType, Integer>(VehicleReadingSourceType.class);
-            for (var r : allPeriodReadings) {
-                counts.merge(r.sourceType(), 1, Integer::sum);
-            }
-            sourceCounts = counts;
+        if (from != null && to != null && to.isBefore(from)) {
+            invalid("Date range is invalid: 'to' cannot be before 'from'");
         }
 
-        return new VehicleMileageSummary(vehicleId, from, to, odoResult.openingValue(), odoResult.closingValue(),
-                odoResult.distance(), engResult.openingValue(), engResult.closingValue(), engResult.distance(),
-                readingCount, correctionCount, resetCount, firstReadingAt, lastReadingAt,
-                coverage, coverageReason, sourceCounts);
+        var allReadings = readings.search(new SearchQuery(vehicleId, null, null, null, null, 0, 1000)).content();
+        var odoReadings = allReadings.stream()
+                .filter(r -> r.readingType() == VehicleReadingType.ODOMETER)
+                .filter(r -> inRange(r.recordedAt(), from, to))
+                .sorted(Comparator.comparing(VehicleReading::recordedAt))
+                .toList();
+
+        var engineReadings = allReadings.stream()
+                .filter(r -> r.readingType() == VehicleReadingType.ENGINE_HOURS)
+                .filter(r -> inRange(r.recordedAt(), from, to))
+                .sorted(Comparator.comparing(VehicleReading::recordedAt))
+                .toList();
+
+        var resets = meterResets.findByVehicleId(vehicleId).stream()
+                .filter(r -> inRange(r.effectiveAt(), from, to))
+                .toList();
+
+        BigDecimal openingOdo = odoReadings.isEmpty() ? null : odoReadings.getFirst().value();
+        BigDecimal closingOdo = odoReadings.isEmpty() ? null : odoReadings.getLast().value();
+        BigDecimal distanceTravelled = calculateDistanceAcrossEpochs(odoReadings);
+
+        BigDecimal openingEngine = engineReadings.isEmpty() ? null : engineReadings.getFirst().value();
+        BigDecimal closingEngine = engineReadings.isEmpty() ? null : engineReadings.getLast().value();
+        BigDecimal engineHoursUsed = calculateHoursAcrossEpochs(engineReadings);
+
+        CoverageStatus coverage = determineCoverage(odoReadings, engineReadings, from, to);
+        boolean abnormal = detectAbnormalReadings(odoReadings);
+
+        return new VehicleMileageSummary(
+                vehicleId,
+                from,
+                to,
+                openingOdo,
+                closingOdo,
+                distanceTravelled,
+                openingEngine,
+                closingEngine,
+                engineHoursUsed,
+                resets.size(),
+                coverage,
+                abnormal
+        );
     }
 
     @Override
-    public TripDistanceSummary tripDistance(UUID tripId, UUID vehicleId) {
+    public TripDistanceSummary calculateTripDistance(UUID tripId) {
         if (tripId == null) invalid("Trip id is required");
-        if (vehicleId == null) invalid("Vehicle id is required");
-        requireVehicle(vehicleId);
+        var allReadings = readings.search(new SearchQuery(null, VehicleReadingType.ODOMETER, null, null, null, 0, 1000)).content();
+        var startReading = allReadings.stream()
+                .filter(r -> r.sourceType() == VehicleReadingSourceType.TRIP_START && tripId.equals(r.sourceReferenceId()))
+                .findFirst();
+        var endReading = allReadings.stream()
+                .filter(r -> r.sourceType() == VehicleReadingSourceType.TRIP_END && tripId.equals(r.sourceReferenceId()))
+                .findFirst();
 
-        var optStart = readings.findEffectiveBySource(vehicleId, VehicleReadingType.ODOMETER,
-                VehicleReadingSourceType.TRIP_START, tripId);
-        var optEnd = readings.findEffectiveBySource(vehicleId, VehicleReadingType.ODOMETER,
-                VehicleReadingSourceType.TRIP_END, tripId);
-
-        if (optStart.isEmpty() && optEnd.isEmpty()) {
-            return new TripDistanceSummary(tripId, vehicleId, null, null, null,
-                    TripDistanceStatus.UNAVAILABLE, false, "No trip readings recorded for vehicle");
+        if (startReading.isEmpty() && endReading.isEmpty()) {
+            return new TripDistanceSummary(tripId, null, null, null, BigDecimal.ZERO.setScale(3, RoundingMode.HALF_UP), TripDistanceStatus.MISMATCH);
         }
-        if (optStart.isEmpty()) {
-            return new TripDistanceSummary(tripId, vehicleId, null, optEnd.get().value(), null,
-                    TripDistanceStatus.PARTIAL, false, "Trip completion reading recorded without start reading");
+        if (startReading.isEmpty()) {
+            return new TripDistanceSummary(tripId, endReading.get().vehicleId(), null, endReading.get().value(),
+                    BigDecimal.ZERO.setScale(3, RoundingMode.HALF_UP), TripDistanceStatus.PENDING_START);
         }
-        if (optEnd.isEmpty()) {
-            return new TripDistanceSummary(tripId, vehicleId, optStart.get().value(), null, null,
-                    TripDistanceStatus.PARTIAL, false, "Trip start reading recorded; trip not yet completed");
+        if (endReading.isEmpty()) {
+            return new TripDistanceSummary(tripId, startReading.get().vehicleId(), startReading.get().value(), null,
+                    BigDecimal.ZERO.setScale(3, RoundingMode.HALF_UP), TripDistanceStatus.PENDING_END);
         }
 
-        var start = optStart.get();
-        var end = optEnd.get();
-
+        var start = startReading.get();
+        var end = endReading.get();
+        BigDecimal distance;
         if (start.meterEpoch() == end.meterEpoch()) {
-            var dist = end.value().subtract(start.value());
-            var nonNegDist = dist.signum() < 0 ? BigDecimal.ZERO.setScale(3) : dist.setScale(3, RoundingMode.HALF_UP);
-            return new TripDistanceSummary(tripId, vehicleId, start.value(), end.value(), nonNegDist,
-                    TripDistanceStatus.AVAILABLE, false, null);
-        } else if (end.meterEpoch() > start.meterEpoch()) {
-            var epochRes = calculateMetricAcrossEpochs(vehicleId, VehicleReadingType.ODOMETER,
-                    start.recordedAt(), end.recordedAt());
-            return new TripDistanceSummary(tripId, vehicleId, start.value(), end.value(), epochRes.distance(),
-                    TripDistanceStatus.AVAILABLE, true, "Meter reset occurred during trip");
+            distance = end.value().subtract(start.value());
         } else {
-            return new TripDistanceSummary(tripId, vehicleId, start.value(), end.value(), BigDecimal.ZERO.setScale(3),
-                    TripDistanceStatus.UNAVAILABLE, false, "Inverted meter epochs on trip readings");
-        }
-    }
-
-    @Override
-    public VehicleMileageSummary getVehicleMileageSummary(UUID vehicleId, OffsetDateTime from, OffsetDateTime to,
-                                                          boolean includeSourceBreakdown) {
-        return mileageSummary(vehicleId, from, to, includeSourceBreakdown);
-    }
-
-    @Override
-    public TripDistanceSummary getTripDistance(UUID tripId, UUID vehicleId) {
-        return tripDistance(tripId, vehicleId);
-    }
-
-    @Override
-    public VehicleMileageQuery.LatestReadings getLatestReadings(UUID vehicleId) {
-        var domainLatest = latest(vehicleId);
-        var odoSnapshot = domainLatest.odometer().map(r -> new VehicleMileageQuery.ReadingSnapshot(
-                r.id(), r.value(), r.unit().name(), r.meterEpoch(), r.sourceType().name(), r.recordedAt())).orElse(null);
-        var engSnapshot = domainLatest.engineHours().map(r -> new VehicleMileageQuery.ReadingSnapshot(
-                r.id(), r.value(), r.unit().name(), r.meterEpoch(), r.sourceType().name(), r.recordedAt())).orElse(null);
-        return new VehicleMileageQuery.LatestReadings(vehicleId, odoSnapshot, engSnapshot);
-    }
-
-    private MetricCalculationResult calculateMetricAcrossEpochs(UUID vehicleId, VehicleReadingType type,
-                                                                OffsetDateTime from, OffsetDateTime to) {
-        var optOpening = readings.findOpeningEffective(vehicleId, type, from);
-        var optClosing = readings.findClosingEffective(vehicleId, type, to);
-        var periodReadings = readings.findEffectiveInPeriod(vehicleId, type, from, to);
-
-        if (optOpening.isEmpty() && optClosing.isEmpty() && periodReadings.isEmpty()) {
-            return new MetricCalculationResult(null, null, BigDecimal.ZERO.setScale(3), CoverageStatus.NO_DATA,
-                    "No " + type.name().toLowerCase() + " readings found for vehicle");
+            var resets = meterResets.findByVehicleIdAndType(start.vehicleId(), VehicleReadingType.ODOMETER);
+            distance = calculateDistanceWithResets(start, end, resets);
         }
 
-        var epochs = new TreeSet<Integer>();
-        optOpening.ifPresent(r -> epochs.add(r.meterEpoch()));
-        optClosing.ifPresent(r -> epochs.add(r.meterEpoch()));
-        periodReadings.forEach(r -> epochs.add(r.meterEpoch()));
-
-        if (epochs.isEmpty()) {
-            return new MetricCalculationResult(null, null, BigDecimal.ZERO.setScale(3), CoverageStatus.NO_DATA,
-                    "No " + type.name().toLowerCase() + " readings found for vehicle");
-        }
-
-        BigDecimal totalDistance = BigDecimal.ZERO.setScale(3);
-        BigDecimal firstOpeningVal = null;
-        BigDecimal finalClosingVal = null;
-        CoverageStatus coverage = CoverageStatus.COMPLETE;
-        String reason = null;
-
-        if (optOpening.isEmpty()) {
-            coverage = CoverageStatus.PARTIAL;
-            reason = "No opening reading recorded at or prior to period start date";
-        }
-
-        for (int epoch : epochs) {
-            final int currentEpoch = epoch;
-            var epochPeriodReadings = periodReadings.stream()
-                    .filter(r -> r.meterEpoch() == currentEpoch)
-                    .toList();
-
-            BigDecimal epochOpen;
-            if (optOpening.isPresent() && optOpening.get().meterEpoch() == currentEpoch) {
-                epochOpen = optOpening.get().value();
-            } else if (!epochPeriodReadings.isEmpty()) {
-                epochOpen = epochPeriodReadings.getFirst().value();
-            } else {
-                continue;
-            }
-
-            BigDecimal epochClose;
-            if (optClosing.isPresent() && optClosing.get().meterEpoch() == currentEpoch) {
-                epochClose = optClosing.get().value();
-            } else if (!epochPeriodReadings.isEmpty()) {
-                epochClose = epochPeriodReadings.getLast().value();
-            } else {
-                epochClose = epochOpen;
-            }
-
-            if (firstOpeningVal == null) {
-                firstOpeningVal = epochOpen;
-            }
-            finalClosingVal = epochClose;
-
-            BigDecimal epochDist = epochClose.subtract(epochOpen);
-            if (epochDist.signum() > 0) {
-                totalDistance = totalDistance.add(epochDist);
-            }
-        }
-
-        return new MetricCalculationResult(firstOpeningVal, finalClosingVal, totalDistance, coverage, reason);
+        return new TripDistanceSummary(tripId, start.vehicleId(), start.value(), end.value(),
+                distance.setScale(3, RoundingMode.HALF_UP), TripDistanceStatus.CALCULATED);
     }
 
     private VehicleReading recordLocked(RecordCommand command) {
@@ -354,131 +263,234 @@ public final class VehicleReadingService implements VehicleReadingUseCase, Vehic
     }
 
     private VehicleReading correctLocked(CorrectCommand command) {
-        validateCorrectCommand(command);
+        if (command.vehicleId() == null) invalid("Vehicle id is required");
+        if (command.originalReadingId() == null) invalid("Original reading id is required");
+        if (command.correctedValue() == null) invalid("Corrected value is required");
+        if (command.correctedValue().compareTo(BigDecimal.ZERO) < 0) invalid("Corrected value cannot be negative");
+        if (blank(command.reason())) invalid("Correction reason is required");
+        if (command.actorId() == null) invalid("Actor id is required");
+
         var vehicle = vehicles.findByIdForUpdate(command.vehicleId()).orElseThrow(() ->
                 new NotFoundException("VEHICLE_NOT_FOUND", "Vehicle not found: " + command.vehicleId()));
-        if (!vehicle.active()) {
-            invalid("Inactive vehicles cannot receive reading corrections");
+
+        var original = readings.findById(command.originalReadingId()).orElseThrow(() ->
+                new NotFoundException("VEHICLE_READING_NOT_FOUND", "Original vehicle reading not found: " + command.originalReadingId()));
+
+        if (!original.vehicleId().equals(command.vehicleId())) {
+            throw new ConflictException("VEHICLE_MISMATCH", "Original reading does not belong to vehicle: " + command.vehicleId());
+        }
+        if (readings.findCorrection(original.id()).isPresent()) {
+            throw new ConflictException("DUPLICATE_VEHICLE_READING_CORRECTION", "This reading has already been corrected");
         }
 
-        var target = readings.findById(command.readingId()).orElseThrow(() ->
-                new NotFoundException("VEHICLE_READING_NOT_FOUND", "Vehicle reading not found: " + command.readingId()));
-
-        if (!target.vehicleId().equals(command.vehicleId())) {
-            throw new BusinessRuleException("INVALID_VEHICLE_READING", "Reading does not belong to vehicle: " + command.vehicleId());
-        }
-
-        if (readings.isSuperseded(target.id())) {
-            throw new ConflictException("VEHICLE_READING_ALREADY_CORRECTED", "This reading has already been superseded by a correction");
-        }
-
-        var currentEpoch = readings.findCurrentMeterEpoch(target.vehicleId(), target.readingType());
-        if (target.meterEpoch() != currentEpoch) {
-            throw new ConflictException("VEHICLE_READING_NOT_CORRECTABLE", "Readings from prior closed meter epochs cannot be corrected");
-        }
-
-        var normalized = normalize(command.value());
-        var idempotencyKey = command.idempotencyKey() == null || command.idempotencyKey().isBlank()
-                ? null
-                : command.idempotencyKey().trim();
-
-        if (idempotencyKey != null) {
-            var replay = readings.findByIdempotencyKey(idempotencyKey);
-            if (replay.isPresent()) {
-                var existing = replay.orElseThrow();
-                if (existing.correctionOfReadingId() != null && existing.correctionOfReadingId().equals(target.id())
-                        && existing.value().compareTo(normalized) == 0) {
-                    return existing;
-                }
-                throw new ConflictException("DUPLICATE_VEHICLE_READING", "Idempotency key already used for a different fact");
-            }
-        }
-
+        var normalized = normalize(command.correctedValue());
+        var recordedAt = command.recordedAt() != null ? command.recordedAt() : original.recordedAt();
         var now = now();
-        var candidate = new VehicleReading(UUID.randomUUID(), target.vehicleId(), target.readingType(), normalized,
-                target.unit(), target.meterEpoch(), target.sourceType(), target.sourceReferenceId(),
-                target.recordedAt(), now, command.actorId(), target.id(), command.reason().trim(),
-                idempotencyKey, command.notes() == null || command.notes().isBlank() ? null : command.notes().trim(), now);
 
-        var previous = readings.findPreviousEffective(candidate.vehicleId(), candidate.readingType(), candidate.meterEpoch(),
-                candidate.recordedAt()).orElse(null);
-        var next = readings.findNextEffective(candidate.vehicleId(), candidate.readingType(), candidate.meterEpoch(),
-                candidate.recordedAt()).orElse(null);
-        var sameTime = readings.findEffectiveAt(candidate.vehicleId(), candidate.readingType(), candidate.meterEpoch(),
-                candidate.recordedAt()).stream().filter(r -> !r.id().equals(target.id())).toList();
+        var correction = new VehicleReading(
+                UUID.randomUUID(),
+                original.vehicleId(),
+                original.readingType(),
+                normalized,
+                original.unit(),
+                original.meterEpoch(),
+                original.sourceType(),
+                original.sourceReferenceId(),
+                recordedAt,
+                now,
+                command.actorId(),
+                original.id(),
+                command.reason().trim(),
+                null,
+                original.notes(),
+                now
+        );
 
-        chronology.validate(candidate, previous, next, sameTime);
+        var previous = readings.findPreviousEffective(correction.vehicleId(), correction.readingType(),
+                correction.meterEpoch(), correction.recordedAt())
+                .filter(r -> !r.id().equals(original.id()))
+                .orElse(null);
+        var next = readings.findNextEffective(correction.vehicleId(), correction.readingType(),
+                correction.meterEpoch(), correction.recordedAt())
+                .filter(r -> !r.id().equals(original.id()))
+                .orElse(null);
+        var sameTime = readings.findEffectiveAt(correction.vehicleId(), correction.readingType(),
+                correction.meterEpoch(), correction.recordedAt()).stream()
+                .filter(r -> !r.id().equals(original.id()))
+                .toList();
 
-        var saved = readings.save(candidate);
+        chronology.validate(correction, previous, next, sameTime);
+
+        var saved = readings.save(correction);
         synchronizeSnapshot(vehicle, saved);
-        events.publishAfterCommit(new VehicleReadingRecorded(saved.id(), saved.vehicleId(),
-                saved.readingType().name(), saved.value(), saved.unit().name(), saved.sourceType().name(),
-                saved.sourceReferenceId(), saved.recordedAt(), saved.receivedAt()));
-        events.publishAfterCommit(new VehicleReadingCorrected(saved.id(), target.id(), saved.vehicleId(),
-                saved.readingType().name(), saved.value(), target.value(), saved.unit().name(),
-                saved.correctionReason(), saved.recordedAt(), saved.receivedAt(), saved.createdBy()));
+
+        events.publishAfterCommit(new VehicleReadingCorrected(saved.id(), original.id(), saved.vehicleId(),
+                saved.readingType().name(), saved.value(), command.actorId(), now));
+
         return saved;
     }
 
     private VehicleMeterReset resetMeterLocked(ResetMeterCommand command) {
-        validateResetCommand(command);
-        if (resets == null) {
-            throw new IllegalStateException("VehicleMeterResetRepository is not configured");
-        }
+        if (command.vehicleId() == null) invalid("Vehicle id is required");
+        if (command.readingType() == null) invalid("Reading type is required");
+        if (command.newMeterValue() == null) invalid("New meter value is required");
+        if (command.newMeterValue().compareTo(BigDecimal.ZERO) < 0) invalid("New meter value cannot be negative");
+        if (command.effectiveAt() == null) invalid("Effective time is required");
+        if (blank(command.reason())) invalid("Meter reset reason is required");
+        if (command.actorId() == null) invalid("Actor id is required");
+
         var vehicle = vehicles.findByIdForUpdate(command.vehicleId()).orElseThrow(() ->
                 new NotFoundException("VEHICLE_NOT_FOUND", "Vehicle not found: " + command.vehicleId()));
         if (!vehicle.active()) {
-            invalid("Inactive vehicles cannot receive meter resets");
+            invalid("Inactive vehicles cannot undergo meter reset");
         }
 
-        var normalized = normalize(command.newMeterValue());
-        var currentEpoch = readings.findCurrentMeterEpoch(command.vehicleId(), command.readingType());
-        var latest = readings.findLatestEffective(command.vehicleId(), command.readingType(), currentEpoch);
-
-        UUID previousReadingId = null;
-        BigDecimal previousMeterValue = BigDecimal.ZERO.setScale(3);
-
-        if (latest.isPresent()) {
-            var prev = latest.orElseThrow();
-            if (command.effectiveAt().isBefore(prev.recordedAt())) {
-                throw new ConflictException("METER_RESET_CONFLICT",
-                        "Meter reset cannot be backdated before an existing effective reading: " + prev.recordedAt());
-            }
-            previousReadingId = prev.id();
-            previousMeterValue = prev.value();
-        }
-
-        var newEpoch = currentEpoch + 1;
-        var resetId = UUID.randomUUID();
         var now = now();
+        if (command.effectiveAt().isAfter(now.plusMinutes(5))) {
+            invalid("Meter reset effective time cannot be more than 5 minutes in the future");
+        }
 
-        var candidateReading = new VehicleReading(UUID.randomUUID(), command.vehicleId(), command.readingType(),
-                normalized, command.readingType().unit(), newEpoch, VehicleReadingSourceType.METER_RESET,
-                resetId, command.effectiveAt(), now, command.actorId(), null, null,
-                "METER_RESET:" + resetId + ":" + command.readingType().name(),
-                command.notes() == null || command.notes().isBlank() ? null : command.notes().trim(), now);
+        int fromEpoch = readings.findCurrentMeterEpoch(command.vehicleId(), command.readingType());
+        int toEpoch = fromEpoch + 1;
 
-        var savedReading = readings.save(candidateReading);
+        var lastReadingOpt = readings.findLatestEffective(command.vehicleId(), command.readingType(), fromEpoch);
+        BigDecimal lastValue = lastReadingOpt.map(VehicleReading::value).orElse(BigDecimal.ZERO.setScale(3, RoundingMode.HALF_UP));
 
-        var meterReset = new VehicleMeterReset(resetId, command.vehicleId(), command.readingType(),
-                previousReadingId, previousMeterValue, savedReading.id(), normalized, command.effectiveAt(),
-                command.reason().trim(), command.actorId(),
-                command.approvedBy() != null ? command.approvedBy() : command.actorId(),
-                command.notes() == null || command.notes().isBlank() ? null : command.notes().trim(), now);
+        var normalizedNewValue = normalize(command.newMeterValue());
 
-        var savedReset = resets.save(meterReset);
+        var reset = new VehicleMeterReset(
+                UUID.randomUUID(),
+                command.vehicleId(),
+                command.readingType(),
+                fromEpoch,
+                toEpoch,
+                lastValue,
+                normalizedNewValue,
+                command.effectiveAt(),
+                command.reason().trim(),
+                command.actorId(),
+                now
+        );
+
+        var savedReset = meterResets.save(reset);
+
+        var initialReading = new VehicleReading(
+                UUID.randomUUID(),
+                command.vehicleId(),
+                command.readingType(),
+                normalizedNewValue,
+                command.readingType().unit(),
+                toEpoch,
+                VehicleReadingSourceType.METER_RESET,
+                savedReset.id(),
+                command.effectiveAt(),
+                now,
+                command.actorId(),
+                null,
+                null,
+                "METER_RESET:" + savedReset.id() + ":" + command.readingType(),
+                "Meter reset: " + command.reason().trim(),
+                now
+        );
+
+        var savedReading = readings.save(initialReading);
         synchronizeSnapshot(vehicle, savedReading);
 
-        events.publishAfterCommit(new VehicleReadingRecorded(savedReading.id(), savedReading.vehicleId(),
-                savedReading.readingType().name(), savedReading.value(), savedReading.unit().name(),
-                savedReading.sourceType().name(), savedReading.sourceReferenceId(), savedReading.recordedAt(),
-                savedReading.receivedAt()));
         events.publishAfterCommit(new VehicleMeterResetRecorded(savedReset.id(), savedReset.vehicleId(),
-                savedReset.readingType().name(), savedReset.previousReadingId(), savedReset.previousMeterValue(),
-                savedReset.newReadingId(), savedReset.newMeterValue(), savedReset.effectiveAt(),
-                savedReset.reason(), savedReset.createdBy(), savedReset.approvedBy(), savedReset.createdAt()));
+                savedReset.readingType().name(), savedReset.fromEpoch(), savedReset.toEpoch(),
+                savedReset.lastReadingValue(), savedReset.newMeterValue(), savedReset.effectiveAt()));
 
         return savedReset;
+    }
+
+    private BigDecimal calculateDistanceAcrossEpochs(List<VehicleReading> readings) {
+        if (readings == null || readings.size() < 2) return BigDecimal.ZERO.setScale(3, RoundingMode.HALF_UP);
+        Map<Integer, List<VehicleReading>> byEpoch = readings.stream()
+                .collect(Collectors.groupingBy(VehicleReading::meterEpoch));
+        BigDecimal total = BigDecimal.ZERO;
+        for (List<VehicleReading> epochReadings : byEpoch.values()) {
+            if (epochReadings.size() >= 2) {
+                var sorted = epochReadings.stream().sorted(Comparator.comparing(VehicleReading::recordedAt)).toList();
+                BigDecimal delta = sorted.getLast().value().subtract(sorted.getFirst().value());
+                if (delta.compareTo(BigDecimal.ZERO) > 0) {
+                    total = total.add(delta);
+                }
+            }
+        }
+        return total.setScale(3, RoundingMode.HALF_UP);
+    }
+
+    private BigDecimal calculateHoursAcrossEpochs(List<VehicleReading> readings) {
+        if (readings == null || readings.size() < 2) return BigDecimal.ZERO.setScale(3, RoundingMode.HALF_UP);
+        Map<Integer, List<VehicleReading>> byEpoch = readings.stream()
+                .collect(Collectors.groupingBy(VehicleReading::meterEpoch));
+        BigDecimal total = BigDecimal.ZERO;
+        for (List<VehicleReading> epochReadings : byEpoch.values()) {
+            if (epochReadings.size() >= 2) {
+                var sorted = epochReadings.stream().sorted(Comparator.comparing(VehicleReading::recordedAt)).toList();
+                BigDecimal delta = sorted.getLast().value().subtract(sorted.getFirst().value());
+                if (delta.compareTo(BigDecimal.ZERO) > 0) {
+                    total = total.add(delta);
+                }
+            }
+        }
+        return total.setScale(3, RoundingMode.HALF_UP);
+    }
+
+    private BigDecimal calculateDistanceWithResets(VehicleReading start, VehicleReading end, List<VehicleMeterReset> resets) {
+        BigDecimal distance = BigDecimal.ZERO;
+        int currentEpoch = start.meterEpoch();
+        BigDecimal currentStartValue = start.value();
+
+        while (currentEpoch < end.meterEpoch()) {
+            int epoch = currentEpoch;
+            var resetOpt = resets.stream().filter(r -> r.fromEpoch() == epoch).findFirst();
+            if (resetOpt.isPresent()) {
+                var reset = resetOpt.get();
+                distance = distance.add(reset.lastReadingValue().subtract(currentStartValue));
+                currentStartValue = reset.newMeterValue();
+                currentEpoch = reset.toEpoch();
+            } else {
+                break;
+            }
+        }
+        distance = distance.add(end.value().subtract(currentStartValue));
+        return distance.max(BigDecimal.ZERO);
+    }
+
+    private CoverageStatus determineCoverage(List<VehicleReading> odo, List<VehicleReading> engine,
+                                             OffsetDateTime from, OffsetDateTime to) {
+        if (odo.isEmpty() && engine.isEmpty()) return CoverageStatus.NO_DATA;
+        if (odo.size() < 2 && engine.size() < 2) return CoverageStatus.PARTIAL;
+        return CoverageStatus.COMPLETE;
+    }
+
+    private boolean detectAbnormalReadings(List<VehicleReading> readings) {
+        if (readings == null || readings.size() < 2) return false;
+        for (int i = 0; i < readings.size() - 1; i++) {
+            var first = readings.get(i);
+            var second = readings.get(i + 1);
+            if (first.meterEpoch() == second.meterEpoch()) {
+                BigDecimal delta = second.value().subtract(first.value());
+                if (delta.compareTo(MAX_DAILY_KM_JUMP) > 0) return true;
+                long seconds = Duration.between(first.recordedAt(), second.recordedAt()).abs().toSeconds();
+                if (seconds > 0) {
+                    BigDecimal hours = BigDecimal.valueOf(seconds).divide(BigDecimal.valueOf(3600), 4, RoundingMode.HALF_UP);
+                    if (hours.compareTo(BigDecimal.ZERO) > 0) {
+                        BigDecimal speed = delta.divide(hours, 2, RoundingMode.HALF_UP);
+                        if (speed.compareTo(MAX_SPEED_KM_PER_HOUR) > 0) return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    private boolean inRange(OffsetDateTime timestamp, OffsetDateTime from, OffsetDateTime to) {
+        if (timestamp == null) return false;
+        if (from != null && timestamp.isBefore(from)) return false;
+        if (to != null && timestamp.isAfter(to)) return false;
+        return true;
     }
 
     private void validateCommand(RecordCommand command) {
@@ -488,41 +500,25 @@ public final class VehicleReadingService implements VehicleReadingUseCase, Vehic
         if (command.sourceType() == null) invalid("Reading source type is required");
         if (command.recordedAt() == null) invalid("Recorded time is required");
         if (command.actorId() == null) invalid("Created-by user is required");
-        if (command.sourceType() == VehicleReadingSourceType.MANUAL) {
-            if (command.sourceReferenceId() != null) invalid("Manual readings cannot have a source reference");
+        if (command.sourceType() == VehicleReadingSourceType.MANUAL || command.sourceType() == VehicleReadingSourceType.BASELINE) {
+            if (command.sourceType() == VehicleReadingSourceType.MANUAL && command.sourceReferenceId() != null) {
+                invalid("Manual readings cannot have a source reference");
+            }
             if (blank(command.idempotencyKey())) invalid("Manual readings require an idempotency key");
             if (command.recordedAt().isAfter(now().plusMinutes(5))) {
                 invalid("Manual recorded time cannot be more than five minutes in the future");
             }
         } else {
             if (command.sourceReferenceId() == null) invalid("System readings require a source reference");
-            if (command.sourceType() == VehicleReadingSourceType.METER_RESET
-                    || command.sourceType() == VehicleReadingSourceType.TELEMATICS
+            if (command.sourceType() == VehicleReadingSourceType.TELEMATICS
                     || command.sourceType() == VehicleReadingSourceType.MAINTENANCE) {
                 invalid("Reading source is reserved for a later workflow");
             }
         }
     }
 
-    private void validateCorrectCommand(CorrectCommand command) {
-        if (command.vehicleId() == null) invalid("Vehicle id is required");
-        if (command.readingId() == null) invalid("Reading id is required");
-        if (command.value() == null) invalid("Reading value is required");
-        if (blank(command.reason())) invalid("Correction reason is required");
-        if (command.actorId() == null) invalid("Created-by user is required");
-    }
-
-    private void validateResetCommand(ResetMeterCommand command) {
-        if (command.vehicleId() == null) invalid("Vehicle id is required");
-        if (command.readingType() == null) invalid("Reading type is required");
-        if (command.newMeterValue() == null) invalid("New meter value is required");
-        if (command.effectiveAt() == null) invalid("Effective time is required");
-        if (blank(command.reason())) invalid("Reset reason is required");
-        if (command.actorId() == null) invalid("Created-by user is required");
-    }
-
-    private java.util.Optional<VehicleReading> sourceReplay(RecordCommand command) {
-        if (command.sourceReferenceId() == null) return java.util.Optional.empty();
+    private Optional<VehicleReading> sourceReplay(RecordCommand command) {
+        if (command.sourceReferenceId() == null) return Optional.empty();
         return readings.findOriginalBySource(command.vehicleId(), command.readingType(), command.sourceType(),
                 command.sourceReferenceId());
     }
@@ -541,7 +537,7 @@ public final class VehicleReadingService implements VehicleReadingUseCase, Vehic
         return existing;
     }
 
-    private void rejectDuplicateManual(VehicleReading candidate, java.util.List<VehicleReading> sameTime) {
+    private void rejectDuplicateManual(VehicleReading candidate, List<VehicleReading> sameTime) {
         if (candidate.sourceType() == VehicleReadingSourceType.MANUAL && sameTime.stream().anyMatch(reading ->
                 reading.sourceType() == VehicleReadingSourceType.MANUAL
                         && reading.value().compareTo(candidate.value()) == 0)) {
@@ -550,46 +546,74 @@ public final class VehicleReadingService implements VehicleReadingUseCase, Vehic
         }
     }
 
-    private void synchronizeSnapshot(Vehicle vehicle, VehicleReading saved) {
-        var latest = readings.findLatestEffective(saved.vehicleId(), saved.readingType(), saved.meterEpoch())
-                .orElse(saved);
-        var updated = saved.readingType() == VehicleReadingType.ODOMETER
-                ? copySnapshot(vehicle, latest.value().doubleValue(), vehicle.engineHours())
-                : copySnapshot(vehicle, vehicle.currentOdometerKm(), latest.value().doubleValue());
-        vehicles.save(updated);
+    private void synchronizeSnapshot(Vehicle vehicle, VehicleReading reading) {
+        var latest = readings.findLatestEffective(reading.vehicleId(), reading.readingType(), reading.meterEpoch())
+                .orElse(reading);
+        if (reading.readingType() == VehicleReadingType.ODOMETER) {
+            vehicles.save(new Vehicle(vehicle.id(), vehicle.registrationNumber(), vehicle.chassisNumber(),
+                    vehicle.engineNumber(), vehicle.categoryId(), vehicle.typeId(), vehicle.manufacturer(),
+                    vehicle.model(), vehicle.manufactureYear(), vehicle.ownershipType(), vehicle.operationalStatus(),
+                    latest.value().doubleValue(), vehicle.engineHours(), vehicle.capacityKg(), vehicle.active()));
+        } else if (reading.readingType() == VehicleReadingType.ENGINE_HOURS) {
+            vehicles.save(new Vehicle(vehicle.id(), vehicle.registrationNumber(), vehicle.chassisNumber(),
+                    vehicle.engineNumber(), vehicle.categoryId(), vehicle.typeId(), vehicle.manufacturer(),
+                    vehicle.model(), vehicle.manufactureYear(), vehicle.ownershipType(), vehicle.operationalStatus(),
+                    vehicle.currentOdometerKm(), latest.value().doubleValue(), vehicle.capacityKg(), vehicle.active()));
+        }
     }
 
-    private Vehicle copySnapshot(Vehicle vehicle, Double odometer, Double engineHours) {
-        return new Vehicle(vehicle.id(), vehicle.registrationNumber(), vehicle.chassisNumber(), vehicle.engineNumber(),
-                vehicle.categoryId(), vehicle.typeId(), vehicle.manufacturer(), vehicle.model(),
-                vehicle.manufactureYear(), vehicle.ownershipType(), vehicle.operationalStatus(), odometer,
-                engineHours, vehicle.capacityKg(), vehicle.active());
-    }
-
-    private Vehicle requireVehicle(UUID vehicleId) {
-        if (vehicleId == null) throw new NotFoundException("VEHICLE_NOT_FOUND", "Vehicle not found: null");
-        return vehicles.findById(vehicleId).orElseThrow(() ->
-                new NotFoundException("VEHICLE_NOT_FOUND", "Vehicle not found: " + vehicleId));
-    }
-
-    private String idempotencyKey(RecordCommand command) {
-        if (command.sourceType() == VehicleReadingSourceType.MANUAL) return command.idempotencyKey().trim();
-        return command.sourceType().name() + ":" + command.sourceReferenceId() + ":" + command.readingType().name();
+    private void requireVehicle(UUID vehicleId) {
+        if (vehicles.findById(vehicleId).isEmpty()) {
+            throw new NotFoundException("VEHICLE_NOT_FOUND", "Vehicle not found: " + vehicleId);
+        }
     }
 
     private BigDecimal normalize(BigDecimal value) {
-        if (value == null) invalid("Reading value is required");
-        if (value.signum() < 0) invalid("Reading value cannot be negative");
-        var normalized = value.setScale(3, RoundingMode.HALF_UP);
-        if (normalized.precision() > 19) invalid("Reading value exceeds NUMERIC(19,3)");
-        return normalized;
+        if (value.scale() > 3) invalid("Reading values support a maximum of three decimal places");
+        return value.setScale(3, RoundingMode.HALF_UP);
+    }
+
+    private String idempotencyKey(RecordCommand command) {
+        if (command.sourceType() == VehicleReadingSourceType.MANUAL) {
+            return command.idempotencyKey().trim();
+        }
+        return command.sourceType().name() + ":" + command.sourceReferenceId() + ":" + command.readingType().name();
     }
 
     private OffsetDateTime now() {
         return OffsetDateTime.ofInstant(clock.instant(), ZoneOffset.UTC);
     }
 
-    private record MetricCalculationResult(BigDecimal openingValue, BigDecimal closingValue, BigDecimal distance,
-                                           CoverageStatus coverageStatus, String reason) {
+    private boolean blank(String value) {
+        return value == null || value.isBlank();
+    }
+
+    private void invalid(String message) {
+        throw new BusinessRuleException("INVALID_VEHICLE_READING", message);
+    }
+
+    private static VehicleMeterResetRepository noOpMeterResetRepository() {
+        return new VehicleMeterResetRepository() {
+            @Override public VehicleMeterReset save(VehicleMeterReset reset) { return reset; }
+            @Override public List<VehicleMeterReset> findByVehicleId(UUID vehicleId) { return List.of(); }
+            @Override public List<VehicleMeterReset> findByVehicleIdAndType(UUID vehicleId, VehicleReadingType readingType) { return List.of(); }
+            @Override public Optional<VehicleMeterReset> findLatestByVehicleIdAndType(UUID vehicleId, VehicleReadingType readingType) { return Optional.empty(); }
+        };
+    }
+
+    private static VehicleReadingType domainType(VehicleReadingRecorder.ReadingType type) {
+        return VehicleReadingType.valueOf(type.name());
+    }
+
+    private static VehicleReadingRecorder.ReadingType publicType(VehicleReadingType type) {
+        return VehicleReadingRecorder.ReadingType.valueOf(type.name());
+    }
+
+    private static VehicleReadingSourceType domainSource(VehicleReadingRecorder.SourceType source) {
+        return VehicleReadingSourceType.valueOf(source.name());
+    }
+
+    private static VehicleReadingRecorder.SourceType publicSource(VehicleReadingSourceType source) {
+        return VehicleReadingRecorder.SourceType.valueOf(source.name());
     }
 }

@@ -1,5 +1,6 @@
 package com.transportlogistics.app.fleet.application.ports.in;
 
+import com.transportlogistics.app.fleet.CoverageStatus;
 import com.transportlogistics.app.fleet.TripDistanceSummary;
 import com.transportlogistics.app.fleet.VehicleMileageSummary;
 import com.transportlogistics.app.fleet.domain.model.VehicleMeterReset;
@@ -20,30 +21,29 @@ public interface VehicleReadingUseCase {
 
     VehicleMeterReset resetMeter(ResetMeterCommand command);
 
+    List<VehicleMeterReset> listMeterResets(UUID vehicleId);
+
     VehicleReading get(UUID readingId);
 
     PageResult<VehicleReading> list(SearchQuery query);
 
     LatestReadings latest(UUID vehicleId);
 
-    List<VehicleMeterReset> listResets(UUID vehicleId);
+    VehicleMileageSummary getMileage(UUID vehicleId, OffsetDateTime from, OffsetDateTime to);
 
-    VehicleMileageSummary mileageSummary(UUID vehicleId, OffsetDateTime from, OffsetDateTime to, boolean includeSourceBreakdown);
-
-    TripDistanceSummary tripDistance(UUID tripId, UUID vehicleId);
+    TripDistanceSummary calculateTripDistance(UUID tripId);
 
     record RecordCommand(UUID vehicleId, VehicleReadingType readingType, BigDecimal value,
                          VehicleReadingSourceType sourceType, UUID sourceReferenceId, OffsetDateTime recordedAt,
                          UUID actorId, String idempotencyKey, String notes) {
     }
 
-    record CorrectCommand(UUID vehicleId, UUID readingId, BigDecimal value, String reason,
-                          UUID actorId, String idempotencyKey, String notes) {
+    record CorrectCommand(UUID vehicleId, UUID originalReadingId, BigDecimal correctedValue,
+                          String reason, OffsetDateTime recordedAt, UUID actorId) {
     }
 
     record ResetMeterCommand(UUID vehicleId, VehicleReadingType readingType, BigDecimal newMeterValue,
-                             OffsetDateTime effectiveAt, String reason, UUID actorId,
-                             UUID approvedBy, String notes) {
+                             OffsetDateTime effectiveAt, String reason, UUID actorId) {
     }
 
     record SearchQuery(UUID vehicleId, VehicleReadingType readingType, VehicleReadingSourceType sourceType,

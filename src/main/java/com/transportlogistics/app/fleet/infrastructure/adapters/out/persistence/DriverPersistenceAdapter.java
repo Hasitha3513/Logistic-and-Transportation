@@ -2,7 +2,6 @@ package com.transportlogistics.app.fleet.infrastructure.adapters.out.persistence
 
 import com.transportlogistics.app.fleet.application.ports.out.DriverRepository;
 import com.transportlogistics.app.fleet.domain.model.Driver;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -10,9 +9,12 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Component
-@RequiredArgsConstructor
 class DriverPersistenceAdapter implements DriverRepository {
     private final DriverJpaRepository repo;
+
+    DriverPersistenceAdapter(DriverJpaRepository repo) {
+        this.repo = repo;
+    }
 
     public Driver save(Driver v) {
         var e = new DriverEntity();

@@ -33,22 +33,7 @@ public interface VehicleReadingRepository {
 
     Optional<VehicleReading> findByIdempotencyKey(String idempotencyKey);
 
-    Optional<VehicleReading> findCorrectionOf(UUID readingId);
-
-    boolean isSuperseded(UUID readingId);
-
-    List<VehicleReading> findEffectiveInPeriod(UUID vehicleId, VehicleReadingType type, OffsetDateTime from, OffsetDateTime to);
-
-    Optional<VehicleReading> findOpeningEffective(UUID vehicleId, VehicleReadingType type, OffsetDateTime from);
-
-    Optional<VehicleReading> findClosingEffective(UUID vehicleId, VehicleReadingType type, OffsetDateTime to);
-
-    Optional<VehicleReading> findEffectiveBySource(UUID vehicleId, VehicleReadingType type,
-                                                   VehicleReadingSourceType sourceType, UUID sourceReferenceId);
-
-    int countCorrectionsInPeriod(UUID vehicleId, OffsetDateTime from, OffsetDateTime to);
-
-    List<VehicleReading> findAllInPeriod(UUID vehicleId, OffsetDateTime from, OffsetDateTime to);
+    Optional<VehicleReading> findCorrection(UUID originalReadingId);
 
     VehicleReadingUseCase.PageResult<VehicleReading> search(VehicleReadingUseCase.SearchQuery query);
 }

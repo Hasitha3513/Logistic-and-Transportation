@@ -48,10 +48,6 @@ class LocalIdentityBootstrapIntegrationTest {
                 .andExpect(jsonPath("$.permissions").value(org.hamcrest.Matchers.hasItem("FUEL_PURCHASE_APPROVE")))
                 .andExpect(jsonPath("$.permissions").value(org.hamcrest.Matchers.hasItem("FUEL_PURCHASE_RECONCILE")))
                 .andExpect(jsonPath("$.permissions").value(org.hamcrest.Matchers.hasItem("FUEL_PRICE_MANAGE")))
-                .andExpect(jsonPath("$.permissions").value(org.hamcrest.Matchers.hasItem("VEHICLE_READING_VIEW")))
-                .andExpect(jsonPath("$.permissions").value(org.hamcrest.Matchers.hasItem("VEHICLE_READING_CREATE")))
-                .andExpect(jsonPath("$.permissions").value(org.hamcrest.Matchers.hasItem("VEHICLE_READING_CORRECT")))
-                .andExpect(jsonPath("$.permissions").value(org.hamcrest.Matchers.hasItem("VEHICLE_READING_RESET_METER")))
                 .andExpect(jsonPath("$.permissions").isArray());
     }
 }

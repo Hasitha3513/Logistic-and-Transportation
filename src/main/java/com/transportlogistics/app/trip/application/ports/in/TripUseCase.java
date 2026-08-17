@@ -45,8 +45,6 @@ public interface TripUseCase {
 
     List<TripHistoryEntry> history(UUID id);
 
-    com.transportlogistics.app.trip.application.ports.out.TripDistancePort.DistanceResult getDistance(UUID id);
-
     record CreateCommand(UUID customerId, UUID departmentId, UUID projectId, UUID routeId, String priority,
                          UUID originLocationId, UUID destinationLocationId, OffsetDateTime requestedStartTime,
                          OffsetDateTime requestedEndTime, UUID requiredVehicleTypeId, Double requiredCapacityKg,

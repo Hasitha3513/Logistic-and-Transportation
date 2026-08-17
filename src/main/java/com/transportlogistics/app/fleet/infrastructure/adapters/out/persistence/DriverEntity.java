@@ -4,6 +4,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -15,6 +16,7 @@ import java.util.UUID;
 @Getter
 @Setter
 @NoArgsConstructor
+@AllArgsConstructor
 class DriverEntity {
     @Id
     @Column(name = "id")
@@ -33,15 +35,4 @@ class DriverEntity {
     private String status;
     @Column(name = "active")
     private boolean active;
-
-    public DriverEntity(UUID id, String employeeNumber, String firstName, String lastName, String phone, String email, String status, boolean active) {
-        this.id = id;
-        this.employeeNumber = employeeNumber;
-        this.firstName = firstName;
-        this.lastName = lastName;
-        this.phone = phone;
-        this.email = email;
-        this.status = status;
-        this.active = active;
-    }
 }

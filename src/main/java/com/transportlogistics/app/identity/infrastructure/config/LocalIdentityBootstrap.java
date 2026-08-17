@@ -6,9 +6,8 @@ import com.transportlogistics.app.identity.domain.model.User;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.context.annotation.Profile;
-import org.springframework.core.annotation.Order;
 import org.springframework.core.env.Environment;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 import java.time.OffsetDateTime;
@@ -16,8 +15,7 @@ import java.util.Set;
 import java.util.UUID;
 
 @Component
-@Order(1)
-@Profile({"h2", "docker", "postgres"})
+@Profile({"h2", "docker"})
 @ConditionalOnProperty(name = "app.dev.identity-bootstrap.enabled", havingValue = "true")
 class LocalIdentityBootstrap implements ApplicationRunner {
     private static final Set<String> MVP_PERMISSIONS = Set.of(
@@ -63,8 +61,8 @@ class LocalIdentityBootstrap implements ApplicationRunner {
         if (existingUser.isPresent()) return;
         var now = OffsetDateTime.now();
         identities.createUser(new User(UUID.randomUUID(), username,
-                environment.getProperty("app.dev.identity-bootstrap.email", "local.operator@example.test"), null,
-                "Local", "Administrator", null, true, now, now, Set.of()), password, Set.of(role.id()));
+                        environment.getProperty("app.dev.identity-bootstrap.email", "local.operator@example.test"), null,
+                        "Local", "Administrator", null, true, now, now, Set.of()), password, Set.of(role.id()));
     }
 
     private String required(String key) {

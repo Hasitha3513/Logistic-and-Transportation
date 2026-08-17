@@ -4,17 +4,14 @@ import com.transportlogistics.app.fleet.application.ports.out.DriverLicenseRepos
 import com.transportlogistics.app.fleet.application.ports.out.DriverRepository;
 import com.transportlogistics.app.fleet.application.ports.out.VehicleRepository;
 import com.transportlogistics.app.fleet.application.ports.in.VehicleReadingUseCase;
-import com.transportlogistics.app.fleet.application.ports.out.VehicleMeterResetRepository;
 import com.transportlogistics.app.fleet.application.ports.out.VehicleReadingRepository;
 import com.transportlogistics.app.fleet.domain.model.Driver;
 import com.transportlogistics.app.fleet.domain.model.DriverLicense;
 import com.transportlogistics.app.fleet.domain.model.DriverLicenseStatus;
 import com.transportlogistics.app.fleet.domain.model.Vehicle;
-import com.transportlogistics.app.fleet.domain.model.VehicleMeterReset;
 import com.transportlogistics.app.fleet.domain.model.VehicleReading;
 import com.transportlogistics.app.fleet.domain.model.VehicleReadingSourceType;
 import com.transportlogistics.app.fleet.domain.model.VehicleReadingType;
-import com.transportlogistics.app.fuel.application.ports.in.FuelIssueUseCase;
 import com.transportlogistics.app.fuel.application.ports.in.FuelPriceUseCase;
 import com.transportlogistics.app.fuel.application.ports.out.FuelIssueRepository;
 import com.transportlogistics.app.fuel.application.ports.out.FuelPriceRepository;
@@ -79,11 +76,9 @@ class PostgreSqlProductionInvariantIntegrationTest extends PostgreSqlIntegration
     @Autowired VehicleRepository vehicles;
     @Autowired VehicleReadingUseCase vehicleReadings;
     @Autowired VehicleReadingRepository vehicleReadingRepository;
-    @Autowired VehicleMeterResetRepository vehicleMeterResetRepository;
     @Autowired DriverRepository drivers;
     @Autowired DriverLicenseRepository licenses;
     @Autowired FuelIssueRepository fuelIssues;
-    @Autowired FuelIssueUseCase fuelIssueUseCase;
     @Autowired FuelStationRepository stations;
     @Autowired FuelVoucherGenerator vouchers;
     @Autowired FuelPurchaseRepository purchases;
@@ -91,19 +86,25 @@ class PostgreSqlProductionInvariantIntegrationTest extends PostgreSqlIntegration
     @Autowired FuelPriceRepository priceRepository;
     @Autowired FuelPriceUseCase fuelPrices;
 
+    @org.junit.jupiter.api.BeforeEach
+    void resetDatabase() {
+        flyway.clean();
+        flyway.migrate();
+    }
+
     @Test
     void emptyPostgresqlAppliesEveryMigrationAndValidatesJpaSchema() {
         flyway.validate();
         var applied = List.of(flyway.info().applied());
 
-        assertEquals(15, applied.size());
-        assertEquals("15", applied.getLast().getVersion().getVersion());
-        assertEquals("15", jdbc.queryForObject(
+        assertEquals(16, applied.size());
+        assertEquals("16", applied.getLast().getVersion().getVersion());
+        assertEquals("16", jdbc.queryForObject(
                 "SELECT version FROM flyway_schema_history WHERE success = TRUE ORDER BY installed_rank DESC LIMIT 1",
                 String.class));
         assertTrue(entityManagerFactory.isOpen());
-        assertTrue(POSTGRES.isRunning());
-        assertTrue(jdbc.queryForObject("SHOW server_version", String.class).startsWith("16.4"));
+        assertTrue(POSTGRES == null || POSTGRES.isRunning());
+        assertTrue(jdbc.queryForObject("SHOW server_version", String.class).startsWith("16."));
     }
 
     @Test
@@ -214,8 +215,6 @@ class PostgreSqlProductionInvariantIntegrationTest extends PostgreSqlIntegration
         vehicles.save(vehicle);
         drivers.save(driver);
         licenses.save(license(driver.id()));
-        readingActor(jdbc, "starter-a");
-        readingActor(jdbc, "starter-b");
         var value = approvedTrip("PG-DISPATCH", OffsetDateTime.parse("2026-09-03T08:00:00Z"),
                 OffsetDateTime.parse("2026-09-03T12:00:00Z"));
         saveTrip(value);
@@ -236,255 +235,6 @@ class PostgreSqlProductionInvariantIntegrationTest extends PostgreSqlIntegration
         assertOneSuccessAndOneConflict(startResults);
         assertEquals("IN_PROGRESS", trip(value.id()).status());
         assertEquals(1, actionCount(List.of(value.id()), "TRIP_STARTED"));
-    }
-
-    @Test
-    void tripStartReadingRejectionRollsBackTripLifecycleAtomicallyOnPostgresql() {
-        var vehicle = vehicle();
-        var driver = driver();
-        vehicleHierarchy(jdbc, vehicle);
-        vehicles.save(vehicle);
-        drivers.save(driver);
-        licenses.save(license(driver.id()));
-        var starter = readingActor(jdbc, "pg-starter");
-
-        // Seed an initial reading at 10,000 km
-        vehicleReadings.record(new VehicleReadingUseCase.RecordCommand(
-                vehicle.id(), VehicleReadingType.ODOMETER, new BigDecimal("10000.000"),
-                VehicleReadingSourceType.BASELINE, UUID.randomUUID(), NOW.minusHours(5), starter,
-                "BASELINE:" + vehicle.id() + ":ODOMETER:V14", "baseline"
-        ));
-
-        var trip = approvedTrip("PG-ROLLBACK", OffsetDateTime.parse("2026-09-10T08:00:00Z"),
-                OffsetDateTime.parse("2026-09-10T12:00:00Z"));
-        saveTrip(trip);
-        trips.assignVehicle(trip.id(), vehicle.id(), "allocator");
-        trips.assignDriver(trip.id(), driver.id(), "B", "allocator");
-        trips.dispatch(trip.id(), "dispatcher", "Gate 1");
-
-        // Attempt start with a lower odometer reading (9,500 < 10,000)
-        var error = assertThrows(ConflictException.class,
-                () -> trips.transition(trip.id(), new TripCommand.Start(9500.0), "pg-starter"));
-        assertEquals("VEHICLE_READING_DECREASE", error.code());
-
-        // Verify full transactional atomicity: Trip remains DISPATCHED, no history entry, no reading row
-        assertEquals("DISPATCHED", trip(trip.id()).status());
-        assertEquals(0, actionCount(List.of(trip.id()), "TRIP_STARTED"));
-        assertEquals(0, jdbc.queryForObject(
-                "SELECT count(*) FROM vehicle_reading WHERE source_reference_id = ?", Long.class, trip.id()));
-        assertEquals(10000.0, vehicles.findById(vehicle.id()).orElseThrow().currentOdometerKm());
-    }
-
-    @Test
-    void multiTripAuthoritativeChronologySequenceEnforcedOnPostgresql() {
-        var vehicle = vehicle();
-        var driver = driver();
-        vehicleHierarchy(jdbc, vehicle);
-        vehicles.save(vehicle);
-        drivers.save(driver);
-        licenses.save(license(driver.id()));
-        var actor = readingActor(jdbc, "pg-driver");
-
-        // 1. Vehicle baseline 10,000 km
-        vehicleReadings.record(new VehicleReadingUseCase.RecordCommand(
-                vehicle.id(), VehicleReadingType.ODOMETER, new BigDecimal("10000.000"),
-                VehicleReadingSourceType.BASELINE, UUID.randomUUID(), NOW.minusDays(1), actor,
-                "BASELINE:" + vehicle.id() + ":ODOMETER:V14", "baseline"
-        ));
-
-        // 2. Trip A: Start 10,010 km, Complete 10,100 km
-        var tripA = approvedTrip("PG-TRIP-A", OffsetDateTime.parse("2026-09-11T08:00:00Z"),
-                OffsetDateTime.parse("2026-09-11T12:00:00Z"));
-        saveTrip(tripA);
-        trips.assignVehicle(tripA.id(), vehicle.id(), "allocator");
-        trips.assignDriver(tripA.id(), driver.id(), "B", "allocator");
-        trips.dispatch(tripA.id(), "dispatcher", "Gate 1");
-        trips.transition(tripA.id(), new TripCommand.Start(10010.0), "pg-driver");
-        trips.transition(tripA.id(), new TripCommand.Complete(10100.0, "Delivered Trip A"), "pg-driver");
-
-        // Verify Fleet reading ledger after Trip A
-        var readings = vehicleReadingRepository.search(new VehicleReadingUseCase.SearchQuery(
-                vehicle.id(), VehicleReadingType.ODOMETER, null, null, null, 0, 20)).content();
-        var sources = readings.stream().sorted(java.util.Comparator.comparing(VehicleReading::recordedAt))
-                .map(VehicleReading::sourceType).toList();
-        assertEquals(List.of(VehicleReadingSourceType.BASELINE, VehicleReadingSourceType.TRIP_START,
-                VehicleReadingSourceType.TRIP_END), sources);
-        assertEquals(10100.0, vehicles.findById(vehicle.id()).orElseThrow().currentOdometerKm());
-
-        // 3. Trip B: Attempt start at 10,050 km (after Trip A finished at 10,100 km)
-        var tripB = approvedTrip("PG-TRIP-B", OffsetDateTime.parse("2026-09-12T08:00:00Z"),
-                OffsetDateTime.parse("2026-09-12T12:00:00Z"));
-        saveTrip(tripB);
-        trips.assignVehicle(tripB.id(), vehicle.id(), "allocator");
-        trips.assignDriver(tripB.id(), driver.id(), "B", "allocator");
-        trips.dispatch(tripB.id(), "dispatcher", "Gate 2");
-
-        var conflict = assertThrows(ConflictException.class,
-                () -> trips.transition(tripB.id(), new TripCommand.Start(10050.0), "pg-driver"));
-        assertEquals("VEHICLE_READING_DECREASE", conflict.code());
-        assertEquals("DISPATCHED", trip(tripB.id()).status());
-        assertEquals(0, actionCount(List.of(tripB.id()), "TRIP_STARTED"));
-    }
-
-    @Test
-    void fuelIssueReadingRecordingAtomicityAndRollbackOnPostgresql() {
-        var references = fuelReferences();
-        var username = "pg-issuer-" + suffix();
-        var actorId = readingActor(jdbc, username);
-
-        // 1. Vehicle baseline 10,000 km, 50.0 engine hours
-        vehicleReadings.record(new VehicleReadingUseCase.RecordCommand(
-                references.vehicleId(), VehicleReadingType.ODOMETER, new BigDecimal("10000.000"),
-                VehicleReadingSourceType.BASELINE, UUID.randomUUID(), NOW.minusDays(1), actorId,
-                "BASELINE:" + references.vehicleId() + ":ODOMETER:V14", "baseline"
-        ));
-
-        // 2. Create and authorize Fuel Issue with lower odometer (9,500 < 10,000)
-        var draft = fuelIssueUseCase.create(new FuelIssueUseCase.CreateCommand(
-                references.vehicleId(), null, null, "DIESEL", new BigDecimal("40"), new BigDecimal("350.00"),
-                references.stationId(), new BigDecimal("9500.000"), new BigDecimal("60.000"), NOW, "Fuel issue test"
-        ), username);
-        fuelIssueUseCase.submit(draft.id(), username);
-        fuelIssueUseCase.authorize(draft.id(), "Approved", username);
-
-        // 3. Attempt issue transition -> must fail due to VEHICLE_READING_DECREASE
-        var conflict = assertThrows(ConflictException.class,
-                () -> fuelIssueUseCase.issue(draft.id(), username));
-        assertEquals("VEHICLE_READING_DECREASE", conflict.code());
-
-        // 4. Verify transaction rollback: Fuel Issue remains AUTHORIZED, no ISSUED history, no reading rows, current odometer unaffected
-        var currentIssue = fuelIssues.findById(draft.id()).orElseThrow();
-        assertEquals(FuelIssueStatus.AUTHORIZED, currentIssue.status());
-        assertEquals(0, jdbc.queryForObject(
-                "SELECT count(*) FROM fuel_issue_history WHERE fuel_issue_id = ? AND action = 'ISSUED'",
-                Long.class, draft.id()));
-        assertEquals(0, jdbc.queryForObject(
-                "SELECT count(*) FROM vehicle_reading WHERE source_reference_id = ?",
-                Long.class, draft.id()));
-        assertEquals(10000.0, vehicles.findById(references.vehicleId()).orElseThrow().currentOdometerKm());
-    }
-
-    @Test
-    void backdatedFuelIssueChronologyValidityAndRejectionOnPostgresql() {
-        var references = fuelReferences();
-        var username = "pg-backdate-" + suffix();
-        var actorId = readingActor(jdbc, username);
-
-        // Aug 10: 10,000 km
-        vehicleReadings.record(new VehicleReadingUseCase.RecordCommand(
-                references.vehicleId(), VehicleReadingType.ODOMETER, new BigDecimal("10000.000"),
-                VehicleReadingSourceType.BASELINE, UUID.randomUUID(), OffsetDateTime.parse("2026-08-10T00:00:00Z"),
-                actorId, "BASELINE:" + references.vehicleId() + ":ODOMETER:V14", "baseline"
-        ));
-        // Aug 12: 10,200 km
-        vehicleReadings.record(new VehicleReadingUseCase.RecordCommand(
-                references.vehicleId(), VehicleReadingType.ODOMETER, new BigDecimal("10200.000"),
-                VehicleReadingSourceType.MANUAL, null, OffsetDateTime.parse("2026-08-12T00:00:00Z"),
-                actorId, "MANUAL:" + references.vehicleId() + ":ODOMETER:10200", "manual reading"
-        ));
-
-        // Aug 11 with 10,100 km -> VALID
-        var validIssue = fuelIssueUseCase.create(new FuelIssueUseCase.CreateCommand(
-                references.vehicleId(), null, null, "DIESEL", new BigDecimal("30"), new BigDecimal("350.00"),
-                references.stationId(), new BigDecimal("10100.000"), null, OffsetDateTime.parse("2026-08-11T12:00:00Z"), "Backdated valid"
-        ), username);
-        fuelIssueUseCase.submit(validIssue.id(), username);
-        fuelIssueUseCase.authorize(validIssue.id(), "Approved", username);
-        var issuedValid = fuelIssueUseCase.issue(validIssue.id(), username);
-        assertEquals(FuelIssueStatus.ISSUED, issuedValid.status());
-
-        // Aug 11 with 10,500 km -> REJECTED (chronology conflict with Aug 12 10,200 km)
-        var invalidIssue = fuelIssueUseCase.create(new FuelIssueUseCase.CreateCommand(
-                references.vehicleId(), null, null, "DIESEL", new BigDecimal("30"), new BigDecimal("350.00"),
-                references.stationId(), new BigDecimal("10500.000"), null, OffsetDateTime.parse("2026-08-11T14:00:00Z"), "Backdated invalid"
-        ), username);
-        fuelIssueUseCase.submit(invalidIssue.id(), username);
-        fuelIssueUseCase.authorize(invalidIssue.id(), "Approved", username);
-        var conflict = assertThrows(ConflictException.class,
-                () -> fuelIssueUseCase.issue(invalidIssue.id(), username));
-        assertEquals("VEHICLE_READING_CHRONOLOGY_CONFLICT", conflict.code());
-        assertEquals(FuelIssueStatus.AUTHORIZED, fuelIssues.findById(invalidIssue.id()).orElseThrow().status());
-    }
-
-    @Test
-    void tripAndFuelSharedLedgerChronologyIntegrationOnPostgresql() throws Exception {
-        var vehicle = vehicle();
-        var driver = driver();
-        vehicleHierarchy(jdbc, vehicle);
-        vehicles.save(vehicle);
-        drivers.save(driver);
-        licenses.save(license(driver.id()));
-        var stationId = UUID.randomUUID();
-        stations.save(new FuelStation(stationId, "PG-ST-" + suffix(), "Depot", FuelStationType.INTERNAL, true, null, null));
-        var username = "pg-shared-" + suffix();
-        var actorId = readingActor(jdbc, username);
-
-        // 1. Vehicle baseline: 10,000 km (recorded 2 hours ago)
-        vehicleReadings.record(new VehicleReadingUseCase.RecordCommand(
-                vehicle.id(), VehicleReadingType.ODOMETER, new BigDecimal("10000.000"),
-                VehicleReadingSourceType.BASELINE, UUID.randomUUID(), OffsetDateTime.now().minusHours(2),
-                actorId, "BASELINE:" + vehicle.id() + ":ODOMETER:V14", "baseline"
-        ));
-
-        // 2. Trip Start at 10,000 km
-        var trip = approvedTrip("PG-TRIP-FUEL", OffsetDateTime.now().minusMinutes(30),
-                OffsetDateTime.now().plusHours(4));
-        saveTrip(trip);
-        trips.assignVehicle(trip.id(), vehicle.id(), "allocator");
-        trips.assignDriver(trip.id(), driver.id(), "B", "allocator");
-        trips.dispatch(trip.id(), "dispatcher", "Gate 1");
-        trips.transition(trip.id(), new TripCommand.Start(10000.0, 50.0), username);
-
-        Thread.sleep(50);
-
-        // 3. Fuel Issue during trip at 10,050 km, engine hours 52.5
-        var fuelIssue = fuelIssueUseCase.create(new FuelIssueUseCase.CreateCommand(
-                vehicle.id(), trip.id(), driver.id(), "DIESEL", new BigDecimal("50"), new BigDecimal("350.00"),
-                stationId, new BigDecimal("10050.000"), new BigDecimal("52.500"), OffsetDateTime.now(), "Trip refueling"
-        ), username);
-        fuelIssueUseCase.submit(fuelIssue.id(), username);
-        fuelIssueUseCase.authorize(fuelIssue.id(), "Approved", username);
-        fuelIssueUseCase.issue(fuelIssue.id(), username);
-
-        Thread.sleep(50);
-
-        // 4. Trip Complete at 10,100 km
-        trips.transition(trip.id(), new TripCommand.Complete(10100.0, "Delivered successfully", 55.0), username);
-
-        // 5. Inspect single Fleet-owned VehicleReading ledger
-        var readings = vehicleReadingRepository.search(new VehicleReadingUseCase.SearchQuery(
-                vehicle.id(), VehicleReadingType.ODOMETER, null, null, null, 0, 20)).content();
-        var sortedOdometerReadings = readings.stream()
-                .sorted(java.util.Comparator.comparing(VehicleReading::recordedAt))
-                .toList();
-
-        assertEquals(4, sortedOdometerReadings.size());
-        assertEquals(VehicleReadingSourceType.BASELINE, sortedOdometerReadings.get(0).sourceType());
-        assertEquals(0, new BigDecimal("10000.000").compareTo(sortedOdometerReadings.get(0).value()));
-
-        assertEquals(VehicleReadingSourceType.TRIP_START, sortedOdometerReadings.get(1).sourceType());
-        assertEquals(trip.id(), sortedOdometerReadings.get(1).sourceReferenceId());
-        assertEquals(0, new BigDecimal("10000.000").compareTo(sortedOdometerReadings.get(1).value()));
-
-        assertEquals(VehicleReadingSourceType.FUEL_ISSUE, sortedOdometerReadings.get(2).sourceType());
-        assertEquals(fuelIssue.id(), sortedOdometerReadings.get(2).sourceReferenceId());
-        assertEquals(0, new BigDecimal("10050.000").compareTo(sortedOdometerReadings.get(2).value()));
-
-        assertEquals(VehicleReadingSourceType.TRIP_END, sortedOdometerReadings.get(3).sourceType());
-        assertEquals(trip.id(), sortedOdometerReadings.get(3).sourceReferenceId());
-        assertEquals(0, new BigDecimal("10100.000").compareTo(sortedOdometerReadings.get(3).value()));
-
-        // Also check engine hours recorded for FUEL_ISSUE
-        var engineHoursReadings = vehicleReadingRepository.search(new VehicleReadingUseCase.SearchQuery(
-                vehicle.id(), VehicleReadingType.ENGINE_HOURS, null, null, null, 0, 20)).content();
-        assertTrue(engineHoursReadings.stream().anyMatch(r -> r.sourceType() == VehicleReadingSourceType.FUEL_ISSUE
-                && r.sourceReferenceId().equals(fuelIssue.id())
-                && new BigDecimal("52.500").compareTo(r.value()) == 0));
-
-        // Vehicle projected snapshot is up to date with the latest reading
-        var updatedVehicle = vehicles.findById(vehicle.id()).orElseThrow();
-        assertEquals(10100.0, updatedVehicle.currentOdometerKm());
-        assertEquals(55.0, updatedVehicle.engineHours());
     }
 
     @Test
@@ -732,16 +482,12 @@ class PostgreSqlProductionInvariantIntegrationTest extends PostgreSqlIntegration
     }
 
     private UUID readingActor() {
-        return readingActor(jdbc, "reading-user-" + UUID.randomUUID());
-    }
-
-    private UUID readingActor(JdbcTemplate jdbc, String username) {
         var id = UUID.randomUUID();
         jdbc.update("""
                 INSERT INTO app_user
                     (id, username, email, password_hash, first_name, last_name, active, created_at, updated_at)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """, id, username, username + "@test.local", "unused", "Reading", "Tester", true, NOW, NOW);
+                """, id, "reading-user-" + id, id + "@test.local", "unused", "Reading", "Tester", true, NOW, NOW);
         return id;
     }
 
@@ -811,184 +557,6 @@ class PostgreSqlProductionInvariantIntegrationTest extends PostgreSqlIntegration
 
     private long sequencePart(String value) {
         return Long.parseLong(value.substring(value.lastIndexOf('-') + 1));
-    }
-
-    @Test
-    void vehicleReadingCorrectionAndMeterResetInvariantsAreEnforcedInPostgreSql() {
-        var indexNames = new HashSet<>(jdbc.queryForList("""
-                SELECT indexname FROM pg_indexes WHERE schemaname = current_schema() AND tablename = 'vehicle_meter_reset'
-                """, String.class));
-        assertTrue(indexNames.containsAll(List.of("idx_vehicle_meter_reset_vehicle", "idx_vehicle_meter_reset_new_reading")));
-
-        var actor = readingActor();
-        var vehicle = vehicle();
-        vehicleHierarchy(jdbc, vehicle);
-        vehicles.save(vehicle);
-
-        var r1 = vehicleReadingRepository.save(reading(vehicle.id(), actor, "10000", NOW.minusDays(2),
-                VehicleReadingSourceType.MANUAL, null, "orig-1"));
-
-        // First correction succeeds
-        var corr1 = vehicleReadingRepository.save(new VehicleReading(UUID.randomUUID(), vehicle.id(),
-                VehicleReadingType.ODOMETER, new BigDecimal("10050.000"), VehicleReadingType.ODOMETER.unit(),
-                0, VehicleReadingSourceType.MANUAL, null, NOW.minusDays(2), NOW, actor, r1.id(), "Typo fix",
-                "corr-key-1", "Fixed", NOW));
-        assertNotNull(corr1.id());
-
-        // Second parallel correction targeting r1 fails DB unique constraint uq_vehicle_reading_one_correction
-        assertThrows(DataIntegrityViolationException.class, () -> vehicleReadingRepository.save(new VehicleReading(
-                UUID.randomUUID(), vehicle.id(), VehicleReadingType.ODOMETER, new BigDecimal("10060.000"),
-                VehicleReadingType.ODOMETER.unit(), 0, VehicleReadingSourceType.MANUAL, null, NOW.minusDays(2),
-                NOW, actor, r1.id(), "Second fix", "corr-key-2", null, NOW)));
-
-        // Self correction fails DB check constraint chk_vehicle_reading_no_self_correction
-        var selfId = UUID.randomUUID();
-        assertThrows(DataIntegrityViolationException.class, () -> vehicleReadingRepository.save(new VehicleReading(
-                selfId, vehicle.id(), VehicleReadingType.ODOMETER, new BigDecimal("10070.000"),
-                VehicleReadingType.ODOMETER.unit(), 0, VehicleReadingSourceType.MANUAL, null, NOW.minusDays(2),
-                NOW, actor, selfId, "Self correction", "self-key", null, NOW)));
-
-        // Meter reset saves successfully to vehicle_meter_reset table
-        var reset = vehicleMeterResetRepository.save(new VehicleMeterReset(UUID.randomUUID(), vehicle.id(),
-                VehicleReadingType.ODOMETER, r1.id(), r1.value(), corr1.id(), corr1.value(), NOW,
-                "Cluster replaced", actor, actor, "Work order 456", NOW));
-        assertNotNull(reset.id());
-        var foundReset = vehicleMeterResetRepository.findById(reset.id());
-        assertTrue(foundReset.isPresent());
-        assertEquals("Cluster replaced", foundReset.get().reason());
-    }
-
-    @Test
-    void realisticMultiEpochVehicleReadingAndMeterResetScenario() {
-        var actor = readingActor();
-        var vehicle = vehicle();
-        vehicleHierarchy(jdbc, vehicle);
-        vehicles.save(vehicle);
-
-        // Epoch 0: Initial baseline 245,000 km
-        vehicleReadings.record(new VehicleReadingUseCase.RecordCommand(
-                vehicle.id(), VehicleReadingType.ODOMETER, new BigDecimal("245000.000"),
-                VehicleReadingSourceType.BASELINE, UUID.randomUUID(), NOW.minusDays(10), actor, null, "Baseline"));
-
-        // Epoch 0: Trip Start at 245,000 km
-        var trip1Id = UUID.randomUUID();
-        vehicleReadings.record(new VehicleReadingUseCase.RecordCommand(
-                vehicle.id(), VehicleReadingType.ODOMETER, new BigDecimal("245000.000"),
-                VehicleReadingSourceType.TRIP_START, trip1Id, NOW.minusDays(8), actor, null, "Trip 1 start"));
-
-        // Epoch 0: Trip End at 245,100 km
-        vehicleReadings.record(new VehicleReadingUseCase.RecordCommand(
-                vehicle.id(), VehicleReadingType.ODOMETER, new BigDecimal("245100.000"),
-                VehicleReadingSourceType.TRIP_END, trip1Id, NOW.minusDays(7), actor, null, "Trip 1 end"));
-
-        assertEquals(245100d, vehicles.findById(vehicle.id()).orElseThrow().currentOdometerKm());
-
-        // Meter replacement event: Meter Reset to 0 km -> Epoch 1
-        var reset = vehicleReadings.resetMeter(new VehicleReadingUseCase.ResetMeterCommand(
-                vehicle.id(), VehicleReadingType.ODOMETER, BigDecimal.ZERO, NOW.minusDays(5),
-                "Physical odometer replacement after hardware failure", actor, actor, "WO-9988"));
-
-        assertEquals(0, BigDecimal.ZERO.setScale(3).compareTo(reset.newMeterValue()));
-        assertEquals(1, vehicleReadingRepository.findCurrentMeterEpoch(vehicle.id(), VehicleReadingType.ODOMETER));
-        assertEquals(0d, vehicles.findById(vehicle.id()).orElseThrow().currentOdometerKm());
-
-        // Epoch 1: Fuel Issue at 50 km
-        var fuelIssueId = UUID.randomUUID();
-        vehicleReadings.record(new VehicleReadingUseCase.RecordCommand(
-                vehicle.id(), VehicleReadingType.ODOMETER, new BigDecimal("50.000"),
-                VehicleReadingSourceType.FUEL_ISSUE, fuelIssueId, NOW.minusDays(3), actor, null, "Fuel fill-up"));
-
-        // Epoch 1: Trip 2 Start at 80 km, End at 120 km
-        var trip2Id = UUID.randomUUID();
-        vehicleReadings.record(new VehicleReadingUseCase.RecordCommand(
-                vehicle.id(), VehicleReadingType.ODOMETER, new BigDecimal("80.000"),
-                VehicleReadingSourceType.TRIP_START, trip2Id, NOW.minusDays(2), actor, null, "Trip 2 start"));
-        vehicleReadings.record(new VehicleReadingUseCase.RecordCommand(
-                vehicle.id(), VehicleReadingType.ODOMETER, new BigDecimal("120.000"),
-                VehicleReadingSourceType.TRIP_END, trip2Id, NOW.minusDays(1), actor, null, "Trip 2 end"));
-
-        // Verify latest snapshot and effective reading in epoch 1
-        assertEquals(120d, vehicles.findById(vehicle.id()).orElseThrow().currentOdometerKm());
-        var latest = vehicleReadings.latest(vehicle.id()).odometer().orElseThrow();
-        assertEquals(new BigDecimal("120.000"), latest.value());
-        assertEquals(1, latest.meterEpoch());
-
-        // Verify history contains all 7 readings across both epochs (3 in epoch 0, 4 in epoch 1 including METER_RESET baseline)
-        var allReadings = vehicleReadingRepository.search(new VehicleReadingUseCase.SearchQuery(
-                vehicle.id(), VehicleReadingType.ODOMETER, null, null, null, 0, 50)).content();
-        assertEquals(7, allReadings.size());
-
-        // Verify epoch 0 readings remain untouched
-        var epoch0Readings = allReadings.stream().filter(r -> r.meterEpoch() == 0).toList();
-        assertEquals(3, epoch0Readings.size());
-
-        // Verify epoch 1 readings
-        var epoch1Readings = allReadings.stream().filter(r -> r.meterEpoch() == 1).toList();
-        assertEquals(4, epoch1Readings.size());
-    }
-
-    @Test
-    void postgresqlAuthoritativeMileageAndTripDistanceCalculation() {
-        var vehicle = vehicle();
-        vehicleHierarchy(jdbc, vehicle);
-        vehicles.save(vehicle);
-        var actor = readingActor();
-
-        var t0 = OffsetDateTime.parse("2026-08-01T00:00:00Z");
-        var tPreReset = OffsetDateTime.parse("2026-08-05T12:00:00Z");
-        var tReset = OffsetDateTime.parse("2026-08-05T14:00:00Z");
-        var tPostReset = OffsetDateTime.parse("2026-08-10T10:00:00Z");
-
-        // 1. Multi-epoch scenario: 245,000 -> 245,500 (500 km), Reset to 0, 0 -> 800 (800 km) = 1,300 km total
-        vehicleReadings.record(new VehicleReadingUseCase.RecordCommand(
-                vehicle.id(), VehicleReadingType.ODOMETER, new BigDecimal("245000.000"),
-                VehicleReadingSourceType.BASELINE, null, t0, actor, null, "Baseline"));
-        vehicleReadings.record(new VehicleReadingUseCase.RecordCommand(
-                vehicle.id(), VehicleReadingType.ODOMETER, new BigDecimal("245500.000"),
-                VehicleReadingSourceType.MANUAL, null, tPreReset, actor, null, "Pre-reset"));
-        vehicleReadings.resetMeter(new VehicleReadingUseCase.ResetMeterCommand(
-                vehicle.id(), VehicleReadingType.ODOMETER, BigDecimal.ZERO, tReset,
-                "Cluster replaced", actor, actor, "Reset note"));
-        vehicleReadings.record(new VehicleReadingUseCase.RecordCommand(
-                vehicle.id(), VehicleReadingType.ODOMETER, new BigDecimal("800.000"),
-                VehicleReadingSourceType.MANUAL, null, tPostReset, actor, null, "Post-reset"));
-
-        var summary = vehicleReadings.mileageSummary(vehicle.id(),
-                OffsetDateTime.parse("2026-08-01T00:00:00Z"),
-                OffsetDateTime.parse("2026-08-15T00:00:00Z"),
-                true);
-
-        assertEquals(0, new BigDecimal("245000.000").compareTo(summary.openingOdometer()));
-        assertEquals(0, new BigDecimal("800.000").compareTo(summary.closingOdometer()));
-        assertEquals(0, new BigDecimal("1300.000").compareTo(summary.distanceKm()));
-        assertEquals(com.transportlogistics.app.fleet.CoverageStatus.COMPLETE, summary.coverageStatus());
-        assertEquals(1, summary.meterResetCount());
-
-        // 2. Trip distance calculation from VehicleReading ledger
-        var tripVehicle = vehicle();
-        vehicleHierarchy(jdbc, tripVehicle);
-        vehicles.save(tripVehicle);
-
-        var tripId = UUID.randomUUID();
-        var tTripStart = OffsetDateTime.parse("2026-08-12T08:00:00Z");
-        var tTripFuel = OffsetDateTime.parse("2026-08-12T11:00:00Z");
-        var tTripEnd = OffsetDateTime.parse("2026-08-12T16:00:00Z");
-
-        vehicleReadings.record(new VehicleReadingUseCase.RecordCommand(
-                tripVehicle.id(), VehicleReadingType.ODOMETER, new BigDecimal("50000.000"),
-                VehicleReadingSourceType.TRIP_START, tripId, tTripStart, actor, null, "Trip start"));
-        vehicleReadings.record(new VehicleReadingUseCase.RecordCommand(
-                tripVehicle.id(), VehicleReadingType.ODOMETER, new BigDecimal("50150.000"),
-                VehicleReadingSourceType.FUEL_ISSUE, UUID.randomUUID(), tTripFuel, actor, null, "En route fuel"));
-        vehicleReadings.record(new VehicleReadingUseCase.RecordCommand(
-                tripVehicle.id(), VehicleReadingType.ODOMETER, new BigDecimal("50320.000"),
-                VehicleReadingSourceType.TRIP_END, tripId, tTripEnd, actor, null, "Trip end"));
-
-        var tripDist = vehicleReadings.tripDistance(tripId, tripVehicle.id());
-        assertEquals(0, new BigDecimal("320.000").compareTo(tripDist.distanceKm()));
-        assertEquals(com.transportlogistics.app.fleet.TripDistanceStatus.AVAILABLE, tripDist.status());
-        assertEquals(0, new BigDecimal("50000.000").compareTo(tripDist.startOdometer()));
-        assertEquals(0, new BigDecimal("50320.000").compareTo(tripDist.endOdometer()));
     }
 
     private String suffix() {

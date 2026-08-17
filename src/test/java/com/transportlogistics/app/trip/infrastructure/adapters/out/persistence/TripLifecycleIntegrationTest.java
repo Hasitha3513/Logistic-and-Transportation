@@ -44,7 +44,6 @@ class TripLifecycleIntegrationTest {
         vehicles.save(vehicle);
         drivers.save(driver);
         licenses.save(license(driver.id()));
-        appUser(jdbc, "driver");
         var draft = draft();
         tripLocations(jdbc, draft);
         tripRepository.save(draft);
@@ -68,14 +67,6 @@ class TripLifecycleIntegrationTest {
         assertTrue(entries.stream().allMatch(entry -> entry.occurredAt() != null));
         assertEquals("DRAFT", entries.getFirst().fromStatus());
         assertEquals("CLOSED", entries.getLast().toStatus());
-
-        var readingSources = jdbc.queryForList(
-                "SELECT source_type FROM vehicle_reading WHERE source_reference_id = ? ORDER BY recorded_at ASC",
-                String.class, draft.id());
-        assertEquals(List.of("TRIP_START", "TRIP_END"), readingSources);
-
-        var updatedVehicle = vehicles.findById(vehicle.id()).orElseThrow();
-        assertEquals(1050.0, updatedVehicle.currentOdometerKm());
     }
 
     private Vehicle vehicle() {

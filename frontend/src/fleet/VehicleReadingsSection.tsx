@@ -1,25 +1,20 @@
 import {
-  BarChartOutlined,
-  CalendarOutlined,
-  CheckCircleOutlined,
   DashboardOutlined,
   EditOutlined,
   ExclamationCircleOutlined,
+  FieldTimeOutlined,
   HistoryOutlined,
-  InfoCircleOutlined,
   PlusOutlined,
   ReloadOutlined,
-  SwapOutlined,
+  WarningOutlined,
 } from '@ant-design/icons';
 import {
   Alert,
   App as AntApp,
-  Badge,
   Button,
   Card,
   Col,
-  Descriptions,
-  Flex,
+  DatePicker,
   Form,
   Input,
   InputNumber,
@@ -31,232 +26,121 @@ import {
   Table,
   Tabs,
   Tag,
-  Tooltip,
   Typography,
   type TableColumnsType,
 } from 'antd';
+import dayjs from 'dayjs';
 import { useState } from 'react';
 import { useAuth } from '../auth/AuthContext';
-import type {
-  CorrectionRequest,
-  CoverageStatus,
-  ManualReadingRequest,
-  MeterResetRequest,
-  MeterResetResponse,
-  VehicleReadingResponse,
-  VehicleReadingType,
-} from './types';
+import type { VehicleMeterReset, VehicleReading, VehicleReadingType } from './types';
 import {
-  useCorrectReading,
+  useCorrectVehicleReading,
   useLatestVehicleReadings,
   useRecordManualReading,
   useResetVehicleMeter,
   useVehicleMeterResets,
-  useVehicleMileageSummary,
+  useVehicleMileage,
   useVehicleReadings,
 } from './useVehicleReadings';
 
 interface VehicleReadingsSectionProps {
   vehicleId: string;
-  vehicleRegistration?: string;
 }
 
-const statusTag = (status: string) => {
-  switch (status) {
-    case 'ACTIVE':
-      return <Tag color="success">Active</Tag>;
-    case 'CORRECTED':
-      return <Tag color="default">Corrected</Tag>;
-    case 'CORRECTION':
-      return <Tag color="processing">Correction</Tag>;
-    default:
-      return <Tag>{status}</Tag>;
-  }
-};
-
-const sourceTag = (source: string) => {
-  switch (source) {
-    case 'MANUAL':
-      return <Tag color="blue">Manual</Tag>;
-    case 'TRIP_START':
-      return <Tag color="cyan">Trip Start</Tag>;
-    case 'TRIP_END':
-      return <Tag color="geekblue">Trip End</Tag>;
-    case 'FUEL_ISSUE':
-      return <Tag color="orange">Fuel Issue</Tag>;
-    case 'BASELINE':
-      return <Tag color="purple">Baseline</Tag>;
-    case 'METER_RESET':
-      return <Tag color="magenta">Meter Reset</Tag>;
-    default:
-      return <Tag>{source}</Tag>;
-  }
-};
-
-const coverageBadge = (status?: CoverageStatus) => {
-  switch (status) {
-    case 'COMPLETE':
-      return (
-        <Tag color="success" icon={<CheckCircleOutlined />}>
-          Complete Coverage
-        </Tag>
-      );
-    case 'PARTIAL':
-      return (
-        <Tag color="warning" icon={<ExclamationCircleOutlined />}>
-          Partial Coverage
-        </Tag>
-      );
-    case 'NO_DATA':
-      return (
-        <Tag color="default" icon={<InfoCircleOutlined />}>
-          No Data
-        </Tag>
-      );
-    default:
-      return null;
-  }
-};
-
-const formatDate = (iso: string | null | undefined) => {
-  if (!iso) return '—';
-  try {
-    return new Date(iso).toLocaleString();
-  } catch {
-    return iso;
-  }
-};
-
-export default function VehicleReadingsSection({ vehicleId, vehicleRegistration }: VehicleReadingsSectionProps) {
+export default function VehicleReadingsSection({ vehicleId }: VehicleReadingsSectionProps) {
   const { message } = AntApp.useApp();
   const { hasPermission } = useAuth();
 
-  const [typeFilter, setTypeFilter] = useState<VehicleReadingType | undefined>();
-  const [activeTab, setActiveTab] = useState<'readings' | 'mileage' | 'resets'>('readings');
+  const [readingTypeFilter, setReadingTypeFilter] = useState<VehicleReadingType | undefined>();
+  const [page, setPage] = useState(0);
+  const [recordModalOpen, setRecordModalOpen] = useState(false);
+  const [resetModalOpen, setResetModalOpen] = useState(false);
+  const [correctingReading, setCorrectingReading] = useState<VehicleReading | null>(null);
 
-  // Summary Date Range (defaults to last 30 days)
-  const defaultFrom = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10) + 'T00:00:00Z';
-  const defaultTo = new Date().toISOString().slice(0, 10) + 'T23:59:59Z';
-  const [summaryFrom, setSummaryFrom] = useState(defaultFrom);
-  const [summaryTo, setSummaryTo] = useState(defaultTo);
-
-  // Modals
-  const [isAddOpen, setIsAddOpen] = useState(false);
-  const [correctingReading, setCorrectingReading] = useState<VehicleReadingResponse | null>(null);
-  const [isResetOpen, setIsResetOpen] = useState(false);
-
-  // Forms
-  const [addForm] = Form.useForm();
-  const [correctForm] = Form.useForm();
+  const [recordForm] = Form.useForm();
   const [resetForm] = Form.useForm();
+  const [correctForm] = Form.useForm();
 
-  // Queries & Mutations
-  const readingsQuery = useVehicleReadings(vehicleId, typeFilter);
   const latestQuery = useLatestVehicleReadings(vehicleId);
+  const mileageQuery = useVehicleMileage(vehicleId);
+  const readingsQuery = useVehicleReadings(vehicleId, { readingType: readingTypeFilter, page, limit: 10 });
   const resetsQuery = useVehicleMeterResets(vehicleId);
-  const mileageSummaryQuery = useVehicleMileageSummary(vehicleId, summaryFrom, summaryTo, true);
 
-  const recordManual = useRecordManualReading(vehicleId);
-  const correctReading = useCorrectReading(vehicleId);
-  const resetMeter = useResetVehicleMeter(vehicleId);
+  const recordMutation = useRecordManualReading(vehicleId);
+  const correctMutation = useCorrectVehicleReading(vehicleId);
+  const resetMutation = useResetVehicleMeter(vehicleId);
 
-  // Permissions
-  const canView = hasPermission('VEHICLE_READING_VIEW');
   const canCreate = hasPermission('VEHICLE_READING_CREATE');
   const canCorrect = hasPermission('VEHICLE_READING_CORRECT');
   const canResetMeter = hasPermission('VEHICLE_READING_RESET_METER');
 
-  if (!canView) {
-    return null;
-  }
-
-  const onAddSubmit = async (values: {
-    readingType: VehicleReadingType;
-    value: number;
-    recordedAt: string;
-    notes?: string;
-  }) => {
+  const handleRecordSubmit = async () => {
     try {
-      const payload: ManualReadingRequest = {
+      const values = await recordForm.validateFields();
+      await recordMutation.mutateAsync({
         readingType: values.readingType,
         value: values.value,
-        recordedAt: new Date(values.recordedAt).toISOString(),
-        idempotencyKey: `MANUAL-${vehicleId}-${values.readingType}-${Date.now()}`,
+        recordedAt: values.recordedAt ? values.recordedAt.toISOString() : dayjs().toISOString(),
         notes: values.notes,
-      };
-      await recordManual.mutateAsync(payload);
-      void message.success('Manual reading recorded successfully');
-      setIsAddOpen(false);
-      addForm.resetFields();
+      });
+      void message.success('Vehicle reading recorded successfully');
+      setRecordModalOpen(false);
+      recordForm.resetFields();
     } catch (err: unknown) {
-      const errorMsg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? 'Failed to record manual reading';
-      void message.error(errorMsg);
+      if (err instanceof Error) {
+        void message.error(err.message);
+      }
     }
   };
 
-  const onCorrectSubmit = async (values: {
-    value: number;
-    reason: string;
-    notes?: string;
-  }) => {
+  const handleCorrectSubmit = async () => {
     if (!correctingReading) return;
     try {
-      const payload: CorrectionRequest = {
-        value: values.value,
-        reason: values.reason,
-        idempotencyKey: `CORR-${correctingReading.id}-${Date.now()}`,
-        notes: values.notes,
-      };
-      await correctReading.mutateAsync({ readingId: correctingReading.id, payload });
-      void message.success('Correction recorded successfully');
+      const values = await correctForm.validateFields();
+      await correctMutation.mutateAsync({
+        readingId: correctingReading.id,
+        payload: {
+          value: values.value,
+          reason: values.reason,
+          recordedAt: correctingReading.recordedAt,
+        },
+      });
+      void message.success('Vehicle reading corrected successfully');
       setCorrectingReading(null);
       correctForm.resetFields();
     } catch (err: unknown) {
-      const errorMsg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? 'Failed to record correction';
-      void message.error(errorMsg);
+      if (err instanceof Error) {
+        void message.error(err.message);
+      }
     }
   };
 
-  const onResetSubmit = async (values: {
-    readingType: VehicleReadingType;
-    newMeterValue: number;
-    effectiveAt: string;
-    reason: string;
-    notes?: string;
-  }) => {
+  const handleResetSubmit = async () => {
     try {
-      const payload: MeterResetRequest = {
+      const values = await resetForm.validateFields();
+      await resetMutation.mutateAsync({
         readingType: values.readingType,
         newMeterValue: values.newMeterValue,
-        effectiveAt: new Date(values.effectiveAt).toISOString(),
+        effectiveAt: values.effectiveAt ? values.effectiveAt.toISOString() : dayjs().toISOString(),
         reason: values.reason,
-        notes: values.notes,
-      };
-      await resetMeter.mutateAsync(payload);
-      void message.success('Meter replacement event recorded successfully. New meter epoch initiated.');
-      setIsResetOpen(false);
+      });
+      void message.success('Physical meter reset recorded');
+      setResetModalOpen(false);
       resetForm.resetFields();
     } catch (err: unknown) {
-      const errorMsg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? 'Failed to record meter replacement';
-      void message.error(errorMsg);
+      if (err instanceof Error) {
+        void message.error(err.message);
+      }
     }
   };
 
-  const readingColumns: TableColumnsType<VehicleReadingResponse> = [
-    {
-      title: 'Recorded At',
-      dataIndex: 'recordedAt',
-      key: 'recordedAt',
-      width: 170,
-      render: (val: string) => formatDate(val),
-    },
+  const readingColumns: TableColumnsType<VehicleReading> = [
     {
       title: 'Type',
       dataIndex: 'readingType',
       key: 'readingType',
-      width: 120,
       render: (type: VehicleReadingType) => (
-        <Tag color={type === 'ODOMETER' ? 'cyan' : 'gold'}>
+        <Tag color={type === 'ODOMETER' ? 'blue' : 'purple'}>
           {type === 'ODOMETER' ? 'Odometer' : 'Engine Hours'}
         </Tag>
       ),
@@ -265,510 +149,291 @@ export default function VehicleReadingsSection({ vehicleId, vehicleRegistration 
       title: 'Value',
       dataIndex: 'value',
       key: 'value',
-      width: 130,
-      render: (val: number, record) => (
-        <Typography.Text strong delete={record.status === 'CORRECTED'}>
-          {Number(val).toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 3 })}{' '}
-          <Typography.Text type="secondary" style={{ fontSize: 11 }}>
-            {record.unit === 'KILOMETER' ? 'km' : 'hrs'}
-          </Typography.Text>
-        </Typography.Text>
+      render: (value: number, record) => (
+        <Space>
+          <Typography.Text strong>{value.toFixed(1)}</Typography.Text>
+          <Typography.Text type="secondary">{record.unit}</Typography.Text>
+          {record.correctionOfReadingId && <Tag color="warning">CORRECTED</Tag>}
+        </Space>
       ),
-    },
-    {
-      title: 'Epoch',
-      dataIndex: 'meterEpoch',
-      key: 'meterEpoch',
-      width: 80,
-      render: (epoch: number) => <Tag>v{epoch}</Tag>,
     },
     {
       title: 'Source',
       dataIndex: 'sourceType',
       key: 'sourceType',
-      width: 120,
-      render: (src: string) => sourceTag(src),
+      render: (source: string) => <Tag>{source.replace('_', ' ')}</Tag>,
     },
     {
-      title: 'Status',
-      dataIndex: 'status',
-      key: 'status',
-      width: 110,
-      render: (status: string) => statusTag(status),
+      title: 'Epoch',
+      dataIndex: 'meterEpoch',
+      key: 'meterEpoch',
+      render: (epoch: number) => <Tag color="cyan">E{epoch}</Tag>,
     },
     {
-      title: 'Notes / Reason',
-      key: 'notes',
-      ellipsis: true,
+      title: 'Recorded At',
+      dataIndex: 'recordedAt',
+      key: 'recordedAt',
+      render: (val: string) => (val ? dayjs(val).format('YYYY-MM-DD HH:mm') : 'â€”'),
+    },
+    {
+      title: 'Actions',
+      key: 'actions',
       render: (_, record) => (
-        <Space direction="vertical" size={0}>
-          {record.correctionReason && (
-            <Typography.Text type="danger" style={{ fontSize: 12 }}>
-              Reason: {record.correctionReason}
-            </Typography.Text>
-          )}
-          {record.notes && (
-            <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-              {record.notes}
-            </Typography.Text>
+        <Space>
+          {canCorrect && !record.correctionOfReadingId && (
+            <Button
+              type="link"
+              size="small"
+              icon={<EditOutlined />}
+              onClick={() => {
+                setCorrectingReading(record);
+                correctForm.setFieldsValue({ value: record.value });
+              }}
+            >
+              Correct
+            </Button>
           )}
         </Space>
       ),
     },
-    {
-      title: 'Action',
-      key: 'action',
-      width: 100,
-      render: (_, record) => {
-        if (record.status === 'ACTIVE' && canCorrect) {
-          return (
-            <Tooltip title="Submit corrected value for this reading">
-              <Button
-                size="small"
-                type="link"
-                icon={<EditOutlined />}
-                onClick={() => {
-                  setCorrectingReading(record);
-                  correctForm.setFieldsValue({
-                    value: record.value,
-                    reason: '',
-                    notes: '',
-                  });
-                }}
-              >
-                Correct
-              </Button>
-            </Tooltip>
-          );
-        }
-        return null;
-      },
-    },
   ];
 
-  const resetColumns: TableColumnsType<MeterResetResponse> = [
-    {
-      title: 'Effective At',
-      dataIndex: 'effectiveAt',
-      key: 'effectiveAt',
-      width: 170,
-      render: (val: string) => formatDate(val),
-    },
+  const resetColumns: TableColumnsType<VehicleMeterReset> = [
     {
       title: 'Type',
       dataIndex: 'readingType',
       key: 'readingType',
-      width: 120,
-      render: (type: VehicleReadingType) => (
-        <Tag color={type === 'ODOMETER' ? 'cyan' : 'gold'}>
-          {type === 'ODOMETER' ? 'Odometer' : 'Engine Hours'}
-        </Tag>
-      ),
+      render: (type: string) => <Tag color="blue">{type}</Tag>,
     },
     {
-      title: 'Previous Value',
-      dataIndex: 'previousMeterValue',
-      key: 'previousMeterValue',
-      width: 130,
-      render: (val: number, record) => (
-        <Typography.Text>
-          {Number(val).toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 3 })}{' '}
-          {record.readingType === 'ODOMETER' ? 'km' : 'hrs'}
-        </Typography.Text>
-      ),
+      title: 'Epoch Transition',
+      key: 'transition',
+      render: (_, record) => `E${record.fromEpoch} â†’ E${record.toEpoch}`,
     },
     {
-      title: 'New Initial Value',
+      title: 'Last Reading',
+      dataIndex: 'lastReadingValue',
+      key: 'lastReadingValue',
+      render: (val: number) => val.toFixed(1),
+    },
+    {
+      title: 'New Baseline',
       dataIndex: 'newMeterValue',
       key: 'newMeterValue',
-      width: 130,
-      render: (val: number, record) => (
-        <Typography.Text strong type="success">
-          {Number(val).toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 3 })}{' '}
-          {record.readingType === 'ODOMETER' ? 'km' : 'hrs'}
-        </Typography.Text>
-      ),
+      render: (val: number) => val.toFixed(1),
+    },
+    {
+      title: 'Effective At',
+      dataIndex: 'effectiveAt',
+      key: 'effectiveAt',
+      render: (val: string) => (val ? dayjs(val).format('YYYY-MM-DD HH:mm') : 'â€”'),
     },
     {
       title: 'Reason',
       dataIndex: 'reason',
       key: 'reason',
-      ellipsis: true,
-    },
-    {
-      title: 'Notes',
-      dataIndex: 'notes',
-      key: 'notes',
-      ellipsis: true,
-      render: (val: string | null) => val || '—',
     },
   ];
 
-  const latestOdo = latestQuery.data?.odometer;
-  const latestEngine = latestQuery.data?.engineHours;
-  const summary = mileageSummaryQuery.data;
-
-  const toLocalIsoDefault = () => {
-    const d = new Date();
-    d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
-    return d.toISOString().slice(0, 16);
-  };
+  const mileage = mileageQuery.data;
+  const latest = latestQuery.data;
 
   return (
     <Card
-      size="small"
       title={
         <Space>
           <DashboardOutlined />
-          <span>Vehicle Readings, Mileage &amp; Utilization</span>
+          <span>Vehicle Mileage & Readings</span>
         </Space>
       }
       extra={
-        <Space wrap>
+        <Space>
           {canCreate && (
             <Button
-              size="small"
               type="primary"
+              size="small"
               icon={<PlusOutlined />}
               onClick={() => {
-                addForm.setFieldsValue({
+                recordForm.setFieldsValue({
                   readingType: 'ODOMETER',
-                  recordedAt: toLocalIsoDefault(),
+                  recordedAt: dayjs(),
                 });
-                setIsAddOpen(true);
+                setRecordModalOpen(true);
               }}
             >
-              Add Reading
+              Record Reading
             </Button>
           )}
           {canResetMeter && (
             <Button
               size="small"
-              icon={<SwapOutlined />}
+              icon={<HistoryOutlined />}
               onClick={() => {
                 resetForm.setFieldsValue({
                   readingType: 'ODOMETER',
                   newMeterValue: 0,
-                  effectiveAt: toLocalIsoDefault(),
+                  effectiveAt: dayjs(),
                 });
-                setIsResetOpen(true);
+                setResetModalOpen(true);
               }}
             >
-              Record Meter Replacement
+              Reset Meter
             </Button>
           )}
           <Button
             size="small"
             icon={<ReloadOutlined />}
-            loading={readingsQuery.isFetching || latestQuery.isFetching || mileageSummaryQuery.isFetching}
             onClick={() => {
-              void readingsQuery.refetch();
               void latestQuery.refetch();
+              void mileageQuery.refetch();
+              void readingsQuery.refetch();
               void resetsQuery.refetch();
-              void mileageSummaryQuery.refetch();
             }}
           />
         </Space>
       }
-      style={{ marginTop: 16 }}
     >
-      {/* Metrics Banner */}
       <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
-        <Col xs={24} sm={12}>
-          <Card size="small" bordered style={{ background: '#fafafa' }}>
+        <Col span={12}>
+          <Card size="small">
             <Statistic
-              title="Authoritative Odometer"
-              value={latestOdo ? Number(latestOdo.value) : '—'}
+              title="Current Odometer"
+              value={latest?.odometer ? latest.odometer.value : 'â€”'}
               precision={1}
-              suffix={
-                latestOdo && (
-                  <Space size={4}>
-                    <Typography.Text type="secondary" style={{ fontSize: 13 }}>
-                      km
-                    </Typography.Text>
-                    <Tag style={{ marginLeft: 6 }}>Epoch v{latestOdo.meterEpoch}</Tag>
-                  </Space>
-                )
-              }
+              suffix="km"
+              prefix={<DashboardOutlined />}
             />
-            {latestOdo && (
+            {latest?.odometer && (
               <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-                Last updated: {formatDate(latestOdo.recordedAt)} ({latestOdo.sourceType})
+                Epoch {latest.odometer.meterEpoch} â€¢ {dayjs(latest.odometer.recordedAt).format('YYYY-MM-DD HH:mm')}
               </Typography.Text>
             )}
           </Card>
         </Col>
-        <Col xs={24} sm={12}>
-          <Card size="small" bordered style={{ background: '#fafafa' }}>
+        <Col span={12}>
+          <Card size="small">
             <Statistic
-              title="Authoritative Engine Hours"
-              value={latestEngine ? Number(latestEngine.value) : '—'}
+              title="Current Engine Hours"
+              value={latest?.engineHours ? latest.engineHours.value : 'â€”'}
               precision={1}
-              suffix={
-                latestEngine && (
-                  <Space size={4}>
-                    <Typography.Text type="secondary" style={{ fontSize: 13 }}>
-                      hrs
-                    </Typography.Text>
-                    <Tag style={{ marginLeft: 6 }}>Epoch v{latestEngine.meterEpoch}</Tag>
-                  </Space>
-                )
-              }
+              suffix="hrs"
+              prefix={<FieldTimeOutlined />}
             />
-            {latestEngine && (
+            {latest?.engineHours && (
               <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-                Last updated: {formatDate(latestEngine.recordedAt)} ({latestEngine.sourceType})
+                Epoch {latest.engineHours.meterEpoch} â€¢ {dayjs(latest.engineHours.recordedAt).format('YYYY-MM-DD HH:mm')}
               </Typography.Text>
             )}
           </Card>
         </Col>
       </Row>
 
-      {/* Tabs: Readings Ledger vs Mileage Summary vs Meter Resets */}
+      {mileage && (
+        <Card size="small" style={{ marginBottom: 16 }}>
+          <Row gutter={[16, 8]}>
+            <Col span={6}>
+              <Statistic title="Total Distance" value={mileage.distanceTravelledKm ?? 0} precision={1} suffix="km" />
+            </Col>
+            <Col span={6}>
+              <Statistic title="Hours Used" value={mileage.engineHoursUsed ?? 0} precision={1} suffix="hrs" />
+            </Col>
+            <Col span={6}>
+              <Statistic title="Meter Resets" value={mileage.meterResetCount} />
+            </Col>
+            <Col span={6}>
+              <Typography.Text type="secondary" style={{ display: 'block', marginBottom: 4 }}>
+                Status
+              </Typography.Text>
+              <Space>
+                <Tag color={mileage.coverageStatus === 'COMPLETE' ? 'success' : 'warning'}>
+                  {mileage.coverageStatus}
+                </Tag>
+                {mileage.abnormalDetected && (
+                  <Tag color="error" icon={<WarningOutlined />}>
+                    ABNORMAL JUMP
+                  </Tag>
+                )}
+              </Space>
+            </Col>
+          </Row>
+          {mileage.abnormalDetected && (
+            <Alert
+              style={{ marginTop: 8 }}
+              type="error"
+              showIcon
+              icon={<ExclamationCircleOutlined />}
+              message="Potential Meter Tampering or Abnormal Reading Detected"
+              description="A sudden anomalous distance jump or speed spike was detected between consecutive readings."
+            />
+          )}
+        </Card>
+      )}
+
       <Tabs
-        activeKey={activeTab}
-        onChange={(k) => setActiveTab(k as 'readings' | 'mileage' | 'resets')}
+        defaultActiveKey="readings"
         items={[
           {
             key: 'readings',
-            label: (
-              <Space>
-                <HistoryOutlined />
-                <span>Readings Ledger ({readingsQuery.data?.totalElements ?? 0})</span>
-              </Space>
-            ),
+            label: 'Reading History',
             children: (
-              <Flex vertical gap={12}>
-                <Flex justify="space-between" align="center" wrap gap={8}>
-                  <Space>
-                    <Typography.Text type="secondary">Filter by type:</Typography.Text>
-                    <Select
-                      size="small"
-                      allowClear
-                      placeholder="All Types"
-                      style={{ width: 140 }}
-                      value={typeFilter}
-                      onChange={(v) => setTypeFilter(v)}
-                      options={[
-                        { value: 'ODOMETER', label: 'Odometer' },
-                        { value: 'ENGINE_HOURS', label: 'Engine Hours' },
-                      ]}
-                    />
-                  </Space>
-                  <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-                    Append-only ledger with chronology &amp; epoch enforcement
-                  </Typography.Text>
-                </Flex>
-
-                {readingsQuery.isError && (
-                  <Alert type="error" showIcon message="Vehicle readings could not be loaded" />
-                )}
-
-                <Table<VehicleReadingResponse>
+              <div>
+                <Space style={{ marginBottom: 12 }}>
+                  <Select
+                    placeholder="All reading types"
+                    allowClear
+                    style={{ width: 160 }}
+                    value={readingTypeFilter}
+                    onChange={setReadingTypeFilter}
+                    options={[
+                      { value: 'ODOMETER', label: 'Odometer' },
+                      { value: 'ENGINE_HOURS', label: 'Engine Hours' },
+                    ]}
+                  />
+                </Space>
+                <Table<VehicleReading>
                   rowKey="id"
                   size="small"
                   columns={readingColumns}
                   dataSource={readingsQuery.data?.content ?? []}
                   loading={readingsQuery.isLoading}
                   pagination={{
+                    current: page + 1,
                     pageSize: 10,
-                    showSizeChanger: true,
-                    showTotal: (total) => `${total} readings`,
+                    total: readingsQuery.data?.totalElements ?? 0,
+                    onChange: (p) => setPage(p - 1),
                   }}
-                  scroll={{ x: 750 }}
-                  locale={{ emptyText: 'No readings recorded for this vehicle' }}
                 />
-              </Flex>
-            ),
-          },
-          {
-            key: 'mileage',
-            label: (
-              <Space>
-                <BarChartOutlined />
-                <span>Period Mileage &amp; Utilization</span>
-              </Space>
-            ),
-            children: (
-              <Flex vertical gap={16}>
-                {/* Date Controls */}
-                <Card size="small" style={{ background: '#fafafa' }}>
-                  <Flex justify="space-between" align="center" wrap gap={12}>
-                    <Space wrap align="center">
-                      <CalendarOutlined />
-                      <Typography.Text strong>Period:</Typography.Text>
-                      <Input
-                        type="date"
-                        size="small"
-                        style={{ width: 140 }}
-                        value={summaryFrom.slice(0, 10)}
-                        onChange={(e) => setSummaryFrom(e.target.value ? `${e.target.value}T00:00:00Z` : defaultFrom)}
-                      />
-                      <span>to</span>
-                      <Input
-                        type="date"
-                        size="small"
-                        style={{ width: 140 }}
-                        value={summaryTo.slice(0, 10)}
-                        onChange={(e) => setSummaryTo(e.target.value ? `${e.target.value}T23:59:59Z` : defaultTo)}
-                      />
-                      <Button
-                        size="small"
-                        onClick={() => {
-                          setSummaryFrom(defaultFrom);
-                          setSummaryTo(defaultTo);
-                        }}
-                      >
-                        Reset (30d)
-                      </Button>
-                    </Space>
-                    <Space>
-                      {coverageBadge(summary?.coverageStatus)}
-                    </Space>
-                  </Flex>
-                </Card>
-
-                {/* Coverage Warning if PARTIAL */}
-                {summary?.coverageStatus === 'PARTIAL' && (
-                  <Alert
-                    type="warning"
-                    showIcon
-                    message="Partial Period Coverage"
-                    description={summary.coverageReason || 'Readings do not span the complete requested start and end dates. Distance is computed across available readings within the period.'}
-                  />
-                )}
-
-                {/* Period Metric Cards */}
-                <Row gutter={[16, 16]}>
-                  <Col xs={24} sm={12} md={6}>
-                    <Card size="small" bordered>
-                      <Statistic
-                        title="Distance Traveled"
-                        value={summary ? Number(summary.distanceKm) : 0}
-                        precision={1}
-                        suffix="km"
-                        valueStyle={{ color: '#1677ff' }}
-                      />
-                      <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-                        Open: {summary?.openingOdometer != null ? `${Number(summary.openingOdometer).toLocaleString()} km` : '—'} | Close: {summary?.closingOdometer != null ? `${Number(summary.closingOdometer).toLocaleString()} km` : '—'}
-                      </Typography.Text>
-                    </Card>
-                  </Col>
-                  <Col xs={24} sm={12} md={6}>
-                    <Card size="small" bordered>
-                      <Statistic
-                        title="Engine Hours Used"
-                        value={summary ? Number(summary.engineHoursUsed) : 0}
-                        precision={1}
-                        suffix="hrs"
-                        valueStyle={{ color: '#52c41a' }}
-                      />
-                      <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-                        Open: {summary?.openingEngineHours != null ? `${Number(summary.openingEngineHours).toLocaleString()} hrs` : '—'} | Close: {summary?.closingEngineHours != null ? `${Number(summary.closingEngineHours).toLocaleString()} hrs` : '—'}
-                      </Typography.Text>
-                    </Card>
-                  </Col>
-                  <Col xs={24} sm={12} md={6}>
-                    <Card size="small" bordered>
-                      <Statistic
-                        title="Readings in Period"
-                        value={summary?.readingCount ?? 0}
-                        suffix={
-                          summary && summary.correctionCount > 0 ? (
-                            <Typography.Text type="warning" style={{ fontSize: 13, marginLeft: 4 }}>
-                              ({summary.correctionCount} corr.)
-                            </Typography.Text>
-                          ) : null
-                        }
-                      />
-                      <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-                        Authoritative ledger points
-                      </Typography.Text>
-                    </Card>
-                  </Col>
-                  <Col xs={24} sm={12} md={6}>
-                    <Card size="small" bordered>
-                      <Statistic
-                        title="Meter Resets"
-                        value={summary?.meterResetCount ?? 0}
-                        valueStyle={{ color: summary?.meterResetCount ? '#eb2f96' : undefined }}
-                      />
-                      <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-                        Physical replacements
-                      </Typography.Text>
-                    </Card>
-                  </Col>
-                </Row>
-
-                {/* Source Breakdown */}
-                {summary?.sourceCounts && Object.keys(summary.sourceCounts).length > 0 && (
-                  <Card size="small" title="Reading Sources Breakdown" bordered>
-                    <Space wrap size={[8, 8]}>
-                      {Object.entries(summary.sourceCounts).map(([source, count]) => (
-                        <Badge
-                          key={source}
-                          count={count}
-                          overflowCount={999}
-                          style={{ backgroundColor: '#108ee9' }}
-                        >
-                          {sourceTag(source)}
-                        </Badge>
-                      ))}
-                    </Space>
-                  </Card>
-                )}
-              </Flex>
+              </div>
             ),
           },
           {
             key: 'resets',
-            label: (
-              <Space>
-                <SwapOutlined />
-                <span>Meter Reset History ({resetsQuery.data?.length ?? 0})</span>
-              </Space>
-            ),
+            label: 'Meter Resets',
             children: (
-              <Flex vertical gap={12}>
-                <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-                  Physical meter replacement events that incremented meter epochs.
-                </Typography.Text>
-                {resetsQuery.isError && (
-                  <Alert type="error" showIcon message="Meter reset history could not be loaded" />
-                )}
-                <Table<MeterResetResponse>
-                  rowKey="id"
-                  size="small"
-                  columns={resetColumns}
-                  dataSource={resetsQuery.data ?? []}
-                  loading={resetsQuery.isLoading}
-                  pagination={{ pageSize: 5 }}
-                  locale={{ emptyText: 'No meter replacements recorded for this vehicle' }}
-                />
-              </Flex>
+              <Table<VehicleMeterReset>
+                rowKey="id"
+                size="small"
+                columns={resetColumns}
+                dataSource={resetsQuery.data ?? []}
+                loading={resetsQuery.isLoading}
+                pagination={{ pageSize: 5 }}
+              />
             ),
           },
         ]}
       />
 
-      {/* Add Manual Reading Modal */}
+      {/* Record Reading Modal */}
       <Modal
-        title={`Record Manual Reading - ${vehicleRegistration || 'Vehicle'}`}
-        open={isAddOpen}
-        onCancel={() => {
-          setIsAddOpen(false);
-          addForm.resetFields();
-        }}
-        onOk={() => addForm.submit()}
-        confirmLoading={recordManual.isPending}
-        destroyOnClose
+        title="Record Vehicle Reading"
+        open={recordModalOpen}
+        onOk={handleRecordSubmit}
+        onCancel={() => setRecordModalOpen(false)}
+        confirmLoading={recordMutation.isPending}
+        destroyOnHidden
       >
-        <Form form={addForm} layout="vertical" onFinish={onAddSubmit}>
-          <Form.Item
-            name="readingType"
-            label="Reading Type"
-            rules={[{ required: true, message: 'Please select reading type' }]}
-          >
+        <Form form={recordForm} layout="vertical">
+          <Form.Item name="readingType" label="Reading Type" rules={[{ required: true }]}>
             <Select
               options={[
                 { value: 'ODOMETER', label: 'Odometer (km)' },
@@ -776,187 +441,99 @@ export default function VehicleReadingsSection({ vehicleId, vehicleRegistration 
               ]}
             />
           </Form.Item>
-
           <Form.Item
             name="value"
             label="Reading Value"
-            rules={[
-              { required: true, message: 'Please input reading value' },
-              { type: 'number', min: 0, message: 'Value must be non-negative' },
-            ]}
+            rules={[{ required: true, message: 'Value is required' }, { type: 'number', min: 0 }]}
           >
-            <InputNumber style={{ width: '100%' }} precision={3} placeholder="e.g. 10250.5" />
+            <InputNumber style={{ width: '100%' }} precision={3} step={1} min={0} />
           </Form.Item>
-
-          <Form.Item
-            name="recordedAt"
-            label="Recorded Time"
-            rules={[{ required: true, message: 'Please select recorded time' }]}
-          >
-            <Input type="datetime-local" />
+          <Form.Item name="recordedAt" label="Recorded Time" rules={[{ required: true }]}>
+            <DatePicker showTime style={{ width: '100%' }} />
           </Form.Item>
-
-          <Form.Item name="notes" label="Notes (Optional)">
-            <Input.TextArea rows={2} placeholder="Optional operational notes" maxLength={500} />
+          <Form.Item name="notes" label="Notes">
+            <Input.TextArea rows={2} placeholder="Optional operational remarks" />
           </Form.Item>
         </Form>
       </Modal>
 
       {/* Correct Reading Modal */}
       <Modal
-        title={
-          <Space>
-            <EditOutlined />
-            <span>Correct Reading #{correctingReading?.id?.substring(0, 8)}</span>
-          </Space>
-        }
+        title="Correct Vehicle Reading"
         open={Boolean(correctingReading)}
-        onCancel={() => {
-          setCorrectingReading(null);
-          correctForm.resetFields();
-        }}
-        onOk={() => correctForm.submit()}
-        confirmLoading={correctReading.isPending}
-        destroyOnClose
+        onOk={handleCorrectSubmit}
+        onCancel={() => setCorrectingReading(null)}
+        confirmLoading={correctMutation.isPending}
+        destroyOnHidden
       >
-        {correctingReading && (
-          <Flex vertical gap={12}>
-            <Alert
-              type="info"
-              showIcon
-              message="Correction Behavior"
-              description="This reading is immutable. Saving a correction will mark the original reading as CORRECTED and append a new CORRECTION reading in the same meter epoch and recorded timestamp."
-            />
-
-            <Descriptions size="small" bordered column={1}>
-              <Descriptions.Item label="Reading Type">
-                {correctingReading.readingType === 'ODOMETER' ? 'Odometer' : 'Engine Hours'}
-              </Descriptions.Item>
-              <Descriptions.Item label="Current Value">
-                <Typography.Text delete>
-                  {Number(correctingReading.value).toLocaleString()}{' '}
-                  {correctingReading.unit === 'KILOMETER' ? 'km' : 'hrs'}
-                </Typography.Text>
-              </Descriptions.Item>
-              <Descriptions.Item label="Epoch">
-                v{correctingReading.meterEpoch}
-              </Descriptions.Item>
-              <Descriptions.Item label="Recorded At">
-                {formatDate(correctingReading.recordedAt)}
-              </Descriptions.Item>
-              <Descriptions.Item label="Source">
-                {sourceTag(correctingReading.sourceType)}
-              </Descriptions.Item>
-            </Descriptions>
-
-            <Form form={correctForm} layout="vertical" onFinish={onCorrectSubmit}>
-              <Form.Item
-                name="value"
-                label="Correct Value"
-                rules={[
-                  { required: true, message: 'Please input correct reading value' },
-                  { type: 'number', min: 0, message: 'Value must be non-negative' },
-                ]}
-              >
-                <InputNumber style={{ width: '100%' }} precision={3} placeholder="e.g. 10250.0" />
-              </Form.Item>
-
-              <Form.Item
-                name="reason"
-                label="Correction Reason"
-                rules={[{ required: true, message: 'Please explain why this reading is being corrected' }]}
-              >
-                <Input.TextArea
-                  rows={3}
-                  placeholder="Mandatory audit explanation (e.g. Typo in manual entry, meter slip inverted)"
-                  maxLength={500}
-                />
-              </Form.Item>
-
-              <Form.Item name="notes" label="Additional Notes (Optional)">
-                <Input.TextArea rows={2} placeholder="Optional operational context" maxLength={500} />
-              </Form.Item>
-            </Form>
-          </Flex>
-        )}
+        <Alert
+          type="info"
+          showIcon
+          message="Auditable Correction"
+          description="The original reading remains permanently preserved in the immutable audit ledger. This correction creates a linked superseding entry."
+          style={{ marginBottom: 16 }}
+        />
+        <Form form={correctForm} layout="vertical">
+          <Form.Item
+            name="value"
+            label="Corrected Value"
+            rules={[{ required: true, message: 'Corrected value is required' }, { type: 'number', min: 0 }]}
+          >
+            <InputNumber style={{ width: '100%' }} precision={3} step={1} min={0} />
+          </Form.Item>
+          <Form.Item
+            name="reason"
+            label="Reason for Correction"
+            rules={[{ required: true, message: 'Correction reason is required' }]}
+          >
+            <Input.TextArea rows={3} placeholder="Explain why this correction is necessary (e.g. driver typo)" />
+          </Form.Item>
+        </Form>
       </Modal>
 
-      {/* Meter Reset / Replacement Modal */}
+      {/* Reset Meter Modal */}
       <Modal
-        title={
-          <Space>
-            <SwapOutlined />
-            <span>Record Meter Replacement - {vehicleRegistration || 'Vehicle'}</span>
-          </Space>
-        }
-        open={isResetOpen}
-        onCancel={() => {
-          setIsResetOpen(false);
-          resetForm.resetFields();
-        }}
-        onOk={() => resetForm.submit()}
-        confirmLoading={resetMeter.isPending}
-        destroyOnClose
+        title="Record Physical Meter Reset / Replacement"
+        open={resetModalOpen}
+        onOk={handleResetSubmit}
+        onCancel={() => setResetModalOpen(false)}
+        confirmLoading={resetMutation.isPending}
+        destroyOnHidden
       >
-        <Flex vertical gap={12}>
-          <Alert
-            type="warning"
-            showIcon
-            message="Meter Replacement Policy"
-            description="Recording a physical meter reset will increment the vehicle meter epoch (e.g. v0 -> v1). All future readings must advance monotonically from this new initial value."
-          />
-
-          <Form form={resetForm} layout="vertical" onFinish={onResetSubmit}>
-            <Form.Item
-              name="readingType"
-              label="Reading Type"
-              rules={[{ required: true, message: 'Please select reading type' }]}
-            >
-              <Select
-                options={[
-                  { value: 'ODOMETER', label: 'Odometer (km)' },
-                  { value: 'ENGINE_HOURS', label: 'Engine Hours (hrs)' },
-                ]}
-              />
-            </Form.Item>
-
-            <Form.Item
-              name="newMeterValue"
-              label="New Physical Meter Starting Value"
-              rules={[
-                { required: true, message: 'Please input starting value of new meter' },
-                { type: 'number', min: 0, message: 'Value must be non-negative' },
+        <Alert
+          type="warning"
+          showIcon
+          message="Meter Replacement / Reset"
+          description="Advancing the meter epoch allows lower values on new meters while preserving total historical mileage continuity across epoch transitions."
+          style={{ marginBottom: 16 }}
+        />
+        <Form form={resetForm} layout="vertical">
+          <Form.Item name="readingType" label="Reading Type" rules={[{ required: true }]}>
+            <Select
+              options={[
+                { value: 'ODOMETER', label: 'Odometer (km)' },
+                { value: 'ENGINE_HOURS', label: 'Engine Hours (hrs)' },
               ]}
-              extra="Typically 0.000 for brand new hardware or current value if pre-calibrated"
-            >
-              <InputNumber style={{ width: '100%' }} precision={3} placeholder="0.000" />
-            </Form.Item>
-
-            <Form.Item
-              name="effectiveAt"
-              label="Replacement Effective Time"
-              rules={[{ required: true, message: 'Please select replacement timestamp' }]}
-            >
-              <Input type="datetime-local" />
-            </Form.Item>
-
-            <Form.Item
-              name="reason"
-              label="Replacement Reason"
-              rules={[{ required: true, message: 'Please provide reason for meter replacement' }]}
-            >
-              <Input.TextArea
-                rows={3}
-                placeholder="e.g. Cluster replaced after hardware failure under warranty"
-                maxLength={500}
-              />
-            </Form.Item>
-
-            <Form.Item name="notes" label="Work Order / Notes (Optional)">
-              <Input.TextArea rows={2} placeholder="Optional work order or technician reference" maxLength={500} />
-            </Form.Item>
-          </Form>
-        </Flex>
+            />
+          </Form.Item>
+          <Form.Item
+            name="newMeterValue"
+            label="New Meter Starting Value"
+            rules={[{ required: true, message: 'New meter value is required' }, { type: 'number', min: 0 }]}
+          >
+            <InputNumber style={{ width: '100%' }} precision={3} step={1} min={0} />
+          </Form.Item>
+          <Form.Item name="effectiveAt" label="Effective Time" rules={[{ required: true }]}>
+            <DatePicker showTime style={{ width: '100%' }} />
+          </Form.Item>
+          <Form.Item
+            name="reason"
+            label="Reason for Reset"
+            rules={[{ required: true, message: 'Reset reason is required' }]}
+          >
+            <Input.TextArea rows={3} placeholder="e.g. Physical odometer gauge replaced under maintenance" />
+          </Form.Item>
+        </Form>
       </Modal>
     </Card>
   );

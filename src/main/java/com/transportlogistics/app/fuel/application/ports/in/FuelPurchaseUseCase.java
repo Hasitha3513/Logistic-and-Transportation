@@ -13,25 +13,15 @@ import java.util.UUID;
 
 public interface FuelPurchaseUseCase {
     FuelPurchase create(Command command, String actor);
-
     FuelPurchase update(UUID id, Command command, String actor);
-
     FuelPurchase submit(UUID id, String actor);
-
     FuelPurchase approve(UUID id, String comment, String actor);
-
     FuelPurchase receive(UUID id, ReceiptCommand command, String actor);
-
     FuelPurchase reconcile(UUID id, ReconciliationCommand command, String actor);
-
     FuelPurchase cancel(UUID id, String reason, String actor);
-
     FuelPurchase get(UUID id);
-
     PageResult<FuelPurchase> search(SearchQuery query);
-
     List<FuelPurchaseHistory> history(UUID id);
-
     VendorReference vendor(UUID vendorId);
 
     record Command(UUID vendorId, UUID fuelStationId, String fuelType, LocalDate purchaseDate,

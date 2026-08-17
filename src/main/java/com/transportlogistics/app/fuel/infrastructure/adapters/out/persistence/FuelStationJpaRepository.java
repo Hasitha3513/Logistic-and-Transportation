@@ -7,8 +7,6 @@ import java.util.UUID;
 
 interface FuelStationJpaRepository extends JpaRepository<FuelStationEntity, UUID> {
     boolean existsByCode(String code);
-
     boolean existsByCodeAndIdNot(String code, UUID id);
-
     List<FuelStationEntity> findByActiveOrderByNameAsc(boolean active);
 }

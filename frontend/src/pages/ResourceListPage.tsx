@@ -159,12 +159,6 @@ export default function ResourceListPage({ endpoint, queryKey, title, descriptio
             <Descriptions bordered size="small" column={1} items={Object.entries(detail).map(([key, value]) => ({
               key, label: fieldLabel(key), children: detailValue(value),
             }))} />
-            {endpoint === '/vehicles' && (
-              <VehicleReadingsSection
-                vehicleId={String(detail.id)}
-                vehicleRegistration={String(detail.registrationNumber || '')}
-              />
-            )}
             {relatedEndpoint && (
               <Card size="small" title={endpoint === '/vehicles' ? 'Vehicle documents' : 'Driver licences'}
                 extra={relatedConfig && hasPermission(relatedConfig.permission) ? <Button size="small" type="primary" icon={<PlusOutlined />}
@@ -191,6 +185,9 @@ export default function ResourceListPage({ endpoint, queryKey, title, descriptio
                     items={Object.entries(record).map(([key, value]) => ({ key, label: fieldLabel(key), children: detailValue(value) }))} />
                 </Card>)}
               </Card>
+            )}
+            {endpoint === '/vehicles' && selected?.id && (
+              <VehicleReadingsSection vehicleId={selected.id} />
             )}
           </Flex>
         )}

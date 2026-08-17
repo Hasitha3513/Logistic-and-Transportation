@@ -15,6 +15,5 @@ public record FuelPurchase(
         BigDecimal priceVariance, UUID destinationFuelStationId, String deliveryNoteNumber,
         OffsetDateTime receivedAt, UUID approvedBy, OffsetDateTime approvedAt,
         UUID reconciledBy, OffsetDateTime reconciledAt, String reconciliationNotes,
-        String reconciliationReference, String notes, UUID createdBy, OffsetDateTime createdAt,
-        OffsetDateTime updatedAt) {
+        String reconciliationReference, String notes, UUID createdBy, OffsetDateTime createdAt, OffsetDateTime updatedAt) {
 }

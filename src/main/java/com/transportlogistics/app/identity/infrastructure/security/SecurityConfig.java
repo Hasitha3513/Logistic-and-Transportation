@@ -46,7 +46,7 @@ class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/vehicles/available", "/vehicles/*/availability")
                         .hasAuthority("VEHICLE_AVAILABILITY_VIEW")
                         .requestMatchers(HttpMethod.GET, "/vehicles/*/readings", "/vehicles/*/readings/latest",
-                                "/vehicles/*/meter-resets")
+                                "/vehicles/*/meter-resets", "/vehicles/*/mileage")
                         .hasAuthority("VEHICLE_READING_VIEW")
                         .requestMatchers(HttpMethod.POST, "/vehicles/*/readings/*/correct")
                         .hasAuthority("VEHICLE_READING_CORRECT")

@@ -4,7 +4,6 @@ import com.transportlogistics.app.fuel.application.ports.in.FuelIssueUseCase;
 import com.transportlogistics.app.fuel.application.ports.out.FuelIssueRepository;
 import com.transportlogistics.app.fuel.domain.model.FuelIssue;
 import jakarta.persistence.criteria.Predicate;
-import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
@@ -15,9 +14,12 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Component
-@RequiredArgsConstructor
 class FuelIssuePersistenceAdapter implements FuelIssueRepository {
     private final FuelIssueJpaRepository repository;
+
+    FuelIssuePersistenceAdapter(FuelIssueJpaRepository repository) {
+        this.repository = repository;
+    }
 
     @Override
     public FuelIssue save(FuelIssue issue) {

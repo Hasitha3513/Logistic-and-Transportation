@@ -5,7 +5,6 @@ import com.transportlogistics.app.fleet.application.ports.out.VehicleReadingRepo
 import com.transportlogistics.app.fleet.domain.model.VehicleReading;
 import com.transportlogistics.app.fleet.domain.model.VehicleReadingSourceType;
 import com.transportlogistics.app.fleet.domain.model.VehicleReadingType;
-import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
@@ -17,11 +16,14 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Component
-@RequiredArgsConstructor
 class VehicleReadingPersistenceAdapter implements VehicleReadingRepository {
     private static final PageRequest ONE = PageRequest.of(0, 1);
 
     private final VehicleReadingJpaRepository repository;
+
+    VehicleReadingPersistenceAdapter(VehicleReadingJpaRepository repository) {
+        this.repository = repository;
+    }
 
     @Override
     public VehicleReading save(VehicleReading reading) {
@@ -79,55 +81,8 @@ class VehicleReadingPersistenceAdapter implements VehicleReadingRepository {
     }
 
     @Override
-    public Optional<VehicleReading> findCorrectionOf(UUID readingId) {
-        return repository.findByCorrectionOfReadingId(readingId).map(this::map);
-    }
-
-    @Override
-    public boolean isSuperseded(UUID readingId) {
-        return repository.existsByCorrectionOfReadingId(readingId);
-    }
-
-    @Override
-    public List<VehicleReading> findEffectiveInPeriod(UUID vehicleId, VehicleReadingType type, OffsetDateTime from, OffsetDateTime to) {
-        return repository.findEffectiveInPeriod(vehicleId, type, from, to).stream().map(this::map).toList();
-    }
-
-    @Override
-    public Optional<VehicleReading> findOpeningEffective(UUID vehicleId, VehicleReadingType type, OffsetDateTime from) {
-        return repository.findOpeningEffective(vehicleId, type, from, ONE).stream().findFirst().map(this::map);
-    }
-
-    @Override
-    public Optional<VehicleReading> findClosingEffective(UUID vehicleId, VehicleReadingType type, OffsetDateTime to) {
-        return repository.findClosingEffective(vehicleId, type, to, ONE).stream().findFirst().map(this::map);
-    }
-
-    @Override
-    public Optional<VehicleReading> findEffectiveBySource(UUID vehicleId, VehicleReadingType type,
-                                                          VehicleReadingSourceType sourceType, UUID sourceReferenceId) {
-        var original = findOriginalBySource(vehicleId, type, sourceType, sourceReferenceId);
-        if (original.isEmpty()) {
-            return Optional.empty();
-        }
-        var current = original.get();
-        while (true) {
-            var correction = findCorrectionOf(current.id());
-            if (correction.isEmpty()) {
-                return Optional.of(current);
-            }
-            current = correction.get();
-        }
-    }
-
-    @Override
-    public int countCorrectionsInPeriod(UUID vehicleId, OffsetDateTime from, OffsetDateTime to) {
-        return repository.countCorrectionsInPeriod(vehicleId, from, to);
-    }
-
-    @Override
-    public List<VehicleReading> findAllInPeriod(UUID vehicleId, OffsetDateTime from, OffsetDateTime to) {
-        return repository.findAllInPeriod(vehicleId, from, to).stream().map(this::map).toList();
+    public Optional<VehicleReading> findCorrection(UUID originalReadingId) {
+        return repository.findByCorrectionOfReadingId(originalReadingId).map(this::map);
     }
 
     @Override

@@ -1,27 +1,43 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '../api/client';
 import type {
-  CorrectionRequest,
-  LatestReadingsResponse,
-  ManualReadingRequest,
-  MeterResetRequest,
-  MeterResetResponse,
-  PageResult,
-  TripDistanceSummaryResponse,
-  VehicleMileageSummaryResponse,
-  VehicleReadingResponse,
+  LatestVehicleReadings,
+  PageResponse,
+  RecordCorrectionRequest,
+  RecordManualReadingRequest,
+  RecordMeterResetRequest,
+  VehicleMeterReset,
+  VehicleMileageSummary,
+  VehicleReading,
+  VehicleReadingSourceType,
   VehicleReadingType,
 } from './types';
 
-export function useVehicleReadings(vehicleId?: string, typeFilter?: VehicleReadingType) {
+interface SearchReadingsParams {
+  readingType?: VehicleReadingType;
+  sourceType?: VehicleReadingSourceType;
+  from?: string;
+  to?: string;
+  page?: number;
+  limit?: number;
+}
+
+export function useVehicleReadings(vehicleId?: string, params?: SearchReadingsParams) {
   return useQuery({
-    queryKey: ['vehicles', vehicleId, 'readings', typeFilter],
+    queryKey: ['vehicle-readings', vehicleId, params],
     queryFn: async () => {
-      if (!vehicleId) return { content: [], page: 0, limit: 50, totalElements: 0, totalPages: 0 };
-      const params: Record<string, unknown> = { limit: 50 };
-      if (typeFilter) params.readingType = typeFilter;
-      const res = await api.get<PageResult<VehicleReadingResponse>>(`/vehicles/${vehicleId}/readings`, { params });
-      return res.data;
+      if (!vehicleId) return { content: [], page: 0, limit: 20, totalElements: 0, totalPages: 0 };
+      const { data } = await api.get<PageResponse<VehicleReading>>(`/vehicles/${vehicleId}/readings`, {
+        params: {
+          readingType: params?.readingType,
+          sourceType: params?.sourceType,
+          from: params?.from,
+          to: params?.to,
+          page: params?.page ?? 0,
+          limit: params?.limit ?? 20,
+        },
+      });
+      return data;
     },
     enabled: Boolean(vehicleId),
   });
@@ -29,49 +45,37 @@ export function useVehicleReadings(vehicleId?: string, typeFilter?: VehicleReadi
 
 export function useLatestVehicleReadings(vehicleId?: string) {
   return useQuery({
-    queryKey: ['vehicles', vehicleId, 'readings', 'latest'],
+    queryKey: ['vehicle-readings-latest', vehicleId],
     queryFn: async () => {
       if (!vehicleId) return null;
-      const res = await api.get<LatestReadingsResponse>(`/vehicles/${vehicleId}/readings/latest`);
-      return res.data;
+      const { data } = await api.get<LatestVehicleReadings>(`/vehicles/${vehicleId}/readings/latest`);
+      return data;
     },
     enabled: Boolean(vehicleId),
   });
 }
 
-export function useVehicleMileageSummary(vehicleId?: string, from?: string, to?: string, includeSourceBreakdown = true) {
-  return useQuery({
-    queryKey: ['vehicles', vehicleId, 'mileage-summary', from, to, includeSourceBreakdown],
-    queryFn: async () => {
-      if (!vehicleId || !from || !to) return null;
-      const res = await api.get<VehicleMileageSummaryResponse>(`/vehicles/${vehicleId}/mileage-summary`, {
-        params: { from, to, includeSourceBreakdown },
-      });
-      return res.data;
-    },
-    enabled: Boolean(vehicleId && from && to),
-  });
-}
-
-export function useTripDistance(tripId?: string) {
-  return useQuery({
-    queryKey: ['trips', tripId, 'distance'],
-    queryFn: async () => {
-      if (!tripId) return null;
-      const res = await api.get<TripDistanceSummaryResponse>(`/trips/${tripId}/distance`);
-      return res.data;
-    },
-    enabled: Boolean(tripId),
-  });
-}
-
 export function useVehicleMeterResets(vehicleId?: string) {
   return useQuery({
-    queryKey: ['vehicles', vehicleId, 'meter-resets'],
+    queryKey: ['vehicle-meter-resets', vehicleId],
     queryFn: async () => {
       if (!vehicleId) return [];
-      const res = await api.get<MeterResetResponse[]>(`/vehicles/${vehicleId}/meter-resets`);
-      return res.data;
+      const { data } = await api.get<VehicleMeterReset[]>(`/vehicles/${vehicleId}/meter-resets`);
+      return data;
+    },
+    enabled: Boolean(vehicleId),
+  });
+}
+
+export function useVehicleMileage(vehicleId?: string, from?: string, to?: string) {
+  return useQuery({
+    queryKey: ['vehicle-mileage', vehicleId, from, to],
+    queryFn: async () => {
+      if (!vehicleId) return null;
+      const { data } = await api.get<VehicleMileageSummary>(`/vehicles/${vehicleId}/mileage`, {
+        params: { from, to },
+      });
+      return data;
     },
     enabled: Boolean(vehicleId),
   });
@@ -80,28 +84,30 @@ export function useVehicleMeterResets(vehicleId?: string) {
 export function useRecordManualReading(vehicleId?: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (payload: ManualReadingRequest) => {
-      const res = await api.post<VehicleReadingResponse>(`/vehicles/${vehicleId}/readings`, payload);
-      return res.data;
+    mutationFn: async (payload: RecordManualReadingRequest) => {
+      const { data } = await api.post<VehicleReading>(`/vehicles/${vehicleId}/readings`, payload);
+      return data;
     },
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['vehicles', vehicleId, 'readings'] });
-      void queryClient.invalidateQueries({ queryKey: ['vehicles', vehicleId, 'mileage-summary'] });
+      void queryClient.invalidateQueries({ queryKey: ['vehicle-readings', vehicleId] });
+      void queryClient.invalidateQueries({ queryKey: ['vehicle-readings-latest', vehicleId] });
+      void queryClient.invalidateQueries({ queryKey: ['vehicle-mileage', vehicleId] });
       void queryClient.invalidateQueries({ queryKey: ['vehicles-page'] });
     },
   });
 }
 
-export function useCorrectReading(vehicleId?: string) {
+export function useCorrectVehicleReading(vehicleId?: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ readingId, payload }: { readingId: string; payload: CorrectionRequest }) => {
-      const res = await api.post<VehicleReadingResponse>(`/vehicles/${vehicleId}/readings/${readingId}/correct`, payload);
-      return res.data;
+    mutationFn: async ({ readingId, payload }: { readingId: string; payload: RecordCorrectionRequest }) => {
+      const { data } = await api.post<VehicleReading>(`/vehicles/${vehicleId}/readings/${readingId}/correct`, payload);
+      return data;
     },
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['vehicles', vehicleId, 'readings'] });
-      void queryClient.invalidateQueries({ queryKey: ['vehicles', vehicleId, 'mileage-summary'] });
+      void queryClient.invalidateQueries({ queryKey: ['vehicle-readings', vehicleId] });
+      void queryClient.invalidateQueries({ queryKey: ['vehicle-readings-latest', vehicleId] });
+      void queryClient.invalidateQueries({ queryKey: ['vehicle-mileage', vehicleId] });
       void queryClient.invalidateQueries({ queryKey: ['vehicles-page'] });
     },
   });
@@ -110,14 +116,15 @@ export function useCorrectReading(vehicleId?: string) {
 export function useResetVehicleMeter(vehicleId?: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (payload: MeterResetRequest) => {
-      const res = await api.post<MeterResetResponse>(`/vehicles/${vehicleId}/meter-resets`, payload);
-      return res.data;
+    mutationFn: async (payload: RecordMeterResetRequest) => {
+      const { data } = await api.post<VehicleMeterReset>(`/vehicles/${vehicleId}/meter-resets`, payload);
+      return data;
     },
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['vehicles', vehicleId, 'readings'] });
-      void queryClient.invalidateQueries({ queryKey: ['vehicles', vehicleId, 'meter-resets'] });
-      void queryClient.invalidateQueries({ queryKey: ['vehicles', vehicleId, 'mileage-summary'] });
+      void queryClient.invalidateQueries({ queryKey: ['vehicle-meter-resets', vehicleId] });
+      void queryClient.invalidateQueries({ queryKey: ['vehicle-readings', vehicleId] });
+      void queryClient.invalidateQueries({ queryKey: ['vehicle-readings-latest', vehicleId] });
+      void queryClient.invalidateQueries({ queryKey: ['vehicle-mileage', vehicleId] });
       void queryClient.invalidateQueries({ queryKey: ['vehicles-page'] });
     },
   });

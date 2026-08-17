@@ -1,12 +1,27 @@
 package com.transportlogistics.app.fleet.infrastructure.adapters.in.web;
 
-import com.transportlogistics.app.fleet.application.ports.in.*;
-import com.transportlogistics.app.fleet.domain.model.*;
+import com.transportlogistics.app.fleet.application.ports.in.DriverUseCase;
+import com.transportlogistics.app.fleet.application.ports.in.DriverAvailabilityUseCase;
+import com.transportlogistics.app.fleet.application.ports.in.DriverLicenseUseCase;
+import com.transportlogistics.app.fleet.application.ports.in.VehicleCategoryUseCase;
+import com.transportlogistics.app.fleet.application.ports.in.VehicleTypeUseCase;
+import com.transportlogistics.app.fleet.application.ports.in.VehicleUseCase;
+import com.transportlogistics.app.fleet.application.ports.in.VehicleAvailabilityUseCase;
+import com.transportlogistics.app.fleet.application.ports.in.VehicleDocumentUseCase;
+import com.transportlogistics.app.fleet.domain.model.Driver;
+import com.transportlogistics.app.fleet.domain.model.DriverAvailability;
+import com.transportlogistics.app.fleet.domain.model.DriverLicense;
+import com.transportlogistics.app.fleet.domain.model.DriverLicenseStatus;
+import com.transportlogistics.app.fleet.domain.model.Vehicle;
+import com.transportlogistics.app.fleet.domain.model.VehicleAvailability;
+import com.transportlogistics.app.fleet.domain.model.VehicleCategory;
+import com.transportlogistics.app.fleet.domain.model.VehicleType;
+import com.transportlogistics.app.fleet.domain.model.VehicleDocument;
+import com.transportlogistics.app.fleet.domain.model.VehicleDocumentStatus;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,10 +29,10 @@ import java.security.Principal;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
-@RequiredArgsConstructor
 public class FleetController {
     private final DriverUseCase drivers;
     private final DriverAvailabilityUseCase driverAvailability;
@@ -27,6 +42,20 @@ public class FleetController {
     private final VehicleCategoryUseCase categories;
     private final VehicleTypeUseCase types;
     private final VehicleDocumentUseCase documents;
+
+    FleetController(DriverUseCase d, DriverAvailabilityUseCase driverAvailability,
+                    DriverLicenseUseCase licenses, VehicleUseCase v,
+                    VehicleAvailabilityUseCase vehicleAvailability, VehicleCategoryUseCase c,
+                    VehicleTypeUseCase t, VehicleDocumentUseCase documents) {
+        drivers = d;
+        this.driverAvailability = driverAvailability;
+        this.licenses = licenses;
+        vehicles = v;
+        this.vehicleAvailability = vehicleAvailability;
+        categories = c;
+        types = t;
+        this.documents = documents;
+    }
 
     @PostMapping("/drivers")
     ResponseEntity<Driver> createDriver(@Valid @RequestBody DriverRequest r) {
@@ -156,7 +185,7 @@ public class FleetController {
 
     @PostMapping("/vehicles/{vehicleId}/documents")
     ResponseEntity<VehicleDocument> createDoc(@PathVariable UUID vehicleId, @Valid @RequestBody DocumentRequest r,
-                                              Principal principal) {
+                                               Principal principal) {
         var command = new VehicleDocumentUseCase.CreateCommand(r.documentType(), r.documentNumber(), r.issueDate(),
                 r.expiryDate(), r.fileReference(), Boolean.TRUE.equals(r.mandatoryForDispatch()), r.status(), r.active());
         return ResponseEntity.status(201).body(documents.create(vehicleId, command, actor(principal)));
@@ -232,10 +261,6 @@ public class FleetController {
         return new Vehicle(id, r.registrationNumber(), r.chassisNumber(), r.engineNumber(), r.categoryId(), r.typeId(), r.manufacturer(), r.model(), r.manufactureYear(), r.ownershipType() == null ? "COMPANY_OWNED" : r.ownershipType(), r.operationalStatus() == null ? "AVAILABLE" : r.operationalStatus(), r.currentOdometerKm(), r.engineHours(), r.capacityKg(), r.active() == null || r.active());
     }
 
-    private String actor(Principal principal) {
-        return principal == null ? "system" : principal.getName();
-    }
-
     record DriverRequest(@NotBlank String employeeNumber, @NotBlank String firstName, @NotBlank String lastName,
                          String phone, @Email String email, String status, Boolean active) {
     }
@@ -266,6 +291,10 @@ public class FleetController {
     }
 
     record MessageResponse(String message) {
+    }
+
+    private String actor(Principal principal) {
+        return principal == null ? "system" : principal.getName();
     }
 
     record DocumentRequest(@NotBlank String documentType, @NotBlank String documentNumber, LocalDate issueDate,

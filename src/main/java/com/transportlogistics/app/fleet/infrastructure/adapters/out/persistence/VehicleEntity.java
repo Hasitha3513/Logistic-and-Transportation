@@ -4,6 +4,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -15,6 +16,7 @@ import java.util.UUID;
 @Getter
 @Setter
 @NoArgsConstructor
+@AllArgsConstructor
 class VehicleEntity {
     @Id
     @Column(name = "id")
@@ -47,25 +49,4 @@ class VehicleEntity {
     private Double capacityKg;
     @Column(name = "active")
     private boolean active;
-
-    public VehicleEntity(UUID id, String registrationNumber, String chassisNumber, String engineNumber,
-                         UUID categoryId, UUID typeId, String manufacturer, String model,
-                         Integer manufactureYear, String ownershipType, String operationalStatus,
-                         Double currentOdometerKm, Double engineHours, Double capacityKg, boolean active) {
-        this.id = id;
-        this.registrationNumber = registrationNumber;
-        this.chassisNumber = chassisNumber;
-        this.engineNumber = engineNumber;
-        this.categoryId = categoryId;
-        this.typeId = typeId;
-        this.manufacturer = manufacturer;
-        this.model = model;
-        this.manufactureYear = manufactureYear;
-        this.ownershipType = ownershipType;
-        this.operationalStatus = operationalStatus;
-        this.currentOdometerKm = currentOdometerKm;
-        this.engineHours = engineHours;
-        this.capacityKg = capacityKg;
-        this.active = active;
-    }
 }
