@@ -29,6 +29,7 @@ import com.transportlogistics.app.fuel.domain.model.FuelStationType;
 import com.transportlogistics.app.fuel.domain.model.ReconciliationStatus;
 import com.transportlogistics.app.shared.domain.ConflictException;
 import com.transportlogistics.app.support.PostgreSqlIntegrationTest;
+import com.transportlogistics.app.support.ReferenceFixtures;
 import com.transportlogistics.app.trip.application.ports.in.TripUseCase;
 import com.transportlogistics.app.trip.application.ports.out.TripDispatchRepository;
 import com.transportlogistics.app.trip.application.ports.out.TripHistoryRepository;
@@ -90,6 +91,7 @@ class PostgreSqlProductionInvariantIntegrationTest extends PostgreSqlIntegration
     void resetDatabase() {
         flyway.clean();
         flyway.migrate();
+        ReferenceFixtures.userReference(jdbc, UUID.fromString("00000000-0000-0000-0000-000000000001"));
     }
 
     @Test
