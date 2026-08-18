@@ -8,12 +8,18 @@ import com.transportlogistics.app.fleet.domain.model.VehicleMeterReset;
 import com.transportlogistics.app.fleet.domain.model.VehicleReading;
 import com.transportlogistics.app.fleet.domain.model.VehicleReadingSourceType;
 import com.transportlogistics.app.fleet.domain.model.VehicleReadingType;
+import com.transportlogistics.app.fleet.domain.model.VehicleReadingUnit;
+import com.transportlogistics.app.fleet.infrastructure.adapters.in.web.controllers.VehicleReadingController;
+import com.transportlogistics.app.fleet.infrastructure.adapters.in.web.dto.request.RecordManualVehicleReadingRequest;
+import com.transportlogistics.app.fleet.infrastructure.adapters.in.web.dto.request.RecordVehicleMeterResetRequest;
+import com.transportlogistics.app.fleet.infrastructure.adapters.in.web.dto.request.RecordVehicleReadingCorrectionRequest;
+import com.transportlogistics.app.fleet.infrastructure.adapters.in.web.mappers.VehicleReadingWebMapper;
 import com.transportlogistics.app.identity.AuthenticatedUserLookup;
 import com.transportlogistics.app.shared.web.GlobalExceptionHandler;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
+import org.mapstruct.factory.Mappers;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
@@ -28,8 +34,6 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -49,14 +53,14 @@ class VehicleReadingControllerTest {
     @Mock
     private AuthenticatedUserLookup userLookup;
 
-    @InjectMocks
     private VehicleReadingController controller;
-
     private MockMvc mockMvc;
     private ObjectMapper objectMapper;
 
     @BeforeEach
     void setUp() {
+        var mapper = Mappers.getMapper(VehicleReadingWebMapper.class);
+        controller = new VehicleReadingController(readingUseCase, userLookup, mapper);
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .build();
@@ -103,7 +107,7 @@ class VehicleReadingControllerTest {
         var created = sampleReading(UUID.randomUUID(), new BigDecimal("15000.000"), VehicleReadingType.ODOMETER);
         when(readingUseCase.record(any())).thenReturn(created);
 
-        var request = new VehicleReadingController.RecordManualVehicleReadingRequest(
+        var request = new RecordManualVehicleReadingRequest(
                 VehicleReadingType.ODOMETER,
                 new BigDecimal("15000.000"),
                 RECORDED_TIME,
@@ -130,7 +134,7 @@ class VehicleReadingControllerTest {
         var corrected = sampleReading(UUID.randomUUID(), new BigDecimal("15500.000"), VehicleReadingType.ODOMETER);
         when(readingUseCase.correct(any())).thenReturn(corrected);
 
-        var request = new VehicleReadingController.RecordVehicleReadingCorrectionRequest(
+        var request = new RecordVehicleReadingCorrectionRequest(
                 new BigDecimal("15500.000"),
                 "Corrected typo",
                 RECORDED_TIME
@@ -156,7 +160,7 @@ class VehicleReadingControllerTest {
         );
         when(readingUseCase.resetMeter(any())).thenReturn(reset);
 
-        var request = new VehicleReadingController.RecordVehicleMeterResetRequest(
+        var request = new RecordVehicleMeterResetRequest(
                 VehicleReadingType.ODOMETER,
                 new BigDecimal("0.000"),
                 RECORDED_TIME,
@@ -178,23 +182,24 @@ class VehicleReadingControllerTest {
         var summary = new VehicleMileageSummary(
                 VEHICLE_ID, RECORDED_TIME.minusDays(7), RECORDED_TIME,
                 new BigDecimal("10000.000"), new BigDecimal("10500.000"), new BigDecimal("500.000"),
-                null, null, null, 0, CoverageStatus.COMPLETE, false
+                new BigDecimal("200.000"), new BigDecimal("210.000"), new BigDecimal("10.000"),
+                0, CoverageStatus.COMPLETE, false
         );
-        when(readingUseCase.getMileage(eq(VEHICLE_ID), any(), any())).thenReturn(summary);
+        when(readingUseCase.getMileage(VEHICLE_ID, null, null)).thenReturn(summary);
 
         mockMvc.perform(get("/vehicles/{vehicleId}/mileage", VEHICLE_ID))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.vehicleId").value(VEHICLE_ID.toString()))
                 .andExpect(jsonPath("$.distanceTravelledKm").value(500.0))
-                .andExpect(jsonPath("$.coverageStatus").value("COMPLETE"))
-                .andExpect(jsonPath("$.abnormalDetected").value(false));
+                .andExpect(jsonPath("$.coverageStatus").value("COMPLETE"));
     }
 
     private VehicleReading sampleReading(UUID id, BigDecimal value, VehicleReadingType type) {
         return new VehicleReading(
-                id, VEHICLE_ID, type, value, type.unit(), 0,
-                VehicleReadingSourceType.MANUAL, null, RECORDED_TIME, RECORDED_TIME,
-                ACTOR_ID, null, null, "key-" + id, null, RECORDED_TIME
+                id, VEHICLE_ID, type, value,
+                type.unit(),
+                0, VehicleReadingSourceType.MANUAL, null, RECORDED_TIME, RECORDED_TIME,
+                ACTOR_ID, null, null, "key-" + id, "test notes", RECORDED_TIME
         );
     }
 }

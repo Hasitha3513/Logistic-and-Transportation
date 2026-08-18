@@ -111,7 +111,7 @@ class SecurityConfig {
                         .requestMatchers(HttpMethod.DELETE, "/projects/*").hasAuthority("PROJECT_UPDATE")
 
                         .requestMatchers(HttpMethod.GET, "/trips/*/fuel-cost")
-                        .hasAnyAuthority("FUEL_COST_VIEW", "FUEL_ISSUE_VIEW")
+                        .hasAuthority("FUEL_COST_VIEW")
                         .requestMatchers(HttpMethod.GET, "/trips", "/trips/*", "/trips/*/status-history")
                         .hasAuthority("TRIP_VIEW")
                         .requestMatchers(HttpMethod.POST, "/trips").hasAuthority("TRIP_CREATE")

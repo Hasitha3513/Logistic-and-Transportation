@@ -2,7 +2,7 @@ package com.transportlogistics.app.fuel.application.service;
 
 import com.transportlogistics.app.fleet.TripDistanceStatus;
 import com.transportlogistics.app.fleet.TripDistanceSummary;
-import com.transportlogistics.app.fuel.PricingSource;
+import com.transportlogistics.app.fuel.domain.model.PricingSource;
 import com.transportlogistics.app.fuel.TripFuelCostCalculationStatus;
 import com.transportlogistics.app.fuel.application.ports.out.FuelIssueRepository;
 import com.transportlogistics.app.fuel.application.ports.out.FuelPriceRepository;
@@ -107,7 +107,7 @@ class TripFuelCostServiceTest {
         assertEquals(1, result.fuelIssueCount());
         assertEquals(0, result.unpricedIssueCount());
         assertEquals(1, result.lines().size());
-        assertEquals(PricingSource.EXPLICIT_ISSUE_PRICE, result.lines().getFirst().pricingSource());
+        assertEquals(PricingSource.ISSUE_PRICE, result.lines().getFirst().pricingSource());
     }
 
     @Test
@@ -154,29 +154,20 @@ class TripFuelCostServiceTest {
     }
 
     @Test
-    void priceCatalogueResolutionWhenExplicitPriceMissing() {
+    void missingHistoricalIssuePriceDoesNotFallbackToCatalogue() {
         mockTripContext();
         var issueNoPrice = issue(UUID.randomUUID(), new BigDecimal("25.000"), null, FuelIssueStatus.ISSUED);
         when(fuelIssues.findByTripId(tripId)).thenReturn(List.of(issueNoPrice));
-        when(stations.findById(stationId)).thenReturn(Optional.of(new FuelStation(
-                stationId, "ST-01", "Main Station", FuelStationType.EXTERNAL, true, vendorId, UUID.randomUUID()
-        )));
-        when(fuelPrices.findEffective(eq(vendorId), eq("DIESEL"), any(LocalDate.class))).thenReturn(Optional.of(
-                new FuelPrice(UUID.randomUUID(), vendorId, "DIESEL", LocalDate.of(2026, 1, 1), null,
-                        new BigDecimal("320.00"), "LKR", true, now, now)
-        ));
-        when(tripDistances.getTripDistance(tripId)).thenReturn(new TripDistanceSummary(
-                tripId, vehicleId, new BigDecimal("10000.000"), new BigDecimal("10250.000"),
-                new BigDecimal("250.000"), TripDistanceStatus.CALCULATED
-        ));
-
+        // No station or catalogue lookup should be performed
         var result = service.getTripFuelCost(tripId);
 
-        assertEquals(TripFuelCostCalculationStatus.COMPLETE, result.calculationStatus());
-        assertEquals(PricingSource.PRICE_CATALOGUE, result.lines().getFirst().pricingSource());
-        assertEquals(new BigDecimal("320.00"), result.lines().getFirst().unitPrice());
-        assertEquals(new BigDecimal("8000.00"), result.totalFuelCost());
-        assertEquals(new BigDecimal("32.00"), result.costPerKm());
+        assertEquals(TripFuelCostCalculationStatus.PARTIAL, result.calculationStatus());
+        assertEquals(PricingSource.UNPRICED, result.lines().getFirst().pricingSource());
+        assertNull(result.lines().getFirst().unitPrice());
+        assertNull(result.lines().getFirst().lineCost());
+        assertEquals(1, result.unpricedIssueCount());
+        assertEquals(1, result.fuelIssueCount());
+        assertNull(result.costPerKm());
     }
 
     @Test
@@ -185,7 +176,7 @@ class TripFuelCostServiceTest {
         var issue1 = issue(UUID.randomUUID(), new BigDecimal("20.000"), new BigDecimal("300.00"), FuelIssueStatus.ISSUED);
         var issueUnpriced = issue(UUID.randomUUID(), new BigDecimal("10.000"), null, FuelIssueStatus.ISSUED);
         when(fuelIssues.findByTripId(tripId)).thenReturn(List.of(issue1, issueUnpriced));
-        when(stations.findById(stationId)).thenReturn(Optional.empty());
+
         when(tripDistances.getTripDistance(tripId)).thenReturn(new TripDistanceSummary(
                 tripId, vehicleId, new BigDecimal("10000.000"), new BigDecimal("10200.000"),
                 new BigDecimal("200.000"), TripDistanceStatus.CALCULATED

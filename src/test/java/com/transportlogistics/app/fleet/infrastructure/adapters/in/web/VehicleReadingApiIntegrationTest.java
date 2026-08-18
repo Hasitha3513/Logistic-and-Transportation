@@ -2,6 +2,9 @@ package com.transportlogistics.app.fleet.infrastructure.adapters.in.web;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.transportlogistics.app.fleet.domain.model.VehicleReadingType;
+import com.transportlogistics.app.fleet.infrastructure.adapters.in.web.dto.request.RecordManualVehicleReadingRequest;
+import com.transportlogistics.app.fleet.infrastructure.adapters.in.web.dto.request.RecordVehicleMeterResetRequest;
+import com.transportlogistics.app.fleet.infrastructure.adapters.in.web.dto.request.RecordVehicleReadingCorrectionRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -121,7 +124,7 @@ class VehicleReadingApiIntegrationTest {
         var baseTime = OffsetDateTime.parse("2026-08-16T08:00:00Z");
 
         // 1. Record manual baseline reading 10,000 km
-        var r1Body = objectMapper.writeValueAsString(new VehicleReadingController.RecordManualVehicleReadingRequest(
+        var r1Body = objectMapper.writeValueAsString(new RecordManualVehicleReadingRequest(
                 VehicleReadingType.ODOMETER, new BigDecimal("10000.000"), baseTime, "it-key-1", "Baseline"
         ));
         var r1Res = mvc.perform(post("/vehicles/{id}/readings", vehicleId)
@@ -134,7 +137,7 @@ class VehicleReadingApiIntegrationTest {
         var r1Id = UUID.fromString(r1Json.get("id").asText());
 
         // 2. Record second reading 10,200 km
-        var r2Body = objectMapper.writeValueAsString(new VehicleReadingController.RecordManualVehicleReadingRequest(
+        var r2Body = objectMapper.writeValueAsString(new RecordManualVehicleReadingRequest(
                 VehicleReadingType.ODOMETER, new BigDecimal("10200.000"), baseTime.plusHours(2), "it-key-2", "Stop A"
         ));
         mvc.perform(post("/vehicles/{id}/readings", vehicleId)
@@ -144,7 +147,7 @@ class VehicleReadingApiIntegrationTest {
                 .andExpect(status().isCreated());
 
         // 3. Attempt decreasing reading 10,100 km at later timestamp -> rejected with 409
-        var rDecreasing = objectMapper.writeValueAsString(new VehicleReadingController.RecordManualVehicleReadingRequest(
+        var rDecreasing = objectMapper.writeValueAsString(new RecordManualVehicleReadingRequest(
                 VehicleReadingType.ODOMETER, new BigDecimal("10100.000"), baseTime.plusHours(3), "it-key-3", "Invalid decrease"
         ));
         mvc.perform(post("/vehicles/{id}/readings", vehicleId)
@@ -155,7 +158,7 @@ class VehicleReadingApiIntegrationTest {
                 .andExpect(jsonPath("$.code").value("VEHICLE_READING_DECREASE"));
 
         // 4. Correct first reading from 10,000 to 10,050
-        var correctBody = objectMapper.writeValueAsString(new VehicleReadingController.RecordVehicleReadingCorrectionRequest(
+        var correctBody = objectMapper.writeValueAsString(new RecordVehicleReadingCorrectionRequest(
                 new BigDecimal("10050.000"), "Typo corrected from log sheet", baseTime
         ));
         mvc.perform(post("/vehicles/{id}/readings/{readingId}/correct", vehicleId, r1Id)
@@ -167,7 +170,7 @@ class VehicleReadingApiIntegrationTest {
                 .andExpect(jsonPath("$.correctionOfReadingId").value(r1Id.toString()));
 
         // 5. Reset meter to 0 at baseTime + 4 hours
-        var resetBody = objectMapper.writeValueAsString(new VehicleReadingController.RecordVehicleMeterResetRequest(
+        var resetBody = objectMapper.writeValueAsString(new RecordVehicleMeterResetRequest(
                 VehicleReadingType.ODOMETER, new BigDecimal("0.000"), baseTime.plusHours(4), "Odometer replaced"
         ));
         mvc.perform(post("/vehicles/{id}/meter-resets", vehicleId)
@@ -179,7 +182,7 @@ class VehicleReadingApiIntegrationTest {
                 .andExpect(jsonPath("$.toEpoch").value(1));
 
         // 6. Record reading on new meter: 75 km
-        var rNewMeter = objectMapper.writeValueAsString(new VehicleReadingController.RecordManualVehicleReadingRequest(
+        var rNewMeter = objectMapper.writeValueAsString(new RecordManualVehicleReadingRequest(
                 VehicleReadingType.ODOMETER, new BigDecimal("75.000"), baseTime.plusHours(6), "it-key-4", "New meter trip"
         ));
         mvc.perform(post("/vehicles/{id}/readings", vehicleId)

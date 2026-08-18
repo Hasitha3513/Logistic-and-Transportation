@@ -2,9 +2,12 @@ package com.transportlogistics.app.routing.infrastructure.adapters.in.web;
 
 import com.transportlogistics.app.routing.application.ports.in.RouteUseCase;
 import com.transportlogistics.app.routing.domain.model.Route;
+import com.transportlogistics.app.routing.infrastructure.adapters.in.web.controllers.RouteController;
+import com.transportlogistics.app.routing.infrastructure.adapters.in.web.mappers.RouteWebMapper;
 import com.transportlogistics.app.shared.web.GlobalExceptionHandler;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mapstruct.factory.Mappers;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -25,7 +28,8 @@ class RouteControllerTest {
     @BeforeEach
     void setUp() {
         routes = mock(RouteUseCase.class);
-        mvc = MockMvcBuilders.standaloneSetup(new RouteController(routes))
+        var mapper = Mappers.getMapper(RouteWebMapper.class);
+        mvc = MockMvcBuilders.standaloneSetup(new RouteController(routes, mapper))
                 .setControllerAdvice(new GlobalExceptionHandler()).build();
     }
 

@@ -1,4 +1,3 @@
-
 # Transport & Logistics Backend - Agent Instructions
 
 ## Architecture
@@ -42,8 +41,20 @@ Business modules include:
 
 Do not create microservices.
 
-Do not introduce direct dependencies between modules unless allowed by
-the application architecture.
+Do not introduce direct dependencies between modules unless allowed by the application architecture.
+
+**Cross-Module Communication:**
+- Use Spring Application Events for inter-module communication to maintain decoupling.
+- Do not inject application services or repositories from one business module into another.
+
+**The `shared` Module:**
+- The `shared` module is strictly for cross-cutting technical concerns (e.g., Base Entities, Global Exception Handler, generic utilities).
+- NEVER use the `shared` module as a dumping ground for feature-specific code or domain business logic.
+
+[ADDED IN V2] **Utility Functions Extraction:**
+- Extract truly common, cross-cutting utility functions (e.g., generic date manipulation, string hashing) to a dedicated `utils` package inside the `shared` module.
+- Avoid creating generic "god" utility classes (e.g., `GeneralUtils`). Use cohesive, specific names (e.g., `DateTimeUtils`, `StringSanitizer`).
+- Module-specific utility logic must remain inside its own module and must NOT be leaked into the `shared` module.
 
 ## Layer Rules
 
@@ -74,6 +85,7 @@ Domain contains:
 - business rules
 - domain events
 - repository ports
+- domain exceptions (e.g., business rule violations)
 
 ### Application
 
@@ -85,6 +97,7 @@ Contains:
 - application services
 - orchestration
 - transaction boundaries
+- MapStruct mappers (mapping Domain models to Application DTOs if necessary)
 
 Application may depend on Domain.
 
@@ -96,6 +109,7 @@ Contains adapters for:
 - PostgreSQL
 - external APIs
 - event infrastructure
+- technical and infrastructure exceptions
 
 ### Web
 
@@ -105,8 +119,17 @@ Contains:
 - request DTOs
 - response DTOs
 - REST mapping
+- MapStruct mappers (mapping Request DTOs to Application Commands/Queries, and Domain models to Response DTOs)
 
 Controllers must not contain business rules.
+Domain entities must NEVER leak directly into REST responses. Always use MapStruct to map them to Response DTOs.
+
+[ADDED IN V2] **Web Layer Packaging Rules:**
+Do not place Request/Response DTOs or Mappers directly inside the `controllers` package. The `web` layer must follow this strict sub-package structure:
+- `web/controllers/` (REST Controllers only)
+- `web/dto/request/` (Incoming Request Payloads)
+- `web/dto/response/` (Outgoing Response Payloads)
+- `web/mappers/` (MapStruct interfaces for Web <-> Application/Domain translation)
 
 ## Database
 
@@ -196,63 +219,48 @@ Before changing existing architecture, explain why.
 ## AI Coding Agent Operating Rules
 
 ### 1. Authority
-
 Existing production code, tests, ADRs, architecture, module boundaries, database migrations, and repository conventions are authoritative. Agents must adapt to the repository. Agents must not redesign the repository unless explicitly instructed.
 
 ### 2. Scope
-
 NEVER delete, replace, rewrite, rename, move, or refactor code outside the explicit scope of the current task. Do not modify an unrelated module simply because doing so would make implementation easier.
 
 ### 3. Existing Code Protection
-
 Do not remove code, tests, comments, validation, security checks, audit behavior, concurrency controls, or database constraints unless the task explicitly requires it. If code appears unnecessary but its purpose is unclear: DO NOT DELETE IT. Report it.
 
 ### 4. Minimal Change Principle
-
 Prefer the smallest implementation that satisfies the requirement. Prefer additive changes over destructive rewrites where both approaches are reasonable. Do not perform opportunistic cleanup.
 
 ### 5. Coding Style
-
 Preserve existing formatting, naming, package organization, design patterns, architecture, dependency injection style, error handling, and test conventions. Do not reformat unrelated files. Do not rename existing classes/methods merely because another name seems better.
 
 ### 6. Architecture
-
 Respect existing ADRs, Spring Modulith boundaries, Hexagonal Architecture / Ports and Adapters, domain ownership, application boundaries, and persistence boundaries. Do not introduce cross‑module coupling. Do not move domain ownership without explicit architectural approval.
 
 ### 7. Database
-
 Existing Flyway migrations are immutable. NEVER modify an already‑applied historical migration. Create a new forward migration only when schema change is explicitly required. Do not rename/drop tables or columns outside explicit scope.
 
 ### 8. Tests
-
-Never delete or weaken tests merely to make implementation pass. Never disable failing tests without explicit approval. Never add broad exclusions to hide failures. Fix implementation rather than manipulating verification.
+Never delete or weaken tests merely to make implementation pass. Never disable failing tests without explicit approval. Never add broad exclusions to hide failures. Fix implementation rather than manipulating verification. Exception: Tests may be replaced only if the task explicitly requires an architectural refactor and a human approves the change.
 
 ### 9. Security
-
 Do not remove or weaken authentication, authorization, permission checks, validation, tenant/organization boundaries, audit logging, or sensitive‑data protection without explicit approval.
 
 ### 10. Public Contracts
-
 Do not change REST endpoints, HTTP methods, request/response schemas, JSON property names, public interfaces, or domain events unless explicitly required.
 
 ### 11. Dependencies
-
 Do not upgrade Java, Spring Boot, React, replace libraries, introduce frameworks, or remove dependencies unless explicitly requested.
 
 ### 12. File Modification
-
 Before modifying a file: inspect it; understand its purpose; identify why it must change; confirm it is inside task scope. If completing the task requires files outside declared scope: STOP that part of implementation and report the required expansion.
 
 ### 13. Diff Discipline
-
 Before declaring completion: inspect `git status`, `git diff --stat`, and `git diff`. Confirm there are no unrelated changes.
 
 ### 14. Required Final Report
-
 Every non‑trivial agent task must report: files changed, created, deleted; tests changed; APIs changed; database changes; architecture changes; dependencies changed; verification commands executed; test results; unresolved risks.
 
 ### 15. Human Authority
-
 Agents propose and implement scoped changes. Humans approve architecture and merge decisions. No agent‑generated change is considered approved merely because tests pass.
 
 ## Mandatory Stop Conditions

@@ -10,6 +10,9 @@ import com.transportlogistics.app.fleet.domain.model.VehicleMeterReset;
 import com.transportlogistics.app.fleet.domain.model.VehicleReading;
 import com.transportlogistics.app.fleet.domain.model.VehicleReadingSourceType;
 import com.transportlogistics.app.fleet.domain.model.VehicleReadingType;
+import com.transportlogistics.app.fleet.infrastructure.adapters.in.web.dto.request.RecordManualVehicleReadingRequest;
+import com.transportlogistics.app.fleet.infrastructure.adapters.in.web.dto.request.RecordVehicleMeterResetRequest;
+import com.transportlogistics.app.fleet.infrastructure.adapters.in.web.dto.request.RecordVehicleReadingCorrectionRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -97,7 +100,7 @@ class VehicleReadingSecurityIntegrationTest {
                 null, OffsetDateTime.now(), OffsetDateTime.now(), UUID.randomUUID(), null, null, "k1", null, OffsetDateTime.now());
         when(readingUseCase.record(any())).thenReturn(sample);
 
-        var body = objectMapper.writeValueAsString(new VehicleReadingController.RecordManualVehicleReadingRequest(
+        var body = objectMapper.writeValueAsString(new RecordManualVehicleReadingRequest(
                 VehicleReadingType.ODOMETER, new BigDecimal("10000.000"), OffsetDateTime.now(), "k1", "Test"
         ));
 
@@ -114,7 +117,7 @@ class VehicleReadingSecurityIntegrationTest {
                 null, OffsetDateTime.now(), OffsetDateTime.now(), UUID.randomUUID(), readingId, "Reason", null, null, OffsetDateTime.now());
         when(readingUseCase.correct(any())).thenReturn(sample);
 
-        var body = objectMapper.writeValueAsString(new VehicleReadingController.RecordVehicleReadingCorrectionRequest(
+        var body = objectMapper.writeValueAsString(new RecordVehicleReadingCorrectionRequest(
                 new BigDecimal("10500.000"), "Typo", OffsetDateTime.now()
         ));
 
@@ -129,7 +132,7 @@ class VehicleReadingSecurityIntegrationTest {
                 new BigDecimal("250000.000"), new BigDecimal("0.000"), OffsetDateTime.now(), "Reset", UUID.randomUUID(), OffsetDateTime.now());
         when(readingUseCase.resetMeter(any())).thenReturn(reset);
 
-        var body = objectMapper.writeValueAsString(new VehicleReadingController.RecordVehicleMeterResetRequest(
+        var body = objectMapper.writeValueAsString(new RecordVehicleMeterResetRequest(
                 VehicleReadingType.ODOMETER, new BigDecimal("0.000"), OffsetDateTime.now(), "Reset odometer"
         ));
 

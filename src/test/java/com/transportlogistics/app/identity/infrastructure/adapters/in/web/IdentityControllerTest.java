@@ -3,7 +3,10 @@ package com.transportlogistics.app.identity.infrastructure.adapters.in.web;
 import com.transportlogistics.app.identity.application.ports.in.IdentityUseCase;
 import com.transportlogistics.app.identity.domain.model.Role;
 import com.transportlogistics.app.identity.domain.model.User;
+import com.transportlogistics.app.identity.infrastructure.adapters.in.web.controllers.IdentityController;
+import com.transportlogistics.app.identity.infrastructure.adapters.in.web.mappers.IdentityWebMapper;
 import org.junit.jupiter.api.Test;
+import org.mapstruct.factory.Mappers;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
@@ -21,7 +24,8 @@ class IdentityControllerTest {
     @Test
     void userResponseNeverContainsPasswordHash() throws Exception {
         var useCase = mock(IdentityUseCase.class);
-        MockMvc mvc = MockMvcBuilders.standaloneSetup(new IdentityController(useCase)).build();
+        var mapper = Mappers.getMapper(IdentityWebMapper.class);
+        MockMvc mvc = MockMvcBuilders.standaloneSetup(new IdentityController(useCase, mapper)).build();
         var id = UUID.randomUUID();
         var now = OffsetDateTime.parse("2026-01-01T00:00:00Z");
         var role = new Role(UUID.randomUUID(), "ADMIN", null, true, Set.of("IDENTITY_MANAGE"));

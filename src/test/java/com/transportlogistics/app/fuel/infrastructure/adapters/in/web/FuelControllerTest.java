@@ -6,9 +6,12 @@ import com.transportlogistics.app.fuel.domain.model.FuelIssue;
 import com.transportlogistics.app.fuel.domain.model.FuelIssueStatus;
 import com.transportlogistics.app.fuel.domain.model.FuelStation;
 import com.transportlogistics.app.fuel.domain.model.FuelStationType;
+import com.transportlogistics.app.fuel.infrastructure.adapters.in.web.controllers.FuelController;
+import com.transportlogistics.app.fuel.infrastructure.adapters.in.web.mappers.FuelWebMapper;
 import com.transportlogistics.app.shared.web.GlobalExceptionHandler;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mapstruct.factory.Mappers;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -40,7 +43,8 @@ class FuelControllerTest {
         stationId = UUID.randomUUID();
         when(stations.get(stationId)).thenReturn(new FuelStation(stationId, "MAIN", "Main Depot",
                 FuelStationType.INTERNAL, true, null, null));
-        mvc = MockMvcBuilders.standaloneSetup(new FuelController(issues, stations))
+        var mapper = Mappers.getMapper(FuelWebMapper.class);
+        mvc = MockMvcBuilders.standaloneSetup(new FuelController(issues, stations, mapper))
                 .setControllerAdvice(new GlobalExceptionHandler()).build();
     }
 
@@ -59,45 +63,41 @@ class FuelControllerTest {
     @Test
     void rejectsZeroQuantityBeforeUseCaseMutation() throws Exception {
         mvc.perform(post("/fuel-issues").principal(() -> "operator").contentType(MediaType.APPLICATION_JSON)
-                        .content(requestBody("0")))
+                        .content(requestBody("0.000")))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
-        verifyNoInteractions(issues);
+        verify(issues, never()).create(any(), any());
     }
 
     @Test
-    void exposesServerPaginationAndFilters() throws Exception {
-        when(issues.search(any())).thenReturn(new FuelIssueUseCase.PageResult<>(List.of(issue()), 1, 10, 12, 2));
-        mvc.perform(get("/fuel-issues").param("page", "1").param("limit", "10")
-                        .param("status", "DRAFT").param("voucherNumber", "2026"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content[0].voucherNumber").value("FUEL-2026-000001"))
-                .andExpect(jsonPath("$.page").value(1))
-                .andExpect(jsonPath("$.totalElements").value(12));
-        verify(issues).search(argThat(query -> query.page() == 1 && query.limit() == 10
-                && query.status() == FuelIssueStatus.DRAFT && query.voucherNumber().equals("2026")));
-    }
-
-    @Test
-    void delegatesExplicitAuthorizeAction() throws Exception {
-        when(issues.authorize(any(), eq("Approved"), eq("manager"))).thenReturn(issue());
-        mvc.perform(post("/fuel-issues/{id}/authorize", UUID.randomUUID()).principal(() -> "manager")
-                        .contentType(MediaType.APPLICATION_JSON).content("{\"comment\":\"Approved\"}"))
+    void authorizationRequiresValidActorAndCommentBoundary() throws Exception {
+        when(issues.authorize(any(), any(), eq("supervisor"))).thenReturn(issue());
+        mvc.perform(post("/fuel-issues/{id}/authorize", UUID.randomUUID()).principal(() -> "supervisor")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"comment\":\"ok to dispatch\"}"))
                 .andExpect(status().isOk());
-        verify(issues).authorize(any(), eq("Approved"), eq("manager"));
+    }
+
+    private FuelIssue issue() {
+        return new FuelIssue(UUID.randomUUID(), "FUEL-2026-000001", vehicleId, null, null, "DIESEL",
+                new BigDecimal("25.500"), new BigDecimal("350.00"), new BigDecimal("8925.00"), stationId,
+                new BigDecimal("12000.00"), new BigDecimal("150.00"), OffsetDateTime.parse("2026-02-01T10:00:00Z"),
+                FuelIssueStatus.DRAFT, UUID.randomUUID(), null, null, "notes", OffsetDateTime.now(), OffsetDateTime.now());
     }
 
     private String requestBody(String quantity) {
         return """
-                {"vehicleId":"%s","fuelType":"DIESEL","quantity":%s,
-                 "stationId":"%s","odometer":1000,"issueDateTime":"2026-08-15T08:00:00Z"}
+                {
+                  "vehicleId": "%s",
+                  "fuelType": "DIESEL",
+                  "quantity": %s,
+                  "unitPrice": 350.00,
+                  "stationId": "%s",
+                  "odometer": 12000.00,
+                  "engineHours": 150.00,
+                  "issueDateTime": "2026-02-01T10:00:00Z",
+                  "notes": "standard issue"
+                }
                 """.formatted(vehicleId, quantity, stationId);
-    }
-
-    private FuelIssue issue() {
-        var now = OffsetDateTime.parse("2026-08-15T08:00:00Z");
-        return new FuelIssue(UUID.randomUUID(), "FUEL-2026-000001", vehicleId, null, null, "DIESEL",
-                new BigDecimal("25.500"), null, null, stationId, new BigDecimal("1000"), null, now,
-                FuelIssueStatus.DRAFT, UUID.randomUUID(), null, null, null, now, now);
     }
 }

@@ -80,11 +80,24 @@ public class HexagonalLayerArchitectureTest {
     }
 
     @Test
-    void controllersMustResideInWebOrAdaptersInWeb() {
+    void controllersMustResideInWebControllersSubpackage() {
         classes()
                 .that().areAnnotatedWith(org.springframework.web.bind.annotation.RestController.class)
-                .should().resideInAnyPackage("..web..", "..adapters.in.web..")
-                .because("REST controllers must reside in the web layer")
+                .should().resideInAPackage("..web.controllers..")
+                .because("REST controllers must strictly reside in web.controllers subpackage")
+                .check(importedClasses);
+    }
+
+    @Test
+    void webLayerClassesMustResideInDesignatedSubpackages() {
+        classes()
+                .that().resideInAPackage("..adapters.in.web..")
+                .should().resideInAnyPackage(
+                        "..web.controllers..",
+                        "..web.dto..",
+                        "..web.mappers.."
+                )
+                .because("Web layer classes must strictly reside in controllers, dto, or mappers subpackages")
                 .check(importedClasses);
     }
 }

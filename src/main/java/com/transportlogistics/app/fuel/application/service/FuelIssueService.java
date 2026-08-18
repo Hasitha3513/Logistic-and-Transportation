@@ -14,6 +14,7 @@ import com.transportlogistics.app.fuel.application.ports.out.FuelTransaction;
 import com.transportlogistics.app.fuel.application.ports.out.FuelVoucherGenerator;
 import com.transportlogistics.app.fuel.application.ports.out.TripFuelContextPort;
 import com.transportlogistics.app.fuel.application.ports.out.VehicleFuelContextPort;
+import com.transportlogistics.app.fuel.application.ports.out.FuelPriceRepository;
 import com.transportlogistics.app.fuel.domain.model.FuelIssue;
 import com.transportlogistics.app.fuel.domain.model.FuelIssueHistory;
 import com.transportlogistics.app.fuel.domain.model.FuelIssueStatus;
@@ -50,21 +51,14 @@ public final class FuelIssueService implements FuelIssueUseCase {
     private final FuelVehicleReadingPort readings;
     private final Clock clock;
     private final FuelIssuePolicy policy = new FuelIssuePolicy();
+    private final FuelPriceRepository fuelPrices;
 
+    // Primary constructor with all dependencies
     public FuelIssueService(FuelIssueRepository issues, FuelIssueHistoryRepository history,
                             FuelStationRepository stations, FuelLimitPolicyRepository limits,
                             VehicleFuelContextPort vehicles, TripFuelContextPort trips, FuelActorPort actors,
                             FuelVoucherGenerator vouchers, FuelTransaction transactions, FuelEventPublisher events,
-                            Clock clock) {
-        this(issues, history, stations, limits, vehicles, trips, actors, vouchers, transactions, events,
-                noOpFuelVehicleReadingPort(), clock);
-    }
-
-    public FuelIssueService(FuelIssueRepository issues, FuelIssueHistoryRepository history,
-                            FuelStationRepository stations, FuelLimitPolicyRepository limits,
-                            VehicleFuelContextPort vehicles, TripFuelContextPort trips, FuelActorPort actors,
-                            FuelVoucherGenerator vouchers, FuelTransaction transactions, FuelEventPublisher events,
-                            FuelVehicleReadingPort readings, Clock clock) {
+                            FuelPriceRepository fuelPrices, FuelVehicleReadingPort readings, Clock clock) {
         this.issues = issues;
         this.history = history;
         this.stations = stations;
@@ -75,8 +69,29 @@ public final class FuelIssueService implements FuelIssueUseCase {
         this.vouchers = vouchers;
         this.transactions = transactions;
         this.events = events;
+        this.fuelPrices = fuelPrices;
         this.readings = readings == null ? noOpFuelVehicleReadingPort() : readings;
         this.clock = clock;
+    }
+
+    // Convenience constructor when only price repository is provided (readings default to no‑op)
+    public FuelIssueService(FuelIssueRepository issues, FuelIssueHistoryRepository history,
+                            FuelStationRepository stations, FuelLimitPolicyRepository limits,
+                            VehicleFuelContextPort vehicles, TripFuelContextPort trips, FuelActorPort actors,
+                            FuelVoucherGenerator vouchers, FuelTransaction transactions, FuelEventPublisher events,
+                            FuelPriceRepository fuelPrices, Clock clock) {
+        this(issues, history, stations, limits, vehicles, trips, actors, vouchers, transactions, events,
+                fuelPrices, null, clock);
+    }
+
+    // Convenience constructor when only vehicle reading port is provided (price repository may be null)
+    public FuelIssueService(FuelIssueRepository issues, FuelIssueHistoryRepository history,
+                            FuelStationRepository stations, FuelLimitPolicyRepository limits,
+                            VehicleFuelContextPort vehicles, TripFuelContextPort trips, FuelActorPort actors,
+                            FuelVoucherGenerator vouchers, FuelTransaction transactions, FuelEventPublisher events,
+                            FuelVehicleReadingPort readings, Clock clock) {
+        this(issues, history, stations, limits, vehicles, trips, actors, vouchers, transactions, events,
+                null, readings, clock);
     }
 
     @Override
@@ -147,8 +162,29 @@ public final class FuelIssueService implements FuelIssueUseCase {
             policy.requireIssuable(current);
             validateOperational(current);
             var now = OffsetDateTime.now(clock);
-            var saved = issues.save(copy(current, FuelIssueStatus.ISSUED, current.authorizedBy(),
-                    current.authorizationDateTime(), now));
+            // Resolve effective unit price if not already set
+            var unitPrice = current.unitPrice();
+            if (unitPrice == null && current.stationId() != null) {
+                var stationOpt = stations.findById(current.stationId());
+                if (stationOpt.isPresent()) {
+                    var station = stationOpt.get();
+                    var date = current.issueDateTime() != null
+                            ? current.issueDateTime().toLocalDate()
+                            : java.time.LocalDate.now(clock);
+                    var priceOpt = fuelPrices.findEffective(station.vendorId(), current.fuelType(), date);
+                    if (priceOpt.isPresent()) {
+                        unitPrice = priceOpt.get().unitPrice();
+                    }
+                }
+            }
+            // Create a new issue instance with the resolved price (if any)
+            var saved = issues.save(new FuelIssue(
+                    current.id(), current.voucherNumber(), current.vehicleId(), current.tripId(),
+                    current.driverId(), current.fuelType(), current.quantity(), unitPrice,
+                    FuelIssue.total(current.quantity(), unitPrice), current.stationId(),
+                    current.odometer(), current.engineHours(), current.issueDateTime(),
+                    FuelIssueStatus.ISSUED, current.requestedBy(), current.authorizedBy(),
+                    current.authorizationDateTime(), current.notes(), current.createdAt(), now));
             readings.record(saved.vehicleId(), saved.id(), saved.odometer(), saved.engineHours(), now, actor.id());
             append(saved, current.status(), saved.status(), "ISSUED", actor, "Fuel issued", now);
             events.publish(new FuelIssued(saved.id(), saved.voucherNumber(), saved.vehicleId(), saved.tripId(),
