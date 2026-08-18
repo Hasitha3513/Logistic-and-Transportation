@@ -18,6 +18,8 @@ import FuelPurchaseListPage from './fuel/FuelPurchaseListPage';
 import FuelPurchaseEditorPage from './fuel/FuelPurchaseEditorPage';
 import FuelPurchaseDetailsPage from './fuel/FuelPurchaseDetailsPage';
 import FuelPricePage from './fuel/FuelPricePage';
+import BunkerTankListPage from './fuel/BunkerTankListPage';
+import BunkerTankDetailsPage from './fuel/BunkerTankDetailsPage';
 
 function ProtectedRoute() {
   const { user, isLoading } = useAuth();
@@ -34,6 +36,7 @@ function HomePage() {
   if (hasPermission('TRIP_VIEW')) return <Navigate to="/trips" replace />;
   if (hasPermission('FUEL_ISSUE_VIEW')) return <Navigate to="/fuel/issues" replace />;
   if (hasPermission('FUEL_PURCHASE_VIEW')) return <Navigate to="/fuel/purchases" replace />;
+  if (hasPermission('BUNKER_VIEW')) return <Navigate to="/fuel/bunker-tanks" replace />;
   if (hasPermission('FUEL_PRICE_VIEW')) return <Navigate to="/fuel/prices" replace />;
   if (hasPermission('IDENTITY_MANAGE')) return <Navigate to="/administration/users" replace />;
   return <Navigate to="/workspace" replace />;
@@ -62,6 +65,8 @@ export default function App() {
         <Route path="fuel/purchases/new" element={<FuelPurchaseEditorPage />} />
         <Route path="fuel/purchases/:fuelPurchaseId/edit" element={<FuelPurchaseEditorPage />} />
         <Route path="fuel/purchases/:fuelPurchaseId" element={<FuelPurchaseDetailsPage />} />
+        <Route path="fuel/bunker-tanks" element={<BunkerTankListPage />} />
+        <Route path="fuel/bunker-tanks/:bunkerTankId" element={<BunkerTankDetailsPage />} />
         <Route path="fuel/prices" element={<FuelPricePage />} />
         <Route path="administration/users" element={<ResourceListPage {...resourcePages.users} />} />
         <Route path="administration/roles" element={<ResourceListPage {...resourcePages.roles} />} />

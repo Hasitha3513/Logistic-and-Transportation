@@ -13,9 +13,11 @@ import java.util.UUID;
 class BunkerTankPersistenceAdapter implements BunkerTankRepository {
 
     private final BunkerTankJpaRepository repository;
+    private final jakarta.persistence.EntityManager entityManager;
 
-    BunkerTankPersistenceAdapter(BunkerTankJpaRepository repository) {
+    BunkerTankPersistenceAdapter(BunkerTankJpaRepository repository, jakarta.persistence.EntityManager entityManager) {
         this.repository = repository;
+        this.entityManager = entityManager;
     }
 
     @Override
@@ -44,7 +46,9 @@ class BunkerTankPersistenceAdapter implements BunkerTankRepository {
 
     @Override
     public Optional<BunkerTank> findByIdForUpdate(UUID id) {
-        return repository.findByIdForUpdate(id).map(this::map);
+        var opt = repository.findByIdForUpdate(id);
+        opt.ifPresent(entityManager::refresh);
+        return opt.map(this::map);
     }
 
     @Override
@@ -59,7 +63,9 @@ class BunkerTankPersistenceAdapter implements BunkerTankRepository {
 
     @Override
     public Optional<BunkerTank> findActiveByStationAndFuelTypeForUpdate(UUID fuelStationId, String fuelType) {
-        return repository.findActiveByStationAndFuelTypeForUpdate(fuelStationId, fuelType).map(this::map);
+        var opt = repository.findActiveByStationAndFuelTypeForUpdate(fuelStationId, fuelType);
+        opt.ifPresent(entityManager::refresh);
+        return opt.map(this::map);
     }
 
     @Override

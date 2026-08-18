@@ -16,7 +16,7 @@ import java.util.UUID;
 @Getter
 @Setter
 @NoArgsConstructor
-class TripEntity {
+public class TripEntity {
     @Id
     private UUID id;
     @Column(name = "trip_number")

@@ -75,6 +75,7 @@ export const navigation: NavigationItem[] = [
     children: [
       { key: 'fuel-issues', label: 'Fuel Issues', path: '/fuel/issues', permission: 'FUEL_ISSUE_VIEW' },
       { key: 'fuel-purchases', label: 'Fuel Purchases', path: '/fuel/purchases', permission: 'FUEL_PURCHASE_VIEW' },
+      { key: 'bunker-tanks', label: 'Bunker Tanks', path: '/fuel/bunker-tanks', permission: 'BUNKER_VIEW' },
       { key: 'fuel-prices', label: 'Fuel Prices', path: '/fuel/prices', permission: 'FUEL_PRICE_VIEW' },
     ],
   },

@@ -71,6 +71,29 @@ const FUEL_PURCHASE_STATUS: PresentationMap = {
   RECONCILED: { color: 'success', label: 'Reconciled' }, CANCELLED: { color: 'volcano', label: 'Cancelled' },
 };
 
+const BUNKER_TANK_STATUS: PresentationMap = {
+  ACTIVE: { color: 'success', label: 'Active' },
+  INACTIVE: { color: 'default', label: 'Inactive' },
+  DECOMMISSIONED: { color: 'volcano', label: 'Decommissioned' },
+};
+
+const BUNKER_STOCK_STATUS: PresentationMap = {
+  NORMAL: { color: 'success', label: 'Normal' },
+  LOW_STOCK: { color: 'warning', label: 'Low Stock' },
+  NEAR_CAPACITY: { color: 'processing', label: 'Near Capacity' },
+  OUT_OF_SERVICE: { color: 'error', label: 'Out of Service' },
+};
+
+const BUNKER_MOVEMENT_TYPE: PresentationMap = {
+  OPENING_BALANCE: { color: 'default', label: 'Opening Balance' },
+  PURCHASE_RECEIPT: { color: 'success', label: 'Purchase Receipt' },
+  FUEL_ISSUE: { color: 'blue', label: 'Fuel Issue' },
+  TRANSFER_IN: { color: 'cyan', label: 'Transfer In' },
+  TRANSFER_OUT: { color: 'volcano', label: 'Transfer Out' },
+  ADJUSTMENT_IN: { color: 'purple', label: 'Adjustment (In)' },
+  ADJUSTMENT_OUT: { color: 'magenta', label: 'Adjustment (Out)' },
+};
+
 function presentation(value: string | null | undefined, mapping: PresentationMap): StatusPresentation {
   const normalized = value?.trim().toUpperCase() || 'UNKNOWN';
   return mapping[normalized] ?? {
@@ -89,6 +112,8 @@ export const vehicleStatusPresentation = (status?: string | null) => presentatio
 export const driverStatusPresentation = (status?: string | null) => presentation(status, DRIVER_STATUS);
 export const documentStatusPresentation = (status?: string | null) => presentation(status, DOCUMENT_STATUS);
 export const priorityPresentation = (priority?: string | null) => presentation(priority, PRIORITY);
+export const bunkerStockStatusPresentation = (status?: string | null) => presentation(status, BUNKER_STOCK_STATUS);
+export const bunkerMovementTypePresentation = (type?: string | null) => presentation(type, BUNKER_MOVEMENT_TYPE);
 
 export function TripStatusTag({ status, ...props }: { status?: string | null } & Omit<TagProps, 'color' | 'children'>) {
   return <PresentationTag {...props} value={status} mapping={TRIP_STATUS} />;
@@ -116,4 +141,16 @@ export function FuelIssueStatusTag({ status, ...props }: { status?: string | nul
 
 export function FuelPurchaseStatusTag({ status, ...props }: { status?: string | null } & Omit<TagProps, 'color' | 'children'>) {
   return <PresentationTag {...props} value={status} mapping={FUEL_PURCHASE_STATUS} />;
+}
+
+export function BunkerTankStatusTag({ status, ...props }: { status?: string | null } & Omit<TagProps, 'color' | 'children'>) {
+  return <PresentationTag {...props} value={status} mapping={BUNKER_TANK_STATUS} />;
+}
+
+export function BunkerStockStatusTag({ status, ...props }: { status?: string | null } & Omit<TagProps, 'color' | 'children'>) {
+  return <PresentationTag {...props} value={status} mapping={BUNKER_STOCK_STATUS} />;
+}
+
+export function BunkerMovementTypeTag({ type, ...props }: { type?: string | null } & Omit<TagProps, 'color' | 'children'>) {
+  return <PresentationTag {...props} value={type} mapping={BUNKER_MOVEMENT_TYPE} />;
 }
