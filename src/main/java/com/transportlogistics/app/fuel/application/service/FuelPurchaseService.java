@@ -7,6 +7,7 @@ import com.transportlogistics.app.fuel.FuelPurchaseReconciled;
 import com.transportlogistics.app.fuel.application.ports.in.FuelPurchaseUseCase;
 import com.transportlogistics.app.fuel.application.ports.out.*;
 import com.transportlogistics.app.fuel.domain.model.*;
+import com.transportlogistics.app.fuel.domain.policy.BunkerTankPolicy;
 import com.transportlogistics.app.fuel.domain.service.FuelPurchasePolicy;
 import com.transportlogistics.app.shared.domain.BusinessRuleException;
 import com.transportlogistics.app.shared.domain.ConflictException;
@@ -30,15 +31,30 @@ public final class FuelPurchaseService implements FuelPurchaseUseCase {
     private final FuelTransaction transactions;
     private final FuelEventPublisher events;
     private final FuelPurchasePolicy policy;
+    private final BunkerTankRepository bunkerTanks;
+    private final BunkerStockLedgerRepository bunkerMovements;
+    private final BunkerTankPolicy bunkerTankPolicy;
     private final Clock clock;
 
     public FuelPurchaseService(FuelPurchaseRepository purchases, FuelPurchaseHistoryRepository history,
                                FuelPriceRepository prices, FuelStationRepository stations, FuelVendorPort vendors,
                                FuelActorPort actors, FuelPurchaseNumberGenerator numbers, FuelTransaction transactions,
-                               FuelEventPublisher events, FuelPurchasePolicy policy, Clock clock) {
+                               FuelEventPublisher events, FuelPurchasePolicy policy,
+                               BunkerTankRepository bunkerTanks, BunkerStockLedgerRepository bunkerMovements,
+                               BunkerTankPolicy bunkerTankPolicy, Clock clock) {
         this.purchases = purchases; this.history = history; this.prices = prices; this.stations = stations;
         this.vendors = vendors; this.actors = actors; this.numbers = numbers; this.transactions = transactions;
-        this.events = events; this.policy = policy; this.clock = clock;
+        this.events = events; this.policy = policy;
+        this.bunkerTanks = bunkerTanks; this.bunkerMovements = bunkerMovements;
+        this.bunkerTankPolicy = bunkerTankPolicy != null ? bunkerTankPolicy : new BunkerTankPolicy();
+        this.clock = clock;
+    }
+
+    public FuelPurchaseService(FuelPurchaseRepository purchases, FuelPurchaseHistoryRepository history,
+                               FuelPriceRepository prices, FuelStationRepository stations, FuelVendorPort vendors,
+                               FuelActorPort actors, FuelPurchaseNumberGenerator numbers, FuelTransaction transactions,
+                               FuelEventPublisher events, FuelPurchasePolicy policy, Clock clock) {
+        this(purchases, history, prices, stations, vendors, actors, numbers, transactions, events, policy, null, null, null, clock);
     }
 
     @Override
@@ -93,8 +109,33 @@ public final class FuelPurchaseService implements FuelPurchaseUseCase {
             if (command.receivedQuantity() == null || command.receivedQuantity().signum() <= 0) throw new BusinessRuleException("INVALID_FUEL_PURCHASE_RECEIPT", "Received quantity must be greater than zero");
             OffsetDateTime receivedAt = command.receivedAt() == null ? now : command.receivedAt();
             if (receivedAt.isAfter(now.plusMinutes(5))) throw new BusinessRuleException("INVALID_FUEL_PURCHASE_RECEIPT", "Received time cannot be in the future");
-            UUID destination = command.destinationFuelStationId() != null ? command.destinationFuelStationId() : current.fuelStationId();
-            validateStation(destination);
+            UUID destination = command.destinationFuelStationId() != null ? command.destinationFuelStationId() : (current.destinationFuelStationId() != null ? current.destinationFuelStationId() : current.fuelStationId());
+            FuelStation station = validateStation(destination);
+            if (station != null && station.isInternal() && bunkerTanks != null) {
+                var bunkerTank = bunkerTanks.findActiveByStationAndFuelTypeForUpdate(destination, current.fuelType())
+                        .orElseThrow(() -> new BusinessRuleException("NO_ACTIVE_BUNKER_TANK", "No active bunker tank found for internal fuel station " + destination + " and fuel type " + current.fuelType()));
+                boolean alreadyReceived = bunkerMovements != null && bunkerMovements.existsByTankIdAndReference(bunkerTank.id(), BunkerReferenceType.FUEL_PURCHASE, current.id());
+                if (!alreadyReceived) {
+                    bunkerTankPolicy.validateReceivable(bunkerTank, command.receivedQuantity(), current.fuelType());
+                    BigDecimal newStock = bunkerTank.currentStockLiters().add(command.receivedQuantity()).setScale(BunkerTankPolicy.QUANTITY_SCALE, java.math.RoundingMode.HALF_UP);
+                    bunkerTanks.save(bunkerTank.withStock(newStock));
+                    if (bunkerMovements != null) {
+                        bunkerMovements.save(new BunkerStockMovement(
+                                UUID.randomUUID(),
+                                bunkerTank.id(),
+                                BunkerMovementType.PURCHASE_RECEIPT,
+                                command.receivedQuantity(),
+                                newStock,
+                                BunkerReferenceType.FUEL_PURCHASE,
+                                current.id(),
+                                receivedAt,
+                                actor.id(),
+                                "Fuel purchase receipt " + current.purchaseNumber() + (command.deliveryNoteNumber() != null ? " (DN: " + command.deliveryNoteNumber().trim() + ")" : ""),
+                                now
+                        ));
+                    }
+                }
+            }
             BigDecimal variance = command.receivedQuantity().subtract(current.quantity()).setScale(FuelPurchasePolicy.QUANTITY_SCALE, java.math.RoundingMode.HALF_UP);
             return copy(current, FuelPurchaseStatus.RECEIVED, ReconciliationStatus.PENDING, command.receivedQuantity(), variance,
                     destination, trim(command.deliveryNoteNumber()), receivedAt, current.approvedBy(), current.approvedAt(),
@@ -161,10 +202,11 @@ public final class FuelPurchaseService implements FuelPurchaseUseCase {
         validateStation(purchase.fuelStationId());
     }
 
-    private void validateStation(UUID stationId) {
-        if (stationId == null) return;
+    private FuelStation validateStation(UUID stationId) {
+        if (stationId == null) return null;
         var station = stations.findById(stationId).orElseThrow(() -> new BusinessRuleException("FUEL_STATION_NOT_FOUND", "Fuel station not found: " + stationId));
         if (!station.active()) throw new BusinessRuleException("FUEL_STATION_INACTIVE", "Inactive fuel station cannot receive fuel");
+        return station;
     }
 
     private void validateInvoice(FuelPurchase purchase) {

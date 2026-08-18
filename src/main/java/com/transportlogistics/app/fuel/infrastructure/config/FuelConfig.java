@@ -27,6 +27,7 @@ import com.transportlogistics.app.fuel.domain.service.FuelPurchasePolicy;
 import com.transportlogistics.app.fuel.application.ports.out.FuelVehicleReadingPort;
 import com.transportlogistics.app.fuel.application.ports.out.BunkerStockLedgerRepository;
 import com.transportlogistics.app.fuel.application.ports.out.BunkerTankRepository;
+import com.transportlogistics.app.fuel.domain.policy.BunkerTankPolicy;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -34,6 +35,11 @@ import java.time.Clock;
 
 @Configuration
 class FuelConfig {
+    @Bean
+    BunkerTankPolicy bunkerTankPolicy() {
+        return new BunkerTankPolicy();
+    }
+
     @Bean
     FuelIssueUseCase fuelIssueUseCase(FuelIssueRepository issues, FuelIssueHistoryRepository history,
                                       FuelStationRepository stations, FuelLimitPolicyRepository limits,
@@ -69,8 +75,10 @@ class FuelConfig {
                                             FuelPriceRepository prices, FuelStationRepository stations,
                                             FuelVendorPort vendors, FuelActorPort actors,
                                             FuelPurchaseNumberGenerator numbers, FuelTransaction transactions,
-                                            FuelEventPublisher events, FuelPurchasePolicy policy, Clock clock) {
+                                            FuelEventPublisher events, FuelPurchasePolicy policy,
+                                            BunkerTankRepository bunkerTanks, BunkerStockLedgerRepository bunkerMovements,
+                                            BunkerTankPolicy bunkerTankPolicy, Clock clock) {
         return new FuelPurchaseService(purchases, history, prices, stations, vendors, actors, numbers,
-                transactions, events, policy, clock);
+                transactions, events, policy, bunkerTanks, bunkerMovements, bunkerTankPolicy, clock);
     }
 }
