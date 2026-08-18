@@ -6,10 +6,13 @@ import com.transportlogistics.app.fuel.TripFuelCost;
 import com.transportlogistics.app.fuel.TripFuelCostCalculationStatus;
 import com.transportlogistics.app.fuel.TripFuelCostLine;
 import com.transportlogistics.app.fuel.application.ports.in.TripFuelCostUseCase;
+import com.transportlogistics.app.fuel.infrastructure.adapters.in.web.controllers.TripFuelCostController;
+import com.transportlogistics.app.fuel.infrastructure.adapters.in.web.mappers.TripFuelCostWebMapper;
 import com.transportlogistics.app.shared.domain.NotFoundException;
 import com.transportlogistics.app.shared.web.GlobalExceptionHandler;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mapstruct.factory.Mappers;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -36,7 +39,8 @@ class TripFuelCostControllerTest {
     @BeforeEach
     void setUp() {
         tripFuelCostUseCase = mock(TripFuelCostUseCase.class);
-        mockMvc = MockMvcBuilders.standaloneSetup(new TripFuelCostController(tripFuelCostUseCase))
+        var mapper = Mappers.getMapper(TripFuelCostWebMapper.class);
+        mockMvc = MockMvcBuilders.standaloneSetup(new TripFuelCostController(tripFuelCostUseCase, mapper))
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .build();
     }
@@ -58,32 +62,32 @@ class TripFuelCostControllerTest {
                 TripFuelCostCalculationStatus.COMPLETE,
                 List.of(new TripFuelCostLine(
                         UUID.randomUUID(), "VOUCHER-01", OffsetDateTime.now(), new BigDecimal("30.000"),
-                        new BigDecimal("303.33"), new BigDecimal("9100.00"), PricingSource.EXPLICIT_ISSUE_PRICE,
-                        "LKR", UUID.randomUUID(), "DIESEL"
-                )),
+                        new BigDecimal("300.00"), new BigDecimal("9000.00"), PricingSource.EXPLICIT_ISSUE_PRICE,
+                        "LKR", UUID.randomUUID(), "DIESEL")),
                 OffsetDateTime.now()
         );
-
         when(tripFuelCostUseCase.getTripFuelCost(tripId)).thenReturn(cost);
 
         mockMvc.perform(get("/trips/{tripId}/fuel-cost", tripId)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.tripId").value(tripId.toString()))
-                .andExpect(jsonPath("$.totalFuelQuantityLiters").value(30.000))
                 .andExpect(jsonPath("$.totalFuelCost").value(9100.00))
                 .andExpect(jsonPath("$.costPerKm").value(45.50))
+                .andExpect(jsonPath("$.litersPer100Km").value(15.00))
                 .andExpect(jsonPath("$.calculationStatus").value("COMPLETE"))
-                .andExpect(jsonPath("$.lines[0].pricingSource").value("EXPLICIT_ISSUE_PRICE"));
+                .andExpect(jsonPath("$.lines").isArray())
+                .andExpect(jsonPath("$.lines[0].voucherNumber").value("VOUCHER-01"));
     }
 
     @Test
-    void getTripFuelCostReturns404WhenTripNotFound() throws Exception {
+    void getTripFuelCostNotFoundReturns404() throws Exception {
         when(tripFuelCostUseCase.getTripFuelCost(tripId))
                 .thenThrow(new NotFoundException("TRIP_NOT_FOUND", "Trip not found"));
 
         mockMvc.perform(get("/trips/{tripId}/fuel-cost", tripId)
                         .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("TRIP_NOT_FOUND"));
     }
 }

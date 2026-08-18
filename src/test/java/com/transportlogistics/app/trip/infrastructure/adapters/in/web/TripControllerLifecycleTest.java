@@ -5,7 +5,10 @@ import com.transportlogistics.app.shared.domain.BusinessRuleException;
 import com.transportlogistics.app.shared.web.GlobalExceptionHandler;
 import com.transportlogistics.app.trip.application.ports.in.TripUseCase;
 import com.transportlogistics.app.trip.domain.model.TripCommand;
+import com.transportlogistics.app.trip.infrastructure.adapters.in.web.controllers.TripController;
+import com.transportlogistics.app.trip.infrastructure.adapters.in.web.mappers.TripWebMapper;
 import org.junit.jupiter.api.Test;
+import org.mapstruct.factory.Mappers;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
@@ -22,7 +25,8 @@ class TripControllerLifecycleTest {
         var trips = mock(TripUseCase.class);
         var origin = UUID.randomUUID();
         var destination = UUID.randomUUID();
-        var mvc = MockMvcBuilders.standaloneSetup(new TripController(trips)).build();
+        var mapper = Mappers.getMapper(TripWebMapper.class);
+        var mvc = MockMvcBuilders.standaloneSetup(new TripController(trips, mapper)).build();
 
         mvc.perform(post("/trips").contentType(MediaType.APPLICATION_JSON).content("""
                 {"originLocationId":"%s","destinationLocationId":"%s",
@@ -39,7 +43,8 @@ class TripControllerLifecycleTest {
     void lifecycleEndpointsPassAuthenticatedActorAndTypedExecutionValues() throws Exception {
         var trips = mock(TripUseCase.class);
         var tripId = UUID.randomUUID();
-        var mvc = MockMvcBuilders.standaloneSetup(new TripController(trips)).build();
+        var mapper = Mappers.getMapper(TripWebMapper.class);
+        var mvc = MockMvcBuilders.standaloneSetup(new TripController(trips, mapper)).build();
 
         mvc.perform(post("/trips/{id}/submit", tripId).principal(() -> "requester"))
                 .andExpect(status().isOk());
@@ -65,7 +70,8 @@ class TripControllerLifecycleTest {
         var trips = mock(TripUseCase.class);
         var tripId = UUID.randomUUID();
         var routeId = UUID.randomUUID();
-        var mvc = MockMvcBuilders.standaloneSetup(new TripController(trips)).build();
+        var mapper = Mappers.getMapper(TripWebMapper.class);
+        var mvc = MockMvcBuilders.standaloneSetup(new TripController(trips, mapper)).build();
 
         mvc.perform(post("/trips/{id}/assign-route", tripId).principal(() -> "planner")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -81,7 +87,8 @@ class TripControllerLifecycleTest {
         var tripId = UUID.randomUUID();
         when(trips.transition(tripId, new TripCommand.Approve(), "approver"))
                 .thenThrow(new ConflictException("TRIP_NOT_APPROVABLE", "Approve requires a SUBMITTED trip"));
-        var mvc = MockMvcBuilders.standaloneSetup(new TripController(trips))
+        var mapper = Mappers.getMapper(TripWebMapper.class);
+        var mvc = MockMvcBuilders.standaloneSetup(new TripController(trips, mapper))
                 .setControllerAdvice(new GlobalExceptionHandler()).build();
 
         mvc.perform(post("/trips/{id}/approve", tripId).principal(() -> "approver")
@@ -98,7 +105,8 @@ class TripControllerLifecycleTest {
         when(trips.transition(tripId, new TripCommand.Cancel(null), "dispatcher"))
                 .thenThrow(new BusinessRuleException("CANCELLATION_REASON_REQUIRED",
                         "Cancellation reason is required"));
-        var mvc = MockMvcBuilders.standaloneSetup(new TripController(trips))
+        var mapper = Mappers.getMapper(TripWebMapper.class);
+        var mvc = MockMvcBuilders.standaloneSetup(new TripController(trips, mapper))
                 .setControllerAdvice(new GlobalExceptionHandler()).build();
 
         mvc.perform(post("/trips/{id}/cancel", tripId).principal(() -> "dispatcher"))

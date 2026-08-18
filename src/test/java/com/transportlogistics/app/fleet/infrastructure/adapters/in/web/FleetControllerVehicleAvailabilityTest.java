@@ -2,7 +2,10 @@ package com.transportlogistics.app.fleet.infrastructure.adapters.in.web;
 
 import com.transportlogistics.app.fleet.application.ports.in.*;
 import com.transportlogistics.app.fleet.domain.model.VehicleAvailability;
+import com.transportlogistics.app.fleet.infrastructure.adapters.in.web.controllers.FleetController;
+import com.transportlogistics.app.fleet.infrastructure.adapters.in.web.mappers.FleetWebMapper;
 import org.junit.jupiter.api.Test;
+import org.mapstruct.factory.Mappers;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
@@ -22,10 +25,11 @@ class FleetControllerVehicleAvailabilityTest {
         var result = new VehicleAvailability(false, List.of(
                 new VehicleAvailability.Reason(OVERLAPPING_ALLOCATION, "Vehicle has an overlapping trip allocation")));
         when(availability.evaluate(any())).thenReturn(result);
+        var mapper = Mappers.getMapper(FleetWebMapper.class);
         var controller = new FleetController(mock(DriverUseCase.class), mock(DriverAvailabilityUseCase.class),
                 mock(DriverLicenseUseCase.class),
                 mock(VehicleUseCase.class), availability, mock(VehicleCategoryUseCase.class),
-                mock(VehicleTypeUseCase.class), mock(VehicleDocumentUseCase.class));
+                mock(VehicleTypeUseCase.class), mock(VehicleDocumentUseCase.class), mapper);
         MockMvc mvc = MockMvcBuilders.standaloneSetup(controller).build();
 
         mvc.perform(get("/vehicles/{id}/availability", UUID.randomUUID())

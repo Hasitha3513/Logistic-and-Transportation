@@ -3,9 +3,12 @@ package com.transportlogistics.app.fleet.infrastructure.adapters.in.web;
 import com.transportlogistics.app.fleet.application.ports.in.*;
 import com.transportlogistics.app.fleet.domain.model.VehicleDocument;
 import com.transportlogistics.app.fleet.domain.model.VehicleDocumentStatus;
+import com.transportlogistics.app.fleet.infrastructure.adapters.in.web.controllers.FleetController;
+import com.transportlogistics.app.fleet.infrastructure.adapters.in.web.mappers.FleetWebMapper;
 import com.transportlogistics.app.shared.web.GlobalExceptionHandler;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mapstruct.factory.Mappers;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -28,10 +31,11 @@ class FleetControllerVehicleDocumentTest {
     @BeforeEach
     void setUp() {
         documents = mock(VehicleDocumentUseCase.class);
+        var mapper = Mappers.getMapper(FleetWebMapper.class);
         var controller = new FleetController(mock(DriverUseCase.class), mock(DriverAvailabilityUseCase.class),
                 mock(DriverLicenseUseCase.class),
                 mock(VehicleUseCase.class), mock(VehicleAvailabilityUseCase.class),
-                mock(VehicleCategoryUseCase.class), mock(VehicleTypeUseCase.class), documents);
+                mock(VehicleCategoryUseCase.class), mock(VehicleTypeUseCase.class), documents, mapper);
         mvc = MockMvcBuilders.standaloneSetup(controller).setControllerAdvice(new GlobalExceptionHandler()).build();
         vehicleId = UUID.randomUUID();
     }
@@ -47,7 +51,7 @@ class FleetControllerVehicleDocumentTest {
                         .content("""
                                 {"documentType":"insurance","documentNumber":"POL-1","issueDate":"2025-01-01",
                                  "expiryDate":"2027-01-01","fileReference":"https://files.example/POL-1",
-                                 "mandatoryForDispatch":true}
+                                 "mandatoryForDispatch":true,"status":"ACTIVE","active":true}
                                 """))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.vehicleId").value(vehicleId.toString()))

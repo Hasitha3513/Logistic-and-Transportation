@@ -3,9 +3,12 @@ package com.transportlogistics.app.fleet.infrastructure.adapters.in.web;
 import com.transportlogistics.app.fleet.application.ports.in.*;
 import com.transportlogistics.app.fleet.domain.model.DriverLicense;
 import com.transportlogistics.app.fleet.domain.model.DriverLicenseStatus;
+import com.transportlogistics.app.fleet.infrastructure.adapters.in.web.controllers.FleetController;
+import com.transportlogistics.app.fleet.infrastructure.adapters.in.web.mappers.FleetWebMapper;
 import com.transportlogistics.app.shared.web.GlobalExceptionHandler;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mapstruct.factory.Mappers;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -28,10 +31,11 @@ class FleetControllerDriverLicenseTest {
     @BeforeEach
     void setUp() {
         licenses = mock(DriverLicenseUseCase.class);
+        var mapper = Mappers.getMapper(FleetWebMapper.class);
         var controller = new FleetController(mock(DriverUseCase.class), mock(DriverAvailabilityUseCase.class),
                 licenses, mock(VehicleUseCase.class),
                 mock(VehicleAvailabilityUseCase.class), mock(VehicleCategoryUseCase.class), mock(VehicleTypeUseCase.class),
-                mock(VehicleDocumentUseCase.class));
+                mock(VehicleDocumentUseCase.class), mapper);
         mvc = MockMvcBuilders.standaloneSetup(controller).setControllerAdvice(new GlobalExceptionHandler()).build();
         driverId = UUID.randomUUID();
     }
@@ -46,7 +50,7 @@ class FleetControllerDriverLicenseTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"licenseNumber":"DL-1","licenseClass":"B","issueDate":"2025-01-01",
-                                 "expiryDate":"2027-01-01"}
+                                 "expiryDate":"2027-01-01","status":"ACTIVE","active":true}
                                 """))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.driverId").value(driverId.toString()))

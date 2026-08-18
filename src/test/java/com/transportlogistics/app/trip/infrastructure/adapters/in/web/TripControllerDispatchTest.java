@@ -1,7 +1,10 @@
 package com.transportlogistics.app.trip.infrastructure.adapters.in.web;
 
 import com.transportlogistics.app.trip.application.ports.in.TripUseCase;
+import com.transportlogistics.app.trip.infrastructure.adapters.in.web.controllers.TripController;
+import com.transportlogistics.app.trip.infrastructure.adapters.in.web.mappers.TripWebMapper;
 import org.junit.jupiter.api.Test;
+import org.mapstruct.factory.Mappers;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
@@ -16,7 +19,8 @@ class TripControllerDispatchTest {
     void passesAuthenticatedActorAndRemarksToDispatchUseCase() throws Exception {
         var trips = mock(TripUseCase.class);
         var tripId = UUID.randomUUID();
-        var mvc = MockMvcBuilders.standaloneSetup(new TripController(trips)).build();
+        var mapper = Mappers.getMapper(TripWebMapper.class);
+        var mvc = MockMvcBuilders.standaloneSetup(new TripController(trips, mapper)).build();
 
         mvc.perform(post("/trips/{tripId}/dispatch", tripId).principal(() -> "dispatcher")
                         .contentType(MediaType.APPLICATION_JSON).content("{\"remarks\":\"Gate 4\"}"))

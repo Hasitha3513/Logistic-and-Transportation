@@ -3,7 +3,10 @@ package com.transportlogistics.app.trip.infrastructure.adapters.in.web;
 import com.transportlogistics.app.shared.domain.ConflictException;
 import com.transportlogistics.app.shared.web.GlobalExceptionHandler;
 import com.transportlogistics.app.trip.application.ports.in.TripUseCase;
+import com.transportlogistics.app.trip.infrastructure.adapters.in.web.controllers.TripController;
+import com.transportlogistics.app.trip.infrastructure.adapters.in.web.mappers.TripWebMapper;
 import org.junit.jupiter.api.Test;
+import org.mapstruct.factory.Mappers;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
@@ -21,7 +24,8 @@ class TripControllerVehicleAssignmentTest {
         var vehicleId = UUID.randomUUID();
         when(trips.assignVehicle(tripId, vehicleId, "dispatcher"))
                 .thenThrow(new ConflictException("Vehicle already has an overlapping trip allocation"));
-        var mvc = MockMvcBuilders.standaloneSetup(new TripController(trips))
+        var mapper = Mappers.getMapper(TripWebMapper.class);
+        var mvc = MockMvcBuilders.standaloneSetup(new TripController(trips, mapper))
                 .setControllerAdvice(new GlobalExceptionHandler()).build();
 
         mvc.perform(post("/trips/{tripId}/assign-vehicle", tripId).principal(() -> "dispatcher")
