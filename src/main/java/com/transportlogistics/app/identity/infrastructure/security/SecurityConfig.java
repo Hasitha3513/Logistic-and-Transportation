@@ -158,12 +158,23 @@ class SecurityConfig {
                         .requestMatchers(HttpMethod.PUT, "/fuel-prices/*", "/vendors/*").hasAuthority("FUEL_PRICE_MANAGE")
                         .requestMatchers(HttpMethod.DELETE, "/vendors/*").hasAuthority("FUEL_PRICE_MANAGE")
 
+                        .requestMatchers(HttpMethod.GET, "/bunker-tanks/*/movements").hasAuthority("BUNKER_LEDGER_VIEW")
+                        .requestMatchers(HttpMethod.GET, "/bunker-tanks", "/bunker-tanks/*", "/bunker-tanks/*/balance", "/bunker-tanks/*/dip-readings")
+                        .hasAuthority("BUNKER_VIEW")
+                        .requestMatchers(HttpMethod.POST, "/bunker-tanks").hasAuthority("BUNKER_CREATE")
+                        .requestMatchers(HttpMethod.PUT, "/bunker-tanks/*").hasAuthority("BUNKER_UPDATE")
+                        .requestMatchers(HttpMethod.POST, "/bunker-tanks/*/opening-balance", "/bunker-tanks/*/adjustments")
+                        .hasAuthority("BUNKER_ADJUST")
+                        .requestMatchers(HttpMethod.POST, "/bunker-tanks/*/dip-readings").hasAuthority("BUNKER_DIP_RECORD")
+                        .requestMatchers(HttpMethod.POST, "/bunker-transfers").hasAuthority("BUNKER_TRANSFER")
+
                         .requestMatchers(HttpMethod.GET, "/dashboard/**").hasAuthority("DASHBOARD_VIEW")
                         .requestMatchers(HttpMethod.GET, "/reports/**").hasAuthority("REPORT_VIEW")
                         .requestMatchers("/vehicles/**", "/drivers/**", "/vehicle-categories/**", "/vehicle-types/**",
                                 "/routes/**", "/customers/**", "/departments/**", "/locations/**", "/projects/**",
                                 "/trips/**", "/fuel-issues/**", "/fuel-stations/**",
                                 "/fuel-purchases/**", "/fuel-prices/**", "/vendors/**",
+                                "/bunker-tanks/**", "/bunker-transfers/**",
                                 "/dashboard/**", "/reports/**").denyAll()
                         .anyRequest().authenticated())
                 .addFilterBefore(jwt, UsernamePasswordAuthenticationFilter.class)

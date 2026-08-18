@@ -35,7 +35,10 @@ class FuelIssueServiceTest {
     private TripFuelContextPort trips;
     private FuelEventPublisher events;
     private FuelPriceRepository priceRepo;
+    private BunkerTankRepository bunkerTanks;
+    private BunkerStockLedgerRepository bunkerMovements;
     private FuelIssueService service;
+    private BunkerTank activeTank;
 
     @BeforeEach
     void setUp() {
@@ -46,6 +49,8 @@ class FuelIssueServiceTest {
         vehicles = mock(VehicleFuelContextPort.class);
         trips = mock(TripFuelContextPort.class);
         events = mock(FuelEventPublisher.class);
+        bunkerTanks = mock(BunkerTankRepository.class);
+        bunkerMovements = mock(BunkerStockLedgerRepository.class);
         var actors = mock(FuelActorPort.class);
         var vouchers = mock(FuelVoucherGenerator.class);
         var transaction = mock(FuelTransaction.class);
@@ -62,8 +67,18 @@ class FuelIssueServiceTest {
         when(limits.findApplicable(vehicleId)).thenReturn(List.of());
         priceRepo = mock(FuelPriceRepository.class);
         when(priceRepo.findEffective(any(), any(), any())).thenReturn(Optional.empty());
+
+        activeTank = new BunkerTank(UUID.randomUUID(), stationId, "BNK-01", "Main Tank", "DIESEL",
+                new BigDecimal("10000.000"), new BigDecimal("5000.000"), new BigDecimal("500.000"),
+                BunkerTankStatus.ACTIVE, OffsetDateTime.now(), true, OffsetDateTime.now(), OffsetDateTime.now());
+        when(bunkerTanks.findActiveByStationAndFuelType(stationId, "DIESEL")).thenReturn(Optional.of(activeTank));
+        when(bunkerTanks.findActiveByStationAndFuelTypeForUpdate(stationId, "DIESEL")).thenReturn(Optional.of(activeTank));
+        when(bunkerTanks.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+        when(bunkerMovements.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
         service = new FuelIssueService(issues, history, stations, limits, vehicles, trips, actors, vouchers,
-                transaction, events, priceRepo, Clock.fixed(Instant.parse("2026-08-15T00:00:00Z"), ZoneOffset.UTC));
+                transaction, events, priceRepo, null, bunkerTanks, bunkerMovements,
+                Clock.fixed(Instant.parse("2026-08-15T00:00:00Z"), ZoneOffset.UTC));
     }
 
     @Test
@@ -245,5 +260,57 @@ class FuelIssueServiceTest {
         when(issues.findByIdForUpdate(issueId)).thenReturn(Optional.of(authorized));
 
         assertThrows(ConflictException.class, () -> fuelService.issue(issueId, "operator"));
+    }
+
+    @Test
+    void rejectsInternalIssueWhenNoActiveBunkerTank() {
+        when(bunkerTanks.findActiveByStationAndFuelType(stationId, "DIESEL")).thenReturn(Optional.empty());
+        assertCode("NO_ACTIVE_BUNKER_TANK", () -> service.create(command(null, vehicleId, new BigDecimal("50")), "operator"));
+    }
+
+    @Test
+    void rejectsInternalIssueWhenBunkerStockIsInsufficient() {
+        var lowTank = activeTank.withStock(new BigDecimal("20.000"));
+        when(bunkerTanks.findActiveByStationAndFuelType(stationId, "DIESEL")).thenReturn(Optional.of(lowTank));
+        assertCode("INSUFFICIENT_BUNKER_STOCK", () -> service.create(command(null, vehicleId, new BigDecimal("50")), "operator"));
+    }
+
+    @Test
+    void deductsBunkerStockAndAppendsMovementOnIssue() {
+        var issueId = UUID.randomUUID();
+        var authorized = withStatus(new FuelIssue(issueId, "FUEL-2026-000001", vehicleId, null, null, "DIESEL",
+                new BigDecimal("50"), null, null, stationId, new BigDecimal("10500"), new BigDecimal("150"),
+                time(), FuelIssueStatus.AUTHORIZED, actorId, actorId, time(), null, time(), time()), FuelIssueStatus.AUTHORIZED);
+        when(issues.findByIdForUpdate(issueId)).thenReturn(Optional.of(authorized));
+
+        var issued = service.issue(issueId, "operator");
+        assertEquals(FuelIssueStatus.ISSUED, issued.status());
+
+        // Verify bunker tank stock decremented by 50 L (5000 - 50 = 4950)
+        verify(bunkerTanks).save(argThat(tank -> tank.currentStockLiters().compareTo(new BigDecimal("4950.000")) == 0));
+        // Verify ledger movement recorded
+        verify(bunkerMovements).save(argThat(m -> m.movementType() == BunkerMovementType.FUEL_ISSUE
+                && m.referenceType() == BunkerReferenceType.FUEL_ISSUE
+                && m.referenceId().equals(issueId)
+                && m.quantityLiters().compareTo(new BigDecimal("50")) == 0
+                && m.resultingBalanceLiters().compareTo(new BigDecimal("4950.000")) == 0));
+    }
+
+    @Test
+    void bypassesBunkerDeductionForExternalStation() {
+        var extStationId = UUID.randomUUID();
+        when(stations.findById(extStationId)).thenReturn(Optional.of(new FuelStation(extStationId, "EXT-01", "External Station",
+                FuelStationType.EXTERNAL, true, UUID.randomUUID(), null)));
+
+        var issueId = UUID.randomUUID();
+        var authorized = withStatus(new FuelIssue(issueId, "FUEL-2026-000002", vehicleId, null, null, "DIESEL",
+                new BigDecimal("50"), null, null, extStationId, new BigDecimal("10500"), new BigDecimal("150"),
+                time(), FuelIssueStatus.AUTHORIZED, actorId, actorId, time(), null, time(), time()), FuelIssueStatus.AUTHORIZED);
+        when(issues.findByIdForUpdate(issueId)).thenReturn(Optional.of(authorized));
+
+        var issued = service.issue(issueId, "operator");
+        assertEquals(FuelIssueStatus.ISSUED, issued.status());
+
+        verify(bunkerTanks, never()).findActiveByStationAndFuelTypeForUpdate(eq(extStationId), any());
     }
 }

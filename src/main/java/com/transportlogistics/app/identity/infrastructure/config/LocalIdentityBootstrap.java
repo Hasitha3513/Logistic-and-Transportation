@@ -6,6 +6,7 @@ import com.transportlogistics.app.identity.domain.model.User;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.core.annotation.Order;
 import org.springframework.core.env.Environment;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
@@ -15,7 +16,8 @@ import java.util.Set;
 import java.util.UUID;
 
 @Component
-@Profile({"h2", "docker"})
+@Order(1)
+@Profile({"h2", "docker", "postgres"})
 @ConditionalOnProperty(name = "app.dev.identity-bootstrap.enabled", havingValue = "true")
 class LocalIdentityBootstrap implements ApplicationRunner {
     private static final Set<String> MVP_PERMISSIONS = Set.of(
@@ -37,6 +39,7 @@ class LocalIdentityBootstrap implements ApplicationRunner {
             "FUEL_PURCHASE_APPROVE", "FUEL_PURCHASE_RECEIVE", "FUEL_PURCHASE_RECONCILE", "FUEL_PURCHASE_CANCEL",
             "FUEL_PRICE_VIEW", "FUEL_PRICE_MANAGE",
             "FUEL_COST_VIEW",
+            "BUNKER_VIEW", "BUNKER_CREATE", "BUNKER_UPDATE", "BUNKER_LEDGER_VIEW", "BUNKER_DIP_RECORD", "BUNKER_ADJUST", "BUNKER_TRANSFER",
             "VEHICLE_READING_VIEW", "VEHICLE_READING_CREATE", "VEHICLE_READING_CORRECT", "VEHICLE_READING_RESET_METER");
 
     private final IdentityUseCase identities;

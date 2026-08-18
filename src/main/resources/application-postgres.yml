@@ -20,3 +20,12 @@ spring:
 security:
   jwt:
     secret: ${JWT_SECRET}
+app:
+  dev:
+    identity-bootstrap:
+      enabled: ${APP_DEV_IDENTITY_BOOTSTRAP_ENABLED:${DEV_IDENTITY_BOOTSTRAP_ENABLED:false}}
+      username: ${APP_DEV_IDENTITY_BOOTSTRAP_USERNAME:${DEV_IDENTITY_USERNAME:admin}}
+      password: ${APP_DEV_IDENTITY_BOOTSTRAP_PASSWORD:${DEV_IDENTITY_PASSWORD:}}
+      email: ${APP_DEV_IDENTITY_BOOTSTRAP_EMAIL:${DEV_IDENTITY_EMAIL:admin@localhost.test}}
+    sample-data:
+      enabled: ${APP_DEV_SAMPLE_DATA_ENABLED:${DEV_SAMPLE_DATA_ENABLED:false}}
