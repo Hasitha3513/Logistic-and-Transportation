@@ -6,6 +6,7 @@ import com.transportlogistics.app.identity.domain.model.User;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.core.annotation.Order;
 import org.springframework.core.env.Environment;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
@@ -15,7 +16,8 @@ import java.util.Set;
 import java.util.UUID;
 
 @Component
-@Profile({"h2", "docker"})
+@Order(1)
+@Profile({"h2", "docker", "postgres"})
 @ConditionalOnProperty(name = "app.dev.identity-bootstrap.enabled", havingValue = "true")
 class LocalIdentityBootstrap implements ApplicationRunner {
     private static final Set<String> MVP_PERMISSIONS = Set.of(

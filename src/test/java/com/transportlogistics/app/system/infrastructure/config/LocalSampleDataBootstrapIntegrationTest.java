@@ -29,10 +29,13 @@ class LocalSampleDataBootstrapIntegrationTest {
         jdbc.update("DELETE FROM vehicle_document");
         jdbc.update("DELETE FROM vehicle_meter_reset");
         jdbc.update("DELETE FROM vehicle_reading");
+        jdbc.update("DELETE FROM fuel_limit_policy");
+        jdbc.update("DELETE FROM fuel_price");
+        jdbc.update("DELETE FROM fuel_station");
+        jdbc.update("DELETE FROM vendor");
         jdbc.update("DELETE FROM vehicle");
         jdbc.update("DELETE FROM vehicle_type");
         jdbc.update("DELETE FROM vehicle_category");
-        jdbc.update("DELETE FROM fuel_station");
         jdbc.update("DELETE FROM project");
         jdbc.update("DELETE FROM department");
         jdbc.update("DELETE FROM location");
@@ -51,6 +54,10 @@ class LocalSampleDataBootstrapIntegrationTest {
         assertEquals(3, count("driver"));
         assertEquals(2, count("route"));
         assertEquals(7, count("trip"));
+        assertEquals(2, count("vendor"));
+        assertEquals(3, count("fuel_price"));
+        assertEquals(2, count("fuel_station"));
+        assertEquals(2, count("fuel_limit_policy"));
 
         var route = routes.get(java.util.UUID.fromString("50000000-0000-0000-0000-000000000001"));
         assertEquals(1, route.stopLocationIds().size());
