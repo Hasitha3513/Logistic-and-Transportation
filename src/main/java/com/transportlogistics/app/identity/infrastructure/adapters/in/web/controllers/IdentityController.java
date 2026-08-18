@@ -1,4 +1,4 @@
-package com.transportlogistics.app.identity.infrastructure.adapters.in.web;
+package com.transportlogistics.app.identity.infrastructure.adapters.in.web.controllers;
 
 import com.transportlogistics.app.identity.application.ports.in.IdentityUseCase;
 import com.transportlogistics.app.identity.domain.model.Role;
@@ -11,6 +11,15 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+
+import com.transportlogistics.app.identity.infrastructure.adapters.in.web.dto.request.LoginRequest;
+import com.transportlogistics.app.identity.infrastructure.adapters.in.web.dto.request.RefreshTokenRequest;
+import com.transportlogistics.app.identity.infrastructure.adapters.in.web.dto.request.UserRequest;
+import com.transportlogistics.app.identity.infrastructure.adapters.in.web.dto.request.RoleRequest;
+
+import com.transportlogistics.app.identity.infrastructure.adapters.in.web.dto.response.AuthResponse;
+import com.transportlogistics.app.identity.infrastructure.adapters.in.web.dto.response.MessageResponse;
+import com.transportlogistics.app.identity.infrastructure.adapters.in.web.dto.response.UserResponse;
 
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -102,12 +111,7 @@ public class IdentityController {
         return new MessageResponse("Role deleted");
     }
 
-    record LoginRequest(@NotBlank String username, @NotBlank String password) {
-        @Override
-        public String toString() {
-            return "LoginRequest[username=" + username + ", password=***]";
-        }
-    }
+
 
     record RefreshTokenRequest(@NotBlank String refreshToken) {
         @Override
