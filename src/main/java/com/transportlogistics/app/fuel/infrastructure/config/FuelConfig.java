@@ -38,9 +38,9 @@ class FuelConfig {
                                       VehicleFuelContextPort vehicles, TripFuelContextPort trips,
                                       FuelActorPort actors, FuelVoucherGenerator vouchers,
                                       FuelTransaction transactions, FuelEventPublisher events,
-                                      FuelVehicleReadingPort readings, Clock clock) {
+                                      FuelVehicleReadingPort readings, FuelPriceRepository fuelPrices, Clock clock) {
         return new FuelIssueService(issues, history, stations, limits, vehicles, trips, actors, vouchers,
-                transactions, events, readings, clock);
+                transactions, events, fuelPrices, readings, clock);
     }
 
     @Bean

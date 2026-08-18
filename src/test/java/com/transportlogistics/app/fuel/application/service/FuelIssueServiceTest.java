@@ -7,7 +7,6 @@ import com.transportlogistics.app.shared.domain.BusinessRuleException;
 import com.transportlogistics.app.shared.domain.ConflictException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
 import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Instant;
@@ -16,10 +15,13 @@ import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.authentication.TestingAuthenticationToken;
 
 class FuelIssueServiceTest {
     private final UUID vehicleId = UUID.randomUUID();
@@ -32,6 +34,7 @@ class FuelIssueServiceTest {
     private VehicleFuelContextPort vehicles;
     private TripFuelContextPort trips;
     private FuelEventPublisher events;
+    private FuelPriceRepository priceRepo;
     private FuelIssueService service;
 
     @BeforeEach
@@ -57,8 +60,10 @@ class FuelIssueServiceTest {
         when(vehicles.find(vehicleId)).thenReturn(Optional.of(new VehicleFuelContextPort.VehicleContext(vehicleId,
                 "WP-1000", true, "AVAILABLE", new BigDecimal("900"), new BigDecimal("100"))));
         when(limits.findApplicable(vehicleId)).thenReturn(List.of());
+        priceRepo = mock(FuelPriceRepository.class);
+        when(priceRepo.findEffective(any(), any(), any())).thenReturn(Optional.empty());
         service = new FuelIssueService(issues, history, stations, limits, vehicles, trips, actors, vouchers,
-                transaction, events, Clock.fixed(Instant.parse("2026-08-15T00:00:00Z"), ZoneOffset.UTC));
+                transaction, events, priceRepo, Clock.fixed(Instant.parse("2026-08-15T00:00:00Z"), ZoneOffset.UTC));
     }
 
     @Test
@@ -190,15 +195,16 @@ class FuelIssueServiceTest {
     void issueRecordsAuthoritativeVehicleReading() {
         var readings = mock(FuelVehicleReadingPort.class);
         var actors = mock(FuelActorPort.class);
+        // Set authenticated operator using TestingAuthenticationToken
+        SecurityContextHolder.getContext().setAuthentication(new TestingAuthenticationToken("operator", "", List.of()));
+        when(actors.find("operator")).thenReturn(Optional.of(new FuelActorPort.Actor(actorId, "operator")));
         var vouchers = mock(FuelVoucherGenerator.class);
         var transaction = mock(FuelTransaction.class);
-        when(transaction.execute(any())).thenAnswer(invocation ->
-                ((java.util.function.Supplier<?>) invocation.getArgument(0)).get());
-        when(actors.find("operator")).thenReturn(Optional.of(new FuelActorPort.Actor(actorId, "operator")));
-        when(issues.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+        when(transaction.execute(any())).thenAnswer(i -> ((java.util.function.Supplier<?>) i.getArgument(0)).get());
+        var events = mock(FuelEventPublisher.class);
 
         var fuelService = new FuelIssueService(issues, history, stations, limits, vehicles, trips, actors, vouchers,
-                transaction, events, readings, Clock.fixed(Instant.parse("2026-08-15T00:00:00Z"), ZoneOffset.UTC));
+                transaction, events, priceRepo, readings, Clock.fixed(Instant.parse("2026-08-15T00:00:00Z"), ZoneOffset.UTC));
 
         var issueId = UUID.randomUUID();
         var authorized = withStatus(new FuelIssue(issueId, "FUEL-2026-000001", vehicleId, null, null, "DIESEL",
@@ -227,8 +233,10 @@ class FuelIssueServiceTest {
         doThrow(new ConflictException("VEHICLE_READING_DECREASE", "Decreasing odometer"))
                 .when(readings).record(any(), any(), any(), any(), any(), any());
 
+        var priceRepo = mock(FuelPriceRepository.class);
+        when(priceRepo.findEffective(any(), any(), any())).thenReturn(Optional.empty());
         var fuelService = new FuelIssueService(issues, history, stations, limits, vehicles, trips, actors, vouchers,
-                transaction, events, readings, Clock.fixed(Instant.parse("2026-08-15T00:00:00Z"), ZoneOffset.UTC));
+                transaction, events, priceRepo, readings, Clock.fixed(Instant.parse("2026-08-15T00:00:00Z"), ZoneOffset.UTC));
 
         var issueId = UUID.randomUUID();
         var authorized = withStatus(new FuelIssue(issueId, "FUEL-2026-000001", vehicleId, null, null, "DIESEL",

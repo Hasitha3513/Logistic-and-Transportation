@@ -93,11 +93,11 @@ class TripFuelCostSecurityIntegrationTest {
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
 
-        // 200 OK for user with FUEL_ISSUE_VIEW
+        // 403 Forbidden for user with FUEL_ISSUE_VIEW only (must not implicitly authorize)
         mvc.perform(get("/trips/{tripId}/fuel-cost", tripId)
                         .header("Authorization", "Bearer " + fuelIssueViewToken)
                         .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+                .andExpect(status().isForbidden());
     }
 
     private void seedRoleAndUser(String username, String... permissions) {

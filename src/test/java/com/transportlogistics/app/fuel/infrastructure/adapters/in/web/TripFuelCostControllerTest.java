@@ -1,7 +1,7 @@
 package com.transportlogistics.app.fuel.infrastructure.adapters.in.web;
 
 import com.transportlogistics.app.fleet.TripDistanceStatus;
-import com.transportlogistics.app.fuel.PricingSource;
+import com.transportlogistics.app.fuel.domain.model.PricingSource;
 import com.transportlogistics.app.fuel.TripFuelCost;
 import com.transportlogistics.app.fuel.TripFuelCostCalculationStatus;
 import com.transportlogistics.app.fuel.TripFuelCostLine;
@@ -62,7 +62,7 @@ class TripFuelCostControllerTest {
                 TripFuelCostCalculationStatus.COMPLETE,
                 List.of(new TripFuelCostLine(
                         UUID.randomUUID(), "VOUCHER-01", OffsetDateTime.now(), new BigDecimal("30.000"),
-                        new BigDecimal("300.00"), new BigDecimal("9000.00"), PricingSource.EXPLICIT_ISSUE_PRICE,
+                        new BigDecimal("300.00"), new BigDecimal("9000.00"), PricingSource.ISSUE_PRICE,
                         "LKR", UUID.randomUUID(), "DIESEL")),
                 OffsetDateTime.now()
         );

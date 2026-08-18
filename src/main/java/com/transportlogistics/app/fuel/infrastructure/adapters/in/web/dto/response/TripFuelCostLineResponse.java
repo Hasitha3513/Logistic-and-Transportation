@@ -1,6 +1,6 @@
 package com.transportlogistics.app.fuel.infrastructure.adapters.in.web.dto.response;
 
-import com.transportlogistics.app.fuel.PricingSource;
+import com.transportlogistics.app.fuel.domain.model.PricingSource;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;

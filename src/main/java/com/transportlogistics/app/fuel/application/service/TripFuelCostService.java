@@ -2,7 +2,7 @@ package com.transportlogistics.app.fuel.application.service;
 
 import com.transportlogistics.app.fleet.TripDistanceStatus;
 import com.transportlogistics.app.fleet.TripDistanceSummary;
-import com.transportlogistics.app.fuel.PricingSource;
+import com.transportlogistics.app.fuel.domain.model.PricingSource;
 import com.transportlogistics.app.fuel.TripFuelCost;
 import com.transportlogistics.app.fuel.TripFuelCostCalculationStatus;
 import com.transportlogistics.app.fuel.TripFuelCostLine;
@@ -144,26 +144,8 @@ public class TripFuelCostService implements TripFuelCostUseCase {
         if (issue.unitPrice() != null) {
             unitPrice = issue.unitPrice().setScale(2, RoundingMode.HALF_UP);
             lineCost = issue.quantity().multiply(unitPrice).setScale(2, RoundingMode.HALF_UP);
-            source = PricingSource.EXPLICIT_ISSUE_PRICE;
-        } else if (issue.stationId() != null) {
-            var stationOpt = stations.findById(issue.stationId());
-            if (stationOpt.isPresent() && stationOpt.get().vendorId() != null) {
-                var priceOpt = fuelPrices.findEffective(
-                        stationOpt.get().vendorId(),
-                        issue.fuelType(),
-                        issue.issueDateTime() != null ? issue.issueDateTime().toLocalDate() : issue.createdAt().toLocalDate()
-                );
-                if (priceOpt.isPresent()) {
-                    var price = priceOpt.get();
-                    unitPrice = price.unitPrice().setScale(2, RoundingMode.HALF_UP);
-                    lineCost = issue.quantity().multiply(unitPrice).setScale(2, RoundingMode.HALF_UP);
-                    source = PricingSource.PRICE_CATALOGUE;
-                    if (price.currencyCode() != null && !price.currencyCode().isBlank()) {
-                        currency = price.currencyCode();
-                    }
-                }
-            }
-        }
+            source = PricingSource.ISSUE_PRICE;
+    }
 
         return new TripFuelCostLine(
                 issue.id(),

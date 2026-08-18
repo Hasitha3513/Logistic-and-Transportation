@@ -11,7 +11,7 @@ public record TripFuelCostLine(
         BigDecimal quantityLiters,
         BigDecimal unitPrice,
         BigDecimal lineCost,
-        PricingSource pricingSource,
+        com.transportlogistics.app.fuel.domain.model.PricingSource pricingSource,
         String currencyCode,
         UUID stationId,
         String fuelType
