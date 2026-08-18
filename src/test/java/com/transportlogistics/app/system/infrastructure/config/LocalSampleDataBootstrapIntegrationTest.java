@@ -31,6 +31,10 @@ class LocalSampleDataBootstrapIntegrationTest {
         jdbc.update("DELETE FROM vehicle_reading");
         jdbc.update("DELETE FROM fuel_limit_policy");
         jdbc.update("DELETE FROM fuel_price");
+        jdbc.update("DELETE FROM bunker_stock_adjustment");
+        jdbc.update("DELETE FROM bunker_dip_reading");
+        jdbc.update("DELETE FROM bunker_stock_movement");
+        jdbc.update("DELETE FROM bunker_tank");
         jdbc.update("DELETE FROM fuel_station");
         jdbc.update("DELETE FROM vendor");
         jdbc.update("DELETE FROM vehicle");
@@ -40,6 +44,7 @@ class LocalSampleDataBootstrapIntegrationTest {
         jdbc.update("DELETE FROM department");
         jdbc.update("DELETE FROM location");
         jdbc.update("DELETE FROM customer");
+        jdbc.update("DELETE FROM app_user WHERE id = '00000000-0000-0000-0000-000000000001'");
 
         var script = new org.springframework.core.io.ClassPathResource("db/sample-data/h2-phase1.sql");
         var populator = new org.springframework.jdbc.datasource.init.ResourceDatabasePopulator(script);
@@ -58,6 +63,8 @@ class LocalSampleDataBootstrapIntegrationTest {
         assertEquals(3, count("fuel_price"));
         assertEquals(2, count("fuel_station"));
         assertEquals(2, count("fuel_limit_policy"));
+        assertEquals(2, count("bunker_tank"));
+        assertEquals(2, count("bunker_stock_movement"));
 
         var route = routes.get(java.util.UUID.fromString("50000000-0000-0000-0000-000000000001"));
         assertEquals(1, route.stopLocationIds().size());

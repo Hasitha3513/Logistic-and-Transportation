@@ -25,6 +25,8 @@ import com.transportlogistics.app.fuel.application.service.FuelPurchaseService;
 import com.transportlogistics.app.fuel.application.service.FuelPriceService;
 import com.transportlogistics.app.fuel.domain.service.FuelPurchasePolicy;
 import com.transportlogistics.app.fuel.application.ports.out.FuelVehicleReadingPort;
+import com.transportlogistics.app.fuel.application.ports.out.BunkerStockLedgerRepository;
+import com.transportlogistics.app.fuel.application.ports.out.BunkerTankRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -38,9 +40,11 @@ class FuelConfig {
                                       VehicleFuelContextPort vehicles, TripFuelContextPort trips,
                                       FuelActorPort actors, FuelVoucherGenerator vouchers,
                                       FuelTransaction transactions, FuelEventPublisher events,
-                                      FuelVehicleReadingPort readings, FuelPriceRepository fuelPrices, Clock clock) {
+                                      FuelVehicleReadingPort readings, FuelPriceRepository fuelPrices,
+                                      BunkerTankRepository bunkerTanks, BunkerStockLedgerRepository bunkerMovements,
+                                      Clock clock) {
         return new FuelIssueService(issues, history, stations, limits, vehicles, trips, actors, vouchers,
-                transactions, events, fuelPrices, readings, clock);
+                transactions, events, fuelPrices, readings, bunkerTanks, bunkerMovements, clock);
     }
 
     @Bean

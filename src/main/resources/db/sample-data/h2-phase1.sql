@@ -87,3 +87,14 @@ INSERT INTO fuel_station (id, code, name, station_type, active, vendor_id, locat
 INSERT INTO fuel_limit_policy (id, vehicle_id, maximum_quantity_per_issue, active) VALUES
 ('71000000-0000-0000-0000-000000000001', '32000000-0000-0000-0000-000000000001', 120.000, TRUE),
 ('71000000-0000-0000-0000-000000000002', '32000000-0000-0000-0000-000000000002', 70.000, TRUE);
+
+INSERT INTO app_user (id, username, email, password_hash, first_name, last_name, active, created_at, updated_at) VALUES
+('00000000-0000-0000-0000-000000000001', 'system.sample.admin', 'sample.admin@example.com', '$2a$10$abcdefghijklmnopqrstuvwxyz123456', 'System', 'Admin', TRUE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+
+INSERT INTO bunker_tank (id, fuel_station_id, tank_code, tank_name, fuel_type, capacity_liters, current_stock_liters, minimum_stock_liters, status, commissioned_at, active, created_at, updated_at) VALUES
+('72000000-0000-0000-0000-000000000001', '70000000-0000-0000-0000-000000000001', 'BNK-CMB-DSL-01', 'Colombo Hub Main Diesel Tank', 'DIESEL', 10000.000, 2500.000, 1000.000, 'ACTIVE', CURRENT_TIMESTAMP - INTERVAL '30' DAY, TRUE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('72000000-0000-0000-0000-000000000002', '70000000-0000-0000-0000-000000000001', 'BNK-CMB-PET-01', 'Colombo Hub Petrol 92 Tank', 'PETROL_92', 5000.000, 1200.000, 500.000, 'ACTIVE', CURRENT_TIMESTAMP - INTERVAL '30' DAY, TRUE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+
+INSERT INTO bunker_stock_movement (id, tank_id, movement_type, quantity_liters, resulting_balance_liters, reference_type, reference_id, occurred_at, created_by, reason, created_at) VALUES
+('73000000-0000-0000-0000-000000000001', '72000000-0000-0000-0000-000000000001', 'OPENING_BALANCE', 2500.000, 2500.000, 'INITIAL_SETUP', '72000000-0000-0000-0000-000000000001', CURRENT_TIMESTAMP - INTERVAL '30' DAY, '00000000-0000-0000-0000-000000000001', 'Initial depot tank commissioning', CURRENT_TIMESTAMP),
+('73000000-0000-0000-0000-000000000002', '72000000-0000-0000-0000-000000000002', 'OPENING_BALANCE', 1200.000, 1200.000, 'INITIAL_SETUP', '72000000-0000-0000-0000-000000000002', CURRENT_TIMESTAMP - INTERVAL '30' DAY, '00000000-0000-0000-0000-000000000001', 'Initial depot tank commissioning', CURRENT_TIMESTAMP);

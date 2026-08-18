@@ -15,9 +15,15 @@ import com.transportlogistics.app.fuel.application.ports.out.FuelVoucherGenerato
 import com.transportlogistics.app.fuel.application.ports.out.TripFuelContextPort;
 import com.transportlogistics.app.fuel.application.ports.out.VehicleFuelContextPort;
 import com.transportlogistics.app.fuel.application.ports.out.FuelPriceRepository;
+import com.transportlogistics.app.fuel.application.ports.out.BunkerStockLedgerRepository;
+import com.transportlogistics.app.fuel.application.ports.out.BunkerTankRepository;
+import com.transportlogistics.app.fuel.domain.model.BunkerMovementType;
+import com.transportlogistics.app.fuel.domain.model.BunkerReferenceType;
+import com.transportlogistics.app.fuel.domain.model.BunkerStockMovement;
 import com.transportlogistics.app.fuel.domain.model.FuelIssue;
 import com.transportlogistics.app.fuel.domain.model.FuelIssueHistory;
 import com.transportlogistics.app.fuel.domain.model.FuelIssueStatus;
+import com.transportlogistics.app.fuel.domain.model.FuelStation;
 import com.transportlogistics.app.fuel.domain.service.FuelIssuePolicy;
 import com.transportlogistics.app.shared.domain.BusinessRuleException;
 import com.transportlogistics.app.shared.domain.NotFoundException;
@@ -49,16 +55,20 @@ public final class FuelIssueService implements FuelIssueUseCase {
     private final FuelTransaction transactions;
     private final FuelEventPublisher events;
     private final FuelVehicleReadingPort readings;
+    private final FuelPriceRepository fuelPrices;
+    private final BunkerTankRepository bunkerTanks;
+    private final BunkerStockLedgerRepository bunkerMovements;
     private final Clock clock;
     private final FuelIssuePolicy policy = new FuelIssuePolicy();
-    private final FuelPriceRepository fuelPrices;
 
-    // Primary constructor with all dependencies
+    // Primary constructor with all dependencies including bunker repositories
     public FuelIssueService(FuelIssueRepository issues, FuelIssueHistoryRepository history,
                             FuelStationRepository stations, FuelLimitPolicyRepository limits,
                             VehicleFuelContextPort vehicles, TripFuelContextPort trips, FuelActorPort actors,
                             FuelVoucherGenerator vouchers, FuelTransaction transactions, FuelEventPublisher events,
-                            FuelPriceRepository fuelPrices, FuelVehicleReadingPort readings, Clock clock) {
+                            FuelPriceRepository fuelPrices, FuelVehicleReadingPort readings,
+                            BunkerTankRepository bunkerTanks, BunkerStockLedgerRepository bunkerMovements,
+                            Clock clock) {
         this.issues = issues;
         this.history = history;
         this.stations = stations;
@@ -71,7 +81,19 @@ public final class FuelIssueService implements FuelIssueUseCase {
         this.events = events;
         this.fuelPrices = fuelPrices;
         this.readings = readings == null ? noOpFuelVehicleReadingPort() : readings;
+        this.bunkerTanks = bunkerTanks;
+        this.bunkerMovements = bunkerMovements;
         this.clock = clock;
+    }
+
+    // Convenience constructor when bunker repositories are not explicitly supplied
+    public FuelIssueService(FuelIssueRepository issues, FuelIssueHistoryRepository history,
+                            FuelStationRepository stations, FuelLimitPolicyRepository limits,
+                            VehicleFuelContextPort vehicles, TripFuelContextPort trips, FuelActorPort actors,
+                            FuelVoucherGenerator vouchers, FuelTransaction transactions, FuelEventPublisher events,
+                            FuelPriceRepository fuelPrices, FuelVehicleReadingPort readings, Clock clock) {
+        this(issues, history, stations, limits, vehicles, trips, actors, vouchers, transactions, events,
+                fuelPrices, readings, null, null, clock);
     }
 
     // Convenience constructor when only price repository is provided (readings default to no‑op)
@@ -81,7 +103,7 @@ public final class FuelIssueService implements FuelIssueUseCase {
                             FuelVoucherGenerator vouchers, FuelTransaction transactions, FuelEventPublisher events,
                             FuelPriceRepository fuelPrices, Clock clock) {
         this(issues, history, stations, limits, vehicles, trips, actors, vouchers, transactions, events,
-                fuelPrices, null, clock);
+                fuelPrices, null, null, null, clock);
     }
 
     // Convenience constructor when only vehicle reading port is provided (price repository may be null)
@@ -91,7 +113,7 @@ public final class FuelIssueService implements FuelIssueUseCase {
                             FuelVoucherGenerator vouchers, FuelTransaction transactions, FuelEventPublisher events,
                             FuelVehicleReadingPort readings, Clock clock) {
         this(issues, history, stations, limits, vehicles, trips, actors, vouchers, transactions, events,
-                null, readings, clock);
+                null, readings, null, null, clock);
     }
 
     @Override
@@ -164,17 +186,15 @@ public final class FuelIssueService implements FuelIssueUseCase {
             var now = OffsetDateTime.now(clock);
             // Resolve effective unit price if not already set
             var unitPrice = current.unitPrice();
-            if (unitPrice == null && current.stationId() != null) {
-                var stationOpt = stations.findById(current.stationId());
-                if (stationOpt.isPresent()) {
-                    var station = stationOpt.get();
-                    var date = current.issueDateTime() != null
-                            ? current.issueDateTime().toLocalDate()
-                            : java.time.LocalDate.now(clock);
-                    var priceOpt = fuelPrices.findEffective(station.vendorId(), current.fuelType(), date);
-                    if (priceOpt.isPresent()) {
-                        unitPrice = priceOpt.get().unitPrice();
-                    }
+            var resolvedStation = current.stationId() != null ? stations.findById(current.stationId()) : Optional.<FuelStation>empty();
+            if (unitPrice == null && resolvedStation.isPresent()) {
+                var station = resolvedStation.get();
+                var date = current.issueDateTime() != null
+                        ? current.issueDateTime().toLocalDate()
+                        : java.time.LocalDate.now(clock);
+                var priceOpt = fuelPrices != null ? fuelPrices.findEffective(station.vendorId(), current.fuelType(), date) : Optional.<com.transportlogistics.app.fuel.domain.model.FuelPrice>empty();
+                if (priceOpt.isPresent()) {
+                    unitPrice = priceOpt.get().unitPrice();
                 }
             }
             // Create a new issue instance with the resolved price (if any)
@@ -185,6 +205,36 @@ public final class FuelIssueService implements FuelIssueUseCase {
                     current.odometer(), current.engineHours(), current.issueDateTime(),
                     FuelIssueStatus.ISSUED, current.requestedBy(), current.authorizedBy(),
                     current.authorizationDateTime(), current.notes(), current.createdAt(), now));
+
+            // Internal station bunker stock deduction under pessimistic write lock
+            if (resolvedStation.isPresent() && resolvedStation.get().isInternal() && bunkerTanks != null) {
+                var bunkerTank = bunkerTanks.findActiveByStationAndFuelTypeForUpdate(current.stationId(), current.fuelType())
+                        .orElseThrow(() -> new BusinessRuleException("NO_ACTIVE_BUNKER_TANK",
+                                "No active bunker tank found for internal station " + current.stationId() + " and fuel type " + current.fuelType()));
+                if (bunkerTank.currentStockLiters().compareTo(saved.quantity()) < 0) {
+                    throw new BusinessRuleException("INSUFFICIENT_BUNKER_STOCK",
+                            "Insufficient bunker stock in tank " + bunkerTank.tankCode() + ". Required: " + saved.quantity()
+                                    + " L, Available: " + bunkerTank.currentStockLiters() + " L");
+                }
+                var newBalance = bunkerTank.currentStockLiters().subtract(saved.quantity());
+                bunkerTanks.save(bunkerTank.withStock(newBalance));
+                if (bunkerMovements != null && !bunkerMovements.existsByTankIdAndReference(bunkerTank.id(), BunkerReferenceType.FUEL_ISSUE, saved.id())) {
+                    bunkerMovements.save(new BunkerStockMovement(
+                            UUID.randomUUID(),
+                            bunkerTank.id(),
+                            BunkerMovementType.FUEL_ISSUE,
+                            saved.quantity(),
+                            newBalance,
+                            BunkerReferenceType.FUEL_ISSUE,
+                            saved.id(),
+                            now,
+                            actor.id(),
+                            "Fuel issue " + saved.voucherNumber() + " to vehicle " + saved.vehicleId(),
+                            now
+                    ));
+                }
+            }
+
             readings.record(saved.vehicleId(), saved.id(), saved.odometer(), saved.engineHours(), now, actor.id());
             append(saved, current.status(), saved.status(), "ISSUED", actor, "Fuel issued", now);
             events.publish(new FuelIssued(saved.id(), saved.voucherNumber(), saved.vehicleId(), saved.tripId(),
@@ -252,6 +302,18 @@ public final class FuelIssueService implements FuelIssueUseCase {
                 new BusinessRuleException("FUEL_STATION_NOT_FOUND", "Fuel station not found: " + issue.stationId()));
         if (!station.active()) {
             throw new BusinessRuleException("FUEL_STATION_INACTIVE", "Inactive fuel station cannot issue fuel");
+        }
+        if (station.isInternal() && bunkerTanks != null) {
+            var bunkerTank = bunkerTanks.findActiveByStationAndFuelType(issue.stationId(), issue.fuelType());
+            if (bunkerTank.isEmpty()) {
+                throw new BusinessRuleException("NO_ACTIVE_BUNKER_TANK",
+                        "No active bunker tank found for internal station " + issue.stationId() + " and fuel type " + issue.fuelType());
+            }
+            if (bunkerTank.get().currentStockLiters().compareTo(issue.quantity()) < 0) {
+                throw new BusinessRuleException("INSUFFICIENT_BUNKER_STOCK",
+                        "Insufficient bunker stock in tank " + bunkerTank.get().tankCode() + ". Required: " + issue.quantity()
+                                + " L, Available: " + bunkerTank.get().currentStockLiters() + " L");
+            }
         }
         validateReadings(issue, vehicle);
         validateTrip(issue);
