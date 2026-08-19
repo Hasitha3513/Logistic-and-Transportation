@@ -107,6 +107,22 @@ class SecurityConfig {
                                 "/drivers/*/violations/*/pay", "/drivers/*/violations/*/waive",
                                 "/drivers/*/violations/*/dispute")
                         .hasAuthority("DRIVER_VIOLATION_MANAGE")
+                        .requestMatchers(HttpMethod.GET, "/drivers/*/medical-records", "/drivers/*/medical-records/*")
+                        .hasAuthority("DRIVER_MEDICAL_VIEW")
+                        .requestMatchers(HttpMethod.POST, "/drivers/*/medical-records")
+                        .hasAuthority("DRIVER_MEDICAL_MANAGE")
+                        .requestMatchers(HttpMethod.PUT, "/drivers/*/medical-records/*")
+                        .hasAuthority("DRIVER_MEDICAL_MANAGE")
+                        .requestMatchers(HttpMethod.PATCH, "/drivers/*/medical-records/*")
+                        .hasAuthority("DRIVER_MEDICAL_MANAGE")
+                        .requestMatchers(HttpMethod.GET, "/drivers/*/drug-tests", "/drivers/*/drug-tests/*")
+                        .hasAuthority("DRIVER_DRUG_TEST_VIEW")
+                        .requestMatchers(HttpMethod.POST, "/drivers/*/drug-tests",
+                                "/drivers/*/drug-tests/*/sample",
+                                "/drivers/*/drug-tests/*/result",
+                                "/drivers/*/drug-tests/*/return-to-duty-clear",
+                                "/drivers/*/drug-tests/*/cancel")
+                        .hasAuthority("DRIVER_DRUG_TEST_MANAGE")
 
                         .requestMatchers(HttpMethod.GET, "/routes", "/routes/*").hasAuthority("ROUTE_VIEW")
                         .requestMatchers(HttpMethod.POST, "/routes").hasAuthority("ROUTE_CREATE")

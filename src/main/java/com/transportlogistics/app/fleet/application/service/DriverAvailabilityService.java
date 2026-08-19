@@ -26,21 +26,34 @@ public final class DriverAvailabilityService implements DriverAvailabilityUseCas
     private final DriverLicenseRepository licenses;
     private final DriverAssignmentAvailability assignments;
     private final DriverExceptionRepository driverExceptions;
+    private final com.transportlogistics.app.fleet.application.ports.out.DriverMedicalRecordRepository medicalRecords;
+    private final com.transportlogistics.app.fleet.application.ports.out.DriverDrugTestRepository drugTests;
+
+    public DriverAvailabilityService(DriverRepository drivers,
+                                     DriverLicenseRepository licenses,
+                                     DriverAssignmentAvailability assignments,
+                                     DriverExceptionRepository driverExceptions,
+                                     com.transportlogistics.app.fleet.application.ports.out.DriverMedicalRecordRepository medicalRecords,
+                                     com.transportlogistics.app.fleet.application.ports.out.DriverDrugTestRepository drugTests) {
+        this.drivers = drivers;
+        this.licenses = licenses;
+        this.assignments = assignments;
+        this.driverExceptions = driverExceptions;
+        this.medicalRecords = medicalRecords;
+        this.drugTests = drugTests;
+    }
 
     public DriverAvailabilityService(DriverRepository drivers,
                                      DriverLicenseRepository licenses,
                                      DriverAssignmentAvailability assignments,
                                      DriverExceptionRepository driverExceptions) {
-        this.drivers = drivers;
-        this.licenses = licenses;
-        this.assignments = assignments;
-        this.driverExceptions = driverExceptions;
+        this(drivers, licenses, assignments, driverExceptions, null, null);
     }
 
     public DriverAvailabilityService(DriverRepository drivers,
                                      DriverLicenseRepository licenses,
                                      DriverAssignmentAvailability assignments) {
-        this(drivers, licenses, assignments, null);
+        this(drivers, licenses, assignments, null, null, null);
     }
 
     @Override
@@ -64,6 +77,34 @@ public final class DriverAvailabilityService implements DriverAvailabilityUseCas
         }
 
         addLicenseReasonsWhenNoneQualifies(reasons, activeLicenses, query);
+
+        if (medicalRecords != null) {
+            var latestMedical = medicalRecords.findLatestByDriverId(driver.id());
+            if (latestMedical.isPresent()) {
+                var medical = latestMedical.get();
+                if (medical.isUnfit()) {
+                    add(reasons, MEDICALLY_UNFIT, "Driver is assessed as medically " + medical.fitnessStatus());
+                } else if (medical.validUntil().isBefore(query.to().toLocalDate())) {
+                    add(reasons, MEDICAL_FITNESS_EXPIRED, "Driver medical fitness certificate expires before the requested end date");
+                } else if (medical.validFrom().isAfter(query.from().toLocalDate())) {
+                    add(reasons, MEDICAL_FITNESS_EXPIRED, "Driver medical fitness certificate is not yet valid for the requested start date");
+                }
+            }
+        }
+
+        if (drugTests != null) {
+            var latestDrugTest = drugTests.findLatestByDriverId(driver.id());
+            if (latestDrugTest.isPresent()) {
+                var test = latestDrugTest.get();
+                if (test.result() == com.transportlogistics.app.fleet.domain.model.DrugTestResult.POSITIVE) {
+                    if (test.returnToDutyRequired() && test.returnToDutyClearedAt() == null) {
+                        add(reasons, RETURN_TO_DUTY_CLEARANCE_REQUIRED, "Driver failed substance screening and requires return-to-duty clearance");
+                    } else if (!test.returnToDutyRequired()) {
+                        add(reasons, DRUG_TEST_FAILED, "Driver tested positive on substance screening");
+                    }
+                }
+            }
+        }
 
         if (driverExceptions != null && driverExceptions.hasOverlappingException(
                 driver.id(), query.from(), query.to(), BLOCKING_EXCEPTION_STATUSES)) {

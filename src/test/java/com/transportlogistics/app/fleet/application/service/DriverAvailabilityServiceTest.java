@@ -205,6 +205,79 @@ class DriverAvailabilityServiceTest {
         assertTrue(result.hasReason(DRIVER_EXCEPTION_BLOCKED));
     }
 
+    @Test
+    void rejectsMedicallyUnfitDriver() {
+        var medicalRecords = mock(com.transportlogistics.app.fleet.application.ports.out.DriverMedicalRecordRepository.class);
+        var serviceWithMedical = new DriverAvailabilityService(drivers, licenses, assignments, driverExceptions, medicalRecords, null);
+
+        var unfitRecord = new com.transportlogistics.app.fleet.domain.model.DriverMedicalRecord(
+                UUID.randomUUID(), driverId, LocalDate.of(2026, 1, 1), LocalDate.of(2026, 1, 1), LocalDate.of(2027, 1, 1),
+                com.transportlogistics.app.fleet.domain.model.DriverMedicalStatus.UNFIT,
+                com.transportlogistics.app.fleet.domain.model.VisionTestStatus.FAILED,
+                "Cardiac issue", "Dr. A", "REF-1", null, true, OffsetDateTime.now(), OffsetDateTime.now(), "admin", "admin"
+        );
+        when(medicalRecords.findLatestByDriverId(driverId)).thenReturn(Optional.of(unfitRecord));
+
+        var result = serviceWithMedical.evaluate(new DriverAvailabilityUseCase.Query(driverId, from, to, "B", null));
+        assertFalse(result.available());
+        assertTrue(result.hasReason(MEDICALLY_UNFIT));
+    }
+
+    @Test
+    void rejectsDriverWithExpiredMedicalFitness() {
+        var medicalRecords = mock(com.transportlogistics.app.fleet.application.ports.out.DriverMedicalRecordRepository.class);
+        var serviceWithMedical = new DriverAvailabilityService(drivers, licenses, assignments, driverExceptions, medicalRecords, null);
+
+        var expiredRecord = new com.transportlogistics.app.fleet.domain.model.DriverMedicalRecord(
+                UUID.randomUUID(), driverId, LocalDate.of(2025, 1, 1), LocalDate.of(2025, 1, 1), from.toLocalDate().minusDays(1),
+                com.transportlogistics.app.fleet.domain.model.DriverMedicalStatus.FIT,
+                com.transportlogistics.app.fleet.domain.model.VisionTestStatus.PASSED,
+                null, "Dr. A", "REF-2", null, true, OffsetDateTime.now(), OffsetDateTime.now(), "admin", "admin"
+        );
+        when(medicalRecords.findLatestByDriverId(driverId)).thenReturn(Optional.of(expiredRecord));
+
+        var result = serviceWithMedical.evaluate(new DriverAvailabilityUseCase.Query(driverId, from, to, "B", null));
+        assertFalse(result.available());
+        assertTrue(result.hasReason(MEDICAL_FITNESS_EXPIRED));
+    }
+
+    @Test
+    void rejectsDriverWithPositiveUnclearedDrugTest() {
+        var drugTests = mock(com.transportlogistics.app.fleet.application.ports.out.DriverDrugTestRepository.class);
+        var serviceWithDrugTest = new DriverAvailabilityService(drivers, licenses, assignments, driverExceptions, null, drugTests);
+
+        var positiveTest = new com.transportlogistics.app.fleet.domain.model.DriverDrugTest(
+                UUID.randomUUID(), driverId, com.transportlogistics.app.fleet.domain.model.DrugTestType.RANDOM,
+                LocalDate.of(2026, 1, 1), OffsetDateTime.now(), LocalDate.of(2026, 1, 2),
+                com.transportlogistics.app.fleet.domain.model.DrugTestResult.POSITIVE,
+                com.transportlogistics.app.fleet.domain.model.DrugTestStatus.COMPLETED,
+                "LabCorp", "REF-3", "Positive THC", true, null, true, OffsetDateTime.now(), OffsetDateTime.now(), "admin", "admin"
+        );
+        when(drugTests.findLatestByDriverId(driverId)).thenReturn(Optional.of(positiveTest));
+
+        var result = serviceWithDrugTest.evaluate(new DriverAvailabilityUseCase.Query(driverId, from, to, "B", null));
+        assertFalse(result.available());
+        assertTrue(result.hasReason(RETURN_TO_DUTY_CLEARANCE_REQUIRED));
+    }
+
+    @Test
+    void allowsDriverWithClearedDrugTest() {
+        var drugTests = mock(com.transportlogistics.app.fleet.application.ports.out.DriverDrugTestRepository.class);
+        var serviceWithDrugTest = new DriverAvailabilityService(drivers, licenses, assignments, driverExceptions, null, drugTests);
+
+        var clearedTest = new com.transportlogistics.app.fleet.domain.model.DriverDrugTest(
+                UUID.randomUUID(), driverId, com.transportlogistics.app.fleet.domain.model.DrugTestType.RANDOM,
+                LocalDate.of(2026, 1, 1), OffsetDateTime.now(), LocalDate.of(2026, 1, 2),
+                com.transportlogistics.app.fleet.domain.model.DrugTestResult.POSITIVE,
+                com.transportlogistics.app.fleet.domain.model.DrugTestStatus.COMPLETED,
+                "LabCorp", "REF-3", "Positive THC", true, OffsetDateTime.now(), true, OffsetDateTime.now(), OffsetDateTime.now(), "admin", "admin"
+        );
+        when(drugTests.findLatestByDriverId(driverId)).thenReturn(Optional.of(clearedTest));
+
+        var result = serviceWithDrugTest.evaluate(new DriverAvailabilityUseCase.Query(driverId, from, to, "B", null));
+        assertTrue(result.available());
+    }
+
     private void assertRejected(DriverAvailability.Code code) {
         var result = evaluate(null, null);
         assertFalse(result.available());

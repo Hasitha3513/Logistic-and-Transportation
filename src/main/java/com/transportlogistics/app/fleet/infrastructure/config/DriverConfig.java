@@ -7,6 +7,8 @@ import com.transportlogistics.app.fleet.application.ports.in.DriverUseCase;
 import com.transportlogistics.app.fleet.application.ports.out.DriverExceptionRepository;
 import com.transportlogistics.app.fleet.application.ports.out.DriverLicenseRepository;
 import com.transportlogistics.app.fleet.application.ports.out.DriverRepository;
+import com.transportlogistics.app.fleet.application.ports.out.DriverDrugTestRepository;
+import com.transportlogistics.app.fleet.application.ports.out.DriverMedicalRecordRepository;
 import com.transportlogistics.app.fleet.application.service.DriverService;
 import com.transportlogistics.app.fleet.application.service.DriverAvailabilityService;
 import org.springframework.context.annotation.Bean;
@@ -23,8 +25,10 @@ class DriverConfig {
     DriverAvailabilityUseCase driverAvailabilityUseCase(DriverRepository drivers,
                                                          DriverLicenseRepository licenses,
                                                          DriverAssignmentAvailability assignments,
-                                                         DriverExceptionRepository driverExceptions) {
-        return new DriverAvailabilityService(drivers, licenses, assignments, driverExceptions);
+                                                         DriverExceptionRepository driverExceptions,
+                                                         DriverMedicalRecordRepository medicalRecords,
+                                                         DriverDrugTestRepository drugTests) {
+        return new DriverAvailabilityService(drivers, licenses, assignments, driverExceptions, medicalRecords, drugTests);
     }
 
     @Bean

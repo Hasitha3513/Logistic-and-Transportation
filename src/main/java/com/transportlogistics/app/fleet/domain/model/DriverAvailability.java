@@ -33,7 +33,12 @@ public record DriverAvailability(boolean available, List<Reason> reasons) {
         LICENSE_EXPIRED,
         REQUIRED_LICENSE_CLASS_MISSING,
         OVERLAPPING_ASSIGNMENT,
-        DRIVER_EXCEPTION_BLOCKED
+        DRIVER_EXCEPTION_BLOCKED,
+        MEDICAL_CLEARANCE_MISSING,
+        MEDICAL_FITNESS_EXPIRED,
+        MEDICALLY_UNFIT,
+        DRUG_TEST_FAILED,
+        RETURN_TO_DUTY_CLEARANCE_REQUIRED
     }
 
     public record Reason(Code code, String message) {

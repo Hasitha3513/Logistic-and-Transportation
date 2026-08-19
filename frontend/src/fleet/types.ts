@@ -258,3 +258,93 @@ export interface DriverPerformanceSummary {
   overallRating: PerformanceRating;
   evaluatedAt: string;
 }
+
+export type DriverMedicalStatus =
+  | 'FIT'
+  | 'FIT_WITH_RESTRICTIONS'
+  | 'TEMPORARILY_UNFIT'
+  | 'UNFIT';
+
+export type VisionTestStatus =
+  | 'PASSED'
+  | 'PASSED_WITH_CORRECTIVE_LENSES'
+  | 'FAILED'
+  | 'NOT_TESTED';
+
+export interface DriverMedicalRecord {
+  id: string;
+  driverId: string;
+  assessmentDate: string;
+  validFrom: string;
+  validUntil: string;
+  fitnessStatus: DriverMedicalStatus;
+  visionTestStatus?: VisionTestStatus | null;
+  restrictions?: string | null;
+  examinerOrProvider?: string | null;
+  certificateReference?: string | null;
+  remarks?: string | null;
+  active: boolean;
+  createdAt: string;
+  updatedAt: string;
+  createdBy?: string | null;
+  updatedBy?: string | null;
+}
+
+export interface DriverMedicalRecordRequest {
+  assessmentDate: string;
+  validFrom: string;
+  validUntil: string;
+  fitnessStatus: DriverMedicalStatus;
+  visionTestStatus?: VisionTestStatus;
+  restrictions?: string;
+  examinerOrProvider?: string;
+  certificateReference?: string;
+  remarks?: string;
+}
+
+export type DrugTestType =
+  | 'RANDOM'
+  | 'SCHEDULED'
+  | 'PRE_EMPLOYMENT'
+  | 'POST_INCIDENT'
+  | 'REASONABLE_SUSPICION'
+  | 'RETURN_TO_DUTY';
+
+export type DrugTestResult = 'PENDING' | 'NEGATIVE' | 'POSITIVE' | 'INCONCLUSIVE';
+export type DrugTestStatus = 'SCHEDULED' | 'SAMPLE_COLLECTED' | 'COMPLETED' | 'CANCELLED';
+
+export interface DriverDrugTest {
+  id: string;
+  driverId: string;
+  testType: DrugTestType;
+  scheduledDate: string;
+  sampleCollectedAt?: string | null;
+  resultDate?: string | null;
+  result: DrugTestResult;
+  status: DrugTestStatus;
+  laboratoryOrProvider?: string | null;
+  referenceNumber?: string | null;
+  remarks?: string | null;
+  returnToDutyRequired: boolean;
+  returnToDutyClearedAt?: string | null;
+  active: boolean;
+  createdAt: string;
+  updatedAt: string;
+  createdBy?: string | null;
+  updatedBy?: string | null;
+}
+
+export interface DriverDrugTestRequest {
+  testType: DrugTestType;
+  scheduledDate: string;
+  laboratoryOrProvider?: string;
+  referenceNumber?: string;
+  remarks?: string;
+}
+
+export interface DriverDrugTestResultRequest {
+  result: DrugTestResult;
+  resultDate?: string;
+  remarks?: string;
+  returnToDutyRequired?: boolean;
+}

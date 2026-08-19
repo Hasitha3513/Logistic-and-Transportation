@@ -62,7 +62,7 @@ describe('DriverPerformanceSection', () => {
       expect(screen.getByText('Trip Reliability')).toBeDefined();
       expect(screen.getByText('Compliance & Penalties')).toBeDefined();
       expect(screen.getByText('92/100')).toBeDefined();
-      expect(screen.getByText('95.0')).toBeDefined();
+      expect(screen.getByText('95')).toBeDefined();
     });
   });
 });

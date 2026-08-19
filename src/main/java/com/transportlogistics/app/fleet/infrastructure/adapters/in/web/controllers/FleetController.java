@@ -29,6 +29,8 @@ public class FleetController {
     private final DriverExceptionUseCase driverExceptions;
     private final DriverViolationUseCase driverViolations;
     private final DriverPerformanceUseCase driverPerformance;
+    private final DriverMedicalRecordUseCase driverMedicalRecords;
+    private final DriverDrugTestUseCase driverDrugTests;
     private final VehicleUseCase vehicles;
     private final VehicleAvailabilityUseCase vehicleAvailability;
     private final VehicleCategoryUseCase categories;
@@ -41,6 +43,7 @@ public class FleetController {
     public FleetController(DriverUseCase d, DriverAvailabilityUseCase driverAvailability,
                            DriverLicenseUseCase licenses, DriverExceptionUseCase driverExceptions,
                            DriverViolationUseCase driverViolations, DriverPerformanceUseCase driverPerformance,
+                           DriverMedicalRecordUseCase driverMedicalRecords, DriverDrugTestUseCase driverDrugTests,
                            VehicleUseCase v, VehicleAvailabilityUseCase vehicleAvailability,
                            VehicleCategoryUseCase c, VehicleTypeUseCase t,
                            VehicleDocumentUseCase documents,
@@ -52,6 +55,8 @@ public class FleetController {
         this.driverExceptions = driverExceptions;
         this.driverViolations = driverViolations;
         this.driverPerformance = driverPerformance;
+        this.driverMedicalRecords = driverMedicalRecords;
+        this.driverDrugTests = driverDrugTests;
         this.vehicles = v;
         this.vehicleAvailability = vehicleAvailability;
         this.categories = c;
@@ -63,12 +68,23 @@ public class FleetController {
 
     public FleetController(DriverUseCase d, DriverAvailabilityUseCase driverAvailability,
                            DriverLicenseUseCase licenses, DriverExceptionUseCase driverExceptions,
+                           DriverViolationUseCase driverViolations, DriverPerformanceUseCase driverPerformance,
                            VehicleUseCase v, VehicleAvailabilityUseCase vehicleAvailability,
                            VehicleCategoryUseCase c, VehicleTypeUseCase t,
                            VehicleDocumentUseCase documents,
                            MaintenanceScheduleUseCase maintenanceSchedules,
                            FleetWebMapper mapper) {
-        this(d, driverAvailability, licenses, driverExceptions, null, null, v, vehicleAvailability, c, t, documents, maintenanceSchedules, mapper);
+        this(d, driverAvailability, licenses, driverExceptions, driverViolations, driverPerformance, null, null, v, vehicleAvailability, c, t, documents, maintenanceSchedules, mapper);
+    }
+
+    public FleetController(DriverUseCase d, DriverAvailabilityUseCase driverAvailability,
+                           DriverLicenseUseCase licenses, DriverExceptionUseCase driverExceptions,
+                           VehicleUseCase v, VehicleAvailabilityUseCase vehicleAvailability,
+                           VehicleCategoryUseCase c, VehicleTypeUseCase t,
+                           VehicleDocumentUseCase documents,
+                           MaintenanceScheduleUseCase maintenanceSchedules,
+                           FleetWebMapper mapper) {
+        this(d, driverAvailability, licenses, driverExceptions, null, null, null, null, v, vehicleAvailability, c, t, documents, maintenanceSchedules, mapper);
     }
 
     public FleetController(DriverUseCase d, DriverAvailabilityUseCase driverAvailability,
@@ -77,7 +93,7 @@ public class FleetController {
                            VehicleTypeUseCase t, VehicleDocumentUseCase documents,
                            MaintenanceScheduleUseCase maintenanceSchedules,
                            FleetWebMapper mapper) {
-        this(d, driverAvailability, licenses, null, null, null, v, vehicleAvailability, c, t, documents, maintenanceSchedules, mapper);
+        this(d, driverAvailability, licenses, null, null, null, null, null, v, vehicleAvailability, c, t, documents, maintenanceSchedules, mapper);
     }
 
     public FleetController(DriverUseCase d, DriverAvailabilityUseCase driverAvailability,
@@ -85,7 +101,7 @@ public class FleetController {
                            VehicleAvailabilityUseCase vehicleAvailability, VehicleCategoryUseCase c,
                            VehicleTypeUseCase t, VehicleDocumentUseCase documents,
                            FleetWebMapper mapper) {
-        this(d, driverAvailability, licenses, null, null, null, v, vehicleAvailability, c, t, documents, null, mapper);
+        this(d, driverAvailability, licenses, null, null, null, null, null, v, vehicleAvailability, c, t, documents, null, mapper);
     }
 
     @PostMapping("/drivers")
@@ -351,6 +367,180 @@ public class FleetController {
     @GetMapping("/drivers/{driverId}/performance")
     public DriverPerformanceResponse getDriverPerformance(@PathVariable UUID driverId) {
         return mapper.toResponse(driverPerformance.getPerformanceSummary(driverId));
+    }
+
+    // Medical Records
+    @GetMapping("/drivers/{driverId}/medical-records")
+    public List<DriverMedicalRecordResponse> listDriverMedicalRecords(@PathVariable UUID driverId) {
+        return mapper.toDriverMedicalRecordResponseList(driverMedicalRecords.list(driverId));
+    }
+
+    @PostMapping("/drivers/{driverId}/medical-records")
+    public ResponseEntity<DriverMedicalRecordResponse> createDriverMedicalRecord(
+            @PathVariable UUID driverId,
+            @Valid @RequestBody DriverMedicalRecordRequest request,
+            Principal principal
+    ) {
+        var fitnessStatus = com.transportlogistics.app.fleet.domain.model.DriverMedicalStatus.valueOf(request.fitnessStatus());
+        var visionStatus = request.visionTestStatus() != null && !request.visionTestStatus().isBlank()
+                ? com.transportlogistics.app.fleet.domain.model.VisionTestStatus.valueOf(request.visionTestStatus()) : null;
+        var command = new DriverMedicalRecordUseCase.CreateCommand(
+                request.assessmentDate(),
+                request.validFrom(),
+                request.validUntil(),
+                fitnessStatus,
+                visionStatus,
+                request.restrictions(),
+                request.examinerOrProvider(),
+                request.certificateReference(),
+                request.remarks()
+        );
+        var created = driverMedicalRecords.create(driverId, command, actor(principal));
+        return ResponseEntity.status(201).body(mapper.toResponse(created));
+    }
+
+    @GetMapping("/drivers/{driverId}/medical-records/{recordId}")
+    public DriverMedicalRecordResponse getDriverMedicalRecord(
+            @PathVariable UUID driverId,
+            @PathVariable UUID recordId
+    ) {
+        return mapper.toResponse(driverMedicalRecords.get(driverId, recordId));
+    }
+
+    @PutMapping("/drivers/{driverId}/medical-records/{recordId}")
+    public DriverMedicalRecordResponse updateDriverMedicalRecord(
+            @PathVariable UUID driverId,
+            @PathVariable UUID recordId,
+            @Valid @RequestBody DriverMedicalRecordRequest request,
+            Principal principal
+    ) {
+        var fitnessStatus = request.fitnessStatus() != null ? com.transportlogistics.app.fleet.domain.model.DriverMedicalStatus.valueOf(request.fitnessStatus()) : null;
+        var visionStatus = request.visionTestStatus() != null && !request.visionTestStatus().isBlank()
+                ? com.transportlogistics.app.fleet.domain.model.VisionTestStatus.valueOf(request.visionTestStatus()) : null;
+        var command = new DriverMedicalRecordUseCase.UpdateCommand(
+                request.assessmentDate(),
+                request.validFrom(),
+                request.validUntil(),
+                fitnessStatus,
+                visionStatus,
+                request.restrictions(),
+                request.examinerOrProvider(),
+                request.certificateReference(),
+                request.remarks(),
+                null
+        );
+        return mapper.toResponse(driverMedicalRecords.update(driverId, recordId, command, actor(principal)));
+    }
+
+    @PatchMapping("/drivers/{driverId}/medical-records/{recordId}")
+    public DriverMedicalRecordResponse patchDriverMedicalRecord(
+            @PathVariable UUID driverId,
+            @PathVariable UUID recordId,
+            @RequestBody DriverMedicalRecordPatchRequest request,
+            Principal principal
+    ) {
+        var fitnessStatus = request.fitnessStatus() != null && !request.fitnessStatus().isBlank()
+                ? com.transportlogistics.app.fleet.domain.model.DriverMedicalStatus.valueOf(request.fitnessStatus()) : null;
+        var visionStatus = request.visionTestStatus() != null && !request.visionTestStatus().isBlank()
+                ? com.transportlogistics.app.fleet.domain.model.VisionTestStatus.valueOf(request.visionTestStatus()) : null;
+        var command = new DriverMedicalRecordUseCase.UpdateCommand(
+                request.assessmentDate(),
+                request.validFrom(),
+                request.validUntil(),
+                fitnessStatus,
+                visionStatus,
+                request.restrictions(),
+                request.examinerOrProvider(),
+                request.certificateReference(),
+                request.remarks(),
+                request.active()
+        );
+        return mapper.toResponse(driverMedicalRecords.update(driverId, recordId, command, actor(principal)));
+    }
+
+    // Drug Tests
+    @GetMapping("/drivers/{driverId}/drug-tests")
+    public List<DriverDrugTestResponse> listDriverDrugTests(@PathVariable UUID driverId) {
+        return mapper.toDriverDrugTestResponseList(driverDrugTests.list(driverId));
+    }
+
+    @PostMapping("/drivers/{driverId}/drug-tests")
+    public ResponseEntity<DriverDrugTestResponse> scheduleDriverDrugTest(
+            @PathVariable UUID driverId,
+            @Valid @RequestBody DriverDrugTestRequest request,
+            Principal principal
+    ) {
+        var testType = com.transportlogistics.app.fleet.domain.model.DrugTestType.valueOf(request.testType());
+        var command = new DriverDrugTestUseCase.ScheduleCommand(
+                testType,
+                request.scheduledDate(),
+                request.laboratoryOrProvider(),
+                request.referenceNumber(),
+                request.remarks()
+        );
+        var scheduled = driverDrugTests.schedule(driverId, command, actor(principal));
+        return ResponseEntity.status(201).body(mapper.toResponse(scheduled));
+    }
+
+    @GetMapping("/drivers/{driverId}/drug-tests/{testId}")
+    public DriverDrugTestResponse getDriverDrugTest(
+            @PathVariable UUID driverId,
+            @PathVariable UUID testId
+    ) {
+        return mapper.toResponse(driverDrugTests.get(driverId, testId));
+    }
+
+    @PostMapping("/drivers/{driverId}/drug-tests/{testId}/sample")
+    public DriverDrugTestResponse recordDrugTestSample(
+            @PathVariable UUID driverId,
+            @PathVariable UUID testId,
+            @RequestBody(required = false) DriverDrugTestSampleRequest request,
+            Principal principal
+    ) {
+        var sampleTime = request != null ? request.sampleCollectedAt() : null;
+        var command = new DriverDrugTestUseCase.RecordSampleCommand(sampleTime);
+        return mapper.toResponse(driverDrugTests.recordSample(driverId, testId, command, actor(principal)));
+    }
+
+    @PostMapping("/drivers/{driverId}/drug-tests/{testId}/result")
+    public DriverDrugTestResponse recordDrugTestResult(
+            @PathVariable UUID driverId,
+            @PathVariable UUID testId,
+            @Valid @RequestBody DriverDrugTestResultRequest request,
+            Principal principal
+    ) {
+        var result = com.transportlogistics.app.fleet.domain.model.DrugTestResult.valueOf(request.result());
+        var command = new DriverDrugTestUseCase.RecordResultCommand(
+                result,
+                request.resultDate(),
+                request.remarks(),
+                request.returnToDutyRequired()
+        );
+        return mapper.toResponse(driverDrugTests.recordResult(driverId, testId, command, actor(principal)));
+    }
+
+    @PostMapping("/drivers/{driverId}/drug-tests/{testId}/return-to-duty-clear")
+    public DriverDrugTestResponse clearReturnToDuty(
+            @PathVariable UUID driverId,
+            @PathVariable UUID testId,
+            @RequestBody(required = false) DriverDrugTestClearanceRequest request,
+            Principal principal
+    ) {
+        var clearedAt = request != null ? request.clearedAt() : null;
+        var remarks = request != null ? request.remarks() : null;
+        var command = new DriverDrugTestUseCase.ReturnToDutyClearanceCommand(clearedAt, remarks);
+        return mapper.toResponse(driverDrugTests.clearReturnToDuty(driverId, testId, command, actor(principal)));
+    }
+
+    @PostMapping("/drivers/{driverId}/drug-tests/{testId}/cancel")
+    public DriverDrugTestResponse cancelDriverDrugTest(
+            @PathVariable UUID driverId,
+            @PathVariable UUID testId,
+            @RequestBody(required = false) DriverDrugTestClearanceRequest request,
+            Principal principal
+    ) {
+        var remarks = request != null ? request.remarks() : null;
+        return mapper.toResponse(driverDrugTests.cancel(driverId, testId, remarks, actor(principal)));
     }
 
     @PostMapping("/vehicles")

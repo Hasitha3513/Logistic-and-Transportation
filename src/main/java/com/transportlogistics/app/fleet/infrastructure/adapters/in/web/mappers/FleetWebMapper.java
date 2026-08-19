@@ -45,4 +45,10 @@ public interface FleetWebMapper {
     List<DriverViolationResponse> toDriverViolationResponseList(List<DriverViolation> violations);
 
     DriverPerformanceResponse toResponse(DriverPerformanceSummary performance);
+
+    DriverMedicalRecordResponse toResponse(DriverMedicalRecord record);
+    List<DriverMedicalRecordResponse> toDriverMedicalRecordResponseList(List<DriverMedicalRecord> records);
+
+    DriverDrugTestResponse toResponse(DriverDrugTest test);
+    List<DriverDrugTestResponse> toDriverDrugTestResponseList(List<DriverDrugTest> tests);
 }

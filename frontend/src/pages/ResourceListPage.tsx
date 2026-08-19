@@ -7,6 +7,8 @@ import { useAuth } from '../auth/AuthContext';
 import DriverExceptionSection from '../fleet/DriverExceptionSection';
 import DriverViolationsSection from '../fleet/DriverViolationsSection';
 import DriverPerformanceSection from '../fleet/DriverPerformanceSection';
+import { DriverMedicalSection } from '../fleet/DriverMedicalSection';
+import { DriverDrugTestSection } from '../fleet/DriverDrugTestSection';
 import VehicleMaintenanceSection from '../fleet/VehicleMaintenanceSection';
 import VehicleReadingsSection from '../fleet/VehicleReadingsSection';
 import ResourceEditorModal, { type ResourceField, type ResourceValues } from './ResourceEditorModal';
@@ -201,6 +203,8 @@ export default function ResourceListPage({ endpoint, queryKey, title, descriptio
                 <DriverPerformanceSection driverId={selected.id} />
                 <DriverViolationsSection driverId={selected.id} />
                 <DriverExceptionSection driverId={selected.id} />
+                <DriverMedicalSection driverId={selected.id} />
+                <DriverDrugTestSection driverId={selected.id} />
               </>
             )}
           </Flex>
