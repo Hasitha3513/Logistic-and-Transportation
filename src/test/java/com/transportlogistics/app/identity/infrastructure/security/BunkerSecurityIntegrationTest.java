@@ -66,4 +66,72 @@ class BunkerSecurityIntegrationTest {
         mvc.perform(get("/bunker-tanks/{id}/movements", UUID.randomUUID()))
                 .andExpect(status().isOk());
     }
+
+    @Test
+    @WithMockUser(authorities = "BUNKER_VIEW")
+    void shouldDenyDipRecordingWithoutDipAuthority() throws Exception {
+        mvc.perform(post("/bunker-tanks/{id}/dip-readings", UUID.randomUUID())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"physicalQuantityLiters\": 5000.0}"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(authorities = "BUNKER_DIP_RECORD")
+    void shouldAllowDipRecordingWithDipAuthority() throws Exception {
+        mvc.perform(post("/bunker-tanks/{id}/dip-readings", UUID.randomUUID())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"physicalQuantityLiters\": 5000.0}"))
+                .andExpect(status().isCreated());
+    }
+
+    @Test
+    @WithMockUser(authorities = "BUNKER_VIEW")
+    void shouldDenyAdjustmentWithoutAdjustAuthority() throws Exception {
+        mvc.perform(post("/bunker-tanks/{id}/adjustments", UUID.randomUUID())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"quantityDeltaLiters\": -100.0, \"reason\": \"Loss\"}"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(authorities = "BUNKER_ADJUST")
+    void shouldAllowAdjustmentWithAdjustAuthority() throws Exception {
+        mvc.perform(post("/bunker-tanks/{id}/adjustments", UUID.randomUUID())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"quantityDeltaLiters\": -100.0, \"reason\": \"Loss\"}"))
+                .andExpect(status().isCreated());
+    }
+
+    @Test
+    @WithMockUser(authorities = "BUNKER_VIEW")
+    void shouldAllowDipListWithViewAuthority() throws Exception {
+        mvc.perform(get("/bunker-tanks/{id}/dip-readings", UUID.randomUUID()))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @WithMockUser(authorities = "RANDOM_AUTHORITY")
+    void shouldDenyDipListWithoutViewAuthority() throws Exception {
+        mvc.perform(get("/bunker-tanks/{id}/dip-readings", UUID.randomUUID()))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(authorities = "BUNKER_VIEW")
+    void shouldDenyTransferWithoutTransferAuthority() throws Exception {
+        mvc.perform(post("/bunker-transfers")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"sourceTankId\": \"" + UUID.randomUUID() + "\", \"destinationTankId\": \"" + UUID.randomUUID() + "\", \"quantityLiters\": 100.0}"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(authorities = "BUNKER_TRANSFER")
+    void shouldAllowTransferWithTransferAuthority() throws Exception {
+        mvc.perform(post("/bunker-transfers")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"sourceTankId\": \"" + UUID.randomUUID() + "\", \"destinationTankId\": \"" + UUID.randomUUID() + "\", \"quantityLiters\": 100.0}"))
+                .andExpect(status().isOk());
+    }
 }
