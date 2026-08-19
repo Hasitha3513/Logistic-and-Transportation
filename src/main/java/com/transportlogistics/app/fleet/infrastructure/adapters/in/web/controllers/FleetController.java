@@ -37,6 +37,7 @@ public class FleetController {
     private final VehicleTypeUseCase types;
     private final VehicleDocumentUseCase documents;
     private final MaintenanceScheduleUseCase maintenanceSchedules;
+    private final LubricantLogUseCase lubricantLogs;
     private final FleetWebMapper mapper;
 
     @org.springframework.beans.factory.annotation.Autowired
@@ -48,6 +49,7 @@ public class FleetController {
                            VehicleCategoryUseCase c, VehicleTypeUseCase t,
                            VehicleDocumentUseCase documents,
                            MaintenanceScheduleUseCase maintenanceSchedules,
+                           LubricantLogUseCase lubricantLogs,
                            FleetWebMapper mapper) {
         this.drivers = d;
         this.driverAvailability = driverAvailability;
@@ -63,7 +65,20 @@ public class FleetController {
         this.types = t;
         this.documents = documents;
         this.maintenanceSchedules = maintenanceSchedules;
+        this.lubricantLogs = lubricantLogs;
         this.mapper = mapper;
+    }
+
+    public FleetController(DriverUseCase d, DriverAvailabilityUseCase driverAvailability,
+                           DriverLicenseUseCase licenses, DriverExceptionUseCase driverExceptions,
+                           DriverViolationUseCase driverViolations, DriverPerformanceUseCase driverPerformance,
+                           DriverMedicalRecordUseCase driverMedicalRecords, DriverDrugTestUseCase driverDrugTests,
+                           VehicleUseCase v, VehicleAvailabilityUseCase vehicleAvailability,
+                           VehicleCategoryUseCase c, VehicleTypeUseCase t,
+                           VehicleDocumentUseCase documents,
+                           MaintenanceScheduleUseCase maintenanceSchedules,
+                           FleetWebMapper mapper) {
+        this(d, driverAvailability, licenses, driverExceptions, driverViolations, driverPerformance, driverMedicalRecords, driverDrugTests, v, vehicleAvailability, c, t, documents, maintenanceSchedules, null, mapper);
     }
 
     public FleetController(DriverUseCase d, DriverAvailabilityUseCase driverAvailability,
@@ -74,7 +89,7 @@ public class FleetController {
                            VehicleDocumentUseCase documents,
                            MaintenanceScheduleUseCase maintenanceSchedules,
                            FleetWebMapper mapper) {
-        this(d, driverAvailability, licenses, driverExceptions, driverViolations, driverPerformance, null, null, v, vehicleAvailability, c, t, documents, maintenanceSchedules, mapper);
+        this(d, driverAvailability, licenses, driverExceptions, driverViolations, driverPerformance, null, null, v, vehicleAvailability, c, t, documents, maintenanceSchedules, null, mapper);
     }
 
     public FleetController(DriverUseCase d, DriverAvailabilityUseCase driverAvailability,
@@ -84,7 +99,7 @@ public class FleetController {
                            VehicleDocumentUseCase documents,
                            MaintenanceScheduleUseCase maintenanceSchedules,
                            FleetWebMapper mapper) {
-        this(d, driverAvailability, licenses, driverExceptions, null, null, null, null, v, vehicleAvailability, c, t, documents, maintenanceSchedules, mapper);
+        this(d, driverAvailability, licenses, driverExceptions, null, null, null, null, v, vehicleAvailability, c, t, documents, maintenanceSchedules, null, mapper);
     }
 
     public FleetController(DriverUseCase d, DriverAvailabilityUseCase driverAvailability,
@@ -93,7 +108,7 @@ public class FleetController {
                            VehicleTypeUseCase t, VehicleDocumentUseCase documents,
                            MaintenanceScheduleUseCase maintenanceSchedules,
                            FleetWebMapper mapper) {
-        this(d, driverAvailability, licenses, null, null, null, null, null, v, vehicleAvailability, c, t, documents, maintenanceSchedules, mapper);
+        this(d, driverAvailability, licenses, null, null, null, null, null, v, vehicleAvailability, c, t, documents, maintenanceSchedules, null, mapper);
     }
 
     public FleetController(DriverUseCase d, DriverAvailabilityUseCase driverAvailability,
@@ -101,7 +116,7 @@ public class FleetController {
                            VehicleAvailabilityUseCase vehicleAvailability, VehicleCategoryUseCase c,
                            VehicleTypeUseCase t, VehicleDocumentUseCase documents,
                            FleetWebMapper mapper) {
-        this(d, driverAvailability, licenses, null, null, null, null, null, v, vehicleAvailability, c, t, documents, null, mapper);
+        this(d, driverAvailability, licenses, null, null, null, null, null, v, vehicleAvailability, c, t, documents, null, null, mapper);
     }
 
     @PostMapping("/drivers")
@@ -712,6 +727,49 @@ public class FleetController {
                                                                     Principal principal) {
         var remarks = r != null ? r.remarks() : null;
         return mapper.toResponse(maintenanceSchedules.complete(vehicleId, scheduleId, remarks, actor(principal)));
+    }
+
+    @GetMapping("/vehicles/{vehicleId}/lubricant-logs")
+    public List<LubricantLogResponse> listLubricantLogs(
+            @PathVariable UUID vehicleId,
+            @RequestParam(required = false) String fluidType,
+            @RequestParam(required = false) OffsetDateTime from,
+            @RequestParam(required = false) OffsetDateTime to
+    ) {
+        var type = fluidType != null && !fluidType.isBlank()
+                ? com.transportlogistics.app.fleet.domain.model.FluidType.valueOf(fluidType.trim())
+                : null;
+        return mapper.toLubricantLogResponseList(lubricantLogs.list(vehicleId, type, from, to));
+    }
+
+    @PostMapping("/vehicles/{vehicleId}/lubricant-logs")
+    public ResponseEntity<LubricantLogResponse> createLubricantLog(
+            @PathVariable UUID vehicleId,
+            @Valid @RequestBody LubricantLogRequest r,
+            Principal principal
+    ) {
+        var command = new LubricantLogUseCase.CreateCommand(
+                com.transportlogistics.app.fleet.domain.model.FluidType.valueOf(r.fluidType()),
+                r.quantity(),
+                com.transportlogistics.app.fleet.domain.model.MeasurementUnit.valueOf(r.unit()),
+                r.recordedAt(),
+                r.odometerKm(),
+                r.engineHours(),
+                r.vendorId(),
+                r.supplierName(),
+                r.referenceNumber(),
+                r.remarks()
+        );
+        var created = lubricantLogs.create(vehicleId, command, actor(principal));
+        return ResponseEntity.status(201).body(mapper.toResponse(created));
+    }
+
+    @GetMapping("/vehicles/{vehicleId}/lubricant-logs/{logId}")
+    public LubricantLogResponse getLubricantLog(
+            @PathVariable UUID vehicleId,
+            @PathVariable UUID logId
+    ) {
+        return mapper.toResponse(lubricantLogs.get(vehicleId, logId));
     }
 
     @PostMapping("/vehicle-categories")

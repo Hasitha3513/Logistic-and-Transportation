@@ -11,6 +11,7 @@ import { DriverMedicalSection } from '../fleet/DriverMedicalSection';
 import { DriverDrugTestSection } from '../fleet/DriverDrugTestSection';
 import VehicleMaintenanceSection from '../fleet/VehicleMaintenanceSection';
 import VehicleReadingsSection from '../fleet/VehicleReadingsSection';
+import { VehicleLubricantSection } from '../fleet/VehicleLubricantSection';
 import ResourceEditorModal, { type ResourceField, type ResourceValues } from './ResourceEditorModal';
 
 type ResourceRecord = Record<string, unknown> & { id: string };
@@ -196,6 +197,7 @@ export default function ResourceListPage({ endpoint, queryKey, title, descriptio
               <>
                 <VehicleMaintenanceSection vehicleId={selected.id} />
                 <VehicleReadingsSection vehicleId={selected.id} />
+                <VehicleLubricantSection vehicleId={selected.id} />
               </>
             )}
             {endpoint === '/drivers' && selected?.id && (
