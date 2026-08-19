@@ -15,6 +15,9 @@ public interface FleetWebMapper {
     DriverLicenseResponse toResponse(DriverLicense license);
     List<DriverLicenseResponse> toDriverLicenseResponseList(List<DriverLicense> licenses);
 
+    DriverExceptionResponse toResponse(DriverException exception);
+    List<DriverExceptionResponse> toDriverExceptionResponseList(List<DriverException> exceptions);
+
     VehicleResponse toResponse(Vehicle vehicle);
     List<VehicleResponse> toVehicleResponseList(List<Vehicle> vehicles);
 
@@ -34,4 +37,12 @@ public interface FleetWebMapper {
     default VehicleAvailabilityResponse toResponse(VehicleAvailability availability) {
         return VehicleAvailabilityResponse.from(availability);
     }
+
+    MaintenanceScheduleResponse toResponse(MaintenanceSchedule schedule);
+    List<MaintenanceScheduleResponse> toMaintenanceScheduleResponseList(List<MaintenanceSchedule> schedules);
+
+    DriverViolationResponse toResponse(DriverViolation violation);
+    List<DriverViolationResponse> toDriverViolationResponseList(List<DriverViolation> violations);
+
+    DriverPerformanceResponse toResponse(DriverPerformanceSummary performance);
 }

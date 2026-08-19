@@ -2,6 +2,7 @@ package com.transportlogistics.app.fleet.application.service;
 
 import com.transportlogistics.app.fleet.DriverAssignmentAvailability;
 import com.transportlogistics.app.fleet.application.ports.in.DriverAvailabilityUseCase;
+import com.transportlogistics.app.fleet.application.ports.out.DriverExceptionRepository;
 import com.transportlogistics.app.fleet.application.ports.out.DriverLicenseRepository;
 import com.transportlogistics.app.fleet.application.ports.out.DriverRepository;
 import com.transportlogistics.app.fleet.domain.model.Driver;
@@ -19,12 +20,16 @@ import java.util.UUID;
 
 import static com.transportlogistics.app.fleet.domain.model.DriverAvailability.Code.*;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 class DriverAvailabilityServiceTest {
     private DriverRepository drivers;
     private DriverLicenseRepository licenses;
     private DriverAssignmentAvailability assignments;
+    private DriverExceptionRepository driverExceptions;
     private DriverAvailabilityService service;
     private UUID driverId;
     private OffsetDateTime from;
@@ -35,7 +40,8 @@ class DriverAvailabilityServiceTest {
         drivers = mock(DriverRepository.class);
         licenses = mock(DriverLicenseRepository.class);
         assignments = mock(DriverAssignmentAvailability.class);
-        service = new DriverAvailabilityService(drivers, licenses, assignments);
+        driverExceptions = mock(DriverExceptionRepository.class);
+        service = new DriverAvailabilityService(drivers, licenses, assignments, driverExceptions);
         driverId = UUID.randomUUID();
         from = OffsetDateTime.parse("2026-02-01T08:00:00Z");
         to = OffsetDateTime.parse("2026-02-01T10:00:00Z");
@@ -132,7 +138,6 @@ class DriverAvailabilityServiceTest {
 
     @Test
     void nonActiveMatchingLicenseDoesNotInvalidateValidMatchingLicense() {
-        // The current MVP status model represents suspended/revoked-like non-active states as INACTIVE.
         when(licenses.findActiveByDriverId(driverId)).thenReturn(List.of(
                 inactiveLicense("B"), validLicense("B")));
 
@@ -160,19 +165,44 @@ class DriverAvailabilityServiceTest {
     }
 
     @Test
+    void rejectsDriverWithOverlappingDriverException() {
+        when(driverExceptions.hasOverlappingException(eq(driverId), eq(from), eq(to), anyList()))
+                .thenReturn(true);
+
+        var result = evaluate("B", null);
+
+        assertFalse(result.available());
+        assertTrue(result.hasReason(DRIVER_EXCEPTION_BLOCKED));
+    }
+
+    @Test
+    void allowsDriverWhenDriverExceptionDoesNotOverlap() {
+        when(driverExceptions.hasOverlappingException(eq(driverId), eq(from), eq(to), anyList()))
+                .thenReturn(false);
+
+        var result = evaluate("B", null);
+
+        assertTrue(result.available());
+        assertFalse(result.hasReason(DRIVER_EXCEPTION_BLOCKED));
+    }
+
+    @Test
     void returnsAllApplicableReasons() {
         givenDriver(false, "ON_LEAVE");
         when(licenses.findActiveByDriverId(driverId)).thenReturn(List.of());
         when(assignments.hasOverlap(driverId, from, to, null)).thenReturn(true);
+        when(driverExceptions.hasOverlappingException(eq(driverId), eq(from), eq(to), anyList()))
+                .thenReturn(true);
 
         var result = evaluate("C", null);
 
-        assertEquals(5, result.reasons().size());
+        assertEquals(6, result.reasons().size());
         assertTrue(result.hasReason(INACTIVE));
         assertTrue(result.hasReason(OPERATIONALLY_UNAVAILABLE));
         assertTrue(result.hasReason(LICENSE_MISSING));
         assertTrue(result.hasReason(REQUIRED_LICENSE_CLASS_MISSING));
         assertTrue(result.hasReason(OVERLAPPING_ASSIGNMENT));
+        assertTrue(result.hasReason(DRIVER_EXCEPTION_BLOCKED));
     }
 
     private void assertRejected(DriverAvailability.Code code) {

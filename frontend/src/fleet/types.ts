@@ -105,3 +105,156 @@ export interface RecordMeterResetRequest {
   effectiveAt: string;
   reason: string;
 }
+
+export type MaintenanceStatus = 'SCHEDULED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
+
+export interface MaintenanceSchedule {
+  id: string;
+  vehicleId: string;
+  maintenanceType: string;
+  scheduledStart: string;
+  scheduledEnd: string;
+  status: MaintenanceStatus;
+  description?: string | null;
+  serviceProvider?: string | null;
+  cost?: number | null;
+  createdAt: string;
+  updatedAt: string;
+  createdBy?: string | null;
+  updatedBy?: string | null;
+}
+
+export interface MaintenanceScheduleRequest {
+  maintenanceType: string;
+  scheduledStart: string;
+  scheduledEnd: string;
+  description?: string;
+  serviceProvider?: string;
+  cost?: number;
+}
+
+export interface MaintenanceSchedulePatchRequest {
+  maintenanceType?: string;
+  scheduledStart?: string;
+  scheduledEnd?: string;
+  status?: MaintenanceStatus;
+  description?: string;
+  serviceProvider?: string;
+  cost?: number;
+}
+
+export type DriverExceptionType = 'LEAVE' | 'DISCIPLINARY_SUSPENSION' | 'MEDICAL_EMERGENCY' | 'OTHER';
+export type DriverExceptionStatus = 'SCHEDULED' | 'ACTIVE' | 'COMPLETED' | 'CANCELLED';
+
+export interface DriverException {
+  id: string;
+  driverId: string;
+  exceptionType: DriverExceptionType;
+  startTime: string;
+  endTime: string;
+  status: DriverExceptionStatus;
+  reason?: string | null;
+  remarks?: string | null;
+  createdAt: string;
+  updatedAt: string;
+  createdBy?: string | null;
+  updatedBy?: string | null;
+}
+
+export interface DriverExceptionRequest {
+  exceptionType: DriverExceptionType;
+  startTime: string;
+  endTime: string;
+  reason?: string;
+  remarks?: string;
+}
+
+export interface DriverExceptionPatchRequest {
+  exceptionType?: DriverExceptionType;
+  startTime?: string;
+  endTime?: string;
+  status?: DriverExceptionStatus;
+  reason?: string;
+  remarks?: string;
+}
+
+export interface DriverExceptionActionRequest {
+  remarks?: string;
+}
+
+export type DriverViolationType =
+  | 'SPEEDING'
+  | 'RED_LIGHT'
+  | 'RECKLESS_DRIVING'
+  | 'UNAUTHORIZED_STOP'
+  | 'LOGBOOK_VIOLATION'
+  | 'ACCIDENT_FAULT'
+  | 'OVERLOADING'
+  | 'OTHER';
+
+export type ViolationSeverity = 'MINOR' | 'MODERATE' | 'MAJOR' | 'CRITICAL';
+export type FinePaymentStatus = 'UNPAID' | 'PAID' | 'WAIVED' | 'DISPUTED';
+
+export interface DriverViolation {
+  id: string;
+  driverId: string;
+  tripId?: string | null;
+  violationType: DriverViolationType;
+  severity: ViolationSeverity;
+  violationDate: string;
+  penaltyPoints: number;
+  fineAmount: number;
+  paymentStatus: FinePaymentStatus;
+  paidAt?: string | null;
+  paymentReference?: string | null;
+  location?: string | null;
+  description?: string | null;
+  createdAt: string;
+  updatedAt: string;
+  createdBy?: string | null;
+  updatedBy?: string | null;
+}
+
+export interface DriverViolationRequest {
+  tripId?: string;
+  violationType: DriverViolationType;
+  severity: ViolationSeverity;
+  violationDate: string;
+  penaltyPoints?: number;
+  fineAmount?: number;
+  location?: string;
+  description?: string;
+}
+
+export interface PayFineRequest {
+  paidAt?: string;
+  paymentReference?: string;
+}
+
+export interface WaiveFineRequest {
+  reason: string;
+}
+
+export type PerformanceRating =
+  | 'EXCELLENT'
+  | 'GOOD'
+  | 'SATISFACTORY'
+  | 'NEEDS_IMPROVEMENT'
+  | 'AT_RISK';
+
+export interface DriverPerformanceSummary {
+  driverId: string;
+  driverName: string;
+  totalTripsAssigned: number;
+  totalTripsCompleted: number;
+  totalTripsCancelled: number;
+  tripCompletionRate: number;
+  totalViolations: number;
+  totalPenaltyPoints: number;
+  criticalViolations: number;
+  totalFines: number;
+  unpaidFines: number;
+  safetyScore: number;
+  overallRating: PerformanceRating;
+  evaluatedAt: string;
+}

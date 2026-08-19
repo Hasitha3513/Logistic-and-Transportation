@@ -32,7 +32,8 @@ public record DriverAvailability(boolean available, List<Reason> reasons) {
         LICENSE_NOT_YET_VALID,
         LICENSE_EXPIRED,
         REQUIRED_LICENSE_CLASS_MISSING,
-        OVERLAPPING_ASSIGNMENT
+        OVERLAPPING_ASSIGNMENT,
+        DRIVER_EXCEPTION_BLOCKED
     }
 
     public record Reason(Code code, String message) {

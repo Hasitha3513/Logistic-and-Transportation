@@ -33,8 +33,9 @@ class VehicleConfig {
     @Bean
     VehicleAvailabilityUseCase vehicleAvailabilityUseCase(VehicleRepository vehicles,
                                                            VehicleDocumentRepository documents,
-                                                           VehicleAllocationAvailability allocations) {
-        return new VehicleAvailabilityService(vehicles, documents, allocations);
+                                                           VehicleAllocationAvailability allocations,
+                                                           com.transportlogistics.app.fleet.application.ports.out.MaintenanceScheduleRepository maintenanceSchedules) {
+        return new VehicleAvailabilityService(vehicles, documents, allocations, maintenanceSchedules);
     }
 
     @Bean

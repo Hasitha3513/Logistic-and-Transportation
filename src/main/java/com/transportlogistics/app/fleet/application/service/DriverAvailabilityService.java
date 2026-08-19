@@ -2,9 +2,11 @@ package com.transportlogistics.app.fleet.application.service;
 
 import com.transportlogistics.app.fleet.DriverAssignmentAvailability;
 import com.transportlogistics.app.fleet.application.ports.in.DriverAvailabilityUseCase;
+import com.transportlogistics.app.fleet.application.ports.out.DriverExceptionRepository;
 import com.transportlogistics.app.fleet.application.ports.out.DriverLicenseRepository;
 import com.transportlogistics.app.fleet.application.ports.out.DriverRepository;
 import com.transportlogistics.app.fleet.domain.model.DriverAvailability;
+import com.transportlogistics.app.fleet.domain.model.DriverExceptionStatus;
 import com.transportlogistics.app.fleet.domain.model.DriverLicense;
 import com.transportlogistics.app.shared.domain.NotFoundException;
 
@@ -14,15 +16,31 @@ import java.util.List;
 import static com.transportlogistics.app.fleet.domain.model.DriverAvailability.Code.*;
 
 public final class DriverAvailabilityService implements DriverAvailabilityUseCase {
+
+    private static final List<DriverExceptionStatus> BLOCKING_EXCEPTION_STATUSES = List.of(
+            DriverExceptionStatus.SCHEDULED,
+            DriverExceptionStatus.ACTIVE
+    );
+
     private final DriverRepository drivers;
     private final DriverLicenseRepository licenses;
     private final DriverAssignmentAvailability assignments;
+    private final DriverExceptionRepository driverExceptions;
 
-    public DriverAvailabilityService(DriverRepository drivers, DriverLicenseRepository licenses,
-                                     DriverAssignmentAvailability assignments) {
+    public DriverAvailabilityService(DriverRepository drivers,
+                                     DriverLicenseRepository licenses,
+                                     DriverAssignmentAvailability assignments,
+                                     DriverExceptionRepository driverExceptions) {
         this.drivers = drivers;
         this.licenses = licenses;
         this.assignments = assignments;
+        this.driverExceptions = driverExceptions;
+    }
+
+    public DriverAvailabilityService(DriverRepository drivers,
+                                     DriverLicenseRepository licenses,
+                                     DriverAssignmentAvailability assignments) {
+        this(drivers, licenses, assignments, null);
     }
 
     @Override
@@ -46,7 +64,14 @@ public final class DriverAvailabilityService implements DriverAvailabilityUseCas
         }
 
         addLicenseReasonsWhenNoneQualifies(reasons, activeLicenses, query);
+
+        if (driverExceptions != null && driverExceptions.hasOverlappingException(
+                driver.id(), query.from(), query.to(), BLOCKING_EXCEPTION_STATUSES)) {
+            add(reasons, DRIVER_EXCEPTION_BLOCKED, "Driver has a scheduled exception or leave during the requested period");
+        }
+
         if (query.checkAssignmentConflicts()
+                && assignments != null
                 && assignments.hasOverlap(driver.id(), query.from(), query.to(), query.excludeTripId())) {
             add(reasons, OVERLAPPING_ASSIGNMENT, "Driver has an overlapping trip assignment");
         }

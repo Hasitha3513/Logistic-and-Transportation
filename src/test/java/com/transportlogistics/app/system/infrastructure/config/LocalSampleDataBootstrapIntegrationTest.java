@@ -25,6 +25,8 @@ class LocalSampleDataBootstrapIntegrationTest {
         jdbc.update("DELETE FROM route_stop");
         jdbc.update("DELETE FROM route");
         jdbc.update("DELETE FROM driver_license");
+        jdbc.update("DELETE FROM driver_exception");
+        jdbc.update("DELETE FROM driver_violation");
         jdbc.update("DELETE FROM driver");
         jdbc.update("DELETE FROM vehicle_document");
         jdbc.update("DELETE FROM vehicle_meter_reset");
@@ -37,6 +39,7 @@ class LocalSampleDataBootstrapIntegrationTest {
         jdbc.update("DELETE FROM bunker_tank");
         jdbc.update("DELETE FROM fuel_station");
         jdbc.update("DELETE FROM vendor");
+        jdbc.update("DELETE FROM maintenance_schedule");
         jdbc.update("DELETE FROM vehicle");
         jdbc.update("DELETE FROM vehicle_type");
         jdbc.update("DELETE FROM vehicle_category");

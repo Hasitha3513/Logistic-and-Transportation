@@ -4,6 +4,7 @@ import com.transportlogistics.app.fleet.DriverAssignmentEligibility;
 import com.transportlogistics.app.fleet.DriverAssignmentAvailability;
 import com.transportlogistics.app.fleet.application.ports.in.DriverAvailabilityUseCase;
 import com.transportlogistics.app.fleet.application.ports.in.DriverUseCase;
+import com.transportlogistics.app.fleet.application.ports.out.DriverExceptionRepository;
 import com.transportlogistics.app.fleet.application.ports.out.DriverLicenseRepository;
 import com.transportlogistics.app.fleet.application.ports.out.DriverRepository;
 import com.transportlogistics.app.fleet.application.service.DriverService;
@@ -19,9 +20,11 @@ class DriverConfig {
     }
 
     @Bean
-    DriverAvailabilityUseCase driverAvailabilityUseCase(DriverRepository drivers, DriverLicenseRepository licenses,
-                                                         DriverAssignmentAvailability assignments) {
-        return new DriverAvailabilityService(drivers, licenses, assignments);
+    DriverAvailabilityUseCase driverAvailabilityUseCase(DriverRepository drivers,
+                                                         DriverLicenseRepository licenses,
+                                                         DriverAssignmentAvailability assignments,
+                                                         DriverExceptionRepository driverExceptions) {
+        return new DriverAvailabilityService(drivers, licenses, assignments, driverExceptions);
     }
 
     @Bean
