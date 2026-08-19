@@ -11,3 +11,6 @@
 /full_diff.txt
 /tech-ref-001.diff
 /docs/refactoring/TECH-REF-001-scope-audit.md.txt
+
+/frontend/test-results/
+/frontend/playwright-report/

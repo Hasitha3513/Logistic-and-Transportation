@@ -69,10 +69,23 @@ class SecurityConfig {
                         .hasAuthority("VEHICLE_DOCUMENT_MANAGE")
                         .requestMatchers(HttpMethod.DELETE, "/vehicles/*/documents/*")
                         .hasAuthority("VEHICLE_DOCUMENT_MANAGE")
+                        .requestMatchers(HttpMethod.GET, "/vehicles/*/maintenance-schedules",
+                                "/vehicles/*/maintenance-schedules/*")
+                        .hasAuthority("VEHICLE_VIEW")
+                        .requestMatchers(HttpMethod.POST, "/vehicles/*/maintenance-schedules",
+                                "/vehicles/*/maintenance-schedules/*/cancel", "/vehicles/*/maintenance-schedules/*/complete")
+                        .hasAuthority("VEHICLE_MAINTENANCE_MANAGE")
+                        .requestMatchers(HttpMethod.PUT, "/vehicles/*/maintenance-schedules/*")
+                        .hasAuthority("VEHICLE_MAINTENANCE_MANAGE")
+                        .requestMatchers(HttpMethod.PATCH, "/vehicles/*/maintenance-schedules/*")
+                        .hasAuthority("VEHICLE_MAINTENANCE_MANAGE")
 
                         .requestMatchers(HttpMethod.GET, "/drivers/available", "/drivers/*/availability")
                         .hasAuthority("DRIVER_AVAILABILITY_VIEW")
-                        .requestMatchers(HttpMethod.GET, "/drivers", "/drivers/*", "/drivers/*/licenses")
+                        .requestMatchers(HttpMethod.GET, "/drivers", "/drivers/*", "/drivers/*/licenses",
+                                "/drivers/*/exceptions", "/drivers/*/exceptions/*",
+                                "/drivers/*/violations", "/drivers/*/violations/*",
+                                "/drivers/*/performance")
                         .hasAuthority("DRIVER_VIEW")
                         .requestMatchers(HttpMethod.POST, "/drivers").hasAuthority("DRIVER_CREATE")
                         .requestMatchers(HttpMethod.PUT, "/drivers/*").hasAuthority("DRIVER_UPDATE")
@@ -83,6 +96,33 @@ class SecurityConfig {
                         .hasAuthority("DRIVER_LICENSE_MANAGE")
                         .requestMatchers(HttpMethod.DELETE, "/drivers/*/licenses/*")
                         .hasAuthority("DRIVER_LICENSE_MANAGE")
+                        .requestMatchers(HttpMethod.POST, "/drivers/*/exceptions",
+                                "/drivers/*/exceptions/*/cancel", "/drivers/*/exceptions/*/complete")
+                        .hasAuthority("DRIVER_EXCEPTION_MANAGE")
+                        .requestMatchers(HttpMethod.PUT, "/drivers/*/exceptions/*")
+                        .hasAuthority("DRIVER_EXCEPTION_MANAGE")
+                        .requestMatchers(HttpMethod.PATCH, "/drivers/*/exceptions/*")
+                        .hasAuthority("DRIVER_EXCEPTION_MANAGE")
+                        .requestMatchers(HttpMethod.POST, "/drivers/*/violations",
+                                "/drivers/*/violations/*/pay", "/drivers/*/violations/*/waive",
+                                "/drivers/*/violations/*/dispute")
+                        .hasAuthority("DRIVER_VIOLATION_MANAGE")
+                        .requestMatchers(HttpMethod.GET, "/drivers/*/medical-records", "/drivers/*/medical-records/*")
+                        .hasAuthority("DRIVER_MEDICAL_VIEW")
+                        .requestMatchers(HttpMethod.POST, "/drivers/*/medical-records")
+                        .hasAuthority("DRIVER_MEDICAL_MANAGE")
+                        .requestMatchers(HttpMethod.PUT, "/drivers/*/medical-records/*")
+                        .hasAuthority("DRIVER_MEDICAL_MANAGE")
+                        .requestMatchers(HttpMethod.PATCH, "/drivers/*/medical-records/*")
+                        .hasAuthority("DRIVER_MEDICAL_MANAGE")
+                        .requestMatchers(HttpMethod.GET, "/drivers/*/drug-tests", "/drivers/*/drug-tests/*")
+                        .hasAuthority("DRIVER_DRUG_TEST_VIEW")
+                        .requestMatchers(HttpMethod.POST, "/drivers/*/drug-tests",
+                                "/drivers/*/drug-tests/*/sample",
+                                "/drivers/*/drug-tests/*/result",
+                                "/drivers/*/drug-tests/*/return-to-duty-clear",
+                                "/drivers/*/drug-tests/*/cancel")
+                        .hasAuthority("DRIVER_DRUG_TEST_MANAGE")
 
                         .requestMatchers(HttpMethod.GET, "/routes", "/routes/*").hasAuthority("ROUTE_VIEW")
                         .requestMatchers(HttpMethod.POST, "/routes").hasAuthority("ROUTE_CREATE")

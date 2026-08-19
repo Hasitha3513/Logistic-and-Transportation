@@ -2,6 +2,8 @@ package com.transportlogistics.app.fleet.infrastructure.adapters.in.web.controll
 
 import com.transportlogistics.app.fleet.application.ports.in.*;
 import com.transportlogistics.app.fleet.domain.model.Driver;
+import com.transportlogistics.app.fleet.domain.model.DriverExceptionStatus;
+import com.transportlogistics.app.fleet.domain.model.DriverExceptionType;
 import com.transportlogistics.app.fleet.domain.model.Vehicle;
 import com.transportlogistics.app.fleet.domain.model.VehicleCategory;
 import com.transportlogistics.app.fleet.domain.model.VehicleType;
@@ -24,27 +26,82 @@ public class FleetController {
     private final DriverUseCase drivers;
     private final DriverAvailabilityUseCase driverAvailability;
     private final DriverLicenseUseCase licenses;
+    private final DriverExceptionUseCase driverExceptions;
+    private final DriverViolationUseCase driverViolations;
+    private final DriverPerformanceUseCase driverPerformance;
+    private final DriverMedicalRecordUseCase driverMedicalRecords;
+    private final DriverDrugTestUseCase driverDrugTests;
     private final VehicleUseCase vehicles;
     private final VehicleAvailabilityUseCase vehicleAvailability;
     private final VehicleCategoryUseCase categories;
     private final VehicleTypeUseCase types;
     private final VehicleDocumentUseCase documents;
+    private final MaintenanceScheduleUseCase maintenanceSchedules;
     private final FleetWebMapper mapper;
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public FleetController(DriverUseCase d, DriverAvailabilityUseCase driverAvailability,
+                           DriverLicenseUseCase licenses, DriverExceptionUseCase driverExceptions,
+                           DriverViolationUseCase driverViolations, DriverPerformanceUseCase driverPerformance,
+                           DriverMedicalRecordUseCase driverMedicalRecords, DriverDrugTestUseCase driverDrugTests,
+                           VehicleUseCase v, VehicleAvailabilityUseCase vehicleAvailability,
+                           VehicleCategoryUseCase c, VehicleTypeUseCase t,
+                           VehicleDocumentUseCase documents,
+                           MaintenanceScheduleUseCase maintenanceSchedules,
+                           FleetWebMapper mapper) {
+        this.drivers = d;
+        this.driverAvailability = driverAvailability;
+        this.licenses = licenses;
+        this.driverExceptions = driverExceptions;
+        this.driverViolations = driverViolations;
+        this.driverPerformance = driverPerformance;
+        this.driverMedicalRecords = driverMedicalRecords;
+        this.driverDrugTests = driverDrugTests;
+        this.vehicles = v;
+        this.vehicleAvailability = vehicleAvailability;
+        this.categories = c;
+        this.types = t;
+        this.documents = documents;
+        this.maintenanceSchedules = maintenanceSchedules;
+        this.mapper = mapper;
+    }
+
+    public FleetController(DriverUseCase d, DriverAvailabilityUseCase driverAvailability,
+                           DriverLicenseUseCase licenses, DriverExceptionUseCase driverExceptions,
+                           DriverViolationUseCase driverViolations, DriverPerformanceUseCase driverPerformance,
+                           VehicleUseCase v, VehicleAvailabilityUseCase vehicleAvailability,
+                           VehicleCategoryUseCase c, VehicleTypeUseCase t,
+                           VehicleDocumentUseCase documents,
+                           MaintenanceScheduleUseCase maintenanceSchedules,
+                           FleetWebMapper mapper) {
+        this(d, driverAvailability, licenses, driverExceptions, driverViolations, driverPerformance, null, null, v, vehicleAvailability, c, t, documents, maintenanceSchedules, mapper);
+    }
+
+    public FleetController(DriverUseCase d, DriverAvailabilityUseCase driverAvailability,
+                           DriverLicenseUseCase licenses, DriverExceptionUseCase driverExceptions,
+                           VehicleUseCase v, VehicleAvailabilityUseCase vehicleAvailability,
+                           VehicleCategoryUseCase c, VehicleTypeUseCase t,
+                           VehicleDocumentUseCase documents,
+                           MaintenanceScheduleUseCase maintenanceSchedules,
+                           FleetWebMapper mapper) {
+        this(d, driverAvailability, licenses, driverExceptions, null, null, null, null, v, vehicleAvailability, c, t, documents, maintenanceSchedules, mapper);
+    }
+
+    public FleetController(DriverUseCase d, DriverAvailabilityUseCase driverAvailability,
+                           DriverLicenseUseCase licenses, VehicleUseCase v,
+                           VehicleAvailabilityUseCase vehicleAvailability, VehicleCategoryUseCase c,
+                           VehicleTypeUseCase t, VehicleDocumentUseCase documents,
+                           MaintenanceScheduleUseCase maintenanceSchedules,
+                           FleetWebMapper mapper) {
+        this(d, driverAvailability, licenses, null, null, null, null, null, v, vehicleAvailability, c, t, documents, maintenanceSchedules, mapper);
+    }
 
     public FleetController(DriverUseCase d, DriverAvailabilityUseCase driverAvailability,
                            DriverLicenseUseCase licenses, VehicleUseCase v,
                            VehicleAvailabilityUseCase vehicleAvailability, VehicleCategoryUseCase c,
                            VehicleTypeUseCase t, VehicleDocumentUseCase documents,
                            FleetWebMapper mapper) {
-        this.drivers = d;
-        this.driverAvailability = driverAvailability;
-        this.licenses = licenses;
-        this.vehicles = v;
-        this.vehicleAvailability = vehicleAvailability;
-        this.categories = c;
-        this.types = t;
-        this.documents = documents;
-        this.mapper = mapper;
+        this(d, driverAvailability, licenses, null, null, null, null, null, v, vehicleAvailability, c, t, documents, null, mapper);
     }
 
     @PostMapping("/drivers")
@@ -131,6 +188,361 @@ public class FleetController {
         return ResponseEntity.noContent().build();
     }
 
+    // Driver Exception endpoints
+    @GetMapping("/drivers/{driverId}/exceptions")
+    public List<DriverExceptionResponse> listDriverExceptions(@PathVariable UUID driverId) {
+        return mapper.toDriverExceptionResponseList(driverExceptions.list(driverId));
+    }
+
+    @PostMapping("/drivers/{driverId}/exceptions")
+    public ResponseEntity<DriverExceptionResponse> createDriverException(
+            @PathVariable UUID driverId,
+            @Valid @RequestBody DriverExceptionRequest request,
+            Principal principal
+    ) {
+        var type = DriverExceptionType.valueOf(request.exceptionType());
+        var command = new DriverExceptionUseCase.CreateCommand(
+                type,
+                request.startTime(),
+                request.endTime(),
+                request.reason(),
+                request.remarks()
+        );
+        var created = driverExceptions.create(driverId, command, actor(principal));
+        return ResponseEntity.status(201).body(mapper.toResponse(created));
+    }
+
+    @GetMapping("/drivers/{driverId}/exceptions/{exceptionId}")
+    public DriverExceptionResponse getDriverException(
+            @PathVariable UUID driverId,
+            @PathVariable UUID exceptionId
+    ) {
+        return mapper.toResponse(driverExceptions.get(driverId, exceptionId));
+    }
+
+    @PutMapping("/drivers/{driverId}/exceptions/{exceptionId}")
+    public DriverExceptionResponse updateDriverException(
+            @PathVariable UUID driverId,
+            @PathVariable UUID exceptionId,
+            @Valid @RequestBody DriverExceptionRequest request,
+            Principal principal
+    ) {
+        var type = request.exceptionType() != null ? DriverExceptionType.valueOf(request.exceptionType()) : null;
+        var command = new DriverExceptionUseCase.UpdateCommand(
+                type,
+                request.startTime(),
+                request.endTime(),
+                null,
+                request.reason(),
+                request.remarks()
+        );
+        return mapper.toResponse(driverExceptions.update(driverId, exceptionId, command, actor(principal)));
+    }
+
+    @PatchMapping("/drivers/{driverId}/exceptions/{exceptionId}")
+    public DriverExceptionResponse patchDriverException(
+            @PathVariable UUID driverId,
+            @PathVariable UUID exceptionId,
+            @RequestBody DriverExceptionPatchRequest request,
+            Principal principal
+    ) {
+        var type = request.exceptionType() != null ? DriverExceptionType.valueOf(request.exceptionType()) : null;
+        var status = request.status() != null ? DriverExceptionStatus.valueOf(request.status()) : null;
+        var command = new DriverExceptionUseCase.UpdateCommand(
+                type,
+                request.startTime(),
+                request.endTime(),
+                status,
+                request.reason(),
+                request.remarks()
+        );
+        return mapper.toResponse(driverExceptions.update(driverId, exceptionId, command, actor(principal)));
+    }
+
+    @PostMapping("/drivers/{driverId}/exceptions/{exceptionId}/cancel")
+    public DriverExceptionResponse cancelDriverException(
+            @PathVariable UUID driverId,
+            @PathVariable UUID exceptionId,
+            @RequestBody(required = false) DriverExceptionActionRequest request,
+            Principal principal
+    ) {
+        var remarks = request != null ? request.remarks() : null;
+        return mapper.toResponse(driverExceptions.cancel(driverId, exceptionId, remarks, actor(principal)));
+    }
+
+    @PostMapping("/drivers/{driverId}/exceptions/{exceptionId}/complete")
+    public DriverExceptionResponse completeDriverException(
+            @PathVariable UUID driverId,
+            @PathVariable UUID exceptionId,
+            @RequestBody(required = false) DriverExceptionActionRequest request,
+            Principal principal
+    ) {
+        var remarks = request != null ? request.remarks() : null;
+        return mapper.toResponse(driverExceptions.complete(driverId, exceptionId, remarks, actor(principal)));
+    }
+
+    @GetMapping("/drivers/{driverId}/violations")
+    public List<DriverViolationResponse> listDriverViolations(@PathVariable UUID driverId) {
+        return mapper.toDriverViolationResponseList(driverViolations.listViolations(driverId));
+    }
+
+    @PostMapping("/drivers/{driverId}/violations")
+    public ResponseEntity<DriverViolationResponse> recordDriverViolation(
+            @PathVariable UUID driverId,
+            @Valid @RequestBody DriverViolationRequest request,
+            Principal principal
+    ) {
+        var command = new DriverViolationUseCase.RecordCommand(
+                driverId,
+                request.tripId(),
+                request.violationType(),
+                request.severity(),
+                request.violationDate(),
+                request.penaltyPoints() != null ? request.penaltyPoints() : 0,
+                request.fineAmount() != null ? request.fineAmount() : java.math.BigDecimal.ZERO,
+                request.location(),
+                request.description(),
+                actor(principal)
+        );
+        var created = driverViolations.recordViolation(command);
+        return ResponseEntity.status(201).body(mapper.toResponse(created));
+    }
+
+    @GetMapping("/drivers/{driverId}/violations/{violationId}")
+    public DriverViolationResponse getDriverViolation(@PathVariable UUID driverId, @PathVariable UUID violationId) {
+        return mapper.toResponse(driverViolations.getViolation(driverId, violationId));
+    }
+
+    @PostMapping("/drivers/{driverId}/violations/{violationId}/pay")
+    public DriverViolationResponse payDriverViolation(
+            @PathVariable UUID driverId,
+            @PathVariable UUID violationId,
+            @RequestBody(required = false) PayFineRequest request,
+            Principal principal
+    ) {
+        var paidAt = request != null ? request.paidAt() : null;
+        var paymentReference = request != null ? request.paymentReference() : null;
+        var command = new DriverViolationUseCase.PayCommand(
+                driverId,
+                violationId,
+                paidAt,
+                paymentReference,
+                actor(principal)
+        );
+        return mapper.toResponse(driverViolations.payFine(command));
+    }
+
+    @PostMapping("/drivers/{driverId}/violations/{violationId}/waive")
+    public DriverViolationResponse waiveDriverViolation(
+            @PathVariable UUID driverId,
+            @PathVariable UUID violationId,
+            @Valid @RequestBody WaiveFineRequest request,
+            Principal principal
+    ) {
+        var command = new DriverViolationUseCase.WaiveCommand(
+                driverId,
+                violationId,
+                request.reason(),
+                actor(principal)
+        );
+        return mapper.toResponse(driverViolations.waiveFine(command));
+    }
+
+    @PostMapping("/drivers/{driverId}/violations/{violationId}/dispute")
+    public DriverViolationResponse disputeDriverViolation(
+            @PathVariable UUID driverId,
+            @PathVariable UUID violationId,
+            @Valid @RequestBody WaiveFineRequest request,
+            Principal principal
+    ) {
+        var command = new DriverViolationUseCase.DisputeCommand(
+                driverId,
+                violationId,
+                request.reason(),
+                actor(principal)
+        );
+        return mapper.toResponse(driverViolations.disputeFine(command));
+    }
+
+    @GetMapping("/drivers/{driverId}/performance")
+    public DriverPerformanceResponse getDriverPerformance(@PathVariable UUID driverId) {
+        return mapper.toResponse(driverPerformance.getPerformanceSummary(driverId));
+    }
+
+    // Medical Records
+    @GetMapping("/drivers/{driverId}/medical-records")
+    public List<DriverMedicalRecordResponse> listDriverMedicalRecords(@PathVariable UUID driverId) {
+        return mapper.toDriverMedicalRecordResponseList(driverMedicalRecords.list(driverId));
+    }
+
+    @PostMapping("/drivers/{driverId}/medical-records")
+    public ResponseEntity<DriverMedicalRecordResponse> createDriverMedicalRecord(
+            @PathVariable UUID driverId,
+            @Valid @RequestBody DriverMedicalRecordRequest request,
+            Principal principal
+    ) {
+        var fitnessStatus = com.transportlogistics.app.fleet.domain.model.DriverMedicalStatus.valueOf(request.fitnessStatus());
+        var visionStatus = request.visionTestStatus() != null && !request.visionTestStatus().isBlank()
+                ? com.transportlogistics.app.fleet.domain.model.VisionTestStatus.valueOf(request.visionTestStatus()) : null;
+        var command = new DriverMedicalRecordUseCase.CreateCommand(
+                request.assessmentDate(),
+                request.validFrom(),
+                request.validUntil(),
+                fitnessStatus,
+                visionStatus,
+                request.restrictions(),
+                request.examinerOrProvider(),
+                request.certificateReference(),
+                request.remarks()
+        );
+        var created = driverMedicalRecords.create(driverId, command, actor(principal));
+        return ResponseEntity.status(201).body(mapper.toResponse(created));
+    }
+
+    @GetMapping("/drivers/{driverId}/medical-records/{recordId}")
+    public DriverMedicalRecordResponse getDriverMedicalRecord(
+            @PathVariable UUID driverId,
+            @PathVariable UUID recordId
+    ) {
+        return mapper.toResponse(driverMedicalRecords.get(driverId, recordId));
+    }
+
+    @PutMapping("/drivers/{driverId}/medical-records/{recordId}")
+    public DriverMedicalRecordResponse updateDriverMedicalRecord(
+            @PathVariable UUID driverId,
+            @PathVariable UUID recordId,
+            @Valid @RequestBody DriverMedicalRecordRequest request,
+            Principal principal
+    ) {
+        var fitnessStatus = request.fitnessStatus() != null ? com.transportlogistics.app.fleet.domain.model.DriverMedicalStatus.valueOf(request.fitnessStatus()) : null;
+        var visionStatus = request.visionTestStatus() != null && !request.visionTestStatus().isBlank()
+                ? com.transportlogistics.app.fleet.domain.model.VisionTestStatus.valueOf(request.visionTestStatus()) : null;
+        var command = new DriverMedicalRecordUseCase.UpdateCommand(
+                request.assessmentDate(),
+                request.validFrom(),
+                request.validUntil(),
+                fitnessStatus,
+                visionStatus,
+                request.restrictions(),
+                request.examinerOrProvider(),
+                request.certificateReference(),
+                request.remarks(),
+                null
+        );
+        return mapper.toResponse(driverMedicalRecords.update(driverId, recordId, command, actor(principal)));
+    }
+
+    @PatchMapping("/drivers/{driverId}/medical-records/{recordId}")
+    public DriverMedicalRecordResponse patchDriverMedicalRecord(
+            @PathVariable UUID driverId,
+            @PathVariable UUID recordId,
+            @RequestBody DriverMedicalRecordPatchRequest request,
+            Principal principal
+    ) {
+        var fitnessStatus = request.fitnessStatus() != null && !request.fitnessStatus().isBlank()
+                ? com.transportlogistics.app.fleet.domain.model.DriverMedicalStatus.valueOf(request.fitnessStatus()) : null;
+        var visionStatus = request.visionTestStatus() != null && !request.visionTestStatus().isBlank()
+                ? com.transportlogistics.app.fleet.domain.model.VisionTestStatus.valueOf(request.visionTestStatus()) : null;
+        var command = new DriverMedicalRecordUseCase.UpdateCommand(
+                request.assessmentDate(),
+                request.validFrom(),
+                request.validUntil(),
+                fitnessStatus,
+                visionStatus,
+                request.restrictions(),
+                request.examinerOrProvider(),
+                request.certificateReference(),
+                request.remarks(),
+                request.active()
+        );
+        return mapper.toResponse(driverMedicalRecords.update(driverId, recordId, command, actor(principal)));
+    }
+
+    // Drug Tests
+    @GetMapping("/drivers/{driverId}/drug-tests")
+    public List<DriverDrugTestResponse> listDriverDrugTests(@PathVariable UUID driverId) {
+        return mapper.toDriverDrugTestResponseList(driverDrugTests.list(driverId));
+    }
+
+    @PostMapping("/drivers/{driverId}/drug-tests")
+    public ResponseEntity<DriverDrugTestResponse> scheduleDriverDrugTest(
+            @PathVariable UUID driverId,
+            @Valid @RequestBody DriverDrugTestRequest request,
+            Principal principal
+    ) {
+        var testType = com.transportlogistics.app.fleet.domain.model.DrugTestType.valueOf(request.testType());
+        var command = new DriverDrugTestUseCase.ScheduleCommand(
+                testType,
+                request.scheduledDate(),
+                request.laboratoryOrProvider(),
+                request.referenceNumber(),
+                request.remarks()
+        );
+        var scheduled = driverDrugTests.schedule(driverId, command, actor(principal));
+        return ResponseEntity.status(201).body(mapper.toResponse(scheduled));
+    }
+
+    @GetMapping("/drivers/{driverId}/drug-tests/{testId}")
+    public DriverDrugTestResponse getDriverDrugTest(
+            @PathVariable UUID driverId,
+            @PathVariable UUID testId
+    ) {
+        return mapper.toResponse(driverDrugTests.get(driverId, testId));
+    }
+
+    @PostMapping("/drivers/{driverId}/drug-tests/{testId}/sample")
+    public DriverDrugTestResponse recordDrugTestSample(
+            @PathVariable UUID driverId,
+            @PathVariable UUID testId,
+            @RequestBody(required = false) DriverDrugTestSampleRequest request,
+            Principal principal
+    ) {
+        var sampleTime = request != null ? request.sampleCollectedAt() : null;
+        var command = new DriverDrugTestUseCase.RecordSampleCommand(sampleTime);
+        return mapper.toResponse(driverDrugTests.recordSample(driverId, testId, command, actor(principal)));
+    }
+
+    @PostMapping("/drivers/{driverId}/drug-tests/{testId}/result")
+    public DriverDrugTestResponse recordDrugTestResult(
+            @PathVariable UUID driverId,
+            @PathVariable UUID testId,
+            @Valid @RequestBody DriverDrugTestResultRequest request,
+            Principal principal
+    ) {
+        var result = com.transportlogistics.app.fleet.domain.model.DrugTestResult.valueOf(request.result());
+        var command = new DriverDrugTestUseCase.RecordResultCommand(
+                result,
+                request.resultDate(),
+                request.remarks(),
+                request.returnToDutyRequired()
+        );
+        return mapper.toResponse(driverDrugTests.recordResult(driverId, testId, command, actor(principal)));
+    }
+
+    @PostMapping("/drivers/{driverId}/drug-tests/{testId}/return-to-duty-clear")
+    public DriverDrugTestResponse clearReturnToDuty(
+            @PathVariable UUID driverId,
+            @PathVariable UUID testId,
+            @RequestBody(required = false) DriverDrugTestClearanceRequest request,
+            Principal principal
+    ) {
+        var clearedAt = request != null ? request.clearedAt() : null;
+        var remarks = request != null ? request.remarks() : null;
+        var command = new DriverDrugTestUseCase.ReturnToDutyClearanceCommand(clearedAt, remarks);
+        return mapper.toResponse(driverDrugTests.clearReturnToDuty(driverId, testId, command, actor(principal)));
+    }
+
+    @PostMapping("/drivers/{driverId}/drug-tests/{testId}/cancel")
+    public DriverDrugTestResponse cancelDriverDrugTest(
+            @PathVariable UUID driverId,
+            @PathVariable UUID testId,
+            @RequestBody(required = false) DriverDrugTestClearanceRequest request,
+            Principal principal
+    ) {
+        var remarks = request != null ? request.remarks() : null;
+        return mapper.toResponse(driverDrugTests.cancel(driverId, testId, remarks, actor(principal)));
+    }
+
     @PostMapping("/vehicles")
     public ResponseEntity<VehicleResponse> createVehicle(@Valid @RequestBody VehicleRequest r) {
         var created = vehicles.create(vehicle(UUID.randomUUID(), r));
@@ -172,50 +584,134 @@ public class FleetController {
 
     @GetMapping("/vehicles/available")
     public List<VehicleResponse> availableVehicles(@RequestParam OffsetDateTime from,
-                                                   @RequestParam OffsetDateTime to,
-                                                   @RequestParam(required = false) UUID vehicleTypeId,
-                                                   @RequestParam(required = false) UUID categoryId,
-                                                   @RequestParam(required = false) Double minimumCapacityKg,
-                                                   @RequestParam(required = false) UUID excludeTripId) {
+                                                  @RequestParam OffsetDateTime to,
+                                                  @RequestParam(required = false) UUID requiredVehicleTypeId,
+                                                  @RequestParam(required = false) Double requiredCapacityKg) {
         var list = vehicles.list().stream()
                 .filter(vehicle -> vehicleAvailability.evaluate(new VehicleAvailabilityUseCase.Query(vehicle.id(),
-                        from, to, vehicleTypeId, minimumCapacityKg, excludeTripId)).available())
-                .filter(vehicle -> categoryId == null || categoryId.equals(vehicle.categoryId()))
+                        from, to, requiredVehicleTypeId, requiredCapacityKg, null)).available())
                 .toList();
         return mapper.toVehicleResponseList(list);
     }
 
     @GetMapping("/vehicles/{vehicleId}/documents")
-    public List<VehicleDocumentResponse> docs(@PathVariable UUID vehicleId) {
+    public List<VehicleDocumentResponse> listDocuments(@PathVariable UUID vehicleId) {
         return mapper.toVehicleDocumentResponseList(documents.list(vehicleId));
     }
 
     @PostMapping("/vehicles/{vehicleId}/documents")
-    public ResponseEntity<VehicleDocumentResponse> createDoc(@PathVariable UUID vehicleId,
-                                                             @Valid @RequestBody DocumentRequest r,
-                                                             Principal principal) {
-        var command = new VehicleDocumentUseCase.CreateCommand(r.documentType(), r.documentNumber(), r.issueDate(),
-                r.expiryDate(), r.fileReference(), Boolean.TRUE.equals(r.mandatoryForDispatch()), r.status(), r.active());
+    public ResponseEntity<VehicleDocumentResponse> createDocument(@PathVariable UUID vehicleId,
+                                                                  @Valid @RequestBody DocumentRequest request,
+                                                                  Principal principal) {
+        var command = new VehicleDocumentUseCase.CreateCommand(request.documentType(), request.documentNumber(),
+                request.issueDate(), request.expiryDate(), request.fileReference(), request.mandatoryForDispatch(),
+                request.status(), request.active());
         var created = documents.create(vehicleId, command, actor(principal));
         return ResponseEntity.status(201).body(mapper.toResponse(created));
     }
 
     @PatchMapping("/vehicles/{vehicleId}/documents/{documentId}")
-    public VehicleDocumentResponse updateDoc(@PathVariable UUID vehicleId,
-                                             @PathVariable UUID documentId,
-                                             @RequestBody DocumentPatchRequest r,
-                                             Principal principal) {
-        var command = new VehicleDocumentUseCase.UpdateCommand(r.documentType(), r.documentNumber(), r.issueDate(),
-                r.expiryDate(), r.fileReference(), r.mandatoryForDispatch(), r.status(), r.active());
+    public VehicleDocumentResponse updateDocument(@PathVariable UUID vehicleId,
+                                                  @PathVariable UUID documentId,
+                                                  @RequestBody DocumentPatchRequest request,
+                                                  Principal principal) {
+        var command = new VehicleDocumentUseCase.UpdateCommand(request.documentType(), request.documentNumber(),
+                request.issueDate(), request.expiryDate(), request.fileReference(), request.mandatoryForDispatch(),
+                request.status(), request.active());
         return mapper.toResponse(documents.update(vehicleId, documentId, command, actor(principal)));
     }
 
     @DeleteMapping("/vehicles/{vehicleId}/documents/{documentId}")
-    public ResponseEntity<Void> deleteDoc(@PathVariable UUID vehicleId,
-                                          @PathVariable UUID documentId,
-                                          Principal principal) {
+    public ResponseEntity<Void> deleteDocument(@PathVariable UUID vehicleId,
+                                               @PathVariable UUID documentId,
+                                               Principal principal) {
         documents.delete(vehicleId, documentId, actor(principal));
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/vehicles/{vehicleId}/maintenance-schedules")
+    public List<MaintenanceScheduleResponse> listMaintenanceSchedules(@PathVariable UUID vehicleId) {
+        return mapper.toMaintenanceScheduleResponseList(maintenanceSchedules.list(vehicleId));
+    }
+
+    @PostMapping("/vehicles/{vehicleId}/maintenance-schedules")
+    public ResponseEntity<MaintenanceScheduleResponse> createMaintenanceSchedule(
+            @PathVariable UUID vehicleId,
+            @Valid @RequestBody MaintenanceScheduleRequest request,
+            Principal principal
+    ) {
+        var command = new MaintenanceScheduleUseCase.CreateCommand(
+                request.maintenanceType(),
+                request.scheduledStart(),
+                request.scheduledEnd(),
+                request.description(),
+                request.serviceProvider(),
+                request.cost()
+        );
+        var created = maintenanceSchedules.create(vehicleId, command, actor(principal));
+        return ResponseEntity.status(201).body(mapper.toResponse(created));
+    }
+
+    @GetMapping("/vehicles/{vehicleId}/maintenance-schedules/{scheduleId}")
+    public MaintenanceScheduleResponse getMaintenanceSchedule(@PathVariable UUID vehicleId,
+                                                              @PathVariable UUID scheduleId) {
+        return mapper.toResponse(maintenanceSchedules.get(vehicleId, scheduleId));
+    }
+
+    @PutMapping("/vehicles/{vehicleId}/maintenance-schedules/{scheduleId}")
+    public MaintenanceScheduleResponse updateMaintenanceSchedule(
+            @PathVariable UUID vehicleId,
+            @PathVariable UUID scheduleId,
+            @Valid @RequestBody MaintenanceScheduleRequest request,
+            Principal principal
+    ) {
+        var command = new MaintenanceScheduleUseCase.UpdateCommand(
+                request.maintenanceType(),
+                request.scheduledStart(),
+                request.scheduledEnd(),
+                null,
+                request.description(),
+                request.serviceProvider(),
+                request.cost()
+        );
+        return mapper.toResponse(maintenanceSchedules.update(vehicleId, scheduleId, command, actor(principal)));
+    }
+
+    @PatchMapping("/vehicles/{vehicleId}/maintenance-schedules/{scheduleId}")
+    public MaintenanceScheduleResponse patchMaintenanceSchedule(
+            @PathVariable UUID vehicleId,
+            @PathVariable UUID scheduleId,
+            @RequestBody MaintenanceSchedulePatchRequest request,
+            Principal principal
+    ) {
+        var command = new MaintenanceScheduleUseCase.UpdateCommand(
+                request.maintenanceType(),
+                request.scheduledStart(),
+                request.scheduledEnd(),
+                request.status(),
+                request.description(),
+                request.serviceProvider(),
+                request.cost()
+        );
+        return mapper.toResponse(maintenanceSchedules.update(vehicleId, scheduleId, command, actor(principal)));
+    }
+
+    @PostMapping("/vehicles/{vehicleId}/maintenance-schedules/{scheduleId}/cancel")
+    public MaintenanceScheduleResponse cancelMaintenanceSchedule(@PathVariable UUID vehicleId,
+                                                                 @PathVariable UUID scheduleId,
+                                                                 @RequestBody(required = false) MaintenanceActionRequest r,
+                                                                 Principal principal) {
+        var reason = r != null ? r.remarks() : null;
+        return mapper.toResponse(maintenanceSchedules.cancel(vehicleId, scheduleId, reason, actor(principal)));
+    }
+
+    @PostMapping("/vehicles/{vehicleId}/maintenance-schedules/{scheduleId}/complete")
+    public MaintenanceScheduleResponse completeMaintenanceSchedule(@PathVariable UUID vehicleId,
+                                                                    @PathVariable UUID scheduleId,
+                                                                    @RequestBody(required = false) MaintenanceActionRequest r,
+                                                                    Principal principal) {
+        var remarks = r != null ? r.remarks() : null;
+        return mapper.toResponse(maintenanceSchedules.complete(vehicleId, scheduleId, remarks, actor(principal)));
     }
 
     @PostMapping("/vehicle-categories")

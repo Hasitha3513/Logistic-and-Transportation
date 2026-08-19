@@ -2,12 +2,15 @@ package com.transportlogistics.app.fleet.application.service;
 
 import com.transportlogistics.app.fleet.VehicleAllocationAvailability;
 import com.transportlogistics.app.fleet.application.ports.in.VehicleAvailabilityUseCase;
+import com.transportlogistics.app.fleet.application.ports.out.MaintenanceScheduleRepository;
 import com.transportlogistics.app.fleet.application.ports.out.VehicleDocumentRepository;
 import com.transportlogistics.app.fleet.application.ports.out.VehicleRepository;
+import com.transportlogistics.app.fleet.domain.model.MaintenanceStatus;
 import com.transportlogistics.app.fleet.domain.model.VehicleAvailability;
 import com.transportlogistics.app.shared.domain.NotFoundException;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import static com.transportlogistics.app.fleet.domain.model.VehicleAvailability.Code.*;
 
@@ -15,12 +18,22 @@ public final class VehicleAvailabilityService implements VehicleAvailabilityUseC
     private final VehicleRepository vehicles;
     private final VehicleDocumentRepository documents;
     private final VehicleAllocationAvailability allocations;
+    private final MaintenanceScheduleRepository maintenanceSchedules;
 
-    public VehicleAvailabilityService(VehicleRepository vehicles, VehicleDocumentRepository documents,
-                                      VehicleAllocationAvailability allocations) {
+    public VehicleAvailabilityService(VehicleRepository vehicles,
+                                      VehicleDocumentRepository documents,
+                                      VehicleAllocationAvailability allocations,
+                                      MaintenanceScheduleRepository maintenanceSchedules) {
         this.vehicles = vehicles;
         this.documents = documents;
         this.allocations = allocations;
+        this.maintenanceSchedules = maintenanceSchedules;
+    }
+
+    public VehicleAvailabilityService(VehicleRepository vehicles,
+                                      VehicleDocumentRepository documents,
+                                      VehicleAllocationAvailability allocations) {
+        this(vehicles, documents, allocations, null);
     }
 
     @Override
@@ -56,6 +69,10 @@ public final class VehicleAvailabilityService implements VehicleAvailabilityUseC
         if (query.requiredCapacityKg() != null
                 && (vehicle.capacityKg() == null || vehicle.capacityKg() < query.requiredCapacityKg())) {
             add(reasons, INSUFFICIENT_CAPACITY, "Vehicle capacity is below the required capacity");
+        }
+        if (maintenanceSchedules != null && maintenanceSchedules.hasOverlappingSchedule(vehicle.id(),
+                query.from(), query.to(), List.of(MaintenanceStatus.SCHEDULED, MaintenanceStatus.IN_PROGRESS))) {
+            add(reasons, MAINTENANCE_BLOCKED, "Vehicle has a scheduled maintenance conflict during the requested period");
         }
         if (query.checkAllocationConflicts()
                 && allocations.hasOverlap(vehicle.id(), query.from(), query.to(), query.excludeTripId())) {

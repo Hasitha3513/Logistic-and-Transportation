@@ -2,8 +2,10 @@ package com.transportlogistics.app.fleet.application.service;
 
 import com.transportlogistics.app.fleet.VehicleAllocationAvailability;
 import com.transportlogistics.app.fleet.application.ports.in.VehicleAvailabilityUseCase;
+import com.transportlogistics.app.fleet.application.ports.out.MaintenanceScheduleRepository;
 import com.transportlogistics.app.fleet.application.ports.out.VehicleDocumentRepository;
 import com.transportlogistics.app.fleet.application.ports.out.VehicleRepository;
+import com.transportlogistics.app.fleet.domain.model.MaintenanceStatus;
 import com.transportlogistics.app.fleet.domain.model.Vehicle;
 import com.transportlogistics.app.fleet.domain.model.VehicleAvailability;
 import com.transportlogistics.app.fleet.domain.model.VehicleDocument;
@@ -26,6 +28,7 @@ class VehicleAvailabilityServiceTest {
     private VehicleRepository vehicles;
     private VehicleDocumentRepository documents;
     private VehicleAllocationAvailability allocations;
+    private MaintenanceScheduleRepository maintenanceSchedules;
     private VehicleAvailabilityService service;
     private UUID vehicleId;
     private UUID typeId;
@@ -37,13 +40,15 @@ class VehicleAvailabilityServiceTest {
         vehicles = mock(VehicleRepository.class);
         documents = mock(VehicleDocumentRepository.class);
         allocations = mock(VehicleAllocationAvailability.class);
-        service = new VehicleAvailabilityService(vehicles, documents, allocations);
+        maintenanceSchedules = mock(MaintenanceScheduleRepository.class);
+        service = new VehicleAvailabilityService(vehicles, documents, allocations, maintenanceSchedules);
         vehicleId = UUID.randomUUID();
         typeId = UUID.randomUUID();
         from = OffsetDateTime.parse("2026-02-01T08:00:00Z");
         to = OffsetDateTime.parse("2026-02-01T10:00:00Z");
         givenVehicle(vehicle(true, "AVAILABLE", typeId, 1000d));
         when(documents.findVisibleByVehicleId(vehicleId)).thenReturn(List.of());
+        when(maintenanceSchedules.hasOverlappingSchedule(eq(vehicleId), any(), any(), any())).thenReturn(false);
     }
 
     @Test
@@ -78,7 +83,7 @@ class VehicleAvailabilityServiceTest {
     }
 
     @Test
-    void rejectsMaintenanceBlockedVehicle() {
+    void rejectsMaintenanceBlockedVehicleByOperationalStatus() {
         givenVehicle(vehicle(true, "UNDER_MAINTENANCE", typeId, 1000d));
         assertRejected(MAINTENANCE_BLOCKED);
     }
@@ -124,19 +129,49 @@ class VehicleAvailabilityServiceTest {
     }
 
     @Test
+    void rejectsWhenScheduledMaintenanceOverlapsRequestedInterval() {
+        when(maintenanceSchedules.hasOverlappingSchedule(
+                eq(vehicleId), eq(from), eq(to),
+                eq(List.of(MaintenanceStatus.SCHEDULED, MaintenanceStatus.IN_PROGRESS))))
+                .thenReturn(true);
+
+        var result = evaluate(typeId, 900d);
+        assertFalse(result.available());
+        assertTrue(result.hasReason(MAINTENANCE_BLOCKED));
+        assertThat(result.reasons().stream()
+                .filter(r -> r.code() == MAINTENANCE_BLOCKED)
+                .findFirst().get().message())
+                .contains("scheduled maintenance conflict");
+    }
+
+    @Test
+    void allowsWhenNoScheduledMaintenanceOverlaps() {
+        when(maintenanceSchedules.hasOverlappingSchedule(
+                eq(vehicleId), eq(from), eq(to),
+                eq(List.of(MaintenanceStatus.SCHEDULED, MaintenanceStatus.IN_PROGRESS))))
+                .thenReturn(false);
+
+        var result = evaluate(typeId, 900d);
+        assertTrue(result.available());
+        assertFalse(result.hasReason(MAINTENANCE_BLOCKED));
+    }
+
+    @Test
     void returnsEveryApplicableReasonInsteadOfStoppingAtFirst() {
         givenVehicle(vehicle(false, "BROKEN_DOWN", UUID.randomUUID(), 100d));
         when(documents.findVisibleByVehicleId(vehicleId)).thenReturn(List.of(expiredMandatoryDocument()));
         when(allocations.hasOverlap(eq(vehicleId), any(), any(), isNull())).thenReturn(true);
+        when(maintenanceSchedules.hasOverlappingSchedule(eq(vehicleId), any(), any(), any())).thenReturn(true);
 
         var result = evaluate(typeId, 1000d);
 
-        assertEquals(6, result.reasons().size());
+        assertEquals(7, result.reasons().size());
         assertTrue(result.hasReason(INACTIVE));
         assertTrue(result.hasReason(BROKEN_DOWN));
         assertTrue(result.hasReason(MANDATORY_DOCUMENT_EXPIRED));
         assertTrue(result.hasReason(VEHICLE_TYPE_MISMATCH));
         assertTrue(result.hasReason(INSUFFICIENT_CAPACITY));
+        assertTrue(result.hasReason(MAINTENANCE_BLOCKED));
         assertTrue(result.hasReason(OVERLAPPING_ALLOCATION));
     }
 
@@ -172,5 +207,13 @@ class VehicleAvailabilityServiceTest {
         return new VehicleDocument(UUID.randomUUID(), vehicleId, "INSURANCE", "POL-2",
                 LocalDate.of(2025, 1, 1), LocalDate.of(2027, 1, 1), null, true,
                 VehicleDocumentStatus.INACTIVE, false, now, now, "alice", "alice");
+    }
+
+    private static void assertThat(boolean condition) {
+        assertTrue(condition);
+    }
+
+    private static org.assertj.core.api.AbstractStringAssert<?> assertThat(String actual) {
+        return org.assertj.core.api.Assertions.assertThat(actual);
     }
 }

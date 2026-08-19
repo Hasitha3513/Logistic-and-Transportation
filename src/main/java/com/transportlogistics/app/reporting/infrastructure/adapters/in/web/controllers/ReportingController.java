@@ -1,5 +1,14 @@
 package com.transportlogistics.app.reporting.infrastructure.adapters.in.web.controllers;
 
+import com.transportlogistics.app.reporting.application.ports.in.DriverAssignmentUseCase;
+import com.transportlogistics.app.reporting.application.ports.in.TripReportUseCase;
+import com.transportlogistics.app.reporting.application.ports.in.VehicleUtilizationUseCase;
+import com.transportlogistics.app.reporting.infrastructure.adapters.in.web.dto.response.DriverAssignmentResponse;
+import com.transportlogistics.app.reporting.infrastructure.adapters.in.web.dto.response.PageResponse;
+import com.transportlogistics.app.reporting.infrastructure.adapters.in.web.dto.response.TripReportResponse;
+import com.transportlogistics.app.reporting.infrastructure.adapters.in.web.dto.response.VehicleUtilizationResponse;
+import com.transportlogistics.app.reporting.infrastructure.adapters.in.web.mappers.ReportingWebMapper;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -10,34 +19,49 @@ import java.util.Map;
 import java.util.UUID;
 
 @RestController
-class ReportingController {
+@RequiredArgsConstructor
+public class ReportingController {
+
+    private final TripReportUseCase tripReports;
+    private final DriverAssignmentUseCase driverAssignments;
+    private final VehicleUtilizationUseCase vehicleUtilization;
+    private final ReportingWebMapper mapper;
 
     @GetMapping("/dashboard/operations")
-    Map<String, Object> dashboard(@RequestParam(required = false) LocalDate date) {
+    public Map<String, Object> dashboard(@RequestParam(required = false) LocalDate date) {
         return Map.of("date", date == null ? LocalDate.now() : date, "status", "READY");
     }
 
     @GetMapping("/reports/trips")
-    Map<String, Object> trips(@RequestParam LocalDate fromDate,
-                              @RequestParam LocalDate toDate,
-                              @RequestParam(defaultValue = "0") int page,
-                              @RequestParam(defaultValue = "20") int limit,
-                              @RequestParam(required = false) String status,
-                              @RequestParam(required = false) UUID customerId) {
-        return Map.of("content", List.of(), "page", page, "limit", limit, "fromDate", fromDate, "toDate", toDate);
+    public PageResponse<TripReportResponse> trips(@RequestParam LocalDate fromDate,
+                                                  @RequestParam LocalDate toDate,
+                                                  @RequestParam(defaultValue = "0") int page,
+                                                  @RequestParam(defaultValue = "20") int limit,
+                                                  @RequestParam(required = false) String status,
+                                                  @RequestParam(required = false) UUID customerId) {
+        var result = tripReports.getTripReport(fromDate, toDate, page, limit, status, customerId);
+        return new PageResponse<>(
+                result.getContent().stream().map(mapper::toResponse).toList(),
+                result.getNumber(),
+                result.getSize(),
+                result.getTotalElements(),
+                result.getTotalPages()
+        );
     }
 
     @GetMapping("/reports/driver-assignments")
-    List<Map<String, Object>> driverAssignments(@RequestParam LocalDate fromDate,
-                                                @RequestParam LocalDate toDate,
-                                                @RequestParam(required = false) UUID driverId) {
-        return List.of();
+    public List<DriverAssignmentResponse> driverAssignments(@RequestParam LocalDate fromDate,
+                                                            @RequestParam LocalDate toDate,
+                                                            @RequestParam(required = false) UUID driverId) {
+        var records = driverAssignments.getDriverAssignmentReport(fromDate, toDate, driverId);
+        return mapper.toDriverAssignmentResponseList(records);
     }
 
     @GetMapping("/reports/vehicle-utilization")
-    List<Map<String, Object>> vehicleUtilization(@RequestParam LocalDate fromDate,
-                                                 @RequestParam LocalDate toDate,
-                                                 @RequestParam(required = false) UUID vehicleId) {
-        return List.of();
+    public List<VehicleUtilizationResponse> vehicleUtilization(@RequestParam LocalDate fromDate,
+                                                               @RequestParam LocalDate toDate,
+                                                               @RequestParam(required = false) UUID vehicleId) {
+        var records = vehicleUtilization.getVehicleUtilizationReport(fromDate, toDate, vehicleId);
+        return mapper.toVehicleUtilizationResponseList(records);
     }
 }
