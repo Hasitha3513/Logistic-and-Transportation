@@ -51,4 +51,7 @@ public interface FleetWebMapper {
 
     DriverDrugTestResponse toResponse(DriverDrugTest test);
     List<DriverDrugTestResponse> toDriverDrugTestResponseList(List<DriverDrugTest> tests);
+
+    LubricantLogResponse toResponse(LubricantLog log);
+    List<LubricantLogResponse> toLubricantLogResponseList(List<LubricantLog> logs);
 }

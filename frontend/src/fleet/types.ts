@@ -348,3 +348,48 @@ export interface DriverDrugTestResultRequest {
   remarks?: string;
   returnToDutyRequired?: boolean;
 }
+
+export type FluidType =
+  | 'ENGINE_OIL'
+  | 'TRANSMISSION_OIL'
+  | 'HYDRAULIC_OIL'
+  | 'GEAR_OIL'
+  | 'COOLANT'
+  | 'BRAKE_FLUID'
+  | 'GREASE'
+  | 'OTHER';
+
+export type MeasurementUnit = 'LITRE' | 'MILLILITRE' | 'KILOGRAM' | 'GRAM';
+
+export interface LubricantLog {
+  id: string;
+  vehicleId: string;
+  fluidType: FluidType;
+  quantity: number;
+  unit: MeasurementUnit;
+  recordedAt: string;
+  odometerKm?: number | null;
+  engineHours?: number | null;
+  vendorId?: string | null;
+  supplierName?: string | null;
+  referenceNumber?: string | null;
+  remarks?: string | null;
+  active: boolean;
+  createdAt: string;
+  updatedAt: string;
+  createdBy?: string | null;
+  updatedBy?: string | null;
+}
+
+export interface LubricantLogRequest {
+  fluidType: FluidType;
+  quantity: number;
+  unit: MeasurementUnit;
+  recordedAt: string;
+  odometerKm?: number;
+  engineHours?: number;
+  vendorId?: string;
+  supplierName?: string;
+  referenceNumber?: string;
+  remarks?: string;
+}

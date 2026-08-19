@@ -79,6 +79,10 @@ class SecurityConfig {
                         .hasAuthority("VEHICLE_MAINTENANCE_MANAGE")
                         .requestMatchers(HttpMethod.PATCH, "/vehicles/*/maintenance-schedules/*")
                         .hasAuthority("VEHICLE_MAINTENANCE_MANAGE")
+                        .requestMatchers(HttpMethod.GET, "/vehicles/*/lubricant-logs", "/vehicles/*/lubricant-logs/*")
+                        .hasAuthority("LUBRICANT_LOG_VIEW")
+                        .requestMatchers(HttpMethod.POST, "/vehicles/*/lubricant-logs")
+                        .hasAuthority("LUBRICANT_LOG_MANAGE")
 
                         .requestMatchers(HttpMethod.GET, "/drivers/available", "/drivers/*/availability")
                         .hasAuthority("DRIVER_AVAILABILITY_VIEW")

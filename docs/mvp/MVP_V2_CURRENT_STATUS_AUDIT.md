@@ -1,28 +1,28 @@
 # MVP v2 Current Implementation Audit
 
-**Audit Task:** MVP-STATUS-AUDIT-007 (Updated post MVP-GAP-005)  
+**Audit Task:** MVP-STATUS-AUDIT-008 (Updated post MVP-GAP-006)  
 **Audit Date:** August 19, 2026  
 **Auditor:** Senior Solution Architect, Technical Lead, and QA Lead  
 **Repository Branch:** `feature/mvp-gap-005`  
-**Repository Working Tree:** Modified (Driver Medical Fitness & Drug Screening Implemented)  
-**Backend Baseline:** Java 21 / Spring Boot 3.2.12 / Spring Modulith 1.2.12 / PostgreSQL & H2 (316 unit/arch tests passing)  
-**Frontend Baseline:** React 19 / TypeScript 5.8 / Vite 7 / Ant Design 5.27 (77 unit tests passing, build clean)  
-**Playwright E2E Baseline:** Complete (32 tests / 26 specs passing 100% on Chromium; multi-browser smoke passing across Chromium, Firefox, WebKit)  
+**Repository Working Tree:** Modified (Vehicle Lubricant & Fluid Consumption Logging Implemented)  
+**Backend Baseline:** Java 21 / Spring Boot 3.2.12 / Spring Modulith 1.2.12 / PostgreSQL & H2 (335 unit/arch tests passing)  
+**Frontend Baseline:** React 19 / TypeScript 5.8 / Vite 7 / Ant Design 5.27 (80 unit tests passing, build clean)  
+**Playwright E2E Baseline:** Complete (33 tests / 27 specs passing 100% on Chromium; multi-browser smoke passing across Chromium, Firefox, WebKit)  
 
 ---
 
 ## 1. Executive Summary
 
-A comprehensive, evidence-based code and architectural audit of the **Transport & Logistics Management System** was conducted against the **Corrected MVP Baseline v2 (39 User Stories)** following the completion of **MVP-GAP-005** (US-43 Driver Medical Fitness and US-44 Driver Drug Tests).
+A comprehensive, evidence-based code and architectural audit of the **Transport & Logistics Management System** was conducted against the **Corrected MVP Baseline v2 (39 User Stories)** following the completion of **MVP-GAP-006** (US-05 Vehicle Lubricant & Fluid Consumption Logging).
 
-Every story was inspected across backend domain aggregates, application use cases, ports, persistence entities, database migrations (V1 through V22), Spring Security RBAC rules (71 permissions), REST controllers, React views, Vitest suites, and Playwright E2E automation.
+Every story was inspected across backend domain aggregates, application use cases, ports, persistence entities, database migrations (V1 through V23), Spring Security RBAC rules (73 permissions), REST controllers, React views, Vitest suites, and Playwright E2E automation.
 
 ### 1.1 Story Classification Breakdown
 
 | Classification | Story Count | Percentage of MVP Baseline |
 |---|---:|---:|
-| **COMPLETE** | **33** | **84.6%** |
-| **PARTIAL** | **4** | **10.3%** |
+| **COMPLETE** | **34** | **87.2%** |
+| **PARTIAL** | **3** | **7.7%** |
 | **NOT IMPLEMENTED** | **2** | **5.1%** |
 | **BLOCKED** | **0** | **0.0%** |
 | **NEEDS VERIFICATION** | **0** | **0.0%** |
@@ -31,10 +31,10 @@ Every story was inspected across backend domain aggregates, application use case
 ### 1.2 Quantitative Metrics
 
 1. **Verified Completion Percentage:**
-   $$\text{Verified Completion} = \frac{33 \text{ COMPLETE}}{39 \text{ Stories}} \times 100\% = \mathbf{84.6\%}$$
+   $$\text{Verified Completion} = \frac{34 \text{ COMPLETE}}{39 \text{ Stories}} \times 100\% = \mathbf{87.2\%}$$
 
 2. **Functional Coverage Percentage:**
-   $$\text{Functional Coverage} = \frac{33 + (0.5 \times 4)}{39} \times 100\% = \frac{35.0}{39} \times 100\% = \mathbf{89.7\%}$$
+   $$\text{Functional Coverage} = \frac{34 + (0.5 \times 3)}{39} \times 100\% = \frac{35.5}{39} \times 100\% = \mathbf{91.0\%}$$
 
 *(Note: Post-MVP Phase 2 stories US-20–23, US-35, US-37, US-38, and US-46 are tracked separately in Section 6 and strictly excluded from MVP metrics).*
 
@@ -44,13 +44,13 @@ Every story was inspected across backend domain aggregates, application use case
 
 | Module | Stories | Complete | Partial | Missing | Blocked | Verify | Coverage |
 |---|---:|---:|---:|---:|---:|---:|---:|
-| **Fleet Management** | 8 | 7 | 1 | 0 | 0 | 0 | **93.8%** |
+| **Fleet Management** | 8 | 8 | 0 | 0 | 0 | 0 | **100.0%** |
 | **Trip Management** | 8 | 7 | 1 | 0 | 0 | 0 | **93.8%** |
 | **Basic Route Management** | 3 | 3 | 0 | 0 | 0 | 0 | **100.0%** |
 | **Basic Fuel Management** | 5 | 5 | 0 | 0 | 0 | 0 | **100.0%** |
 | **Driver Management** | 7 | 7 | 0 | 0 | 0 | 0 | **100.0%** |
 | **Cross-Cutting / Supporting** | 8 | 4 | 2 | 2 | 0 | 0 | **62.5%** |
-| **TOTAL** | **39** | **33** | **4** | **2** | **0** | **0** | **89.7%** |
+| **TOTAL** | **39** | **34** | **3** | **2** | **0** | **0** | **91.0%** |
 
 ---
 
@@ -62,7 +62,7 @@ Every story was inspected across backend domain aggregates, application use case
 | **US-02** | Manage Fleet Categories | **COMPLETE** | `VehicleCategory.java`, `VehicleType.java`, `VehicleCategoryService.java`, `FleetController.java` | `ResourceListPage.tsx`, `ResourceEditorModal.tsx` | None | `VehicleCategoryServiceTest`, `VehicleTypeServiceTest` (8 tests) | Baseline |
 | **US-03** | Manage Vehicle Documents | **COMPLETE** | `VehicleDocument.java`, `DocumentType`, `VehicleDocumentService.java`, `V3__vehicle_documents.sql` | `ResourceListPage.tsx`, Document drawer | Automated renewal alert notifications, document version history table | `VehicleDocumentTest`, `VehicleDocumentServiceTest` (8 tests) | Baseline |
 | **US-04** | Allocate Vehicles | **COMPLETE** | `VehicleAvailabilityService.java`, `VehicleAllocationLookup.java`, `TripVehicleAllocationAdapter.java`, `V6` | `AssignmentDrawers.tsx` | Priority allocation ranking algorithm, replacement vehicle auto-suggestion | `VehicleAvailabilityServiceTest`, `ConcurrentVehicleAssignmentIntegrationTest` (12 tests) | Baseline |
-| **US-05** | Maintain Fuel & Lubricant Logs | **PARTIAL** | `FuelIssue.java`, `FuelIssueService.java`, `VehicleReading.java`, `V11`, `V14` | `FuelIssueListPage.tsx`, `FuelIssueEditorPage.tsx`, `VehicleReadingsSection.tsx` | Lubricant, fluid, and engine oil consumption logging | `FuelIssueServiceTest`, `FuelIssueBunkerIntegrationTest` (26 tests) | P2 |
+| **US-05** | Maintain Fuel & Lubricant Logs | **COMPLETE** | `FuelIssue.java`, `FuelIssueService.java`, `LubricantLog.java`, `LubricantLogService.java`, `FleetController.java`, `V11`, `V14`, `V23__lubricant_logs.sql` | `FuelIssueListPage.tsx`, `FuelIssueEditorPage.tsx`, `VehicleReadingsSection.tsx`, `VehicleLubricantSection.tsx`, `useVehicleLubricantLogs.ts` | None | `LubricantLogTest`, `LubricantLogServiceTest`, `FleetControllerLubricantTest`, `LubricantLogPersistenceIntegrationTest`, `VehicleLubricantSection.test.tsx`, `lubricants.spec.ts` (34 tests) | Baseline |
 | **US-06** | Maintain Running Logs | **COMPLETE** | `VehicleReading.java`, `VehicleMeterReset.java`, `VehicleReadingService.java`, `VehicleReadingController.java`, `V14`, `V16` | `VehicleReadingsSection.tsx`, `fleet/useVehicleReadings.ts` | Idle time breakdown tracking | `VehicleReadingServiceTest`, `VehicleReadingSecurityIntegrationTest` (24 tests) | Baseline |
 | **US-07** | Link Maintenance to Availability | **COMPLETE** | `MaintenanceSchedule.java`, `MaintenanceScheduleService.java`, `VehicleAvailabilityService.java`, `FleetController.java`, `V19__maintenance_schedules.sql` | `VehicleMaintenanceSection.tsx`, `useVehicleMaintenance.ts`, `ResourceListPage.tsx` | None | `MaintenanceScheduleTest`, `MaintenanceScheduleServiceTest`, `VehicleAvailabilityServiceTest`, `FleetControllerMaintenanceTest`, `FleetMaintenanceSecurityIntegrationTest`, `MaintenanceSchedulePersistenceIntegrationTest`, `TripVehicleMaintenanceAssignmentIntegrationTest` (41 tests) | Baseline |
 | **US-08** | Handle Fleet Allocation Edge Cases | **COMPLETE** | `VehicleAvailabilityService.java`, `DriverAvailabilityService.java`, pessimistic row locking (`findByIdForUpdate`), half-open interval overlap query | `AssignmentDrawers.tsx` | None | `ConcurrentVehicleAssignmentIntegrationTest`, `ConcurrentDriverAssignmentIntegrationTest` (8 tests) | Baseline |
@@ -870,12 +870,60 @@ EXPECTED RESULT:    DriverException entity created; DriverAvailabilityService re
 - **Not Implemented Stories:** **2** / 39 (**5.1%**)
 - **Functional Coverage:** **89.7%**
 - **Driver Management Module Coverage:** **100.0%** (7 of 7 stories COMPLETE)
-- **Backend Tests:** 316 unit & architecture tests passing (0 failures, 0 errors)
+
+---
+
+## 16. Implementation Update: MVP-GAP-006 Verification
+
+**Implementation Date:** August 19, 2026  
+**Status:** **COMPLETED**  
+**Story Reclassifications:**
+- **US-05: PARTIAL $\rightarrow$ COMPLETE**
+
+### 16.1 Architecture & Implementation Summary
+1. **US-05 (Maintain Fuel & Lubricant Logs):**
+   - Created `V23__lubricant_logs.sql` forward migration creating table `lubricant_log` (with check constraints for positive quantity, non-negative odometer/engine hours, and foreign key to `vehicle(id) ON DELETE CASCADE`) and seeding permissions `LUBRICANT_LOG_VIEW` and `LUBRICANT_LOG_MANAGE`.
+   - Implemented domain aggregates `FluidType`, `MeasurementUnit`, `LubricantLog` with domain validation invariants.
+   - Implemented `LubricantLogService` with `@Transactional` boundaries, vehicle validation, and `LubricantLogPersistenceAdapter`.
+   - Exposed REST endpoints in `FleetController` under `/api/v1/vehicles/{vehicleId}/lubricant-logs/**`.
+   - Secured endpoints in `SecurityConfig` with `LUBRICANT_LOG_VIEW` and `LUBRICANT_LOG_MANAGE`.
+   - Built frontend `VehicleLubricantSection.tsx` and `useVehicleLubricantLogs.ts` mounted in the Vehicle drawer in `ResourceListPage.tsx`.
+   - Added automated Playwright test `E2E-FLT-006` in `e2e/tests/fleet/lubricants.spec.ts`.
+
+### 16.2 Current State Metrics Post MVP-GAP-006
+- **Total MVP Stories:** 39
+- **Complete Stories:** **34** / 39 (**87.2%**)
+- **Partial Stories:** **3** / 39 (**7.7%**) (US-13, US-74, US-75)
+- **Not Implemented Stories:** **2** / 39 (**5.1%**) (US-76, US-77)
+- **Verified Completion:** **87.2%**
+- **Functional Coverage:** **91.0%**
+- **Fleet Management Module Coverage:** **100.0%** (8 of 8 stories COMPLETE)
+- **Driver Management Module Coverage:** **100.0%** (7 of 7 stories COMPLETE)
+- **Basic Route Management Coverage:** **100.0%** (3 of 3 stories COMPLETE)
+- **Basic Fuel Management Coverage:** **100.0%** (5 of 5 stories COMPLETE)
+- **Backend Tests:** 335 unit & architecture tests passing (0 failures, 0 errors)
 - **Modulith & Architecture Rules:** 15/15 passing (100%)
-- **Frontend Vitest Tests:** 77/77 passing (100%)
+- **Frontend Vitest Tests:** 80/80 passing across 19 files (100%)
 - **Frontend Build:** Clean (`tsc -b && vite build` succeeded)
-- **Playwright E2E Tests:** 32/32 passing (100% across Chromium)
-- **Remaining P1 Gaps:** None. All P1 Driver Management stories are complete.
+- **Playwright E2E Tests:** 33/33 passing (100% across Chromium)
+
+---
+
+## 17. MVP Implementation Gap Queue & Next Recommendation
+
+| Task ID | Story | Title | Status |
+|---|---|---|:---:|
+| **MVP-GAP-001-FIX** | US-06, US-33 | Vehicle Meter Reset & Distance Calculation Fixes | **COMPLETE** |
+| **MVP-GAP-002** | US-36 | Bunker Tank Management & Inter-Tank Transfers | **COMPLETE** |
+| **MVP-GAP-003** | US-07, US-45 | Maintenance & Driver Leave Availability Blackouts | **COMPLETE** |
+| **MVP-GAP-004** | US-41, US-42 | Driver Performance & Violations Management | **COMPLETE** |
+| **MVP-GAP-005** | US-43, US-44 | Driver Medical Fitness & Drug Screening | **COMPLETE** |
+| **MVP-GAP-006** | US-05 | Vehicle Lubricant & Fluid Consumption Logging | **COMPLETE** |
+| **MVP-GAP-007** | **US-13** | **En-Route Checkpoints & Delay Logging** | **RECOMMENDED NEXT** |
+
+**Recommended Next Task:**
+**MVP-GAP-007 — US-13 En-Route Checkpoints & Delay Logging**
+
 
 
 
