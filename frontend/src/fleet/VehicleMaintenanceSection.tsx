@@ -12,7 +12,6 @@ import {
   Button,
   Card,
   DatePicker,
-  Flex,
   Form,
   Input,
   InputNumber,
@@ -24,6 +23,7 @@ import {
   type TableColumnsType,
 } from 'antd';
 import dayjs from 'dayjs';
+import { isAxiosError } from 'axios';
 import { useState } from 'react';
 import { useAuth } from '../auth/AuthContext';
 import type { MaintenanceSchedule, MaintenanceScheduleRequest, MaintenanceStatus } from './types';
@@ -40,6 +40,16 @@ const { Text } = Typography;
 
 interface VehicleMaintenanceSectionProps {
   vehicleId: string;
+}
+
+function isFormValidationError(error: unknown): boolean {
+  return typeof error === 'object' && error !== null && 'errorFields' in error;
+}
+
+function apiErrorMessage(error: unknown, fallback: string): string {
+  return isAxiosError<{ message?: string }>(error)
+    ? error.response?.data?.message ?? fallback
+    : fallback;
 }
 
 function statusTag(status: MaintenanceStatus) {
@@ -92,10 +102,9 @@ export default function VehicleMaintenanceSection({ vehicleId }: VehicleMaintena
       void message.success('Maintenance schedule created successfully');
       setCreateModalOpen(false);
       createForm.resetFields();
-    } catch (error: any) {
-      if (error?.errorFields) return;
-      const apiMessage = error?.response?.data?.message || 'Failed to create maintenance schedule';
-      void message.error(apiMessage);
+    } catch (error: unknown) {
+      if (isFormValidationError(error)) return;
+      void message.error(apiErrorMessage(error, 'Failed to create maintenance schedule'));
     }
   };
 
@@ -119,10 +128,9 @@ export default function VehicleMaintenanceSection({ vehicleId }: VehicleMaintena
       void message.success('Maintenance schedule updated successfully');
       setEditingSchedule(null);
       editForm.resetFields();
-    } catch (error: any) {
-      if (error?.errorFields) return;
-      const apiMessage = error?.response?.data?.message || 'Failed to update maintenance schedule';
-      void message.error(apiMessage);
+    } catch (error: unknown) {
+      if (isFormValidationError(error)) return;
+      void message.error(apiErrorMessage(error, 'Failed to update maintenance schedule'));
     }
   };
 
@@ -148,9 +156,8 @@ export default function VehicleMaintenanceSection({ vehicleId }: VehicleMaintena
         try {
           await cancelMutation.mutateAsync({ scheduleId: schedule.id, remarks });
           void message.success('Maintenance schedule cancelled');
-        } catch (error: any) {
-          const apiMessage = error?.response?.data?.message || 'Failed to cancel maintenance schedule';
-          void message.error(apiMessage);
+        } catch (error: unknown) {
+          void message.error(apiErrorMessage(error, 'Failed to cancel maintenance schedule'));
         }
       },
     });
@@ -177,9 +184,8 @@ export default function VehicleMaintenanceSection({ vehicleId }: VehicleMaintena
         try {
           await completeMutation.mutateAsync({ scheduleId: schedule.id, remarks });
           void message.success('Maintenance schedule marked as completed');
-        } catch (error: any) {
-          const apiMessage = error?.response?.data?.message || 'Failed to complete maintenance schedule';
-          void message.error(apiMessage);
+        } catch (error: unknown) {
+          void message.error(apiErrorMessage(error, 'Failed to complete maintenance schedule'));
         }
       },
     });

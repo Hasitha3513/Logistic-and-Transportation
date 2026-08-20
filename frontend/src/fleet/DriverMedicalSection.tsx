@@ -14,7 +14,7 @@ import {
   Typography,
 } from 'antd';
 import { PlusOutlined, MedicineBoxOutlined } from '@ant-design/icons';
-import dayjs from 'dayjs';
+import dayjs, { type Dayjs } from 'dayjs';
 import {
   useDriverMedicalRecords,
   useCreateDriverMedicalRecord,
@@ -32,6 +32,18 @@ interface DriverMedicalSectionProps {
   driverId: string;
 }
 
+interface MedicalRecordFormValues {
+  assessmentDate: Dayjs;
+  validFrom: Dayjs;
+  validUntil: Dayjs;
+  fitnessStatus: DriverMedicalStatus;
+  visionTestStatus?: VisionTestStatus;
+  restrictions?: string;
+  examinerOrProvider?: string;
+  certificateReference?: string;
+  remarks?: string;
+}
+
 export const DriverMedicalSection: React.FC<DriverMedicalSectionProps> = ({ driverId }) => {
   const { hasPermission } = useAuth();
   const canManage = hasPermission('DRIVER_MEDICAL_MANAGE');
@@ -42,7 +54,7 @@ export const DriverMedicalSection: React.FC<DriverMedicalSectionProps> = ({ driv
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [form] = Form.useForm();
 
-  const handleCreate = async (values: any) => {
+  const handleCreate = async (values: MedicalRecordFormValues) => {
     await createMutation.mutateAsync({
       assessmentDate: values.assessmentDate.format('YYYY-MM-DD'),
       validFrom: values.validFrom.format('YYYY-MM-DD'),
@@ -91,7 +103,7 @@ export const DriverMedicalSection: React.FC<DriverMedicalSectionProps> = ({ driv
     {
       title: 'Validity Period',
       key: 'validity',
-      render: (_: any, record: DriverMedicalRecord) => (
+      render: (_: unknown, record: DriverMedicalRecord) => (
         <span>
           {record.validFrom} to {record.validUntil}
         </span>

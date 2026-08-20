@@ -4,7 +4,7 @@ export class TestDataFactory {
     return Math.random().toString(36).substring(2, 7).toUpperCase();
   }
 
-  static createVehiclePayload(overrides: Partial<any> = {}) {
+  static createVehiclePayload(overrides: Record<string, unknown> = {}) {
     const suffix = this.randomSuffix();
     return {
       registrationNumber: `WP-CAB-${suffix}`,
@@ -25,7 +25,7 @@ export class TestDataFactory {
     };
   }
 
-  static createDriverPayload(overrides: Partial<any> = {}) {
+  static createDriverPayload(overrides: Record<string, unknown> = {}) {
     const suffix = this.randomSuffix();
     return {
       employeeNumber: `DRV-${suffix}`,
@@ -39,7 +39,7 @@ export class TestDataFactory {
     };
   }
 
-  static createRoutePayload(overrides: Partial<any> = {}) {
+  static createRoutePayload(overrides: Record<string, unknown> = {}) {
     const suffix = this.randomSuffix();
     return {
       code: `RTE-${suffix}`,
@@ -54,7 +54,7 @@ export class TestDataFactory {
     };
   }
 
-  static createTripPayload(overrides: Partial<any> = {}) {
+  static createTripPayload(overrides: Record<string, unknown> = {}) {
     const suffix = this.randomSuffix();
     return {
       tripNumber: `TRIP-E2E-${suffix}`,
@@ -77,7 +77,7 @@ export class TestDataFactory {
     };
   }
 
-  static createFuelPurchasePayload(overrides: Partial<any> = {}) {
+  static createFuelPurchasePayload(overrides: Record<string, unknown> = {}) {
     const suffix = this.randomSuffix();
     return {
       purchaseOrderNumber: `PO-E2E-${suffix}`,
@@ -94,7 +94,7 @@ export class TestDataFactory {
     };
   }
 
-  static createFuelIssuePayload(overrides: Partial<any> = {}) {
+  static createFuelIssuePayload(overrides: Record<string, unknown> = {}) {
     const suffix = this.randomSuffix();
     return {
       issueNumber: `ISS-E2E-${suffix}`,

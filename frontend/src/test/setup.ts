@@ -1,12 +1,22 @@
 import '@testing-library/jest-dom/vitest';
 import { afterAll, afterEach, beforeAll, vi } from 'vitest';
 import { cleanup, configure } from '@testing-library/react';
+import { HttpResponse, http } from 'msw';
 import { server } from './server';
 
-beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
+const defaultHandlers = [
+  http.get('*/notifications/unread-count', () => HttpResponse.json({ unreadCount: 0 })),
+  http.get('*/notifications', () => HttpResponse.json([])),
+];
+
+beforeAll(() => {
+  server.use(...defaultHandlers);
+  server.listen({ onUnhandledRequest: 'error' });
+});
 afterEach(() => {
   cleanup();
   server.resetHandlers();
+  server.use(...defaultHandlers);
   localStorage.clear();
 });
 afterAll(() => server.close());

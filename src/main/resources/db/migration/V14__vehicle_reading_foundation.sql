@@ -57,4 +57,4 @@ CREATE UNIQUE INDEX uq_vehicle_reading_idempotency
 CREATE UNIQUE INDEX uq_vehicle_reading_one_correction
     ON vehicle_reading(correction_of_reading_id);
 
-${vehicleReadingSourceIdentityIndex};
+CREATE INDEX idx_vehicle_reading_source_identity ON vehicle_reading(source_type, source_reference_id);

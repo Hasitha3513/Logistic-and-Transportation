@@ -1,10 +1,8 @@
 import React from 'react';
 import { Alert, Card, Col, Progress, Row, Spin, Statistic, Tag, Typography } from 'antd';
 import {
-  SafetyCertificateOutlined,
   CheckCircleOutlined,
   WarningOutlined,
-  DollarOutlined,
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { useDriverPerformance } from './useDriverPerformance';

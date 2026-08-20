@@ -6,8 +6,8 @@ import { TripsPage } from '../../pages/TripsPage';
 
 test.describe('@critical End-to-End Fleet to Trip Lifecycle Journey', () => {
   test('E2E-JOURNEY-001: Register vehicle & driver and navigate to operations', async ({ adminPage }) => {
-    let vehiclesList: any[] = [];
-    let driversList: any[] = [];
+    const vehiclesList: Record<string, unknown>[] = [];
+    const driversList: Record<string, unknown>[] = [];
 
     await adminPage.route('**/api/vehicle-categories*', (r) => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify([{ id: 'cat-1', name: 'Trucks' }]) }));
     await adminPage.route('**/api/vehicle-types*', (r) => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify([{ id: 'type-1', name: 'Box Truck' }]) }));

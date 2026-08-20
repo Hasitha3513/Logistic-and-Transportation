@@ -169,12 +169,21 @@ describe('TripDetailsPage', () => {
     await waitFor(() => expect(driverAssignment).toEqual({ driverId: 'driver-1', requiredLicenseClass: 'C' }));
   });
 
+  it('renders en-route operational events in the Trip Logs tab', async () => {
+    const user = userEvent.setup();
+    renderDetails();
+    await screen.findAllByText('TRIP-000123');
+
+    await user.click(screen.getByRole('tab', { name: 'Trip Logs' }));
+    expect(await screen.findByText('En-Route Checkpoints & Operational Events')).toBeInTheDocument();
+  });
+
   it('explains future backend-supported sections in a modal', async () => {
     const user = userEvent.setup();
     renderDetails();
     await screen.findAllByText('TRIP-000123');
 
-    await user.click(screen.getByRole('tab', { name: /Trip Logs/ }));
+    await user.click(screen.getByRole('tab', { name: /Exceptions/ }));
     await user.click(screen.getByRole('button', { name: 'About this section' }));
     expect(await screen.findByText('Future backend-supported section')).toBeInTheDocument();
   });

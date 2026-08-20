@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import {
+  BellOutlined,
   CarOutlined,
   DashboardOutlined,
   EnvironmentOutlined,
@@ -91,6 +92,13 @@ export const navigation: NavigationItem[] = [
         path: '/administration/roles',
         permission: 'IDENTITY_MANAGE',
         icon: <SafetyCertificateOutlined />,
+      },
+      {
+        key: 'notification-rules',
+        label: 'Notification Rules',
+        path: '/notification-rules',
+        permission: 'NOTIFICATION_RULE_VIEW',
+        icon: <BellOutlined />,
       },
     ],
   },

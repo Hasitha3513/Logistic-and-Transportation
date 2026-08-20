@@ -1,5 +1,5 @@
 
-import { Page, Locator, expect } from '@playwright/test';
+import { Page, expect } from '@playwright/test';
 
 export class UiHelpers {
   static async selectOption(page: Page, selectSelector: string, optionText: string) {

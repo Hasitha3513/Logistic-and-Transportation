@@ -7,15 +7,14 @@ import {
   Input,
   InputNumber,
   Modal,
-  Popconfirm,
   Select,
   Space,
   Table,
   Tag,
   Typography,
 } from 'antd';
-import { PlusOutlined, DollarOutlined, StopOutlined } from '@ant-design/icons';
-import dayjs from 'dayjs';
+import { PlusOutlined, DollarOutlined } from '@ant-design/icons';
+import dayjs, { type Dayjs } from 'dayjs';
 import { useAuth } from '../auth/AuthContext';
 import {
   useDriverViolations,
@@ -35,6 +34,25 @@ const { Text, Title } = Typography;
 
 interface DriverViolationsSectionProps {
   driverId: string;
+}
+
+interface ViolationFormValues {
+  violationType: DriverViolationType;
+  severity: ViolationSeverity;
+  violationDate: Dayjs;
+  penaltyPoints?: number;
+  fineAmount?: number;
+  location?: string;
+  description?: string;
+}
+
+interface PayFineFormValues {
+  paidAt?: Dayjs;
+  paymentReference?: string;
+}
+
+interface ReasonFormValues {
+  reason: string;
 }
 
 export const DriverViolationsSection: React.FC<DriverViolationsSectionProps> = ({ driverId }) => {
@@ -57,7 +75,7 @@ export const DriverViolationsSection: React.FC<DriverViolationsSectionProps> = (
   const [waiveForm] = Form.useForm();
   const [disputeForm] = Form.useForm();
 
-  const handleCreate = async (values: any) => {
+  const handleCreate = async (values: ViolationFormValues) => {
     const payload: DriverViolationRequest = {
       violationType: values.violationType,
       severity: values.severity,
@@ -72,7 +90,7 @@ export const DriverViolationsSection: React.FC<DriverViolationsSectionProps> = (
     setCreateModalOpen(false);
   };
 
-  const handlePay = async (values: any) => {
+  const handlePay = async (values: PayFineFormValues) => {
     if (!payModalViolation) return;
     await payMutation.mutateAsync({
       violationId: payModalViolation.id,
@@ -85,7 +103,7 @@ export const DriverViolationsSection: React.FC<DriverViolationsSectionProps> = (
     setPayModalViolation(null);
   };
 
-  const handleWaive = async (values: any) => {
+  const handleWaive = async (values: ReasonFormValues) => {
     if (!waiveModalViolation) return;
     await waiveMutation.mutateAsync({
       violationId: waiveModalViolation.id,
@@ -95,7 +113,7 @@ export const DriverViolationsSection: React.FC<DriverViolationsSectionProps> = (
     setWaiveModalViolation(null);
   };
 
-  const handleDispute = async (values: any) => {
+  const handleDispute = async (values: ReasonFormValues) => {
     if (!disputeModalViolation) return;
     await disputeMutation.mutateAsync({
       violationId: disputeModalViolation.id,
@@ -179,7 +197,7 @@ export const DriverViolationsSection: React.FC<DriverViolationsSectionProps> = (
     {
       title: 'Actions',
       key: 'actions',
-      render: (_: any, record: DriverViolation) => {
+      render: (_: unknown, record: DriverViolation) => {
         if (!canManage || record.paymentStatus === 'PAID' || record.paymentStatus === 'WAIVED') {
           return null;
         }

@@ -3,7 +3,7 @@ import { test, expect } from '../../fixtures/authFixtures';
 import { FleetVehiclesPage } from '../../pages/FleetVehiclesPage';
 
 test.describe('@fleet Vehicle Master & Fleet Categories (US-01, US-02)', () => {
-  let vehiclesList: any[] = [];
+  let vehiclesList: Record<string, unknown>[] = [];
 
   test.beforeEach(async ({ fleetManagerPage }) => {
     vehiclesList = [

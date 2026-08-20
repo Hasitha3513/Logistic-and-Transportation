@@ -1,9 +1,9 @@
 
-import { Page, expect } from '@playwright/test';
+import { Locator, Page, expect } from '@playwright/test';
 
 export class ApiConsistency {
   static async verifyTableRowMatchesApi(page: Page, rowSelector: Locator, expectedData: Record<string, string>) {
-    for (const [key, value] of Object.entries(expectedData)) {
+    for (const value of Object.values(expectedData)) {
       await expect(rowSelector).toContainText(value);
     }
   }

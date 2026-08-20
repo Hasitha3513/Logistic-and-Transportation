@@ -3,7 +3,7 @@ import { test, expect } from '../../fixtures/authFixtures';
 import { DriversPage } from '../../pages/DriversPage';
 
 test.describe('@drivers Driver Profiles & Licensing (US-39, US-40)', () => {
-  let driversList: any[] = [];
+  let driversList: Record<string, unknown>[] = [];
 
   test.beforeEach(async ({ fleetManagerPage }) => {
     driversList = [

@@ -24,6 +24,7 @@ import {
   type TableColumnsType,
 } from 'antd';
 import dayjs from 'dayjs';
+import { isAxiosError } from 'axios';
 import { useState } from 'react';
 import { useAuth } from '../auth/AuthContext';
 import type {
@@ -46,6 +47,16 @@ const { Text } = Typography;
 
 interface DriverExceptionSectionProps {
   driverId: string;
+}
+
+function isFormValidationError(error: unknown): boolean {
+  return typeof error === 'object' && error !== null && 'errorFields' in error;
+}
+
+function apiErrorMessage(error: unknown, fallback: string): string {
+  return isAxiosError<{ message?: string }>(error)
+    ? error.response?.data?.message ?? fallback
+    : fallback;
 }
 
 function statusTag(status: DriverExceptionStatus) {
@@ -112,10 +123,9 @@ export default function DriverExceptionSection({ driverId }: DriverExceptionSect
       void message.success('Driver exception created successfully');
       setCreateModalOpen(false);
       createForm.resetFields();
-    } catch (error: any) {
-      if (error?.errorFields) return;
-      const apiMessage = error?.response?.data?.message || 'Failed to create driver exception';
-      void message.error(apiMessage);
+    } catch (error: unknown) {
+      if (isFormValidationError(error)) return;
+      void message.error(apiErrorMessage(error, 'Failed to create driver exception'));
     }
   };
 
@@ -147,10 +157,9 @@ export default function DriverExceptionSection({ driverId }: DriverExceptionSect
       void message.success('Driver exception updated successfully');
       setEditingException(null);
       editForm.resetFields();
-    } catch (error: any) {
-      if (error?.errorFields) return;
-      const apiMessage = error?.response?.data?.message || 'Failed to update driver exception';
-      void message.error(apiMessage);
+    } catch (error: unknown) {
+      if (isFormValidationError(error)) return;
+      void message.error(apiErrorMessage(error, 'Failed to update driver exception'));
     }
   };
 
@@ -179,9 +188,8 @@ export default function DriverExceptionSection({ driverId }: DriverExceptionSect
             remarks: remarksInput.trim() || undefined,
           });
           void message.success('Driver exception cancelled');
-        } catch (error: any) {
-          const apiMessage = error?.response?.data?.message || 'Failed to cancel driver exception';
-          void message.error(apiMessage);
+        } catch (error: unknown) {
+          void message.error(apiErrorMessage(error, 'Failed to cancel driver exception'));
         }
       },
     });
@@ -211,9 +219,8 @@ export default function DriverExceptionSection({ driverId }: DriverExceptionSect
             remarks: remarksInput.trim() || undefined,
           });
           void message.success('Driver exception completed');
-        } catch (error: any) {
-          const apiMessage = error?.response?.data?.message || 'Failed to complete driver exception';
-          void message.error(apiMessage);
+        } catch (error: unknown) {
+          void message.error(apiErrorMessage(error, 'Failed to complete driver exception'));
         }
       },
     });

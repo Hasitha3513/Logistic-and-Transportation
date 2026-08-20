@@ -1,5 +1,5 @@
 
-import { test, expect } from '../../fixtures/authFixtures';
+import { test } from '../../fixtures/authFixtures';
 import { TripDetailsPage } from '../../pages/TripDetailsPage';
 
 test.describe('@trips Trip State Transitions & Lifecycle (US-12, US-14, US-15, US-16, US-80)', () => {

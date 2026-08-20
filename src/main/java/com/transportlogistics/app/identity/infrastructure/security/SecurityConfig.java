@@ -156,8 +156,9 @@ class SecurityConfig {
 
                         .requestMatchers(HttpMethod.GET, "/trips/*/fuel-cost")
                         .hasAuthority("FUEL_COST_VIEW")
-                        .requestMatchers(HttpMethod.GET, "/trips", "/trips/*", "/trips/*/status-history")
-                        .hasAuthority("TRIP_VIEW")
+                        .requestMatchers(HttpMethod.GET, "/trips", "/trips/*", "/trips/*/status-history",
+                                "/trips/*/operational-events", "/trips/*/operational-events/*")
+                        .hasAnyAuthority("TRIP_VIEW", "TRIP_LOG_VIEW")
                         .requestMatchers(HttpMethod.POST, "/trips").hasAuthority("TRIP_CREATE")
                         .requestMatchers(HttpMethod.PUT, "/trips/*").hasAuthority("TRIP_UPDATE")
                         .requestMatchers(HttpMethod.POST, "/trips/*/submit").hasAuthority("TRIP_SUBMIT")
@@ -174,6 +175,8 @@ class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/trips/*/complete").hasAuthority("TRIP_COMPLETE")
                         .requestMatchers(HttpMethod.POST, "/trips/*/close").hasAuthority("TRIP_CLOSE")
                         .requestMatchers(HttpMethod.POST, "/trips/*/cancel").hasAuthority("TRIP_CANCEL")
+                        .requestMatchers(HttpMethod.POST, "/trips/*/checkpoints", "/trips/*/delays", "/trips/*/incidents")
+                        .hasAnyAuthority("TRIP_DISPATCH", "TRIP_LOG_MANAGE", "TRIP_UPDATE")
 
                         .requestMatchers(HttpMethod.GET, "/fuel-issues", "/fuel-issues/*",
                                 "/fuel-issues/*/history", "/fuel-stations", "/fuel-stations/*")
@@ -214,12 +217,30 @@ class SecurityConfig {
 
                         .requestMatchers(HttpMethod.GET, "/dashboard/**").hasAuthority("DASHBOARD_VIEW")
                         .requestMatchers(HttpMethod.GET, "/reports/**").hasAuthority("REPORT_VIEW")
+
+                        .requestMatchers(HttpMethod.GET, "/notification-rules", "/notification-rules/*")
+                        .hasAuthority("NOTIFICATION_RULE_VIEW")
+                        .requestMatchers(HttpMethod.POST, "/notification-rules")
+                        .hasAuthority("NOTIFICATION_RULE_MANAGE")
+                        .requestMatchers(HttpMethod.PUT, "/notification-rules/*")
+                        .hasAuthority("NOTIFICATION_RULE_MANAGE")
+                        .requestMatchers(HttpMethod.PATCH, "/notification-rules/*/enable", "/notification-rules/*/disable")
+                        .hasAuthority("NOTIFICATION_RULE_MANAGE")
+                        .requestMatchers(HttpMethod.DELETE, "/notification-rules/*")
+                        .hasAuthority("NOTIFICATION_RULE_MANAGE")
+
+                        .requestMatchers(HttpMethod.GET, "/notifications", "/notifications/unread-count")
+                        .hasAuthority("NOTIFICATION_VIEW")
+                        .requestMatchers(HttpMethod.PATCH, "/notifications/*/read", "/notifications/read-all")
+                        .hasAuthority("NOTIFICATION_VIEW")
+
                         .requestMatchers("/vehicles/**", "/drivers/**", "/vehicle-categories/**", "/vehicle-types/**",
                                 "/routes/**", "/customers/**", "/departments/**", "/locations/**", "/projects/**",
                                 "/trips/**", "/fuel-issues/**", "/fuel-stations/**",
                                 "/fuel-purchases/**", "/fuel-prices/**", "/vendors/**",
                                 "/bunker-tanks/**", "/bunker-transfers/**",
-                                "/dashboard/**", "/reports/**").denyAll()
+                                "/dashboard/**", "/reports/**",
+                                "/notification-rules/**", "/notifications/**").denyAll()
                         .anyRequest().authenticated())
                 .addFilterBefore(jwt, UsernamePasswordAuthenticationFilter.class)
                 .build();

@@ -17,7 +17,7 @@ const mockPost = vi.fn();
 vi.mock('../api/client', () => ({
   api: {
     get: (url: string) => mockGet(url),
-    post: (url: string, data: any) => mockPost(url, data),
+    post: (url: string, data: unknown) => mockPost(url, data),
   },
 }));
 
