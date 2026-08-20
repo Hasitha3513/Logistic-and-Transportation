@@ -30,6 +30,7 @@ import {
 } from 'antd';
 import { useAuth } from '../auth/AuthContext';
 import { findNavigationItem, navigation, permittedNavigation, type NavigationItem } from '../navigation/navigation';
+import { NotificationCenter } from '../notifications/NotificationCenter';
 
 const { Header, Sider, Content } = Layout;
 const { Text, Title } = Typography;
@@ -132,28 +133,31 @@ export default function AppLayout() {
               </div>
             </Flex>
 
-            <Dropdown
-              menu={{
-                items: userMenu,
-                onClick: ({ key }) => {
-                  if (key === 'logout') void logout();
-                  if (key === 'access') setAccessOpen(true);
-                },
-              }}
-              placement="bottomRight"
-              trigger={['click']}
-            >
-              <Button type="text" className="user-menu" loading={isLoggingOut}>
-                <Space size={10}>
-                  <Avatar className="user-menu__avatar">{initials.toUpperCase()}</Avatar>
-                  <span className="user-menu__identity">
-                    <Text strong>{user.firstName} {user.lastName}</Text>
-                    <Text type="secondary">{user.roles?.[0] ?? 'Team member'}</Text>
-                  </span>
-                  <DownOutlined className="user-menu__chevron" />
-                </Space>
-              </Button>
-            </Dropdown>
+            <Flex align="center" gap={12}>
+              <NotificationCenter />
+              <Dropdown
+                menu={{
+                  items: userMenu,
+                  onClick: ({ key }) => {
+                    if (key === 'logout') void logout();
+                    if (key === 'access') setAccessOpen(true);
+                  },
+                }}
+                placement="bottomRight"
+                trigger={['click']}
+              >
+                <Button type="text" className="user-menu" loading={isLoggingOut}>
+                  <Space size={10}>
+                    <Avatar className="user-menu__avatar">{initials.toUpperCase()}</Avatar>
+                    <span className="user-menu__identity">
+                      <Text strong>{user.firstName} {user.lastName}</Text>
+                      <Text type="secondary">{user.roles?.[0] ?? 'Team member'}</Text>
+                    </span>
+                    <DownOutlined className="user-menu__chevron" />
+                  </Space>
+                </Button>
+              </Dropdown>
+            </Flex>
           </Flex>
         </Header>
 

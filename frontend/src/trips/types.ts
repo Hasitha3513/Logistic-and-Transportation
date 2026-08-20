@@ -105,3 +105,59 @@ export interface PagedTrips {
 }
 
 export type TripResponse = Trip[] | PagedTrips;
+
+export type TripOperationalEventType = 'CHECKPOINT' | 'DELAY' | 'INCIDENT';
+
+export type TripCheckpointType =
+  | 'DEPARTURE'
+  | 'ARRIVAL'
+  | 'PICKUP'
+  | 'DELIVERY'
+  | 'REST_STOP'
+  | 'CUSTOM';
+
+export type TripIncidentSeverity = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+
+export interface TripOperationalEvent {
+  id: string;
+  tripId: string;
+  eventType: TripOperationalEventType;
+  occurredAt: string;
+  locationId?: string | null;
+  locationDescription?: string | null;
+  checkpointType?: TripCheckpointType | null;
+  delayMinutes?: number | null;
+  reason?: string | null;
+  incidentSeverity?: TripIncidentSeverity | null;
+  remarks?: string | null;
+  recordedBy: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TripCheckpointRequest {
+  checkpointType: TripCheckpointType;
+  occurredAt?: string;
+  locationId?: string | null;
+  locationDescription?: string | null;
+  remarks?: string | null;
+}
+
+export interface TripDelayRequest {
+  delayMinutes: number;
+  reason: string;
+  occurredAt?: string;
+  locationId?: string | null;
+  locationDescription?: string | null;
+  remarks?: string | null;
+}
+
+export interface TripIncidentRequest {
+  incidentSeverity: TripIncidentSeverity;
+  description: string;
+  occurredAt?: string;
+  locationId?: string | null;
+  locationDescription?: string | null;
+  remarks?: string | null;
+}
+

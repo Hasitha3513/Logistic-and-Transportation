@@ -7,8 +7,10 @@ import com.transportlogistics.app.fleet.domain.model.Vehicle;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
@@ -17,6 +19,7 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.*;
 
 @DataJpaTest
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @Import({LubricantLogPersistenceAdapter.class, VehiclePersistenceAdapter.class})
 class LubricantLogPersistenceIntegrationTest {
 
@@ -26,12 +29,21 @@ class LubricantLogPersistenceIntegrationTest {
     @Autowired
     private VehiclePersistenceAdapter vehicleAdapter;
 
+    @Autowired
+    private JdbcTemplate jdbc;
+
     @Test
     @DisplayName("Should save and retrieve vehicle lubricant logs")
     void shouldSaveAndRetrieveLubricantLog() {
         var vehicleId = UUID.randomUUID();
+        var categoryId = UUID.randomUUID();
+        var typeId = UUID.randomUUID();
+        jdbc.update("INSERT INTO vehicle_category (id, code, name, active) VALUES (?, ?, ?, ?)",
+                categoryId, "CAT-" + vehicleId.toString().substring(0, 6), "Test Category", true);
+        jdbc.update("INSERT INTO vehicle_type (id, category_id, code, name, active) VALUES (?, ?, ?, ?, ?)",
+                typeId, categoryId, "TYPE-" + vehicleId.toString().substring(0, 6), "Test Type", true);
         var vehicle = new Vehicle(vehicleId, "WP-LUB-" + vehicleId.toString().substring(0, 6), "VIN-LUB", "ENG-LUB",
-                UUID.randomUUID(), UUID.randomUUID(), "Toyota", "Dyna", 2021, "COMPANY_OWNED", "AVAILABLE",
+                categoryId, typeId, "Toyota", "Dyna", 2021, "COMPANY_OWNED", "AVAILABLE",
                 25000.0, 500.0, 3000.0, true);
         vehicleAdapter.save(vehicle);
 

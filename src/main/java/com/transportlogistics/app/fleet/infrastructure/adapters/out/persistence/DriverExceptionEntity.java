@@ -18,7 +18,8 @@ import java.util.UUID;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-class DriverExceptionEntity {
+class
+DriverExceptionEntity {
 
     @Id
     @Column(name = "id", nullable = false)

@@ -15,21 +15,21 @@ export class ApiClient {
     });
   }
 
-  async get<T = any>(endpoint: string, token?: string, params?: Record<string, any>): Promise<T> {
+  async get<T = unknown>(endpoint: string, token?: string, params?: Record<string, string | number | boolean>): Promise<T> {
     const context = await this.getContext(token);
     const response = await context.get(endpoint, { params });
     if (!response.ok()) throw new Error(`GET ${endpoint} failed with ${response.status()}`);
     return response.json();
   }
 
-  async post<T = any>(endpoint: string, body: any, token?: string): Promise<T> {
+  async post<T = unknown>(endpoint: string, body: unknown, token?: string): Promise<T> {
     const context = await this.getContext(token);
     const response = await context.post(endpoint, { data: body });
     if (!response.ok()) throw new Error(`POST ${endpoint} failed with ${response.status()}`);
     return response.json();
   }
 
-  async put<T = any>(endpoint: string, body: any, token?: string): Promise<T> {
+  async put<T = unknown>(endpoint: string, body: unknown, token?: string): Promise<T> {
     const context = await this.getContext(token);
     const response = await context.put(endpoint, { data: body });
     if (!response.ok()) throw new Error(`PUT ${endpoint} failed with ${response.status()}`);

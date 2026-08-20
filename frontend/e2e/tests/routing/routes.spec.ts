@@ -3,7 +3,7 @@ import { test, expect } from '../../fixtures/authFixtures';
 import { RoutesPage } from '../../pages/RoutesPage';
 
 test.describe('@routing Route Definitions & Multi-Stop Plans (US-17, US-18, US-19)', () => {
-  let routesList: any[] = [];
+  let routesList: Record<string, unknown>[] = [];
 
   test.beforeEach(async ({ dispatcherPage }) => {
     routesList = [

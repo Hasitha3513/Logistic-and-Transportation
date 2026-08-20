@@ -1,15 +1,17 @@
 package com.transportlogistics.app.trip.infrastructure.adapters.in.web.controllers;
 
 import com.transportlogistics.app.shared.utils.PrincipalUtils;
+import com.transportlogistics.app.trip.application.ports.in.TripOperationalEventUseCase;
 import com.transportlogistics.app.trip.application.ports.in.TripUseCase;
 import com.transportlogistics.app.trip.domain.model.Trip;
 import com.transportlogistics.app.trip.domain.model.TripCommand;
 import com.transportlogistics.app.trip.infrastructure.adapters.in.web.dto.request.*;
 import com.transportlogistics.app.trip.infrastructure.adapters.in.web.dto.response.TripHistoryResponse;
+import com.transportlogistics.app.trip.infrastructure.adapters.in.web.dto.response.TripOperationalEventResponse;
 import com.transportlogistics.app.trip.infrastructure.adapters.in.web.dto.response.TripResponse;
 import com.transportlogistics.app.trip.infrastructure.adapters.in.web.mappers.TripWebMapper;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,11 +21,22 @@ import java.util.Map;
 import java.util.UUID;
 
 @RestController
-@RequiredArgsConstructor
 public class TripController {
 
     private final TripUseCase trips;
+    private final TripOperationalEventUseCase operationalEvents;
     private final TripWebMapper mapper;
+
+    @Autowired
+    public TripController(TripUseCase trips, TripOperationalEventUseCase operationalEvents, TripWebMapper mapper) {
+        this.trips = trips;
+        this.operationalEvents = operationalEvents;
+        this.mapper = mapper;
+    }
+
+    public TripController(TripUseCase trips, TripWebMapper mapper) {
+        this(trips, null, mapper);
+    }
 
     @PostMapping("/trips")
     ResponseEntity<TripResponse> create(@Valid @RequestBody TripRequest r) {
@@ -132,6 +145,69 @@ public class TripController {
     @GetMapping("/trips/{id}/status-history")
     List<TripHistoryResponse> history(@PathVariable UUID id) {
         return mapper.toTripHistoryResponseList(trips.history(id));
+    }
+
+    @GetMapping("/trips/{id}/operational-events")
+    List<TripOperationalEventResponse> listOperationalEvents(@PathVariable UUID id) {
+        return mapper.toTripOperationalEventResponseList(operationalEvents.getTripEvents(id));
+    }
+
+    @GetMapping("/trips/{id}/operational-events/{eventId}")
+    TripOperationalEventResponse getOperationalEvent(@PathVariable UUID id, @PathVariable UUID eventId) {
+        return mapper.toResponse(operationalEvents.getEvent(id, eventId));
+    }
+
+    @PostMapping("/trips/{id}/checkpoints")
+    ResponseEntity<TripOperationalEventResponse> recordCheckpoint(
+            @PathVariable UUID id,
+            @Valid @RequestBody TripCheckpointRequest request,
+            Principal principal
+    ) {
+        var command = new TripOperationalEventUseCase.RecordCheckpointCommand(
+                request.checkpointType(),
+                request.occurredAt(),
+                request.locationId(),
+                request.locationDescription(),
+                request.remarks()
+        );
+        var created = operationalEvents.recordCheckpoint(id, command, actor(principal));
+        return ResponseEntity.status(201).body(mapper.toResponse(created));
+    }
+
+    @PostMapping("/trips/{id}/delays")
+    ResponseEntity<TripOperationalEventResponse> recordDelay(
+            @PathVariable UUID id,
+            @Valid @RequestBody TripDelayRequest request,
+            Principal principal
+    ) {
+        var command = new TripOperationalEventUseCase.RecordDelayCommand(
+                request.delayMinutes(),
+                request.reason(),
+                request.occurredAt(),
+                request.locationId(),
+                request.locationDescription(),
+                request.remarks()
+        );
+        var created = operationalEvents.recordDelay(id, command, actor(principal));
+        return ResponseEntity.status(201).body(mapper.toResponse(created));
+    }
+
+    @PostMapping("/trips/{id}/incidents")
+    ResponseEntity<TripOperationalEventResponse> recordIncident(
+            @PathVariable UUID id,
+            @Valid @RequestBody TripIncidentRequest request,
+            Principal principal
+    ) {
+        var command = new TripOperationalEventUseCase.RecordIncidentCommand(
+                request.incidentSeverity(),
+                request.description(),
+                request.occurredAt(),
+                request.locationId(),
+                request.locationDescription(),
+                request.remarks()
+        );
+        var created = operationalEvents.recordIncident(id, command, actor(principal));
+        return ResponseEntity.status(201).body(mapper.toResponse(created));
     }
 
     private String actor(Principal principal) {

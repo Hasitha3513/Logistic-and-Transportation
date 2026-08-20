@@ -36,6 +36,7 @@ import { PriorityTag, TripStatusTag } from '../components/status/StatusTags';
 import { DriverAssignmentDrawer, VehicleAssignmentDrawer } from './AssignmentDrawers';
 import LifecycleActions from './LifecycleActions';
 import TripFuelCostSection from '../fuel/TripFuelCostSection';
+import TripOperationalEventsSection from './TripOperationalEventsSection';
 import type {
   CustomerReference,
   DriverReference,
@@ -301,7 +302,7 @@ export default function TripDetailsPage() {
     { key: 'lifecycle', label: 'Lifecycle', children: lifecycleSection },
     { key: 'history', label: 'History', children: historySection },
     { key: 'fuelCost', label: 'Fuel Cost', children: <TripFuelCostSection tripId={trip.id} /> },
-    { key: 'logs', label: <Space size={6}>Trip Logs<Badge count="Future" /></Space>, children: <FutureSection title="Trip Logs" onExplain={setFutureSection} /> },
+    { key: 'logs', label: 'Trip Logs', children: <TripOperationalEventsSection trip={trip} /> },
     { key: 'exceptions', label: <Space size={6}>Exceptions<Badge count="Future" /></Space>, children: <FutureSection title="Exceptions" onExplain={setFutureSection} /> },
   ];
 

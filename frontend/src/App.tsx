@@ -20,6 +20,7 @@ import FuelPurchaseDetailsPage from './fuel/FuelPurchaseDetailsPage';
 import FuelPricePage from './fuel/FuelPricePage';
 import BunkerTankListPage from './fuel/BunkerTankListPage';
 import BunkerTankDetailsPage from './fuel/BunkerTankDetailsPage';
+import NotificationRulesPage from './notifications/NotificationRulesPage';
 
 function ProtectedRoute() {
   const { user, isLoading } = useAuth();
@@ -70,6 +71,7 @@ export default function App() {
         <Route path="fuel/prices" element={<FuelPricePage />} />
         <Route path="administration/users" element={<ResourceListPage {...resourcePages.users} />} />
         <Route path="administration/roles" element={<ResourceListPage {...resourcePages.roles} />} />
+        <Route path="notification-rules" element={<NotificationRulesPage />} />
         <Route path="workspace" element={<ModulePage eyebrow="Operations" title="Workspace" description="Select an available module from the navigation." icon={<DashboardOutlined />} />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>

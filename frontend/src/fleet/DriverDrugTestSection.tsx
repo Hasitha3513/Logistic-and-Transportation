@@ -12,11 +12,10 @@ import {
   DatePicker,
   Alert,
   Typography,
-  Popconfirm,
   Checkbox,
 } from 'antd';
 import { PlusOutlined, ExperimentOutlined, CheckCircleOutlined } from '@ant-design/icons';
-import dayjs from 'dayjs';
+import dayjs, { type Dayjs } from 'dayjs';
 import {
   useDriverDrugTests,
   useScheduleDriverDrugTest,
@@ -37,6 +36,25 @@ interface DriverDrugTestSectionProps {
   driverId: string;
 }
 
+interface ScheduleDrugTestFormValues {
+  testType: DrugTestType;
+  scheduledDate: Dayjs;
+  laboratoryOrProvider?: string;
+  referenceNumber?: string;
+  remarks?: string;
+}
+
+interface DrugTestResultFormValues {
+  result: DrugTestResult;
+  resultDate?: Dayjs;
+  remarks?: string;
+  returnToDutyRequired?: boolean;
+}
+
+interface ReturnToDutyFormValues {
+  remarks?: string;
+}
+
 export const DriverDrugTestSection: React.FC<DriverDrugTestSectionProps> = ({ driverId }) => {
   const { hasPermission } = useAuth();
   const canManage = hasPermission('DRIVER_DRUG_TEST_MANAGE');
@@ -55,7 +73,7 @@ export const DriverDrugTestSection: React.FC<DriverDrugTestSectionProps> = ({ dr
   const [rtdModalTest, setRtdModalTest] = useState<DriverDrugTest | null>(null);
   const [rtdForm] = Form.useForm();
 
-  const handleSchedule = async (values: any) => {
+  const handleSchedule = async (values: ScheduleDrugTestFormValues) => {
     await scheduleMutation.mutateAsync({
       testType: values.testType,
       scheduledDate: values.scheduledDate.format('YYYY-MM-DD'),
@@ -67,7 +85,7 @@ export const DriverDrugTestSection: React.FC<DriverDrugTestSectionProps> = ({ dr
     scheduleForm.resetFields();
   };
 
-  const handleRecordResult = async (values: any) => {
+  const handleRecordResult = async (values: DrugTestResultFormValues) => {
     if (!resultModalTest) return;
     await recordResultMutation.mutateAsync({
       testId: resultModalTest.id,
@@ -82,7 +100,7 @@ export const DriverDrugTestSection: React.FC<DriverDrugTestSectionProps> = ({ dr
     resultForm.resetFields();
   };
 
-  const handleClearRtd = async (values: any) => {
+  const handleClearRtd = async (values: ReturnToDutyFormValues) => {
     if (!rtdModalTest) return;
     await clearRtdMutation.mutateAsync({
       testId: rtdModalTest.id,
@@ -142,7 +160,7 @@ export const DriverDrugTestSection: React.FC<DriverDrugTestSectionProps> = ({ dr
     {
       title: 'Return to Duty',
       key: 'rtd',
-      render: (_: any, record: DriverDrugTest) => getRtdTag(record),
+      render: (_: unknown, record: DriverDrugTest) => getRtdTag(record),
     },
     {
       title: 'Lab / Provider',
@@ -159,7 +177,7 @@ export const DriverDrugTestSection: React.FC<DriverDrugTestSectionProps> = ({ dr
     {
       title: 'Actions',
       key: 'actions',
-      render: (_: any, record: DriverDrugTest) => (
+      render: (_: unknown, record: DriverDrugTest) => (
         <Space size="small">
           {canManage && record.status !== 'COMPLETED' && record.status !== 'CANCELLED' && (
             <Button

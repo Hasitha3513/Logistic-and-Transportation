@@ -2,7 +2,7 @@ import { request } from '@playwright/test';
 
 const baseURL = process.env.BASE_URL || 'http://localhost:5173';
 
-export async function apiCreate(path: string, body: any, token?: string) {
+export async function apiCreate(path: string, body: unknown, token?: string) {
   const context = await request.newContext({ baseURL });
   const response = await context.post(path.startsWith('/api') ? path : `/api${path.startsWith('/') ? path : `/${path}`}`, {
     data: body,

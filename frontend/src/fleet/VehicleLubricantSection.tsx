@@ -15,7 +15,7 @@ import {
   Typography,
 } from 'antd';
 import { PlusOutlined, ExperimentOutlined } from '@ant-design/icons';
-import dayjs from 'dayjs';
+import dayjs, { type Dayjs } from 'dayjs';
 import {
   useVehicleLubricantLogs,
   useCreateVehicleLubricantLog,
@@ -31,6 +31,18 @@ const { Text } = Typography;
 
 interface VehicleLubricantSectionProps {
   vehicleId: string;
+}
+
+interface LubricantLogFormValues {
+  fluidType: FluidType;
+  quantity: number;
+  unit: MeasurementUnit;
+  recordedAt: Dayjs;
+  odometerKm?: number;
+  engineHours?: number;
+  supplierName?: string;
+  referenceNumber?: string;
+  remarks?: string;
 }
 
 const FLUID_TYPE_OPTIONS: { label: string; value: FluidType; color: string }[] = [
@@ -61,7 +73,7 @@ export const VehicleLubricantSection: React.FC<VehicleLubricantSectionProps> = (
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [form] = Form.useForm();
 
-  const handleCreate = async (values: any) => {
+  const handleCreate = async (values: LubricantLogFormValues) => {
     await createMutation.mutateAsync({
       fluidType: values.fluidType,
       quantity: values.quantity,
@@ -92,7 +104,7 @@ export const VehicleLubricantSection: React.FC<VehicleLubricantSectionProps> = (
     {
       title: 'Quantity',
       key: 'quantity',
-      render: (_: any, record: LubricantLog) => (
+      render: (_: unknown, record: LubricantLog) => (
         <Text strong>
           {record.quantity} {record.unit.toLowerCase()}
         </Text>

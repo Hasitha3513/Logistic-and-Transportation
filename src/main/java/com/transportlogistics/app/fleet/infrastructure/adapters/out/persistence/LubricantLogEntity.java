@@ -40,10 +40,10 @@ class LubricantLogEntity {
     @Column(name = "recorded_at", nullable = false)
     private OffsetDateTime recordedAt;
 
-    @Column(name = "odometer_km")
+    @Column(name = "odometer_km", columnDefinition = "NUMERIC(12, 2)")
     private Double odometerKm;
 
-    @Column(name = "engine_hours")
+    @Column(name = "engine_hours", columnDefinition = "NUMERIC(12, 2)")
     private Double engineHours;
 
     @Column(name = "vendor_id")
