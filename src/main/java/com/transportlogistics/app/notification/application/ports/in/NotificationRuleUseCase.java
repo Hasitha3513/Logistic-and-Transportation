@@ -25,6 +25,7 @@ public interface NotificationRuleUseCase {
         NotificationChannel channel,
         RecipientType recipientType,
         String recipientValue,
+        String templateCode,
         boolean enabled,
         NotificationSeverity severityThreshold
     ) {}
@@ -36,6 +37,7 @@ public interface NotificationRuleUseCase {
         NotificationChannel channel,
         RecipientType recipientType,
         String recipientValue,
+        String templateCode,
         boolean enabled,
         NotificationSeverity severityThreshold
     ) {}

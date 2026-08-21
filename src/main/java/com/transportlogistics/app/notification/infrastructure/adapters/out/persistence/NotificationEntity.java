@@ -47,6 +47,12 @@ public class NotificationEntity {
     @Column(nullable = false, columnDefinition = "TEXT")
     private String message;
 
+    @Column(name = "template_id")
+    private UUID templateId;
+
+    @Column(name = "template_version")
+    private Integer templateVersion;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 32)
     private NotificationStatus status;
@@ -78,6 +84,8 @@ public class NotificationEntity {
         NotificationSeverity severity,
         String title,
         String message,
+        UUID templateId,
+        Integer templateVersion,
         NotificationStatus status,
         OffsetDateTime createdAt,
         OffsetDateTime sentAt,
@@ -94,6 +102,8 @@ public class NotificationEntity {
         this.severity = severity;
         this.title = title;
         this.message = message;
+        this.templateId = templateId;
+        this.templateVersion = templateVersion;
         this.status = status;
         this.createdAt = createdAt;
         this.sentAt = sentAt;
@@ -113,6 +123,8 @@ public class NotificationEntity {
             notification.severity(),
             notification.title(),
             notification.message(),
+            notification.templateId(),
+            notification.templateVersion(),
             notification.status(),
             notification.createdAt(),
             notification.sentAt(),
@@ -133,6 +145,8 @@ public class NotificationEntity {
             severity,
             title,
             message,
+            templateId,
+            templateVersion,
             status,
             createdAt,
             sentAt,
@@ -168,6 +182,12 @@ public class NotificationEntity {
 
     public String getMessage() { return message; }
     public void setMessage(String message) { this.message = message; }
+
+    public UUID getTemplateId() { return templateId; }
+    public void setTemplateId(UUID templateId) { this.templateId = templateId; }
+
+    public Integer getTemplateVersion() { return templateVersion; }
+    public void setTemplateVersion(Integer templateVersion) { this.templateVersion = templateVersion; }
 
     public NotificationStatus getStatus() { return status; }
     public void setStatus(NotificationStatus status) { this.status = status; }

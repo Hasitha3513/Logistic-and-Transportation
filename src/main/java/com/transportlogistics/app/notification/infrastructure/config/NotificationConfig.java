@@ -2,6 +2,7 @@ package com.transportlogistics.app.notification.infrastructure.config;
 
 import com.transportlogistics.app.notification.application.ports.out.NotificationDeliveryPort;
 import com.transportlogistics.app.notification.domain.model.NotificationChannel;
+import com.transportlogistics.app.notification.domain.model.NotificationTemplateRenderer;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -11,6 +12,11 @@ import java.util.Map;
 
 @Configuration
 public class NotificationConfig {
+
+    @Bean
+    public NotificationTemplateRenderer notificationTemplateRenderer() {
+        return new NotificationTemplateRenderer();
+    }
 
     @Bean
     public Map<NotificationChannel, NotificationDeliveryPort> notificationDeliveryPorts(

@@ -2,6 +2,7 @@ package com.transportlogistics.app.notification.infrastructure.adapters.in.web;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.transportlogistics.app.notification.application.ports.in.NotificationRuleUseCase;
+import com.transportlogistics.app.notification.application.ports.in.NotificationConfigurationUseCase;
 import com.transportlogistics.app.notification.application.ports.in.NotificationUseCase;
 import com.transportlogistics.app.notification.domain.model.NotificationChannel;
 import com.transportlogistics.app.notification.domain.model.NotificationRule;
@@ -34,6 +35,7 @@ class NotificationSecurityIntegrationTest {
 
     @MockBean private NotificationRuleUseCase ruleUseCase;
     @MockBean private NotificationUseCase notificationUseCase;
+    @MockBean private NotificationConfigurationUseCase configurationUseCase;
 
     @Test
     void shouldDenyUnauthenticatedAccessToRules() throws Exception {
@@ -67,6 +69,7 @@ class NotificationSecurityIntegrationTest {
             NotificationChannel.IN_APP,
             RecipientType.ROLE,
             "DISPATCHER",
+            "TRIP_DELAY",
             true,
             NotificationSeverity.INFO
         );
@@ -87,6 +90,7 @@ class NotificationSecurityIntegrationTest {
             NotificationChannel.IN_APP,
             RecipientType.ROLE,
             "DISPATCHER",
+            "TRIP_DELAY",
             true,
             NotificationSeverity.INFO
         );
@@ -102,6 +106,26 @@ class NotificationSecurityIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated());
+    }
+
+    @Test
+    void shouldDenyUnauthenticatedCatalogueAccess() throws Exception {
+        mvc.perform(get("/notification-event-catalogue")).andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @WithMockUser(authorities = "RANDOM_AUTHORITY")
+    void shouldDenyCatalogueAccessWithoutPermission() throws Exception {
+        mvc.perform(get("/notification-event-catalogue")).andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(authorities = "NOTIFICATION_RULE_VIEW")
+    void shouldAllowCatalogueAndTemplatesWithViewPermission() throws Exception {
+        when(configurationUseCase.listEventCatalogue()).thenReturn(List.of());
+        when(configurationUseCase.listActiveTemplates(any(), any())).thenReturn(List.of());
+        mvc.perform(get("/notification-event-catalogue")).andExpect(status().isOk());
+        mvc.perform(get("/notification-templates")).andExpect(status().isOk());
     }
 
     @Test

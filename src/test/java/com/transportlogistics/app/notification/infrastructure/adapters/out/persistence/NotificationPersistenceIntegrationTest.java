@@ -20,7 +20,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-@Import({NotificationRulePersistenceAdapter.class, NotificationPersistenceAdapter.class})
+@Import({NotificationRulePersistenceAdapter.class, NotificationPersistenceAdapter.class,
+    NotificationTemplatePersistenceAdapter.class})
 class NotificationPersistenceIntegrationTest {
 
     @Autowired
@@ -28,6 +29,9 @@ class NotificationPersistenceIntegrationTest {
 
     @Autowired
     private NotificationPersistenceAdapter notificationAdapter;
+
+    @Autowired
+    private NotificationTemplatePersistenceAdapter templateAdapter;
 
     @Test
     @DisplayName("Should save and retrieve notification rules by event type")
@@ -49,12 +53,26 @@ class NotificationPersistenceIntegrationTest {
         List<NotificationRule> matching = ruleAdapter.findByEventTypeAndEnabledTrue("trip_delay_recorded");
         assertThat(matching).hasSize(1);
         assertThat(matching.get(0).name()).isEqualTo("Delay Warning");
+        assertThat(matching.get(0).templateCode()).isEqualTo("TRIP_DELAY");
+    }
+
+    @Test
+    @DisplayName("Should load the single active compatible system template")
+    void template_findActiveCompatible_succeeds() {
+        var template = templateAdapter.findActiveCompatible(
+            "TRIP_DELAY", "TRIP_DELAY_RECORDED", NotificationChannel.IN_APP);
+
+        assertThat(template).isPresent();
+        assertThat(template.orElseThrow().version()).isEqualTo(1);
+        assertThat(templateAdapter.findActive(null, null)).hasSize(16);
     }
 
     @Test
     @DisplayName("Should save, query, and mark notifications as read")
     void notification_saveAndQueryRecipients_succeeds() {
         UUID eventId = UUID.randomUUID();
+        var template = templateAdapter.findActiveCompatible(
+            "TRIP_DELAY", "TRIP_DELAY_RECORDED", NotificationChannel.IN_APP).orElseThrow();
         Notification notification = Notification.createPending(
             null,
             eventId,
@@ -64,6 +82,8 @@ class NotificationPersistenceIntegrationTest {
             NotificationSeverity.WARNING,
             "Trip Delayed",
             "Delay of 15 min",
+            template.id(),
+            template.version(),
             "/trips/1"
         ).markSent();
 
@@ -74,6 +94,8 @@ class NotificationPersistenceIntegrationTest {
 
         List<Notification> list = notificationAdapter.findByRecipientsOrderByCreatedAtDesc(Set.of("user1"), 10);
         assertThat(list).hasSize(1);
+        assertThat(list.get(0).templateId()).isEqualTo(template.id());
+        assertThat(list.get(0).templateVersion()).isEqualTo(1);
 
         long unread = notificationAdapter.countUnreadByRecipients(Set.of("user1"));
         assertThat(unread).isEqualTo(1L);

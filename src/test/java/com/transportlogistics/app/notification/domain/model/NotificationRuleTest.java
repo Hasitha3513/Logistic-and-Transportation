@@ -28,6 +28,7 @@ class NotificationRuleTest {
         assertThat(rule.channel()).isEqualTo(NotificationChannel.IN_APP);
         assertThat(rule.recipientType()).isEqualTo(RecipientType.ROLE);
         assertThat(rule.recipientValue()).isEqualTo("DISPATCHER");
+        assertThat(rule.templateCode()).isEqualTo("TRIP_DELAY");
         assertThat(rule.enabled()).isTrue();
         assertThat(rule.severityThreshold()).isEqualTo(NotificationSeverity.WARNING);
     }
@@ -37,7 +38,7 @@ class NotificationRuleTest {
         NotificationRule rule = NotificationRule.create(
             "Critical Maintenance Email",
             "Send email on critical maintenance",
-            "VEHICLE_MAINTENANCE_BLOCKED",
+            "VEHICLE_MAINTENANCE_DUE",
             NotificationChannel.EMAIL,
             RecipientType.EMAIL_ADDRESS,
             "fleet.manager@company.com",
@@ -54,7 +55,7 @@ class NotificationRuleTest {
         assertThatThrownBy(() -> NotificationRule.create(
             "Email Alert",
             "Desc",
-            "EVENT",
+            "TRIP_DELAY_RECORDED",
             NotificationChannel.EMAIL,
             RecipientType.EMAIL_ADDRESS,
             "not-an-email",
@@ -69,7 +70,7 @@ class NotificationRuleTest {
         assertThatThrownBy(() -> NotificationRule.create(
             "   ",
             "Desc",
-            "EVENT",
+            "TRIP_DELAY_RECORDED",
             NotificationChannel.IN_APP,
             RecipientType.USER,
             "user1",

@@ -13,6 +13,7 @@ public record NotificationRule(
     NotificationChannel channel,
     RecipientType recipientType,
     String recipientValue,
+    String templateCode,
     boolean enabled,
     NotificationSeverity severityThreshold,
     OffsetDateTime createdAt,
@@ -42,6 +43,7 @@ public record NotificationRule(
         name = name.trim();
         eventType = eventType.trim().toUpperCase();
         recipientValue = recipientValue.trim();
+        templateCode = templateCode == null || templateCode.isBlank() ? null : templateCode.trim().toUpperCase();
         description = description != null ? description.trim() : null;
         if (createdAt == null) {
             createdAt = OffsetDateTime.now();
@@ -58,9 +60,11 @@ public record NotificationRule(
         NotificationChannel channel,
         RecipientType recipientType,
         String recipientValue,
+        String templateCode,
         boolean enabled,
         NotificationSeverity severityThreshold
     ) {
+        validateCatalogueConfiguration(eventType, channel, templateCode);
         OffsetDateTime now = OffsetDateTime.now();
         return new NotificationRule(
             UUID.randomUUID(),
@@ -70,6 +74,7 @@ public record NotificationRule(
             channel,
             recipientType,
             recipientValue,
+            templateCode,
             enabled,
             severityThreshold != null ? severityThreshold : NotificationSeverity.INFO,
             now,
@@ -77,7 +82,7 @@ public record NotificationRule(
         );
     }
 
-    public NotificationRule update(
+    public static NotificationRule create(
         String name,
         String description,
         String eventType,
@@ -87,6 +92,23 @@ public record NotificationRule(
         boolean enabled,
         NotificationSeverity severityThreshold
     ) {
+        String defaultTemplate = NotificationEventCatalogue.require(eventType).templateCode();
+        return create(name, description, eventType, channel, recipientType, recipientValue,
+            defaultTemplate, enabled, severityThreshold);
+    }
+
+    public NotificationRule update(
+        String name,
+        String description,
+        String eventType,
+        NotificationChannel channel,
+        RecipientType recipientType,
+        String recipientValue,
+        String templateCode,
+        boolean enabled,
+        NotificationSeverity severityThreshold
+    ) {
+        validateCatalogueConfiguration(eventType, channel, templateCode);
         return new NotificationRule(
             this.id,
             name,
@@ -95,6 +117,7 @@ public record NotificationRule(
             channel,
             recipientType,
             recipientValue,
+            templateCode,
             enabled,
             severityThreshold != null ? severityThreshold : NotificationSeverity.INFO,
             this.createdAt,
@@ -103,6 +126,9 @@ public record NotificationRule(
     }
 
     public NotificationRule withEnabled(boolean enabled) {
+        if (enabled) {
+            validateCatalogueConfiguration(this.eventType, this.channel, this.templateCode);
+        }
         return new NotificationRule(
             this.id,
             this.name,
@@ -111,11 +137,22 @@ public record NotificationRule(
             this.channel,
             this.recipientType,
             this.recipientValue,
+            this.templateCode,
             enabled,
             this.severityThreshold,
             this.createdAt,
             OffsetDateTime.now()
         );
+    }
+
+    private static void validateCatalogueConfiguration(String eventType, NotificationChannel channel, String templateCode) {
+        NotificationEventDefinition definition = NotificationEventCatalogue.require(eventType);
+        if (!definition.supports(channel)) {
+            throw new IllegalArgumentException("Notification event does not support channel " + channel);
+        }
+        if (templateCode == null || !definition.templateCode().equalsIgnoreCase(templateCode.trim())) {
+            throw new IllegalArgumentException("Template is incompatible with notification event and channel");
+        }
     }
 
     public boolean matchesEvent(String eventType, NotificationSeverity eventSeverity) {

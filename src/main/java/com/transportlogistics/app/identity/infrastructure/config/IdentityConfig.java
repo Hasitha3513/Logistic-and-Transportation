@@ -1,6 +1,7 @@
 package com.transportlogistics.app.identity.infrastructure.config;
 
 import com.transportlogistics.app.identity.AuthenticatedUserLookup;
+import com.transportlogistics.app.identity.NotificationRecipientDirectory;
 import com.transportlogistics.app.identity.application.ports.in.IdentityUseCase;
 import com.transportlogistics.app.identity.application.ports.out.AccessTokenService;
 import com.transportlogistics.app.identity.application.ports.out.IdentityRepository;
@@ -27,6 +28,36 @@ class IdentityConfig {
     AuthenticatedUserLookup authenticatedUserLookup(IdentityUseCase identities) {
         return username -> identities.findByUsername(username)
                 .map(user -> new AuthenticatedUserLookup.AuthenticatedUser(user.id(), user.username()));
+    }
+
+    @Bean
+    NotificationRecipientDirectory notificationRecipientDirectory(IdentityUseCase identities) {
+        return new NotificationRecipientDirectory() {
+            @Override
+            public java.util.Optional<RecipientUser> findActiveUser(String username) {
+                return identities.findByUsername(username)
+                    .filter(com.transportlogistics.app.identity.domain.model.User::active)
+                    .map(user -> new RecipientUser(user.username(), user.email()));
+            }
+
+            @Override
+            public boolean activeRoleExists(String roleName) {
+                return roleName != null && identities.listRoles().stream()
+                    .anyMatch(role -> role.active() && role.name().equalsIgnoreCase(roleName.trim()));
+            }
+
+            @Override
+            public java.util.List<RecipientUser> findActiveRoleMembers(String roleName) {
+                if (roleName == null) {
+                    return java.util.List.of();
+                }
+                return identities.listUsers().stream()
+                    .filter(com.transportlogistics.app.identity.domain.model.User::active)
+                    .filter(user -> user.hasRole(roleName.trim()))
+                    .map(user -> new RecipientUser(user.username(), user.email()))
+                    .toList();
+            }
+        };
     }
 
     @Bean

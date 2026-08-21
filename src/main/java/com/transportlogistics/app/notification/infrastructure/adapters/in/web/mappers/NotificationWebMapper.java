@@ -3,10 +3,14 @@ package com.transportlogistics.app.notification.infrastructure.adapters.in.web.m
 import com.transportlogistics.app.notification.application.ports.in.NotificationRuleUseCase;
 import com.transportlogistics.app.notification.domain.model.Notification;
 import com.transportlogistics.app.notification.domain.model.NotificationRule;
+import com.transportlogistics.app.notification.domain.model.NotificationEventDefinition;
+import com.transportlogistics.app.notification.domain.model.NotificationTemplate;
 import com.transportlogistics.app.notification.infrastructure.adapters.in.web.dto.request.CreateNotificationRuleRequest;
 import com.transportlogistics.app.notification.infrastructure.adapters.in.web.dto.request.UpdateNotificationRuleRequest;
 import com.transportlogistics.app.notification.infrastructure.adapters.in.web.dto.response.NotificationResponse;
 import com.transportlogistics.app.notification.infrastructure.adapters.in.web.dto.response.NotificationRuleResponse;
+import com.transportlogistics.app.notification.infrastructure.adapters.in.web.dto.response.NotificationEventCatalogueResponse;
+import com.transportlogistics.app.notification.infrastructure.adapters.in.web.dto.response.NotificationTemplateResponse;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -20,6 +24,7 @@ public class NotificationWebMapper {
             request.channel(),
             request.recipientType(),
             request.recipientValue(),
+            request.templateCode(),
             request.enabled() != null ? request.enabled() : true,
             request.severityThreshold()
         );
@@ -33,6 +38,7 @@ public class NotificationWebMapper {
             request.channel(),
             request.recipientType(),
             request.recipientValue(),
+            request.templateCode(),
             request.enabled() != null ? request.enabled() : true,
             request.severityThreshold()
         );
@@ -47,6 +53,7 @@ public class NotificationWebMapper {
             rule.channel(),
             rule.recipientType(),
             rule.recipientValue(),
+            rule.templateCode(),
             rule.enabled(),
             rule.severityThreshold(),
             rule.createdAt(),
@@ -65,6 +72,8 @@ public class NotificationWebMapper {
             notification.severity(),
             notification.title(),
             notification.message(),
+            notification.templateId(),
+            notification.templateVersion(),
             notification.status(),
             notification.createdAt(),
             notification.sentAt(),
@@ -72,5 +81,19 @@ public class NotificationWebMapper {
             notification.failureReason(),
             notification.relatedRoute()
         );
+    }
+
+    public NotificationEventCatalogueResponse toResponse(NotificationEventDefinition definition) {
+        return new NotificationEventCatalogueResponse(
+            definition.eventType(), definition.owningModule(), definition.defaultSeverity(),
+            definition.supportedChannels(), definition.templateCodes(),
+            definition.requiredVariables(), definition.optionalVariables());
+    }
+
+    public NotificationTemplateResponse toResponse(NotificationTemplate template) {
+        return new NotificationTemplateResponse(
+            template.id(), template.code(), template.name(), template.eventType(), template.channel(),
+            template.subject(), template.body(), template.version(), template.active(),
+            template.createdAt(), template.updatedAt());
     }
 }

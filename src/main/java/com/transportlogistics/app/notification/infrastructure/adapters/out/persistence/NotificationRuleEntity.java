@@ -41,6 +41,9 @@ public class NotificationRuleEntity {
     @Column(name = "recipient_value", nullable = false, length = 128)
     private String recipientValue;
 
+    @Column(name = "template_code", length = 64)
+    private String templateCode;
+
     @Column(nullable = false)
     private boolean enabled;
 
@@ -64,6 +67,7 @@ public class NotificationRuleEntity {
         NotificationChannel channel,
         RecipientType recipientType,
         String recipientValue,
+        String templateCode,
         boolean enabled,
         NotificationSeverity severityThreshold,
         OffsetDateTime createdAt,
@@ -76,6 +80,7 @@ public class NotificationRuleEntity {
         this.channel = channel;
         this.recipientType = recipientType;
         this.recipientValue = recipientValue;
+        this.templateCode = templateCode;
         this.enabled = enabled;
         this.severityThreshold = severityThreshold;
         this.createdAt = createdAt;
@@ -91,6 +96,7 @@ public class NotificationRuleEntity {
             rule.channel(),
             rule.recipientType(),
             rule.recipientValue(),
+            rule.templateCode(),
             rule.enabled(),
             rule.severityThreshold(),
             rule.createdAt(),
@@ -107,6 +113,7 @@ public class NotificationRuleEntity {
             channel,
             recipientType,
             recipientValue,
+            templateCode,
             enabled,
             severityThreshold,
             createdAt,
@@ -134,6 +141,9 @@ public class NotificationRuleEntity {
 
     public String getRecipientValue() { return recipientValue; }
     public void setRecipientValue(String recipientValue) { this.recipientValue = recipientValue; }
+
+    public String getTemplateCode() { return templateCode; }
+    public void setTemplateCode(String templateCode) { this.templateCode = templateCode; }
 
     public boolean isEnabled() { return enabled; }
     public void setEnabled(boolean enabled) { this.enabled = enabled; }
