@@ -4,10 +4,12 @@ import com.transportlogistics.app.notification.OperationalNotificationEvent;
 import com.transportlogistics.app.notification.application.ports.out.NotificationDeliveryPort;
 import com.transportlogistics.app.notification.application.ports.out.NotificationRepository;
 import com.transportlogistics.app.notification.application.ports.out.NotificationRuleRepository;
+import com.transportlogistics.app.notification.application.ports.out.NotificationTemplateRepository;
 import com.transportlogistics.app.notification.domain.model.Notification;
 import com.transportlogistics.app.notification.domain.model.NotificationChannel;
 import com.transportlogistics.app.notification.domain.model.NotificationRule;
 import com.transportlogistics.app.notification.domain.model.NotificationSeverity;
+import com.transportlogistics.app.notification.domain.model.NotificationTemplateRenderer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -24,15 +26,24 @@ public class NotificationRuleEngine {
 
     private final NotificationRuleRepository ruleRepository;
     private final NotificationRepository notificationRepository;
+    private final NotificationTemplateRepository templateRepository;
+    private final NotificationRecipientResolver recipientResolver;
+    private final NotificationTemplateRenderer templateRenderer;
     private final Map<NotificationChannel, NotificationDeliveryPort> deliveryPorts;
 
     public NotificationRuleEngine(
         NotificationRuleRepository ruleRepository,
         NotificationRepository notificationRepository,
+        NotificationTemplateRepository templateRepository,
+        NotificationRecipientResolver recipientResolver,
+        NotificationTemplateRenderer templateRenderer,
         Map<NotificationChannel, NotificationDeliveryPort> deliveryPorts
     ) {
         this.ruleRepository = Objects.requireNonNull(ruleRepository, "ruleRepository must not be null");
         this.notificationRepository = Objects.requireNonNull(notificationRepository, "notificationRepository must not be null");
+        this.templateRepository = Objects.requireNonNull(templateRepository, "templateRepository must not be null");
+        this.recipientResolver = Objects.requireNonNull(recipientResolver, "recipientResolver must not be null");
+        this.templateRenderer = Objects.requireNonNull(templateRenderer, "templateRenderer must not be null");
         this.deliveryPorts = Objects.requireNonNull(deliveryPorts, "deliveryPorts must not be null");
     }
 
@@ -54,17 +65,41 @@ public class NotificationRuleEngine {
 
         NotificationSeverity severity = toDomainSeverity(event.severity());
         for (NotificationRule rule : matchingRules) {
-            if (!severity.meetsThreshold(rule.severityThreshold())) {
-                log.debug("Rule '{}' skipped because event severity {} < threshold {}",
-                    rule.name(), event.severity(), rule.severityThreshold());
-                continue;
+            try {
+                processRule(event, severity, rule);
+            } catch (RuntimeException exception) {
+                log.error("Notification rule {} failed for event {} without affecting the source operation: {}",
+                    rule.id(), event.eventId(), exception.getMessage(), exception);
             }
+        }
+    }
 
-            String recipient = resolveRecipient(rule);
-            if (recipient == null || recipient.isBlank()) {
-                log.warn("Could not resolve recipient for rule '{}', skipping.", rule.name());
-                continue;
-            }
+    private void processRule(OperationalNotificationEvent event, NotificationSeverity severity, NotificationRule rule) {
+        if (!severity.meetsThreshold(rule.severityThreshold())) {
+            log.debug("Rule '{}' skipped because event severity {} < threshold {}",
+                rule.name(), event.severity(), rule.severityThreshold());
+            return;
+        }
+
+        if (rule.templateCode() == null) {
+            log.warn("Legacy notification rule '{}' has no template and cannot execute", rule.name());
+            return;
+        }
+
+        var template = templateRepository.findActiveCompatible(rule.templateCode(), rule.eventType(), rule.channel())
+            .orElseThrow(() -> new IllegalStateException("No active compatible template for rule " + rule.id()));
+        Map<String, String> variables = new java.util.HashMap<>(event.metadata());
+        variables.put("eventTime", event.occurredAt().toString());
+        variables.put("severity", event.severity().name());
+        var rendered = templateRenderer.render(template, variables);
+
+        List<String> recipients = recipientResolver.resolve(rule.recipientType(), rule.channel(), rule.recipientValue());
+        if (recipients.isEmpty()) {
+            log.warn("Rule '{}' resolved no active recipients; NO_RECIPIENT", rule.name());
+            return;
+        }
+
+        for (String recipient : recipients) {
 
             // Enforce idempotency: eventId + ruleId + recipient
             if (notificationRepository.existsByEventIdAndRuleIdAndRecipient(event.eventId(), rule.id(), recipient)) {
@@ -81,8 +116,10 @@ public class NotificationRuleEngine {
                 rule.channel(),
                 recipient,
                 severity,
-                event.title(),
-                event.message(),
+                rendered.subject(),
+                rendered.body(),
+                template.id(),
+                template.version(),
                 relatedRoute
             );
 
@@ -93,17 +130,6 @@ public class NotificationRuleEngine {
 
     private NotificationSeverity toDomainSeverity(OperationalNotificationEvent.Severity severity) {
         return NotificationSeverity.valueOf(severity.name());
-    }
-
-    private String resolveRecipient(NotificationRule rule) {
-        return switch (rule.recipientType()) {
-            case USER -> rule.recipientValue();
-            case ROLE -> {
-                String r = rule.recipientValue().toUpperCase();
-                yield r.startsWith("ROLE:") ? r : "ROLE:" + r;
-            }
-            case EMAIL_ADDRESS -> rule.recipientValue();
-        };
     }
 
     private void dispatchNotification(Notification notification, NotificationChannel channel) {

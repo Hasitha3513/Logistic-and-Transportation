@@ -29,6 +29,9 @@ public record CreateNotificationRuleRequest(
     @Size(max = 128, message = "Recipient value must not exceed 128 characters")
     String recipientValue,
 
+    @Size(max = 64, message = "Template code must not exceed 64 characters")
+    String templateCode,
+
     Boolean enabled,
 
     NotificationSeverity severityThreshold

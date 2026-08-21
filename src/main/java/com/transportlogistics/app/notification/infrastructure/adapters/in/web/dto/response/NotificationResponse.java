@@ -17,6 +17,8 @@ public record NotificationResponse(
     NotificationSeverity severity,
     String title,
     String message,
+    UUID templateId,
+    Integer templateVersion,
     NotificationStatus status,
     OffsetDateTime createdAt,
     OffsetDateTime sentAt,

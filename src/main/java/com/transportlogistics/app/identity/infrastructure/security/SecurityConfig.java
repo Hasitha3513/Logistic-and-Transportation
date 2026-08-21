@@ -220,6 +220,8 @@ class SecurityConfig {
 
                         .requestMatchers(HttpMethod.GET, "/notification-rules", "/notification-rules/*")
                         .hasAuthority("NOTIFICATION_RULE_VIEW")
+                        .requestMatchers(HttpMethod.GET, "/notification-event-catalogue", "/notification-templates", "/notification-templates/*")
+                        .hasAuthority("NOTIFICATION_RULE_VIEW")
                         .requestMatchers(HttpMethod.POST, "/notification-rules")
                         .hasAuthority("NOTIFICATION_RULE_MANAGE")
                         .requestMatchers(HttpMethod.PUT, "/notification-rules/*")
@@ -240,7 +242,8 @@ class SecurityConfig {
                                 "/fuel-purchases/**", "/fuel-prices/**", "/vendors/**",
                                 "/bunker-tanks/**", "/bunker-transfers/**",
                                 "/dashboard/**", "/reports/**",
-                                "/notification-rules/**", "/notifications/**").denyAll()
+                                "/notification-rules/**", "/notification-event-catalogue/**", "/notification-templates/**",
+                                "/notifications/**").denyAll()
                         .anyRequest().authenticated())
                 .addFilterBefore(jwt, UsernamePasswordAuthenticationFilter.class)
                 .build();

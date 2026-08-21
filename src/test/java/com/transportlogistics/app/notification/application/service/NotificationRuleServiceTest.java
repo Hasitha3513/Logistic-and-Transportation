@@ -2,10 +2,13 @@ package com.transportlogistics.app.notification.application.service;
 
 import com.transportlogistics.app.notification.application.ports.in.NotificationRuleUseCase;
 import com.transportlogistics.app.notification.application.ports.out.NotificationRuleRepository;
+import com.transportlogistics.app.notification.application.ports.out.NotificationRecipientDirectoryPort;
+import com.transportlogistics.app.notification.application.ports.out.NotificationTemplateRepository;
 import com.transportlogistics.app.notification.domain.model.NotificationChannel;
 import com.transportlogistics.app.notification.domain.model.NotificationRule;
 import com.transportlogistics.app.notification.domain.model.NotificationSeverity;
 import com.transportlogistics.app.notification.domain.model.RecipientType;
+import com.transportlogistics.app.notification.domain.model.NotificationTemplate;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -23,12 +26,22 @@ import static org.mockito.Mockito.*;
 class NotificationRuleServiceTest {
 
     private NotificationRuleRepository ruleRepository;
+    private NotificationTemplateRepository templateRepository;
+    private NotificationRecipientDirectoryPort recipientDirectory;
     private NotificationRuleService ruleService;
 
     @BeforeEach
     void setUp() {
         ruleRepository = mock(NotificationRuleRepository.class);
-        ruleService = new NotificationRuleService(ruleRepository);
+        templateRepository = mock(NotificationTemplateRepository.class);
+        recipientDirectory = mock(NotificationRecipientDirectoryPort.class);
+        var recipientResolver = new NotificationRecipientResolver(recipientDirectory);
+        ruleService = new NotificationRuleService(ruleRepository, templateRepository, recipientResolver);
+        when(recipientDirectory.activeRoleExists(any())).thenReturn(true);
+        when(recipientDirectory.findActiveUser(any())).thenReturn(Optional.of(
+            new NotificationRecipientDirectoryPort.RecipientUser("user1", "user1@example.test")));
+        when(templateRepository.findActiveCompatible(any(), any(), any())).thenAnswer(invocation -> Optional.of(
+            template(invocation.getArgument(0), invocation.getArgument(1), invocation.getArgument(2))));
     }
 
     @Test
@@ -36,10 +49,11 @@ class NotificationRuleServiceTest {
         NotificationRuleUseCase.CreateRuleCommand cmd = new NotificationRuleUseCase.CreateRuleCommand(
             "Driver Leave Rule",
             "Alert on driver exception",
-            "DRIVER_EXCEPTION_CREATED",
+            "DRIVER_EXCEPTION_RECORDED",
             NotificationChannel.IN_APP,
             RecipientType.ROLE,
             "FLEET_MANAGER",
+            "DRIVER_EXCEPTION",
             true,
             NotificationSeverity.INFO
         );
@@ -49,7 +63,7 @@ class NotificationRuleServiceTest {
         NotificationRule created = ruleService.createRule(cmd);
 
         assertThat(created.name()).isEqualTo("Driver Leave Rule");
-        assertThat(created.eventType()).isEqualTo("DRIVER_EXCEPTION_CREATED");
+        assertThat(created.eventType()).isEqualTo("DRIVER_EXCEPTION_RECORDED");
         verify(ruleRepository).save(any(NotificationRule.class));
     }
 
@@ -59,7 +73,7 @@ class NotificationRuleServiceTest {
         NotificationRule existing = NotificationRule.create(
             "Old Name",
             "Old Desc",
-            "EVENT_1",
+            "TRIP_DELAY_RECORDED",
             NotificationChannel.IN_APP,
             RecipientType.USER,
             "user1",
@@ -73,10 +87,11 @@ class NotificationRuleServiceTest {
         NotificationRuleUseCase.UpdateRuleCommand updateCmd = new NotificationRuleUseCase.UpdateRuleCommand(
             "New Name",
             "New Desc",
-            "EVENT_2",
+            "TRIP_INCIDENT_RECORDED",
             NotificationChannel.EMAIL,
             RecipientType.EMAIL_ADDRESS,
             "new@example.com",
+            "TRIP_INCIDENT",
             false,
             NotificationSeverity.CRITICAL
         );
@@ -94,7 +109,7 @@ class NotificationRuleServiceTest {
     void enableAndDisableRule_modifiesState() {
         UUID id = UUID.randomUUID();
         NotificationRule rule = NotificationRule.create(
-            "Rule", "Desc", "EVENT", NotificationChannel.IN_APP, RecipientType.USER, "u1", true, NotificationSeverity.INFO
+            "Rule", "Desc", "TRIP_DELAY_RECORDED", NotificationChannel.IN_APP, RecipientType.USER, "user1", true, NotificationSeverity.INFO
         );
 
         when(ruleRepository.findById(id)).thenReturn(Optional.of(rule));
@@ -115,5 +130,47 @@ class NotificationRuleServiceTest {
 
         assertThatThrownBy(() -> ruleService.deleteRule(id))
             .isInstanceOf(NoSuchElementException.class);
+    }
+
+    @Test
+    void createRule_rejectsUnsupportedEvent() {
+        var command = new NotificationRuleUseCase.CreateRuleCommand(
+            "Unsupported", null, "FUEL_LIMIT_EXCEEDED", NotificationChannel.IN_APP,
+            RecipientType.ROLE, "FLEET_MANAGER", "FUEL_LIMIT", true, NotificationSeverity.WARNING);
+
+        assertThatThrownBy(() -> ruleService.createRule(command))
+            .isInstanceOf(com.transportlogistics.app.shared.domain.BusinessRuleException.class)
+            .hasMessageContaining("Unsupported notification event");
+        verify(ruleRepository, never()).save(any());
+    }
+
+    @Test
+    void createRule_rejectsUnsupportedChannel() {
+        var command = new NotificationRuleUseCase.CreateRuleCommand(
+            "No channel", null, "TRIP_DELAY_RECORDED", null,
+            RecipientType.ROLE, "FLEET_MANAGER", "TRIP_DELAY", true, NotificationSeverity.WARNING);
+
+        assertThatThrownBy(() -> ruleService.createRule(command))
+            .isInstanceOfSatisfying(com.transportlogistics.app.shared.domain.BusinessRuleException.class,
+                error -> assertThat(error.code()).isEqualTo("NOTIFICATION_EVENT_UNSUPPORTED"));
+        verify(ruleRepository, never()).save(any());
+    }
+
+    @Test
+    void createRule_rejectsIncompatibleTemplate() {
+        var command = new NotificationRuleUseCase.CreateRuleCommand(
+            "Wrong template", null, "TRIP_DELAY_RECORDED", NotificationChannel.IN_APP,
+            RecipientType.ROLE, "FLEET_MANAGER", "TRIP_INCIDENT", true, NotificationSeverity.WARNING);
+
+        assertThatThrownBy(() -> ruleService.createRule(command))
+            .isInstanceOfSatisfying(com.transportlogistics.app.shared.domain.BusinessRuleException.class,
+                error -> assertThat(error.code()).isEqualTo("NOTIFICATION_TEMPLATE_INCOMPATIBLE"));
+        verify(ruleRepository, never()).save(any());
+    }
+
+    private NotificationTemplate template(String code, String eventType, NotificationChannel channel) {
+        return new NotificationTemplate(UUID.randomUUID(), code, code, eventType, channel,
+            "{{severity}} alert", "Event at {{eventTime}}", 1, true,
+            java.time.OffsetDateTime.now(), java.time.OffsetDateTime.now());
     }
 }
