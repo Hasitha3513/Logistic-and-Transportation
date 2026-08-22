@@ -10,6 +10,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import com.transportlogistics.app.notification.domain.model.NotificationStatus;
 
 @Component
 public class NotificationPersistenceAdapter implements NotificationRepository {
@@ -59,5 +60,30 @@ public class NotificationPersistenceAdapter implements NotificationRepository {
             return 0;
         }
         return jpaRepository.markAllAsReadForRecipients(recipients, OffsetDateTime.now());
+    }
+
+    public Optional<Notification> findByIdForUpdate(UUID id) {
+        return jpaRepository.findByIdForUpdate(id).map(NotificationEntity::toDomain);
+    }
+
+    public List<Notification> findDuePendingEmails(OffsetDateTime now, int limit) {
+        return jpaRepository.findDuePendingEmails(now, PageRequest.of(0, limit)).stream()
+            .map(NotificationEntity::toDomain).toList();
+    }
+
+    public List<Notification> findFailedEmails(int limit) {
+        return jpaRepository.findFailedEmails(PageRequest.of(0, limit)).stream()
+            .map(NotificationEntity::toDomain).toList();
+    }
+
+    public List<Notification> findDeliveries(NotificationStatus status, String eventType,
+                                             OffsetDateTime from, OffsetDateTime to, int limit) {
+        String normalized = eventType == null || eventType.isBlank() ? null : eventType.trim().toUpperCase();
+        return jpaRepository.findDeliveries(status, normalized, from, to, PageRequest.of(0, limit)).stream()
+            .map(NotificationEntity::toDomain).toList();
+    }
+
+    public boolean existsByParentNotificationIdAndRecipient(UUID parentNotificationId, String recipient) {
+        return jpaRepository.existsByParentNotificationIdAndRecipient(parentNotificationId, recipient);
     }
 }

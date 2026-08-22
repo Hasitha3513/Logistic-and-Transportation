@@ -3,12 +3,15 @@ package com.transportlogistics.app.fleet.application.service;
 import com.transportlogistics.app.fleet.application.ports.in.DriverDrugTestUseCase;
 import com.transportlogistics.app.fleet.application.ports.out.DriverDrugTestRepository;
 import com.transportlogistics.app.fleet.application.ports.out.DriverRepository;
+import com.transportlogistics.app.fleet.application.ports.out.FleetOperationalNotificationPublisher;
 import com.transportlogistics.app.fleet.domain.model.DriverDrugTest;
 import com.transportlogistics.app.fleet.domain.model.DrugTestResult;
 import com.transportlogistics.app.fleet.domain.model.DrugTestStatus;
 import com.transportlogistics.app.shared.domain.BusinessRuleException;
 import com.transportlogistics.app.shared.domain.NotFoundException;
 import org.springframework.transaction.annotation.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -17,13 +20,21 @@ import java.util.UUID;
 
 @Transactional
 public class DriverDrugTestService implements DriverDrugTestUseCase {
+    private static final Logger log = LoggerFactory.getLogger(DriverDrugTestService.class);
 
     private final DriverRepository drivers;
     private final DriverDrugTestRepository drugTests;
+    private final FleetOperationalNotificationPublisher notifications;
 
-    public DriverDrugTestService(DriverRepository drivers, DriverDrugTestRepository drugTests) {
+    public DriverDrugTestService(DriverRepository drivers, DriverDrugTestRepository drugTests,
+                                 FleetOperationalNotificationPublisher notifications) {
         this.drivers = Objects.requireNonNull(drivers, "DriverRepository cannot be null");
         this.drugTests = Objects.requireNonNull(drugTests, "DriverDrugTestRepository cannot be null");
+        this.notifications = Objects.requireNonNull(notifications, "Notification publisher cannot be null");
+    }
+
+    public DriverDrugTestService(DriverRepository drivers, DriverDrugTestRepository drugTests) {
+        this(drivers, drugTests, event -> {});
     }
 
     @Override
@@ -106,7 +117,7 @@ public class DriverDrugTestService implements DriverDrugTestUseCase {
 
     @Override
     public DriverDrugTest recordResult(UUID driverId, UUID testId, RecordResultCommand command, String actor) {
-        drivers.findByIdForUpdate(driverId)
+        var driver = drivers.findByIdForUpdate(driverId)
                 .orElseThrow(() -> new NotFoundException("Driver not found: " + driverId));
         var existing = get(driverId, testId);
         if (existing.status() == DrugTestStatus.CANCELLED) {
@@ -135,7 +146,11 @@ public class DriverDrugTestService implements DriverDrugTestUseCase {
                 existing.createdBy(),
                 actor
         );
-        return drugTests.save(updated);
+        var saved = drugTests.save(updated);
+        if (saved.isBlocking()) {
+            publishSafely(FleetOperationalNotificationEvents.drugTestFailed(saved, driver, saved.updatedAt()));
+        }
+        return saved;
     }
 
     @Override
@@ -206,5 +221,13 @@ public class DriverDrugTestService implements DriverDrugTestUseCase {
                 actor
         );
         return drugTests.save(updated);
+    }
+
+    private void publishSafely(com.transportlogistics.app.notification.OperationalNotificationEvent event) {
+        try {
+            notifications.publish(event);
+        } catch (RuntimeException exception) {
+            log.error("Driver drug-test notification publication failed for event {}", event.eventId(), exception);
+        }
     }
 }

@@ -20,9 +20,14 @@ public record NotificationResponse(
     UUID templateId,
     Integer templateVersion,
     NotificationStatus status,
+    OffsetDateTime nextDeliveryAt,
     OffsetDateTime createdAt,
     OffsetDateTime sentAt,
     OffsetDateTime readAt,
     String failureReason,
-    String relatedRoute
+    String relatedRoute,
+    Long attemptCount,
+    boolean terminalFailure,
+    UUID parentNotificationId,
+    int escalationLevel
 ) {}

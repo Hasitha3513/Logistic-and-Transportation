@@ -37,6 +37,14 @@ public class MaintenanceSchedulePersistenceAdapter implements MaintenanceSchedul
     }
 
     @Override
+    public List<MaintenanceSchedule> findScheduledStartingBetween(OffsetDateTime fromExclusive,
+                                                                   OffsetDateTime toInclusive) {
+        return repository.findScheduledStartingBetween(fromExclusive, toInclusive).stream()
+                .map(this::toDomain)
+                .toList();
+    }
+
+    @Override
     public boolean hasOverlappingSchedule(UUID vehicleId, OffsetDateTime from, OffsetDateTime to, List<MaintenanceStatus> blockingStatuses) {
         var statusNames = blockingStatuses.stream().map(Enum::name).toList();
         return repository.hasOverlap(vehicleId, from, to, statusNames);

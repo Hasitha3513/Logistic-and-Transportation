@@ -2,7 +2,7 @@
 
 **Document ID:** QA-AUTO-MATRIX-001  
 **Target Baseline:** Corrected MVP Baseline v2 (39 User Stories)  
-**Date:** August 19, 2026  
+**Date:** August 22, 2026
 **Status:** COMPLETE & AUTHORITATIVE  
 
 ---
@@ -10,6 +10,15 @@
 ## 1. Executive Summary
 
 This matrix establishes direct traceability between delivered business user stories, acceptance criteria, UI pages/drawers/modals, backend REST APIs, Spring Security roles/permissions, test case categories (Positive, Negative, Boundary), and automated Playwright E2E test specs.
+
+### MVP-E2E-HARNESS-001 verification (August 21, 2026)
+
+- Initial command: `npm run test:e2e` — 108 failed, 0 passed, 0 skipped because neither application was started (`ERR_CONNECTION_REFUSED` at `http://localhost:5173/login`).
+- Recovered command: `npm run test:e2e` — 111 passed, 0 failed, 0 skipped across Chromium, Firefox, and WebKit.
+- The harness now starts the H2 Spring Boot backend and Vite frontend through Playwright `webServer`, checks `/api/health` and `/login`, and uses per-run generated administrator credentials and JWT secret.
+- Chromium: 37/37 passed. Firefox and WebKit smoke: 3/3 each passed. The complete cross-browser gate also passed 111/111.
+- MVP-GAP-008H adds all 15 retained US-77 cases. Notification-only execution passes 45/45 across Chromium, Firefox, and WebKit; the complete retained suite passes 156/156 (111 existing + 45 notification).
+- MVP-GAP-008I reverified the full closure gate: 15 logical notification cases, 45 notification browser executions, and 156/156 total executions. Default workers are bounded to three after four-worker contention; retries remain disabled and assertions/timeouts are unchanged.
 
 ---
 
@@ -50,6 +59,7 @@ This matrix establishes direct traceability between delivered business user stor
 | **US-45** (Driver Exceptions) | Manage driver leave, medical, or administrative availability blackouts | Driver Details Drawer -> `DriverExceptionSection` | `GET /api/drivers/{id}/exceptions`, `POST /api/drivers/{id}/exceptions` | `DRIVER_VIEW`, `DRIVER_EXCEPTION_MANAGE` | Record medical leave window, cancel exception | Start date after end date | Boundary overlap with trip assignment window | `e2e/tests/drivers/exceptions.spec.ts` |
 | **US-74** (Security & RBAC) | Authentication, JWT token storage, permission-guarded routes & menus | `/login`, `AppLayout` navigation menu, `Access & permissions` drawer | `POST /api/auth/login`, `GET /api/auth/me`, `POST /api/auth/logout` | All (role-based) | Sign in as Admin, Dispatcher, Viewer; verify accessible items | Invalid password, expired token | Direct URL access to unauthorized route | `e2e/tests/auth/auth.spec.ts`, `e2e/tests/rbac/rbac.spec.ts` |
 | **US-75** (Audit & Reports) | View operations dashboard metrics, trip reports, driver/vehicle utilization | `/` (`DashboardPage`), Reports | `GET /api/dashboard/operations`, `GET /api/reports/trips`, `GET /api/reports/driver-assignments`, `GET /api/reports/vehicle-utilization` | `DASHBOARD_VIEW`, `REPORT_VIEW` | View operational readiness metrics, filter report dates | Invalid report date ranges | Empty reporting periods | `e2e/tests/reporting/reporting.spec.ts` |
+| **US-77** (Notification Rules) | Configure operational rules and review in-app/EMAIL delivery behavior | `/administration/notification-rules`, header notification center | Rule, catalogue/template, notification, execution, delivery/attempt, Trip event, and E2E-profile control endpoints | `NOTIFICATION_RULE_VIEW`, `NOTIFICATION_RULE_MANAGE`, `NOTIFICATION_VIEW` | Rule CRUD/toggle, event-to-center, read state, EMAIL policies | 401/403, disabled rule, terminal EMAIL failure/no false SENT | quiet hours, suppression audit, one transient retry | `e2e/tests/notifications/*.spec.ts` — E2E-NOT-001..015, 45/45 PASS |
 | **US-79** (Master Data) | Manage customers, departments, projects, locations, vendors, fuel stations | `/administration/users`, `/administration/roles`, reference lookups | `GET /api/customers`, `GET /api/locations`, `GET /api/vendors` | `IDENTITY_MANAGE`, Module view permissions | View master data references in selectors during trip/route creation | Unauthenticated lookup access | Zero locations/customers available | `e2e/tests/fleet/vehicles.spec.ts`, `e2e/tests/routing/routes.spec.ts` |
 | **US-80** (Workflows - Implemented Part) | Enforce strict state machines on Trip, Fuel Issue, and Fuel Purchase | `/trips/{id}`, `/fuel/issues/{id}`, `/fuel/purchases/{id}` | Respective lifecycle POST endpoints | Lifecycle permissions | Execute valid state transitions in order | Out-of-order transition (e.g. DRAFT -> DISPATCH) | Simultaneous state change attempts | `e2e/tests/trips/tripLifecycle.spec.ts` |
 | **US-81** (Scheduling - Implemented Part) | Calendar window overlap validation on trip assignment | `/trips/{id}` -> Assignment Drawer | `POST /api/trips/{id}/assign-vehicle` | `TRIP_ASSIGN` | Assign resource to non-overlapping schedule | Assign resource to overlapping schedule | Exact start/end touch point [t1, t2) and [t2, t3) | `e2e/tests/trips/tripAssignments.spec.ts` |

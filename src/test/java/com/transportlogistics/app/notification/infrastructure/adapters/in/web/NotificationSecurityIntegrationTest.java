@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.transportlogistics.app.notification.application.ports.in.NotificationRuleUseCase;
 import com.transportlogistics.app.notification.application.ports.in.NotificationConfigurationUseCase;
 import com.transportlogistics.app.notification.application.ports.in.NotificationUseCase;
+import com.transportlogistics.app.notification.application.ports.in.NotificationRuleExecutionUseCase;
+import com.transportlogistics.app.notification.application.ports.in.NotificationDeliveryDiagnosticsUseCase;
 import com.transportlogistics.app.notification.domain.model.NotificationChannel;
 import com.transportlogistics.app.notification.domain.model.NotificationRule;
 import com.transportlogistics.app.notification.domain.model.NotificationSeverity;
@@ -19,8 +21,11 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
+import java.util.UUID;
+import com.transportlogistics.app.shared.domain.NotFoundException;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -36,6 +41,8 @@ class NotificationSecurityIntegrationTest {
     @MockBean private NotificationRuleUseCase ruleUseCase;
     @MockBean private NotificationUseCase notificationUseCase;
     @MockBean private NotificationConfigurationUseCase configurationUseCase;
+    @MockBean private NotificationRuleExecutionUseCase executionUseCase;
+    @MockBean private NotificationDeliveryDiagnosticsUseCase deliveryDiagnosticsUseCase;
 
     @Test
     void shouldDenyUnauthenticatedAccessToRules() throws Exception {
@@ -126,6 +133,68 @@ class NotificationSecurityIntegrationTest {
         when(configurationUseCase.listActiveTemplates(any(), any())).thenReturn(List.of());
         mvc.perform(get("/notification-event-catalogue")).andExpect(status().isOk());
         mvc.perform(get("/notification-templates")).andExpect(status().isOk());
+    }
+
+    @Test
+    void shouldDenyUnauthenticatedExecutionAuditAccess() throws Exception {
+        mvc.perform(get("/notification-rule-executions")).andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @WithMockUser(authorities = "RANDOM_AUTHORITY")
+    void shouldDenyExecutionAuditAccessWithoutPermission() throws Exception {
+        mvc.perform(get("/notification-rule-executions")).andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(authorities = "NOTIFICATION_RULE_VIEW")
+    void shouldAllowExecutionAuditAccessWithViewPermission() throws Exception {
+        when(executionUseCase.listExecutions(any(), any(), anyInt())).thenReturn(List.of());
+        mvc.perform(get("/notification-rule-executions")).andExpect(status().isOk());
+    }
+
+    @Test
+    void shouldDenyUnauthenticatedDeliveryDiagnostics() throws Exception {
+        mvc.perform(get("/notification-deliveries")).andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @WithMockUser(authorities = "RANDOM_AUTHORITY")
+    void shouldDenyDeliveryDiagnosticsWithoutPermission() throws Exception {
+        mvc.perform(get("/notification-deliveries")).andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(authorities = "NOTIFICATION_RULE_VIEW")
+    void shouldAllowDeliveryDiagnosticsWithViewPermission() throws Exception {
+        when(deliveryDiagnosticsUseCase.find(any(), any(), any(), any(), anyInt())).thenReturn(List.of());
+        mvc.perform(get("/notification-deliveries")).andExpect(status().isOk());
+    }
+
+    @Test
+    void shouldDenyUnauthenticatedAttemptDiagnostics() throws Exception {
+        mvc.perform(get("/notification-deliveries/{id}/attempts", UUID.randomUUID()))
+            .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @WithMockUser(authorities = "RANDOM_AUTHORITY")
+    void shouldDenyAttemptDiagnosticsWithoutPermission() throws Exception {
+        mvc.perform(get("/notification-deliveries/{id}/attempts", UUID.randomUUID()))
+            .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(authorities = "NOTIFICATION_RULE_VIEW")
+    void shouldAllowAttemptDiagnosticsAndReturn404ForUnknownDelivery() throws Exception {
+        UUID existing = UUID.randomUUID();
+        when(deliveryDiagnosticsUseCase.attempts(existing)).thenReturn(List.of());
+        mvc.perform(get("/notification-deliveries/{id}/attempts", existing)).andExpect(status().isOk());
+
+        UUID missing = UUID.randomUUID();
+        when(deliveryDiagnosticsUseCase.attempts(missing))
+            .thenThrow(new NotFoundException("NOTIFICATION_DELIVERY_NOT_FOUND", "missing"));
+        mvc.perform(get("/notification-deliveries/{id}/attempts", missing)).andExpect(status().isNotFound());
     }
 
     @Test

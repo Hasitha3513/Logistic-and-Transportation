@@ -3,8 +3,8 @@
 **Task:** MVP-GAP-008A
 **Story:** US-77 — Manage Notification Rules
 **Contract status:** FROZEN FOR MVP IMPLEMENTATION
-**US-77 implementation status:** PARTIAL
-**Latest schema:** V25; all implementation migrations must be V26 or later
+**US-77 implementation status:** COMPLETE
+**Latest schema:** V28; V25-V28 are immutable
 
 ## 1. Scope
 
@@ -14,7 +14,7 @@ MVP provides rule-driven operational notifications through **IN_APP** and **EMAI
 
 This contract does not create a generic workflow, scripting, campaign, or messaging platform.
 
-## 2. Existing Implementation
+## 2. Current Implementation (008I closure)
 
 The repository already contains:
 
@@ -26,10 +26,12 @@ The repository already contains:
 - event/rule/recipient idempotency, SENT/FAILED/READ state, failure reason, and history;
 - V25 permissions and explicit `SecurityConfig` mappings;
 - `NotificationRulesPage`, `NotificationRuleModal`, `NotificationCenter`, and hooks;
-- one production producer: `TripOperationalEventService.recordDelay` -> `TRIP_DELAY_RECORDED`;
-- 32 notification backend tests and 10 notification frontend tests.
+- exactly eight frozen operational producers through the public Trip/Fleet boundaries;
+- controlled templates/rendering, recipient validation, quiet/suppression, durable EMAIL retry, terminal escalation, SMTP production delivery, and diagnostic audit;
+- complete operator UI for channels, templates, recipients, policies, delivery health, and attempts;
+- 15 retained notification Playwright cases passing in all three supported browsers (45/45 executions).
 
-Known implementation gaps remain: event title/message are copied instead of rendered, EMAIL only logs, the modal has no channel control, only one production event is connected, policy/retry/escalation behavior is absent, and no notification-specific Playwright test exists.
+Slices 008A through 008I are complete. Final closure verification passed 647 backend tests, all 15 architecture checks, Spring/JPA/Security startup, Flyway V1-V28, 106 frontend tests, lint/build, 45/45 notification browser executions, and the complete 156/156 Playwright regression.
 
 ## 3. MVP-Required Capabilities
 
@@ -327,19 +329,19 @@ Provider behavior is controlled through an explicit E2E test adapter, not a real
 |---|---|---|---|---|---|---|---|---|---|
 | AC-77-01,02,05 | catalogue + existing rule | rule service | rule/V26 | catalogue + existing rule APIs | rules/modal | rule/controller | rules page/modal | NOT-001..004 | 008B/G/H |
 | AC-77-03 | existing permissions | security chain | V25 | all protected endpoints | permission gates | security integration | permission UI | NOT-005 | 008B-G/H |
-| AC-77-04,16 | existing event/rule + stable key | rule engine | execution audit PLANNED | diagnostics PLANNED | state display PLANNED | engine/idempotency | indirect | NOT-006 | 008B/E/H |
-| AC-77-06,07 | template PLANNED | renderer PLANNED | V26 PLANNED | template API PLANNED | selection/preview PLANNED | renderer/integration | modal | NOT-002/011 | 008B/G/H |
-| AC-77-08..11 | recipient policy PLANNED | recipient resolver PLANNED | execution audit PLANNED | rule validation PLANNED | conditional recipient fields | resolver/controller | modal | NOT-002/011 | 008B/G/H |
-| AC-77-12,13 | existing Notification | existing notification service | existing notification table | existing notifications API | existing center | existing service/integration | existing center | NOT-006..010 | 008H/I |
-| AC-77-14,15 | quiet policy PLANNED | policy evaluator/worker PLANNED | V27/V28 PLANNED | rule policy PLANNED | quiet fields PLANNED | clock/time-zone tests | modal/status | NOT-013 | 008C/D/G/H |
-| AC-77-17 | suppression policy PLANNED | policy evaluator PLANNED | execution audit/index PLANNED | diagnostics PLANNED | policy fields PLANNED | concurrency/window tests | modal | NOT-014 | 008C/G/H |
-| AC-77-18,19 | sender result PLANNED | delivery orchestration PLANNED | attempts PLANNED | diagnostics PLANNED | delivery status PLANNED | adapter contract/integration | status UI | NOT-012 | 008F/G/H |
-| AC-77-20,21 | attempt policy PLANNED | retry worker PLANNED | V28 PLANNED | attempts PLANNED | retry/failure state PLANNED | scheduling/restart/concurrency | status UI | NOT-015 | 008D/F/G/H |
-| AC-77-22 | escalation policy PLANNED | escalation service PLANNED | V27/V28 PLANNED | rule/diagnostics PLANNED | fallback fields PLANNED | uniqueness/resolution | modal | NOT-012 | 008D/G/H |
-| AC-77-23 | public event exists; producers PLANNED | owning services PLANNED | source aggregates existing | existing operational APIs | existing operation UI | producer/module tests | existing feature tests | NOT-006 | 008E/H |
-| AC-77-24 | execution/attempt audit PLANNED | diagnostics query PLANNED | V27/V28 PLANNED | delivery diagnostics PLANNED | diagnostics PLANNED | persistence/security | diagnostics | NOT-012..015 | 008D/F/G/H |
-| AC-77-25 | n/a | existing/new APIs | n/a | field errors | modal/page PLANNED | controller | component | NOT-002/011 | 008G/H |
-| AC-77-26 | all | all | V26+ | all | all | full verify | lint/unit/build | all NOT cases | 008I |
+| AC-77-04,16 | eight stable public operational events IMPLEMENTED | rule engine IMPLEMENTED | V27 execution audit IMPLEMENTED | execution diagnostics IMPLEMENTED | state display IMPLEMENTED | producer stability + engine idempotency PASS | indirect | NOT-006 PASS | 008B/C/E/G/H/I COMPLETE |
+| AC-77-06,07 | template IMPLEMENTED | renderer IMPLEMENTED | V26 IMPLEMENTED | template API IMPLEMENTED | selection/preview IMPLEMENTED | renderer/integration PASS | modal PASS | NOT-002/011 PASS | 008B/G/H/I COMPLETE |
+| AC-77-08..11 | recipient policy IMPLEMENTED | recipient resolver IMPLEMENTED | execution audit IMPLEMENTED | rule validation IMPLEMENTED | conditional recipient fields IMPLEMENTED | resolver/controller PASS | modal PASS | NOT-002/011 PASS | 008B/G/H/I COMPLETE |
+| AC-77-12,13 | existing Notification | existing notification service | existing notification table | existing notifications API | existing center | service/integration PASS | center PASS | NOT-006..010 PASS | 008H/I COMPLETE |
+| AC-77-14,15 | quiet policy IMPLEMENTED | deterministic evaluator IMPLEMENTED | V27 policy/quiet-day/next-delivery IMPLEMENTED | additive rule policy IMPLEMENTED | quiet fields IMPLEMENTED | clock/time-zone/DST PASS | modal/status PASS | NOT-013 PASS | 008C/D/G/H/I COMPLETE |
+| AC-77-17 | suppression policy IMPLEMENTED | evaluator + policy-row locking IMPLEMENTED | V27 execution audit/index IMPLEMENTED | audit query IMPLEMENTED | policy fields IMPLEMENTED | concurrency/window/critical PASS | modal PASS | NOT-014 PASS | 008C/G/H/I COMPLETE |
+| AC-77-18,19 | provider-neutral sender result IMPLEMENTED | configured real SMTP transport IMPLEMENTED | V28 provider evidence IMPLEMENTED | sanitized typed failures IMPLEMENTED | delivery status IMPLEMENTED | real local-SMTP/worker integration PASS | status UI PASS | NOT-012 PASS | 008F/G/H/I COMPLETE |
+| AC-77-20,21 | attempt policy IMPLEMENTED | durable retry worker + real SMTP mapping IMPLEMENTED | V28 attempts IMPLEMENTED | delivery/attempt diagnostics IMPLEMENTED | retry/failure state IMPLEMENTED | timing/restart/concurrency/provider PASS | status UI PASS | NOT-015 PASS | 008D/F/G/H/I COMPLETE |
+| AC-77-22 | escalation policy IMPLEMENTED | durable one-level escalation IMPLEMENTED | V27 policy/V28 linkage IMPLEMENTED | rule/diagnostics IMPLEMENTED | fallback fields IMPLEMENTED | uniqueness/resolution PASS | modal PASS | NOT-012 PASS | 008D/G/H/I COMPLETE |
+| AC-77-23 | public contract + exactly eight producers IMPLEMENTED | Trip mutation producers + Fleet mutation/scanner producers IMPLEMENTED | no new schema after V28 | operational APIs unchanged | existing operation UI | producer/scanner/failure-isolation/module PASS | existing feature tests | NOT-006 PASS | 008E/H/I COMPLETE |
+| AC-77-24 | rule execution + attempts + producer/provider facts IMPLEMENTED | rule/delivery/attempt diagnostics IMPLEMENTED | V27 execution/V28 attempts IMPLEMENTED | authorized audit APIs IMPLEMENTED | diagnostics IMPLEMENTED | persistence/security/producer/SMTP PASS | diagnostics PASS | NOT-012..015 PASS | 008C/D/E/F/G/H/I COMPLETE |
+| AC-77-25 | n/a | existing/new APIs | n/a | field errors IMPLEMENTED | modal/page IMPLEMENTED | controller PASS | component PASS | NOT-002/011 PASS | 008G/H/I COMPLETE |
+| AC-77-26 | all | all | V26-V28 | all | all | clean test/verify PASS | lint 0 warnings; 106/106; build PASS | 45/45 notification; 156/156 full | 008I COMPLETE |
 
 ## 21. Implementation Slices
 
@@ -357,66 +359,86 @@ Provider behavior is controlled through an explicit E2E test adapter, not a real
 
 ### MVP-GAP-008C — Quiet hours and suppression
 
+- **Status:** COMPLETE (2026-08-21).
 - **Objective:** deterministic policy evaluation and auditable repeated-event suppression.
 - **Likely files:** notification domain/application/persistence/web config.
 - **Database/API:** V27 policy, quiet-day, rule-execution tables; additive rule policy fields.
 - **Tests:** time zones, overnight/DST, severity bypass, window boundary, concurrency and audit.
 - **Dependencies:** 008B.
 - **Done:** AC-77-14,15,17 pass.
+- **Implementation evidence:** `NotificationRulePolicy`, `NotificationQuietHoursEvaluator`, `NotificationSuppressionKey`, `NotificationSuppressionEvaluator`, and recipient-granular `NotificationRuleExecution`; `NotificationRuleEngine` policy-row locking, stable-event idempotency, quiet EMAIL queuing, critical bypass, and audit outcomes; additive rule policy fields and protected `GET /notification-rule-executions`; V27 policy, quiet-day, execution, and `notification.next_delivery_at` persistence. V28 will reuse the sequencing-adjusted next-delivery column.
+- **Verification evidence:** backend clean test and verify each ran 579 tests with 0 failures/errors and 21 skipped; architecture 15/15 PASS; Spring context PASS; H2 Flyway V1-V27 PASS; frontend lint, 94/94 unit tests, and build PASS. The full Playwright run was 110/111 with a transient Firefox logout redirect timeout that passed 1/1 in isolation; no reproducible 008C regression was found.
 
 ### MVP-GAP-008D — Escalation and durable retry
 
+- **Status:** COMPLETE (2026-08-22).
 - **Objective:** durable attempt state, automatic recovery, bounded retry, one-level terminal-failure escalation.
 - **Likely files:** notification domain/application scheduler/ports/persistence/config/web diagnostics.
 - **Database/API:** V28 attempts and notification scheduling/link columns; diagnostics GET.
 - **Tests:** error classification, timing, restart, concurrent claims, terminal state, escalation uniqueness.
 - **Dependencies:** 008B/C.
 - **Done:** AC-77-20..22 and attempt-audit portion of AC-77-24 pass with a deterministic fake sender.
+- **Implementation evidence:** `NotificationDeliveryAttempt`, `NotificationEmailRetryPolicy`, typed `EmailDeliveryErrorCategory`, `EmailNotificationSenderPort`, short-transaction `NotificationEmailDeliveryClaimService`, scheduled `NotificationEmailDeliveryWorker`, and `NotificationEscalationService`; stable `<notificationId>:<attemptNumber>` idempotency, stale same-attempt recovery, pessimistic notification claims, exactly three attempts with +1/+2 minute backoff, terminal FAILED state, and linked level-1 IN_APP fallback. `V28__notification_email_delivery_attempts.sql` adds attempt audit and parent/level linkage while reusing V27 `next_delivery_at`. Protected delivery and attempt diagnostics provide bounded sanitized evidence.
+- **Verification evidence:** backend clean test and verify each ran 610 tests with 0 failures/errors and 21 skipped; architecture 15/15 PASS; Spring context PASS; H2 Flyway V1-V28 PASS; frontend lint, 94/94 unit tests, and build PASS; Playwright 111/111 PASS across Chromium, Firefox, and WebKit.
 
 ### MVP-GAP-008E — Required operational event producers
 
+- **Status:** COMPLETE (2026-08-22).
 - **Objective:** publish all eight MVP_REQUIRED events with stable IDs and catalogue metadata.
 - **Likely files:** Trip and Fleet application services/public event adapters; scheduled scan configuration; notification catalogue tests. Fuel is not changed for MVP.
 - **Database/API/frontend:** no notification schema beyond prior slices; existing source APIs/UI remain.
 - **Tests:** one producer test per trigger, scheduled scan idempotency, rollback isolation, module boundaries.
 - **Dependencies:** 008B/C; scheduled events need suppression/execution audit.
 - **Done:** AC-77-23 passes for every required catalogue row.
+- **Implementation evidence:** `TripOperationalEventService` publishes stable accepted delay and incident events; `DriverExceptionService` and `DriverDrugTestService` publish blocking mutation facts; `MaintenanceDueNotificationScanner` and `ComplianceNotificationScanner` publish restart-safe time milestones through `FleetOperationalNotificationPublisher`. `FleetOperationalNotificationEvents` derives deterministic name-based UUIDs from immutable source and milestone inputs, emits frozen metadata/severity, and preserves `DUE_24H`, `D30`, `EXPIRED`, and blocking-transition identity. Focused repository ports keep JPA and Notification internals outside application scanners. No V29, API, or frontend change was introduced.
+- **Verification evidence:** backend clean test and verify each passed with 625 tests (604 passed, 21 skipped); architecture 15/15 PASS; Spring context PASS; H2 Flyway V1-V28 PASS; frontend lint, 94/94 unit tests, and build PASS; Playwright 111/111 PASS across Chromium, Firefox, and WebKit.
 
 ### MVP-GAP-008F — Production EMAIL delivery
 
+- **Status:** COMPLETE (2026-08-22).
 - **Objective:** provider-neutral sender port plus one real, configured infrastructure adapter with fail-fast production behavior.
 - **Likely files:** notification output ports, delivery orchestration/adapter/config, application profiles.
 - **Database/API/frontend:** uses V28 attempts; no vendor-specific public API.
 - **Tests:** adapter contract, timeout/error mapping, disabled/misconfigured behavior, secret redaction, integration with a local test server.
 - **Dependencies:** 008D.
 - **Done:** AC-77-18,19 pass and no logging path can report SENT.
+- **Implementation evidence:** `SmtpEmailNotificationSenderAdapter` provides one UTF-8 plain-text SMTP transport behind the preserved `EmailNotificationSenderPort`; `NotificationEmailConfiguration` selects exactly one disabled, test, or production sender; `NotificationEmailProperties` validates mode/profile/provider/from/host/port/TLS/credentials/bounded timeouts and redacts secrets. SMTP acceptance alone permits `SENT` and its Jakarta Mail message ID is persisted through V28. Typed SMTP/connection/timeout/authentication/recipient/TLS failures feed the existing 008D retry and escalation lifecycle. SMTP's at-least-once uncertain-completion risk is documented in `MVP-GAP-008F-IMPLEMENTATION.md`.
+- **Verification evidence:** backend clean test and verify each passed with 644 tests (623 passed, 21 skipped); architecture 15/15 PASS; Spring context PASS; H2 Flyway V1-V28 PASS; frontend lint, 94/94 unit tests, and build PASS; Playwright 111/111 PASS across Chromium, Firefox, and WebKit.
 
 ### MVP-GAP-008G — Frontend completion
 
+- **Status:** COMPLETE.
 - **Objective:** configure every applicable rule field and display delivery health using existing Ant Design UX.
 - **Likely files:** notification page/modal/center, hooks/types, route-adjacent component tests.
 - **Database/API:** none beyond B-F.
 - **Tests:** conditional fields, catalogue/templates, validation mapping, permissions, delivery state.
 - **Dependencies:** 008B-F APIs stable.
 - **Done:** AC-77-25 and frontend portions of all traceability rows pass; lint/test/build green.
+- **Implementation evidence:** the existing rule page/modal and query layer now consume the controlled catalogue and filtered templates, expose IN_APP/EMAIL, USER/ROLE/EMAIL_ADDRESS compatibility, severity, read-only previews, quiet days/hours, suppression, and mandatory EMAIL USER/ROLE fallback while excluding hidden stale fields. `NotificationDeliveryDiagnostics` presents bounded filtered delivery health and sanitized attempt history without manual retry. The Notification Center remains recipient-scoped and permission-gated.
+- **Verification evidence:** frontend lint/build and 106/106 unit/component tests PASS; backend clean test and verify each PASS with 644 tests (623 passed, 21 skipped); architecture 15/15, Spring context, JPA, and Flyway V1-V28 PASS; existing Playwright regression 111/111 PASS across Chromium, Firefox, and WebKit. Visual inspection covered the rules page, full modal, expanded EMAIL policies, diagnostics, and center. See `MVP-GAP-008G-IMPLEMENTATION.md`.
 
 ### MVP-GAP-008H — Notification-specific Playwright
 
+- **Status:** COMPLETE (2026-08-22).
 - **Objective:** implement E2E-NOT-001 through E2E-NOT-015 with deterministic test delivery/time controls.
 - **Likely files:** `frontend/e2e/tests/notifications/**` and narrowly scoped harness fixtures/config.
 - **Database/API/frontend:** no production expansion.
 - **Tests:** all retained notification cases in Chromium, Firefox, and WebKit.
 - **Dependencies:** 008B-G.
 - **Done:** all notification cases pass through the repository-standard self-starting command.
+- **Implementation evidence:** four notification spec files plus page objects and API fixtures cover rule CRUD/toggle/RBAC, a real Trip operational event, recipient-scoped center/read state, EMAIL configuration, terminal failure, quiet hours, suppression audit, and transient retry. An `e2e`-only adjustable clock, deterministic sender, worker trigger, and security-protected test controller provide bounded deterministic controls with no production-profile exposure. The modal initialization race discovered by WebKit was fixed by initializing once per open.
+- **Verification evidence:** notification-only Playwright passed 45/45: Chromium 15/15, Firefox 15/15, WebKit 15/15. Frontend lint, 106/106 unit/component tests, and build pass; focused module/layer/harness verification passes 12/12. See `MVP-GAP-008H-IMPLEMENTATION.md`.
 
 ### MVP-GAP-008I — Regression and US-77 closure
 
+- **Status:** COMPLETE (2026-08-22).
 - **Objective:** full story traceability and release regression verification.
 - **Likely files:** MVP/QA documentation only unless an in-scope defect is found and separately approved.
 - **Database/API/frontend:** none planned.
 - **Tests:** Maven clean verify, 15 architecture tests, startup/Flyway, frontend lint/unit/build, full three-browser Playwright.
 - **Dependencies:** 008B-H.
 - **Done:** AC-77-26 passes, no unresolved required criterion remains, and only then US-77 becomes COMPLETE.
+- **Verification evidence:** backend clean test and verify each pass 647 tests (626 passed, 21 skipped, 0 failures/errors); architecture 15/15; Spring context, Security, Notification, Trip, Fleet, JPA (44 repositories), and H2 Flyway V1-V28 pass; frontend lint, 106/106 tests, and build pass; notification Playwright passes 45/45 and the complete three-browser regression passes 156/156. Default E2E concurrency was bounded from four to three after reproducible full-suite contention; retries, timeouts, sleeps, and assertions remain unchanged.
 
 ## 22. Definition of Done
 
@@ -432,4 +454,4 @@ US-77 is complete only when:
 8. full backend, architecture, startup/Flyway, frontend, and three-browser gates pass;
 9. human reviewers approve any provider selection, schema, public boundary expansion, and final diff.
 
-MVP-GAP-008A completes only the contract freeze. It does not change US-77 from PARTIAL.
+MVP-GAP-008A completed only the contract freeze; MVP-GAP-008I supplied the final evidence that changes US-77 to COMPLETE.

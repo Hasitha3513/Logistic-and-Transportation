@@ -17,6 +17,9 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.UUID;
+import java.time.DayOfWeek;
+import java.time.LocalTime;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -92,6 +95,8 @@ class NotificationRuleServiceTest {
             RecipientType.EMAIL_ADDRESS,
             "new@example.com",
             "TRIP_INCIDENT",
+            null, null, null, null, null,
+            true, 0, RecipientType.USER, "user1",
             false,
             NotificationSeverity.CRITICAL
         );
@@ -166,6 +171,41 @@ class NotificationRuleServiceTest {
             .isInstanceOfSatisfying(com.transportlogistics.app.shared.domain.BusinessRuleException.class,
                 error -> assertThat(error.code()).isEqualTo("NOTIFICATION_TEMPLATE_INCOMPATIBLE"));
         verify(ruleRepository, never()).save(any());
+    }
+
+    @Test
+    void createRule_appliesCatalogueSuppressionDefaultWhenPolicyIsOmitted() {
+        var command = new NotificationRuleUseCase.CreateRuleCommand(
+            "Delay", null, "TRIP_DELAY_RECORDED", NotificationChannel.IN_APP,
+            RecipientType.ROLE, "FLEET_MANAGER", "TRIP_DELAY", true, NotificationSeverity.WARNING);
+        when(ruleRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+        assertThat(ruleService.createRule(command).policy().suppressionWindowMinutes()).isEqualTo(15);
+    }
+
+    @Test
+    void createRule_rejectsQuietHoursForInAppChannel() {
+        var command = new NotificationRuleUseCase.CreateRuleCommand(
+            "Delay", null, "TRIP_DELAY_RECORDED", NotificationChannel.IN_APP,
+            RecipientType.ROLE, "FLEET_MANAGER", "TRIP_DELAY", true,
+            LocalTime.of(22, 0), LocalTime.of(6, 0), Set.of(DayOfWeek.MONDAY), 15,
+            true, NotificationSeverity.WARNING);
+
+        assertThatThrownBy(() -> ruleService.createRule(command))
+            .isInstanceOfSatisfying(com.transportlogistics.app.shared.domain.BusinessRuleException.class,
+                error -> assertThat(error.code()).isEqualTo("NOTIFICATION_POLICY_INVALID"));
+    }
+
+    @Test
+    void createRule_rejectsCriticalCapableEmailWithoutFallback() {
+        var command = new NotificationRuleUseCase.CreateRuleCommand(
+            "Email", null, "TRIP_DELAY_RECORDED", NotificationChannel.EMAIL,
+            RecipientType.EMAIL_ADDRESS, "ops@example.test", "TRIP_DELAY", true,
+            NotificationSeverity.INFO);
+
+        assertThatThrownBy(() -> ruleService.createRule(command))
+            .isInstanceOfSatisfying(com.transportlogistics.app.shared.domain.BusinessRuleException.class,
+                error -> assertThat(error.code()).isEqualTo("NOTIFICATION_POLICY_INVALID"));
     }
 
     private NotificationTemplate template(String code, String eventType, NotificationChannel channel) {

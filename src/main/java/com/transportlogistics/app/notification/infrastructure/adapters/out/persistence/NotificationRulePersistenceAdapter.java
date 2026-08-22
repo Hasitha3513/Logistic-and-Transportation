@@ -11,31 +11,39 @@ import java.util.UUID;
 @Component
 public class NotificationRulePersistenceAdapter implements NotificationRuleRepository {
     private final NotificationRuleJpaRepository jpaRepository;
+    private final NotificationRulePolicyJpaRepository policyRepository;
 
-    public NotificationRulePersistenceAdapter(NotificationRuleJpaRepository jpaRepository) {
+    public NotificationRulePersistenceAdapter(NotificationRuleJpaRepository jpaRepository,
+                                              NotificationRulePolicyJpaRepository policyRepository) {
         this.jpaRepository = jpaRepository;
+        this.policyRepository = policyRepository;
     }
 
     @Override
     public NotificationRule save(NotificationRule rule) {
         NotificationRuleEntity entity = NotificationRuleEntity.fromDomain(rule);
-        return jpaRepository.save(entity).toDomain();
+        NotificationRuleEntity saved = jpaRepository.save(entity);
+        NotificationRulePolicyEntity policy = policyRepository.findById(rule.id())
+            .orElseGet(() -> NotificationRulePolicyEntity.fromDomain(rule.id(), rule.policy()));
+        policy.apply(rule.policy());
+        policyRepository.save(policy);
+        return saved.toDomain(policy.toDomain());
     }
 
     @Override
     public Optional<NotificationRule> findById(UUID id) {
-        return jpaRepository.findById(id).map(NotificationRuleEntity::toDomain);
+        return jpaRepository.findById(id).map(this::toDomain);
     }
 
     @Override
     public List<NotificationRule> findAll() {
-        return jpaRepository.findAll().stream().map(NotificationRuleEntity::toDomain).toList();
+        return jpaRepository.findAll().stream().map(this::toDomain).toList();
     }
 
     @Override
     public List<NotificationRule> findByEventTypeAndEnabledTrue(String eventType) {
         return jpaRepository.findByEventTypeIgnoreCaseAndEnabledTrue(eventType).stream()
-            .map(NotificationRuleEntity::toDomain)
+            .map(this::toDomain)
             .toList();
     }
 
@@ -47,5 +55,12 @@ public class NotificationRulePersistenceAdapter implements NotificationRuleRepos
     @Override
     public boolean existsById(UUID id) {
         return jpaRepository.existsById(id);
+    }
+
+    private NotificationRule toDomain(NotificationRuleEntity entity) {
+        var policy = policyRepository.findById(entity.getId())
+            .map(NotificationRulePolicyEntity::toDomain)
+            .orElseGet(() -> com.transportlogistics.app.notification.domain.model.NotificationRulePolicy.defaults(entity.getEventType()));
+        return entity.toDomain(policy);
     }
 }

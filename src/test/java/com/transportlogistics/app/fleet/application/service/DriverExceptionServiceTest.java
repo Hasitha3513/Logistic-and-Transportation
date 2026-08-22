@@ -4,6 +4,7 @@ import com.transportlogistics.app.fleet.DriverAssignmentAvailability;
 import com.transportlogistics.app.fleet.application.ports.in.DriverExceptionUseCase;
 import com.transportlogistics.app.fleet.application.ports.out.DriverExceptionRepository;
 import com.transportlogistics.app.fleet.application.ports.out.DriverRepository;
+import com.transportlogistics.app.fleet.application.ports.out.FleetOperationalNotificationPublisher;
 import com.transportlogistics.app.fleet.domain.model.Driver;
 import com.transportlogistics.app.fleet.domain.model.DriverException;
 import com.transportlogistics.app.fleet.domain.model.DriverExceptionStatus;
@@ -32,6 +33,7 @@ class DriverExceptionServiceTest {
     private DriverRepository drivers;
     private DriverAssignmentAvailability assignments;
     private DriverExceptionService service;
+    private FleetOperationalNotificationPublisher notifications;
 
     private final UUID driverId = UUID.randomUUID();
     private final Driver driver = new Driver(
@@ -43,7 +45,8 @@ class DriverExceptionServiceTest {
         driverExceptions = mock(DriverExceptionRepository.class);
         drivers = mock(DriverRepository.class);
         assignments = mock(DriverAssignmentAvailability.class);
-        service = new DriverExceptionService(driverExceptions, drivers, assignments);
+        notifications = mock(FleetOperationalNotificationPublisher.class);
+        service = new DriverExceptionService(driverExceptions, drivers, assignments, notifications);
 
         when(drivers.findById(driverId)).thenReturn(Optional.of(driver));
         when(drivers.findByIdForUpdate(driverId)).thenReturn(Optional.of(driver));
@@ -67,6 +70,15 @@ class DriverExceptionServiceTest {
         assertThat(created.status()).isEqualTo(DriverExceptionStatus.SCHEDULED);
         assertThat(created.createdBy()).isEqualTo("fleet.manager");
         verify(driverExceptions, times(1)).save(any(DriverException.class));
+        var captor = org.mockito.ArgumentCaptor.forClass(
+                com.transportlogistics.app.notification.OperationalNotificationEvent.class);
+        verify(notifications).publish(captor.capture());
+        assertThat(captor.getValue().eventType()).isEqualTo("DRIVER_EXCEPTION_RECORDED");
+        assertThat(captor.getValue().severity())
+                .isEqualTo(com.transportlogistics.app.notification.OperationalNotificationEvent.Severity.WARNING);
+        assertThat(captor.getValue().metadata()).containsEntry("driverName", "John Doe")
+                .containsEntry("exceptionType", "LEAVE")
+                .containsEntry("reason", "Annual leave");
     }
 
     @Test
@@ -183,6 +195,12 @@ class DriverExceptionServiceTest {
         assertThat(updated.status()).isEqualTo(DriverExceptionStatus.ACTIVE);
         assertThat(updated.reason()).isEqualTo("New reason");
         assertThat(updated.updatedBy()).isEqualTo("editor");
+        var captor = org.mockito.ArgumentCaptor.forClass(
+                com.transportlogistics.app.notification.OperationalNotificationEvent.class);
+        verify(notifications).publish(captor.capture());
+        assertThat(captor.getValue().severity())
+                .isEqualTo(com.transportlogistics.app.notification.OperationalNotificationEvent.Severity.CRITICAL);
+        assertThat(captor.getValue().metadata()).containsEntry("transition", "BLOCKING_ACTIVE");
     }
 
     @Test
@@ -253,6 +271,7 @@ class DriverExceptionServiceTest {
         assertThat(cancelled.status()).isEqualTo(DriverExceptionStatus.CANCELLED);
         assertThat(cancelled.remarks()).contains("Cancelled: Trip urgent");
         assertThat(cancelled.updatedBy()).isEqualTo("canceller");
+        verifyNoInteractions(notifications);
     }
 
     @Test
@@ -274,6 +293,21 @@ class DriverExceptionServiceTest {
         assertThat(completed.status()).isEqualTo(DriverExceptionStatus.COMPLETED);
         assertThat(completed.remarks()).contains("Completed: Driver returned early");
         assertThat(completed.updatedBy()).isEqualTo("completer");
+        verifyNoInteractions(notifications);
+    }
+
+    @Test
+    void notificationFailureDoesNotRollBackBlockingExceptionCreation() {
+        var start = OffsetDateTime.now(ZoneOffset.UTC).plusDays(1);
+        var end = start.plusHours(8);
+        when(driverExceptions.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        doThrow(new IllegalStateException("listener failed")).when(notifications).publish(any());
+
+        var created = service.create(driverId, new DriverExceptionUseCase.CreateCommand(
+                DriverExceptionType.MEDICAL_EMERGENCY, start, end, "Emergency", null), "manager");
+
+        assertThat(created.status()).isEqualTo(DriverExceptionStatus.SCHEDULED);
+        verify(driverExceptions).save(any());
     }
 
     @Test

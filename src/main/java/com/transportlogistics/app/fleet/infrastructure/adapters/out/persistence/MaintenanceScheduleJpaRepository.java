@@ -13,6 +13,18 @@ interface MaintenanceScheduleJpaRepository extends JpaRepository<MaintenanceSche
     List<MaintenanceScheduleEntity> findByVehicleIdOrderByScheduledStartAsc(UUID vehicleId);
 
     @Query("""
+            select m from MaintenanceScheduleEntity m
+            where m.status = 'SCHEDULED'
+              and m.scheduledStart > :from
+              and m.scheduledStart <= :to
+            order by m.scheduledStart
+            """)
+    List<MaintenanceScheduleEntity> findScheduledStartingBetween(
+            @Param("from") OffsetDateTime from,
+            @Param("to") OffsetDateTime to
+    );
+
+    @Query("""
             select count(m) > 0 from MaintenanceScheduleEntity m
             where m.vehicleId = :vehicleId
               and m.status in :statuses

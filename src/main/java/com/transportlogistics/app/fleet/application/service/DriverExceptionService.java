@@ -4,11 +4,14 @@ import com.transportlogistics.app.fleet.DriverAssignmentAvailability;
 import com.transportlogistics.app.fleet.application.ports.in.DriverExceptionUseCase;
 import com.transportlogistics.app.fleet.application.ports.out.DriverExceptionRepository;
 import com.transportlogistics.app.fleet.application.ports.out.DriverRepository;
+import com.transportlogistics.app.fleet.application.ports.out.FleetOperationalNotificationPublisher;
 import com.transportlogistics.app.fleet.domain.model.DriverException;
 import com.transportlogistics.app.fleet.domain.model.DriverExceptionStatus;
 import com.transportlogistics.app.shared.domain.BusinessRuleException;
 import com.transportlogistics.app.shared.domain.NotFoundException;
 import org.springframework.transaction.annotation.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -16,6 +19,7 @@ import java.util.UUID;
 
 @Transactional
 public class DriverExceptionService implements DriverExceptionUseCase {
+    private static final Logger log = LoggerFactory.getLogger(DriverExceptionService.class);
 
     private static final List<DriverExceptionStatus> BLOCKING_STATUSES = List.of(
             DriverExceptionStatus.SCHEDULED,
@@ -25,13 +29,22 @@ public class DriverExceptionService implements DriverExceptionUseCase {
     private final DriverExceptionRepository driverExceptions;
     private final DriverRepository drivers;
     private final DriverAssignmentAvailability assignments;
+    private final FleetOperationalNotificationPublisher notifications;
+
+    public DriverExceptionService(DriverExceptionRepository driverExceptions,
+                                  DriverRepository drivers,
+                                  DriverAssignmentAvailability assignments,
+                                  FleetOperationalNotificationPublisher notifications) {
+        this.driverExceptions = driverExceptions;
+        this.drivers = drivers;
+        this.assignments = assignments;
+        this.notifications = notifications;
+    }
 
     public DriverExceptionService(DriverExceptionRepository driverExceptions,
                                   DriverRepository drivers,
                                   DriverAssignmentAvailability assignments) {
-        this.driverExceptions = driverExceptions;
-        this.drivers = drivers;
-        this.assignments = assignments;
+        this(driverExceptions, drivers, assignments, event -> {});
     }
 
     public DriverExceptionService(DriverExceptionRepository driverExceptions,
@@ -41,7 +54,7 @@ public class DriverExceptionService implements DriverExceptionUseCase {
 
     @Override
     public DriverException create(UUID driverId, CreateCommand command, String actor) {
-        drivers.findByIdForUpdate(driverId)
+        var driver = drivers.findByIdForUpdate(driverId)
                 .orElseThrow(() -> new NotFoundException("Driver not found: " + driverId));
 
         if (command.exceptionType() == null) {
@@ -81,7 +94,10 @@ public class DriverExceptionService implements DriverExceptionUseCase {
                 actor,
                 actor
         );
-        return driverExceptions.save(exception);
+        var saved = driverExceptions.save(exception);
+        publishSafely(FleetOperationalNotificationEvents.driverException(saved, driver,
+                "BLOCKING_" + saved.status().name(), now));
+        return saved;
     }
 
     @Override
@@ -105,7 +121,7 @@ public class DriverExceptionService implements DriverExceptionUseCase {
 
     @Override
     public DriverException update(UUID driverId, UUID exceptionId, UpdateCommand command, String actor) {
-        drivers.findByIdForUpdate(driverId)
+        var driver = drivers.findByIdForUpdate(driverId)
                 .orElseThrow(() -> new NotFoundException("Driver not found: " + driverId));
 
         var existing = get(driverId, exceptionId);
@@ -156,7 +172,12 @@ public class DriverExceptionService implements DriverExceptionUseCase {
                 existing.createdBy(),
                 actor
         );
-        return driverExceptions.save(updated);
+        var saved = driverExceptions.save(updated);
+        if (saved.status() == DriverExceptionStatus.ACTIVE && existing.status() != DriverExceptionStatus.ACTIVE) {
+            publishSafely(FleetOperationalNotificationEvents.driverException(saved, driver,
+                    "BLOCKING_ACTIVE", saved.updatedAt()));
+        }
+        return saved;
     }
 
     @Override
@@ -250,6 +271,14 @@ public class DriverExceptionService implements DriverExceptionUseCase {
         if (!valid) {
             throw new BusinessRuleException("INVALID_TRANSITION",
                     "Cannot transition driver exception from " + current + " to " + target);
+        }
+    }
+
+    private void publishSafely(com.transportlogistics.app.notification.OperationalNotificationEvent event) {
+        try {
+            notifications.publish(event);
+        } catch (RuntimeException exception) {
+            log.error("Driver exception notification publication failed for event {}", event.eventId(), exception);
         }
     }
 }

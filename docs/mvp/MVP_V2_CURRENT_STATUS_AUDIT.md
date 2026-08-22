@@ -1,5 +1,17 @@
 # MVP v2 Current Implementation Audit
 
+## MVP-E2E-HARNESS-001 — Engineering Health Update (2026-08-21)
+
+- Initial `npm run test:e2e`: 108 failed, 0 passed, 0 skipped; the frontend was not running and the first navigation failed with `ERR_CONNECTION_REFUSED`.
+- Final `npm run test:e2e`: **111/111 passed** across Chromium, Firefox, and WebKit with Playwright-managed Spring Boot H2 and Vite services.
+- Chromium: 37/37 passed. Firefox and WebKit smoke: 3/3 each passed. Real backend login smoke passed with per-run generated credentials and JWT secret.
+- Backend regression: 524 run, 503 passed, 0 failures, 0 errors, 21 skipped. Architecture/Modulith: 15/15 passed.
+- Frontend: lint passed, 94/94 tests passed, and production build passed.
+- No dependency, migration, production behavior, static JWT, or committed credential was added.
+- Story status remains **37 COMPLETE, 1 PARTIAL, 1 NOT IMPLEMENTED (94.87%)**. US-77 notification E2E coverage remains missing.
+- Release status: **NOT READY** because US-77 is still partial and US-71 is not implemented; all current engineering gates are green.
+- Recommended next task: **MVP-GAP-008**. Do not implement it in this task.
+
 **Audit Task:** MVP-CURRENT-STATUS-AUDIT-010  
 **Audit Date:** August 19, 2026  
 **Auditor:** Senior Solution Architect, Technical Lead, QA Architect, and Release Architect  
@@ -991,7 +1003,6 @@ The frontend lint release gate has been restored without changing application be
 - MVP story status: unchanged at 37 COMPLETE, 1 PARTIAL, and 1 NOT IMPLEMENTED (94.87%).
 - Release status: overall NOT READY because the Playwright harness still does not start its required services and functional E2E assertions remain unverified.
 - Recommended next task: `MVP-E2E-HARNESS-001`. Do not begin US-71 or extend US-77 before restoring that gate.
-
 
 
 

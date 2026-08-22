@@ -21,6 +21,22 @@ security:
   jwt:
     secret: ${JWT_SECRET}
 app:
+  notification:
+    email:
+      enabled: ${NOTIFICATION_EMAIL_ENABLED:false}
+      mode: ${NOTIFICATION_EMAIL_MODE:production}
+      provider: ${NOTIFICATION_EMAIL_PROVIDER:smtp}
+      from: ${NOTIFICATION_EMAIL_FROM:}
+      reply-to: ${NOTIFICATION_EMAIL_REPLY_TO:}
+      connect-timeout: ${NOTIFICATION_EMAIL_CONNECT_TIMEOUT:PT5S}
+      read-timeout: ${NOTIFICATION_EMAIL_READ_TIMEOUT:PT30S}
+      smtp:
+        host: ${NOTIFICATION_EMAIL_SMTP_HOST:}
+        port: ${NOTIFICATION_EMAIL_SMTP_PORT:587}
+        tls-mode: ${NOTIFICATION_EMAIL_SMTP_TLS_MODE:starttls}
+        authentication-required: ${NOTIFICATION_EMAIL_SMTP_AUTH_REQUIRED:true}
+        username: ${NOTIFICATION_EMAIL_SMTP_USERNAME:}
+        password: ${NOTIFICATION_EMAIL_SMTP_PASSWORD:}
   dev:
     identity-bootstrap:
       enabled: ${APP_DEV_IDENTITY_BOOTSTRAP_ENABLED:${DEV_IDENTITY_BOOTSTRAP_ENABLED:false}}

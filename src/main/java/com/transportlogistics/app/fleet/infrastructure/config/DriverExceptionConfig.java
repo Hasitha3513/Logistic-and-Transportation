@@ -4,6 +4,7 @@ import com.transportlogistics.app.fleet.DriverAssignmentAvailability;
 import com.transportlogistics.app.fleet.application.ports.in.DriverExceptionUseCase;
 import com.transportlogistics.app.fleet.application.ports.out.DriverExceptionRepository;
 import com.transportlogistics.app.fleet.application.ports.out.DriverRepository;
+import com.transportlogistics.app.fleet.application.ports.out.FleetOperationalNotificationPublisher;
 import com.transportlogistics.app.fleet.application.service.DriverExceptionService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -15,8 +16,9 @@ class DriverExceptionConfig {
     DriverExceptionUseCase driverExceptionUseCase(
             DriverExceptionRepository driverExceptions,
             DriverRepository drivers,
-            DriverAssignmentAvailability assignments
+            DriverAssignmentAvailability assignments,
+            FleetOperationalNotificationPublisher notifications
     ) {
-        return new DriverExceptionService(driverExceptions, drivers, assignments);
+        return new DriverExceptionService(driverExceptions, drivers, assignments, notifications);
     }
 }

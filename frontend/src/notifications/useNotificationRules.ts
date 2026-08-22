@@ -4,6 +4,11 @@ import type {
   CreateNotificationRuleRequest,
   NotificationRule,
   UpdateNotificationRuleRequest,
+  DeliveryFilters,
+  NotificationDelivery,
+  NotificationDeliveryAttempt,
+  NotificationEventCatalogueItem,
+  NotificationTemplate,
 } from './types';
 
 export function useNotificationRules() {
@@ -13,6 +18,42 @@ export function useNotificationRules() {
       const response = await api.get<NotificationRule[]>('/notification-rules');
       return response.data;
     },
+  });
+}
+
+export function useNotificationEventCatalogue() {
+  return useQuery({
+    queryKey: ['notification-event-catalogue'],
+    queryFn: async () => (await api.get<NotificationEventCatalogueItem[]>('/notification-event-catalogue')).data,
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+export function useNotificationTemplates(eventType?: string, channel?: string) {
+  return useQuery({
+    queryKey: ['notification-templates', eventType, channel],
+    queryFn: async () => (await api.get<NotificationTemplate[]>('/notification-templates', {
+      params: { eventType, channel },
+    })).data,
+    enabled: Boolean(eventType && channel),
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+export function useNotificationDeliveries(filters: DeliveryFilters) {
+  return useQuery({
+    queryKey: ['notification-deliveries', filters],
+    queryFn: async () => (await api.get<NotificationDelivery[]>('/notification-deliveries', {
+      params: { ...filters, limit: filters.limit ?? 100 },
+    })).data,
+  });
+}
+
+export function useNotificationDeliveryAttempts(notificationId?: string) {
+  return useQuery({
+    queryKey: ['notification-delivery-attempts', notificationId],
+    queryFn: async () => (await api.get<NotificationDeliveryAttempt[]>(`/notification-deliveries/${notificationId}/attempts`)).data,
+    enabled: Boolean(notificationId),
   });
 }
 

@@ -13,6 +13,21 @@ test.describe('@smoke Core Application Smoke Suite', () => {
     await expect(loginPage.submitButton).toBeVisible();
   });
 
+  test('E2E-SMK-000: E2E administrator authenticates against the running backend', async ({ page }) => {
+    const username = process.env.E2E_ADMIN_USERNAME;
+    const password = process.env.E2E_ADMIN_PASSWORD;
+    if (!username || !password) {
+      throw new Error('Playwright E2E administrator credentials were not initialized');
+    }
+
+    const loginPage = new LoginPage(page);
+    await loginPage.goto();
+    await loginPage.login(username, password);
+
+    await expect(page.getByRole('heading', { name: 'Operations Overview' })).toBeVisible({ timeout: 15_000 });
+    await expect(page.locator('.user-menu')).toContainText('Local Administrator');
+  });
+
   test('E2E-SMK-001: Admin can access dashboard and main operations views', async ({ adminPage }) => {
     const dashboard = new DashboardPage(adminPage);
     await dashboard.goto();

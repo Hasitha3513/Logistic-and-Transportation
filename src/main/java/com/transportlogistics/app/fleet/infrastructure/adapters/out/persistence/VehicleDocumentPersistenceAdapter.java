@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.time.LocalDate;
 
 @Component
 class VehicleDocumentPersistenceAdapter implements VehicleDocumentRepository {
@@ -51,6 +52,13 @@ class VehicleDocumentPersistenceAdapter implements VehicleDocumentRepository {
     @Override
     public List<VehicleDocument> findActiveByVehicleId(UUID vehicleId) {
         return repository.findByVehicleIdAndActiveTrue(vehicleId).stream().map(this::map).toList();
+    }
+
+    @Override
+    public List<VehicleDocument> findActiveMandatoryExpiringBy(LocalDate cutoffInclusive) {
+        return repository
+                .findByActiveTrueAndMandatoryForDispatchTrueAndExpiryDateLessThanEqualOrderByExpiryDateAsc(cutoffInclusive)
+                .stream().map(this::map).toList();
     }
 
     @Override

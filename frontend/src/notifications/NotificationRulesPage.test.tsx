@@ -20,6 +20,11 @@ const mockRules: NotificationRule[] = [
     channel: 'IN_APP',
     recipientType: 'ROLE',
     recipientValue: 'DISPATCHER',
+    templateCode: 'TRIP_DELAY',
+    quietHoursEnabled: false,
+    quietDays: [],
+    suppressionWindowMinutes: 15,
+    escalationEnabled: false,
     enabled: true,
     severityThreshold: 'WARNING',
     createdAt: '2026-08-19T10:00:00Z',
@@ -33,6 +38,16 @@ const mockRules: NotificationRule[] = [
     channel: 'EMAIL',
     recipientType: 'EMAIL_ADDRESS',
     recipientValue: 'fleet@example.com',
+    templateCode: 'VEHICLE_MAINTENANCE_DUE',
+    quietHoursEnabled: true,
+    quietStartTime: '22:00:00',
+    quietEndTime: '06:00:00',
+    quietDays: ['MONDAY', 'TUESDAY'],
+    suppressionWindowMinutes: 60,
+    escalationEnabled: true,
+    escalationDelayMinutes: 10,
+    escalationRecipientType: 'ROLE',
+    escalationRecipientValue: 'OPERATIONS',
     enabled: false,
     severityThreshold: 'CRITICAL',
     createdAt: '2026-08-19T11:00:00Z',
@@ -40,7 +55,7 @@ const mockRules: NotificationRule[] = [
   },
 ];
 
-function renderPage(permissions = ['NOTIFICATION_RULE_VIEW', 'NOTIFICATION_RULE_MANAGE']) {
+function renderPage(permissions = ['NOTIFICATION_RULE_VIEW', 'NOTIFICATION_RULE_MANAGE'], deliveries: Record<string, unknown>[] = []) {
   server.use(
     http.get('*/auth/me', () => HttpResponse.json({
       id: 'user-1',
@@ -53,6 +68,16 @@ function renderPage(permissions = ['NOTIFICATION_RULE_VIEW', 'NOTIFICATION_RULE_
       permissions,
     })),
     http.get('*/notification-rules', () => HttpResponse.json(mockRules)),
+    http.get('*/notification-event-catalogue', () => HttpResponse.json([
+      { eventType: 'TRIP_DELAY_RECORDED', owningModule: 'trip', defaultSeverity: 'WARNING', supportedChannels: ['IN_APP', 'EMAIL'], templateCodes: ['TRIP_DELAY'], requiredVariables: [], optionalVariables: [] },
+    ])),
+    http.get('*/notification-templates', () => HttpResponse.json([
+      { id: 'template-1', code: 'TRIP_DELAY', name: 'Trip delay', eventType: 'TRIP_DELAY_RECORDED', channel: 'IN_APP', body: 'Trip {{tripNumber}} delayed', version: 1, active: true, createdAt: '2026-08-19T10:00:00Z', updatedAt: '2026-08-19T10:00:00Z' },
+    ])),
+    http.get('*/notification-deliveries', () => HttpResponse.json(deliveries)),
+    http.get('*/notification-deliveries/:id/attempts', () => HttpResponse.json([
+      { id: 'attempt-1', attemptNumber: 1, state: 'FAILED', dueAt: '2026-08-19T12:00:00Z', completedAt: '2026-08-19T12:01:00Z', errorCategory: 'TRANSIENT', errorCode: 'SMTP_TIMEOUT', errorMessage: 'Provider timed out' },
+    ])),
     http.post('*/notification-rules', async ({ request }) => {
       const body = await request.json() as Record<string, unknown>;
       return HttpResponse.json({
@@ -126,6 +151,8 @@ describe('NotificationRulesPage', () => {
 
     const nameInput = screen.getByLabelText('Rule Name');
     await user.type(nameInput, 'High Incident Alert');
+    await user.type(screen.getByLabelText('Role Name'), 'OPERATIONS');
+    expect(await screen.findByText('Trip {{tripNumber}} delayed')).toBeInTheDocument();
 
     const submitBtn = screen.getByRole('button', { name: 'Create Rule' });
     await user.click(submitBtn);
@@ -133,6 +160,36 @@ describe('NotificationRulesPage', () => {
     await waitFor(() => {
       expect(screen.queryByText('Create Notification Rule', { selector: '.ant-modal-title' })).not.toBeInTheDocument();
     });
+  });
+
+  it('shows compact suppression, quiet-hours, and escalation policy summaries', async () => {
+    renderPage();
+    expect(await screen.findByText('Suppress 15 min')).toBeInTheDocument();
+    expect(screen.getByText('Quiet MONDAY, TUESDAY 22:00:00-06:00:00')).toBeInTheDocument();
+    expect(screen.getByText('Fallback ROLE OPERATIONS after 10 min')).toBeInTheDocument();
+  });
+
+  it('shows pending, sent, and terminal failed delivery health without manual retry', async () => {
+    const user = userEvent.setup();
+    renderPage(undefined, [
+      { notificationId: 'delivery-1', eventId: 'event-1', eventType: 'TRIP_DELAY_RECORDED', channel: 'EMAIL', status: 'PENDING', attemptCount: 1, nextDeliveryAt: '2026-08-19T13:00:00Z', terminalFailure: false, escalationLevel: 0, createdAt: '2026-08-19T12:00:00Z', recipient: 'o***@example.com' },
+      { notificationId: 'delivery-2', eventId: 'event-2', eventType: 'TRIP_DELAY_RECORDED', channel: 'EMAIL', status: 'SENT', attemptCount: 1, terminalFailure: false, escalationLevel: 0, createdAt: '2026-08-19T12:00:00Z', sentAt: '2026-08-19T12:01:00Z', recipient: 'o***@example.com' },
+      { notificationId: 'delivery-3', eventId: 'event-3', eventType: 'TRIP_DELAY_RECORDED', channel: 'EMAIL', status: 'FAILED', attemptCount: 3, terminalFailure: true, escalationLevel: 1, parentNotificationId: 'parent-1', createdAt: '2026-08-19T12:00:00Z', recipient: 'o***@example.com' },
+    ]);
+    await user.click(await screen.findByRole('tab', { name: 'Delivery Diagnostics' }));
+    expect(await screen.findByText('PENDING')).toBeInTheDocument();
+    expect(screen.getByText('SENT')).toBeInTheDocument();
+    expect(screen.getByText('Terminal')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /retry/i })).not.toBeInTheDocument();
+  });
+
+  it('loads sanitized delivery attempt history for a rule manager', async () => {
+    const user = userEvent.setup();
+    renderPage(undefined, [{ notificationId: 'delivery-1', eventId: 'event-1', eventType: 'TRIP_DELAY_RECORDED', channel: 'EMAIL', status: 'FAILED', attemptCount: 1, terminalFailure: true, escalationLevel: 0, createdAt: '2026-08-19T12:00:00Z', recipient: 'o***@example.com' }]);
+    await user.click(await screen.findByRole('tab', { name: 'Delivery Diagnostics' }));
+    await user.click(await screen.findByRole('button', { name: /View attempts/ }));
+    expect(await screen.findByText('Provider timed out')).toBeInTheDocument();
+    expect(screen.getByText('TRANSIENT')).toBeInTheDocument();
   });
 
   it('toggles rule enable/disable status', async () => {
