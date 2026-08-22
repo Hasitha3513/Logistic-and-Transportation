@@ -8,6 +8,7 @@ import java.util.Optional;
 import java.util.Set;
 
 public final class NotificationEventCatalogue {
+    public static final String MILESTONE_METADATA_KEY = "catalogueMilestone";
     private static final Set<NotificationChannel> MVP_CHANNELS = Set.of(NotificationChannel.IN_APP, NotificationChannel.EMAIL);
     private static final Set<String> COMMON_REQUIRED = Set.of("eventTime", "severity");
     private static final Map<String, NotificationEventDefinition> EVENTS = definitions();
@@ -33,21 +34,25 @@ public final class NotificationEventCatalogue {
     private static Map<String, NotificationEventDefinition> definitions() {
         Map<String, NotificationEventDefinition> definitions = new LinkedHashMap<>();
         add(definitions, "TRIP_DELAY_RECORDED", "trip", NotificationSeverity.WARNING, "TRIP_DELAY",
-            required("tripId", "tripNumber", "delayMinutes", "reason"), Set.of("locationDescription"));
+            required("tripId", "tripNumber", "delayMinutes", "reason"), Set.of("locationDescription"), 15, null);
         add(definitions, "TRIP_INCIDENT_RECORDED", "trip", NotificationSeverity.WARNING, "TRIP_INCIDENT",
-            required("tripId", "tripNumber", "incidentSeverity", "description"), Set.of("locationDescription"));
+            required("tripId", "tripNumber", "incidentSeverity", "description"), Set.of("locationDescription"), 0, null);
         add(definitions, "VEHICLE_MAINTENANCE_DUE", "fleet", NotificationSeverity.WARNING, "VEHICLE_MAINTENANCE_DUE",
-            required("vehicleId", "vehicleRegistration", "maintenanceType", "scheduledStart", "scheduledEnd"), Set.of());
+            required("vehicleId", "vehicleRegistration", "maintenanceType", "scheduledStart", "scheduledEnd"), Set.of(),
+            1440, MILESTONE_METADATA_KEY);
         add(definitions, "VEHICLE_DOCUMENT_EXPIRING", "fleet", NotificationSeverity.WARNING, "VEHICLE_DOCUMENT_EXPIRING",
-            required("vehicleId", "vehicleRegistration", "documentId", "documentType", "documentNumber", "expiryDate"), Set.of());
+            required("vehicleId", "vehicleRegistration", "documentId", "documentType", "documentNumber", "expiryDate"), Set.of(),
+            1440, MILESTONE_METADATA_KEY);
         add(definitions, "DRIVER_EXCEPTION_RECORDED", "fleet", NotificationSeverity.WARNING, "DRIVER_EXCEPTION",
-            required("driverId", "driverName", "exceptionId", "exceptionType", "startTime", "endTime"), Set.of("reason"));
+            required("driverId", "driverName", "exceptionId", "exceptionType", "startTime", "endTime"), Set.of("reason"), 0, null);
         add(definitions, "DRIVER_MEDICAL_EXPIRING", "fleet", NotificationSeverity.WARNING, "DRIVER_MEDICAL_EXPIRING",
-            required("driverId", "driverName", "medicalRecordId", "validUntil", "fitnessStatus"), Set.of());
+            required("driverId", "driverName", "medicalRecordId", "validUntil", "fitnessStatus"), Set.of(),
+            1440, MILESTONE_METADATA_KEY);
         add(definitions, "DRIVER_DRUG_TEST_FAILED", "fleet", NotificationSeverity.CRITICAL, "DRIVER_DRUG_TEST_FAILED",
-            required("driverId", "driverName", "drugTestId", "resultDate", "testType"), Set.of());
+            required("driverId", "driverName", "drugTestId", "resultDate", "testType"), Set.of(), 0, null);
         add(definitions, "DRIVER_LICENSE_EXPIRING", "fleet", NotificationSeverity.WARNING, "DRIVER_LICENSE_EXPIRING",
-            required("driverId", "driverName", "licenseId", "licenseNumber", "licenseClass", "expiryDate"), Set.of());
+            required("driverId", "driverName", "licenseId", "licenseNumber", "licenseClass", "expiryDate"), Set.of(),
+            1440, MILESTONE_METADATA_KEY);
         return Collections.unmodifiableMap(new LinkedHashMap<>(definitions));
     }
 
@@ -59,8 +64,9 @@ public final class NotificationEventCatalogue {
 
     private static void add(Map<String, NotificationEventDefinition> definitions, String eventType,
                             String owningModule, NotificationSeverity severity, String templateCode,
-                            Set<String> required, Set<String> optional) {
+                            Set<String> required, Set<String> optional, int suppressionMinutes,
+                            String milestoneMetadataKey) {
         definitions.put(eventType, new NotificationEventDefinition(eventType, owningModule, severity,
-            MVP_CHANNELS, templateCode, required, optional));
+            MVP_CHANNELS, templateCode, required, optional, suppressionMinutes, milestoneMetadataKey));
     }
 }

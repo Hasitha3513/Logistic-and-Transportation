@@ -1,20 +1,18 @@
 package com.transportlogistics.app.notification.application.service;
 
 import com.transportlogistics.app.notification.OperationalNotificationEvent;
-import com.transportlogistics.app.notification.application.ports.out.NotificationDeliveryPort;
-import com.transportlogistics.app.notification.application.ports.out.NotificationRepository;
-import com.transportlogistics.app.notification.application.ports.out.NotificationRuleRepository;
-import com.transportlogistics.app.notification.application.ports.out.NotificationTemplateRepository;
-import com.transportlogistics.app.notification.domain.model.Notification;
-import com.transportlogistics.app.notification.domain.model.NotificationChannel;
-import com.transportlogistics.app.notification.domain.model.NotificationRule;
-import com.transportlogistics.app.notification.domain.model.NotificationSeverity;
-import com.transportlogistics.app.notification.domain.model.NotificationTemplateRenderer;
+import com.transportlogistics.app.notification.application.ports.out.*;
+import com.transportlogistics.app.notification.domain.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Clock;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -23,130 +21,139 @@ import java.util.UUID;
 @Service
 public class NotificationRuleEngine {
     private static final Logger log = LoggerFactory.getLogger(NotificationRuleEngine.class);
-
     private final NotificationRuleRepository ruleRepository;
+    private final NotificationRulePolicyRepository policyRepository;
+    private final NotificationRuleExecutionRepository executionRepository;
     private final NotificationRepository notificationRepository;
     private final NotificationTemplateRepository templateRepository;
     private final NotificationRecipientResolver recipientResolver;
     private final NotificationTemplateRenderer templateRenderer;
+    private final NotificationQuietHoursEvaluator quietHoursEvaluator;
+    private final NotificationSuppressionEvaluator suppressionEvaluator;
     private final Map<NotificationChannel, NotificationDeliveryPort> deliveryPorts;
+    private final Clock clock;
 
-    public NotificationRuleEngine(
-        NotificationRuleRepository ruleRepository,
-        NotificationRepository notificationRepository,
-        NotificationTemplateRepository templateRepository,
-        NotificationRecipientResolver recipientResolver,
-        NotificationTemplateRenderer templateRenderer,
-        Map<NotificationChannel, NotificationDeliveryPort> deliveryPorts
-    ) {
-        this.ruleRepository = Objects.requireNonNull(ruleRepository, "ruleRepository must not be null");
-        this.notificationRepository = Objects.requireNonNull(notificationRepository, "notificationRepository must not be null");
-        this.templateRepository = Objects.requireNonNull(templateRepository, "templateRepository must not be null");
-        this.recipientResolver = Objects.requireNonNull(recipientResolver, "recipientResolver must not be null");
-        this.templateRenderer = Objects.requireNonNull(templateRenderer, "templateRenderer must not be null");
-        this.deliveryPorts = Objects.requireNonNull(deliveryPorts, "deliveryPorts must not be null");
+    public NotificationRuleEngine(NotificationRuleRepository ruleRepository,
+                                  NotificationRulePolicyRepository policyRepository,
+                                  NotificationRuleExecutionRepository executionRepository,
+                                  NotificationRepository notificationRepository,
+                                  NotificationTemplateRepository templateRepository,
+                                  NotificationRecipientResolver recipientResolver,
+                                  NotificationTemplateRenderer templateRenderer,
+                                  NotificationQuietHoursEvaluator quietHoursEvaluator,
+                                  NotificationSuppressionEvaluator suppressionEvaluator,
+                                  Map<NotificationChannel, NotificationDeliveryPort> deliveryPorts,
+                                  Clock clock) {
+        this.ruleRepository = Objects.requireNonNull(ruleRepository);
+        this.policyRepository = Objects.requireNonNull(policyRepository);
+        this.executionRepository = Objects.requireNonNull(executionRepository);
+        this.notificationRepository = Objects.requireNonNull(notificationRepository);
+        this.templateRepository = Objects.requireNonNull(templateRepository);
+        this.recipientResolver = Objects.requireNonNull(recipientResolver);
+        this.templateRenderer = Objects.requireNonNull(templateRenderer);
+        this.quietHoursEvaluator = Objects.requireNonNull(quietHoursEvaluator);
+        this.suppressionEvaluator = Objects.requireNonNull(suppressionEvaluator);
+        this.deliveryPorts = Objects.requireNonNull(deliveryPorts);
+        this.clock = Objects.requireNonNull(clock);
     }
 
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void processEvent(OperationalNotificationEvent event) {
         if (event == null) {
-            log.warn("Received null OperationalNotificationEvent, skipping processing.");
+            log.warn("Received null OperationalNotificationEvent, skipping processing");
             return;
         }
-
-        log.info("Evaluating notification rules for event: {} (severity: {}, aggregate: {}/{})",
-            event.eventType(), event.severity(), event.aggregateType(), event.aggregateId());
-
-        List<NotificationRule> matchingRules = ruleRepository.findByEventTypeAndEnabledTrue(event.eventType());
-        if (matchingRules.isEmpty()) {
-            log.debug("No enabled notification rules matching event type '{}'", event.eventType());
-            return;
-        }
-
-        NotificationSeverity severity = toDomainSeverity(event.severity());
-        for (NotificationRule rule : matchingRules) {
+        NotificationSeverity severity = NotificationSeverity.valueOf(event.severity().name());
+        for (NotificationRule rule : ruleRepository.findByEventTypeAndEnabledTrue(event.eventType())) {
+            if (!severity.meetsThreshold(rule.severityThreshold())) continue;
             try {
                 processRule(event, severity, rule);
             } catch (RuntimeException exception) {
                 log.error("Notification rule {} failed for event {} without affecting the source operation: {}",
                     rule.id(), event.eventId(), exception.getMessage(), exception);
+                record(event, rule, null, NotificationRuleExecutionOutcome.FAILED, null, null,
+                    "RULE_EVALUATION_FAILED", exception.getMessage(), now());
             }
         }
     }
 
     private void processRule(OperationalNotificationEvent event, NotificationSeverity severity, NotificationRule rule) {
-        if (!severity.meetsThreshold(rule.severityThreshold())) {
-            log.debug("Rule '{}' skipped because event severity {} < threshold {}",
-                rule.name(), event.severity(), rule.severityThreshold());
+        var policy = policyRepository.findByRuleIdForUpdate(rule.id()).orElse(rule.policy());
+        OffsetDateTime now = now();
+        var template = templateRepository.findActiveCompatible(rule.templateCode(), rule.eventType(), rule.channel()).orElse(null);
+        if (template == null) {
+            record(event, rule, null, NotificationRuleExecutionOutcome.TEMPLATE_DATA_MISSING, null, null,
+                "TEMPLATE_DATA_MISSING", "No active compatible template", now);
             return;
         }
-
-        if (rule.templateCode() == null) {
-            log.warn("Legacy notification rule '{}' has no template and cannot execute", rule.name());
-            return;
-        }
-
-        var template = templateRepository.findActiveCompatible(rule.templateCode(), rule.eventType(), rule.channel())
-            .orElseThrow(() -> new IllegalStateException("No active compatible template for rule " + rule.id()));
-        Map<String, String> variables = new java.util.HashMap<>(event.metadata());
-        variables.put("eventTime", event.occurredAt().toString());
-        variables.put("severity", event.severity().name());
-        var rendered = templateRenderer.render(template, variables);
-
         List<String> recipients = recipientResolver.resolve(rule.recipientType(), rule.channel(), rule.recipientValue());
         if (recipients.isEmpty()) {
-            log.warn("Rule '{}' resolved no active recipients; NO_RECIPIENT", rule.name());
+            record(event, rule, null, NotificationRuleExecutionOutcome.NO_RECIPIENT, null, null,
+                "NO_RECIPIENT", "No active recipient resolved", now);
             return;
         }
 
-        for (String recipient : recipients) {
+        NotificationTemplateRenderer.RenderedNotification rendered;
+        try {
+            Map<String, String> variables = new HashMap<>(event.metadata());
+            variables.put("eventTime", event.occurredAt().toString());
+            variables.put("severity", event.severity().name());
+            rendered = templateRenderer.render(template, variables);
+        } catch (IllegalArgumentException exception) {
+            for (String recipient : recipients) record(event, rule, recipient,
+                NotificationRuleExecutionOutcome.TEMPLATE_DATA_MISSING, null, null,
+                "TEMPLATE_DATA_MISSING", exception.getMessage(), now);
+            return;
+        }
 
-            // Enforce idempotency: eventId + ruleId + recipient
-            if (notificationRepository.existsByEventIdAndRuleIdAndRecipient(event.eventId(), rule.id(), recipient)) {
-                log.debug("Duplicate notification prevented for eventId: {}, ruleId: {}, recipient: {}",
-                    event.eventId(), rule.id(), recipient);
+        String milestone = NotificationEventCatalogue.require(event.eventType()).milestone(event.metadata());
+        for (String recipient : recipients) {
+            String executionKey = NotificationRuleExecution.executionKey(event.eventId(), rule.id(), rule.channel(), recipient);
+            if (executionRepository.existsByExecutionKey(executionKey)) continue;
+            String suppressionKey = NotificationSuppressionKey.of(rule.id(), event.eventType(), event.aggregateType(),
+                event.aggregateId(), recipient, rule.channel(), milestone).value();
+            var suppression = suppressionEvaluator.evaluate(policy, severity, suppressionKey, now);
+            if (suppression.suppressed()) {
+                record(event, rule, recipient, NotificationRuleExecutionOutcome.SUPPRESSED, suppressionKey,
+                    suppression.controllingExecution().controllingNotificationId(), null, null, now);
                 continue;
             }
 
-            String relatedRoute = event.metadata() != null ? event.metadata().get("relatedRoute") : null;
-            Notification pending = Notification.createPending(
-                rule.id(),
-                event.eventId(),
-                event.eventType(),
-                rule.channel(),
-                recipient,
-                severity,
-                rendered.subject(),
-                rendered.body(),
-                template.id(),
-                template.version(),
-                relatedRoute
-            );
-
+            var quietDecision = quietHoursEvaluator.evaluate(policy, rule.channel(), severity);
+            Notification pending = Notification.createPending(rule.id(), event.eventId(), event.eventType(), rule.channel(),
+                recipient, severity, rendered.subject(), rendered.body(), template.id(), template.version(),
+                event.metadata().get("relatedRoute"), now, quietDecision.nextDeliveryAt());
             Notification saved = notificationRepository.save(pending);
-            dispatchNotification(saved, rule.channel());
+            if (rule.channel() == NotificationChannel.IN_APP) dispatchNotification(saved, rule.channel());
+            record(event, rule, recipient, NotificationRuleExecutionOutcome.ACCEPTED, suppressionKey,
+                saved.id(), null, null, now);
         }
     }
 
-    private NotificationSeverity toDomainSeverity(OperationalNotificationEvent.Severity severity) {
-        return NotificationSeverity.valueOf(severity.name());
+    private void record(OperationalNotificationEvent event, NotificationRule rule, String recipient,
+                        NotificationRuleExecutionOutcome outcome, String suppressionKey,
+                        UUID controllingNotificationId, String failureCode, String failureMessage,
+                        OffsetDateTime timestamp) {
+        String key = NotificationRuleExecution.executionKey(event.eventId(), rule.id(), rule.channel(), recipient);
+        if (executionRepository.existsByExecutionKey(key)) return;
+        executionRepository.save(NotificationRuleExecution.completed(event.eventId(), event.eventType(),
+            event.aggregateType(), event.aggregateId(), rule.id(), recipient, rule.channel(), outcome,
+            suppressionKey, controllingNotificationId, failureCode, failureMessage, timestamp));
     }
+
+    private OffsetDateTime now() { return OffsetDateTime.ofInstant(clock.instant(), ZoneOffset.UTC); }
 
     private void dispatchNotification(Notification notification, NotificationChannel channel) {
         NotificationDeliveryPort port = deliveryPorts.get(channel);
         if (port == null) {
-            log.error("No delivery adapter registered for channel: {}", channel);
             notificationRepository.save(notification.markFailed("No delivery adapter registered for channel " + channel));
             return;
         }
-
         try {
             port.deliver(notification);
             notificationRepository.save(notification.markSent());
-            log.info("Dispatched {} notification {} to {}", channel, notification.id(), notification.recipient());
-        } catch (Exception ex) {
-            log.error("Failed to deliver {} notification {}: {}", channel, notification.id(), ex.getMessage(), ex);
-            notificationRepository.save(notification.markFailed(ex.getMessage()));
+        } catch (Exception exception) {
+            notificationRepository.save(notification.markFailed(exception.getMessage()));
         }
     }
 }

@@ -105,7 +105,16 @@ class TripOperationalEventServiceTest {
         verify(publisher).publishEvent(captor.capture());
         com.transportlogistics.app.notification.OperationalNotificationEvent published = captor.getValue();
         assertEquals("TRIP_DELAY_RECORDED", published.eventType());
+        assertEquals(result.id(), published.eventId());
+        assertEquals("TRIP", published.aggregateType());
         assertEquals(tripId, published.aggregateId());
+        assertEquals(com.transportlogistics.app.notification.OperationalNotificationEvent.Severity.WARNING,
+                published.severity());
+        assertEquals(result.occurredAt(), published.occurredAt());
+        assertEquals(activeTrip.tripNumber(), published.metadata().get("tripNumber"));
+        assertEquals("30", published.metadata().get("delayMinutes"));
+        assertEquals("Traffic checkpoint delay", published.metadata().get("reason"));
+        assertEquals("Toll Plaza", published.metadata().get("locationDescription"));
     }
 
     @Test
@@ -129,6 +138,55 @@ class TripOperationalEventServiceTest {
         assertEquals(TripOperationalEventType.INCIDENT, result.eventType());
         assertEquals(TripIncidentSeverity.MEDIUM, result.incidentSeverity());
         assertEquals("Flat tire on rear axle", result.reason());
+        verify(eventRepo).save(any());
+        var captor = org.mockito.ArgumentCaptor.forClass(
+                com.transportlogistics.app.notification.OperationalNotificationEvent.class);
+        verify(publisher).publishEvent(captor.capture());
+        var published = captor.getValue();
+        assertEquals(result.id(), published.eventId());
+        assertEquals("TRIP_INCIDENT_RECORDED", published.eventType());
+        assertEquals(com.transportlogistics.app.notification.OperationalNotificationEvent.Severity.WARNING,
+                published.severity());
+        assertEquals("MEDIUM", published.metadata().get("incidentSeverity"));
+        assertEquals("Flat tire on rear axle", published.metadata().get("description"));
+        assertEquals("Highway Mile 12", published.metadata().get("locationDescription"));
+    }
+
+    @Test
+    void mapsEveryIncidentSeverityAndKeepsStableOperationalEventIdentity() {
+        when(tripRepo.findById(tripId)).thenReturn(Optional.of(activeTrip));
+        when(eventRepo.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+        var expected = java.util.List.of(
+                com.transportlogistics.app.notification.OperationalNotificationEvent.Severity.INFO,
+                com.transportlogistics.app.notification.OperationalNotificationEvent.Severity.WARNING,
+                com.transportlogistics.app.notification.OperationalNotificationEvent.Severity.WARNING,
+                com.transportlogistics.app.notification.OperationalNotificationEvent.Severity.CRITICAL);
+        var savedIds = new java.util.ArrayList<UUID>();
+
+        for (var severity : TripIncidentSeverity.values()) {
+            savedIds.add(service.recordIncident(tripId, new TripOperationalEventUseCase.RecordIncidentCommand(
+                    severity, "Incident " + severity, OffsetDateTime.now(clock), null, null, null), "driver").id());
+        }
+
+        var captor = org.mockito.ArgumentCaptor.forClass(
+                com.transportlogistics.app.notification.OperationalNotificationEvent.class);
+        verify(publisher, times(4)).publishEvent(captor.capture());
+        assertEquals(expected, captor.getAllValues().stream().map(
+                com.transportlogistics.app.notification.OperationalNotificationEvent::severity).toList());
+        assertEquals(savedIds, captor.getAllValues().stream().map(
+                com.transportlogistics.app.notification.OperationalNotificationEvent::eventId).toList());
+    }
+
+    @Test
+    void notificationFailureDoesNotRollBackAcceptedIncident() {
+        when(tripRepo.findById(tripId)).thenReturn(Optional.of(activeTrip));
+        when(eventRepo.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+        doThrow(new IllegalStateException("listener failed")).when(publisher).publishEvent(any());
+
+        var result = service.recordIncident(tripId, new TripOperationalEventUseCase.RecordIncidentCommand(
+                TripIncidentSeverity.HIGH, "Road closure", OffsetDateTime.now(clock), null, null, null), "driver");
+
+        assertNotNull(result);
         verify(eventRepo).save(any());
     }
 

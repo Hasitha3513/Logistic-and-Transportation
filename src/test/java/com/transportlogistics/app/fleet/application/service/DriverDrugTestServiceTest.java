@@ -3,6 +3,7 @@ package com.transportlogistics.app.fleet.application.service;
 import com.transportlogistics.app.fleet.application.ports.in.DriverDrugTestUseCase;
 import com.transportlogistics.app.fleet.application.ports.out.DriverDrugTestRepository;
 import com.transportlogistics.app.fleet.application.ports.out.DriverRepository;
+import com.transportlogistics.app.fleet.application.ports.out.FleetOperationalNotificationPublisher;
 import com.transportlogistics.app.fleet.domain.model.Driver;
 import com.transportlogistics.app.fleet.domain.model.DriverDrugTest;
 import com.transportlogistics.app.fleet.domain.model.DrugTestResult;
@@ -36,13 +37,16 @@ class DriverDrugTestServiceTest {
     @Mock
     private DriverDrugTestRepository drugTests;
 
+    @Mock
+    private FleetOperationalNotificationPublisher notifications;
+
     private DriverDrugTestService service;
     private UUID driverId;
     private Driver driver;
 
     @BeforeEach
     void setUp() {
-        service = new DriverDrugTestService(drivers, drugTests);
+        service = new DriverDrugTestService(drivers, drugTests, notifications);
         driverId = UUID.randomUUID();
         driver = new Driver(driverId, "EMP-001", "John", "Doe", "+1234567890", "john@example.com", "AVAILABLE", true);
     }
@@ -112,6 +116,36 @@ class DriverDrugTestServiceTest {
         assertTrue(result.returnToDutyRequired());
         assertNull(result.returnToDutyClearedAt());
         assertTrue(result.isBlocking());
+        var captor = org.mockito.ArgumentCaptor.forClass(
+                com.transportlogistics.app.notification.OperationalNotificationEvent.class);
+        verify(notifications).publish(captor.capture());
+        assertEquals("DRIVER_DRUG_TEST_FAILED", captor.getValue().eventType());
+        assertEquals(com.transportlogistics.app.notification.OperationalNotificationEvent.Severity.CRITICAL,
+                captor.getValue().severity());
+        assertEquals(testId.toString(), captor.getValue().metadata().get("drugTestId"));
+        assertEquals("John Doe", captor.getValue().metadata().get("driverName"));
+        assertEquals("RANDOM", captor.getValue().metadata().get("testType"));
+    }
+
+    @Test
+    void negativeResultDoesNotPublishAndPublisherFailureDoesNotUndoPositiveResult() {
+        var testId = UUID.randomUUID();
+        var existing = new DriverDrugTest(testId, driverId, DrugTestType.POST_INCIDENT,
+                LocalDate.of(2026, 6, 1), OffsetDateTime.now(), null, DrugTestResult.PENDING,
+                DrugTestStatus.SAMPLE_COLLECTED, "Lab", "REF", null, false, null, true,
+                OffsetDateTime.now(), OffsetDateTime.now(), "admin", "admin");
+        when(drivers.findByIdForUpdate(driverId)).thenReturn(Optional.of(driver));
+        when(drugTests.findById(testId)).thenReturn(Optional.of(existing));
+        when(drugTests.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        service.recordResult(driverId, testId, new DriverDrugTestUseCase.RecordResultCommand(
+                DrugTestResult.NEGATIVE, LocalDate.of(2026, 6, 2), null, false), "admin");
+        verifyNoInteractions(notifications);
+
+        doThrow(new IllegalStateException("listener failed")).when(notifications).publish(any());
+        var positive = service.recordResult(driverId, testId, new DriverDrugTestUseCase.RecordResultCommand(
+                DrugTestResult.POSITIVE, LocalDate.of(2026, 6, 2), null, true), "admin");
+        assertTrue(positive.isBlocking());
     }
 
     @Test

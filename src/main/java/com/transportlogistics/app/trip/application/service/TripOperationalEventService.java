@@ -13,16 +13,21 @@ import com.transportlogistics.app.trip.domain.model.TripOperationalEvent;
 import com.transportlogistics.app.notification.OperationalNotificationEvent;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.transaction.annotation.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.Clock;
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 
 @Transactional
 public class TripOperationalEventService implements TripOperationalEventUseCase {
+    private static final Logger log = LoggerFactory.getLogger(TripOperationalEventService.class);
 
     private static final Set<String> INVALID_RECORDING_STATES = Set.of(
             TripLifecyclePolicy.DRAFT,
@@ -104,17 +109,17 @@ public class TripOperationalEventService implements TripOperationalEventUseCase 
 
         var saved = eventRepo.save(event);
 
-        // Publish a generic operational notification for the delay event
-        var notificationEvent = OperationalNotificationEvent.of(
-                "TRIP_DELAY_RECORDED",
-                "TRIP",
-                trip.id(),
-                OperationalNotificationEvent.Severity.INFO,
-                "Trip delay recorded",
-                "Delay of " + command.delayMinutes() + " mins: " + command.reason(),
-                java.util.Map.of()
-        );
-        publisher.publishEvent(notificationEvent);
+        Map<String, String> metadata = new LinkedHashMap<>();
+        metadata.put("tripId", trip.id().toString());
+        metadata.put("tripNumber", trip.tripNumber());
+        metadata.put("delayMinutes", Integer.toString(saved.delayMinutes()));
+        metadata.put("reason", saved.reason());
+        if (saved.locationDescription() != null && !saved.locationDescription().isBlank()) {
+            metadata.put("locationDescription", saved.locationDescription());
+        }
+        publishSafely(new OperationalNotificationEvent(saved.id(), "TRIP_DELAY_RECORDED", "TRIP", trip.id(),
+                OperationalNotificationEvent.Severity.WARNING, "Trip delay recorded",
+                "Delay of " + saved.delayMinutes() + " mins: " + saved.reason(), saved.occurredAt(), metadata));
 
         String details = "Delay of " + command.delayMinutes() + " mins recorded: " + command.reason()
                 + (command.locationDescription() != null ? " at " + command.locationDescription() : "");
@@ -144,6 +149,18 @@ public class TripOperationalEventService implements TripOperationalEventUseCase 
         );
 
         var saved = eventRepo.save(event);
+
+        Map<String, String> metadata = new LinkedHashMap<>();
+        metadata.put("tripId", trip.id().toString());
+        metadata.put("tripNumber", trip.tripNumber());
+        metadata.put("incidentSeverity", saved.incidentSeverity().name());
+        metadata.put("description", saved.reason());
+        if (saved.locationDescription() != null && !saved.locationDescription().isBlank()) {
+            metadata.put("locationDescription", saved.locationDescription());
+        }
+        publishSafely(new OperationalNotificationEvent(saved.id(), "TRIP_INCIDENT_RECORDED", "TRIP", trip.id(),
+                incidentSeverity(saved.incidentSeverity()), "Trip incident recorded", saved.reason(),
+                saved.occurredAt(), metadata));
 
         String details = "[" + command.incidentSeverity() + "] Incident reported: " + command.description();
         recordHistory(trip.id(), "INCIDENT_RECORDED", trip.status(), details, actorName, occurredAt, now);
@@ -198,6 +215,23 @@ public class TripOperationalEventService implements TripOperationalEventUseCase 
             ));
         } catch (Exception ignored) {
             // History append is auxiliary; do not block primary operational event
+        }
+    }
+
+    private OperationalNotificationEvent.Severity incidentSeverity(
+            com.transportlogistics.app.trip.domain.model.TripIncidentSeverity severity) {
+        return switch (severity) {
+            case LOW -> OperationalNotificationEvent.Severity.INFO;
+            case MEDIUM, HIGH -> OperationalNotificationEvent.Severity.WARNING;
+            case CRITICAL -> OperationalNotificationEvent.Severity.CRITICAL;
+        };
+    }
+
+    private void publishSafely(OperationalNotificationEvent event) {
+        try {
+            publisher.publishEvent(event);
+        } catch (RuntimeException exception) {
+            log.error("Operational notification publication failed for trip event {}", event.eventId(), exception);
         }
     }
 }

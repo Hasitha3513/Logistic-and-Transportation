@@ -2,13 +2,13 @@
 
 ## 1. Executive Summary
 
-The current repository preserves the latest verified functional baseline: 37 of 39 selected MVP stories are complete, US-77 is partial, and US-71 is not implemented. Verified completion is 94.87%; weighted functional coverage is 96.15%. No previously complete story regressed.
+The current repository has 38 of 39 selected MVP stories complete. US-77 is complete after MVP-GAP-008I; US-71 remains not implemented. Verified completion and weighted functional coverage are both 97.44%. No previously complete story regressed.
 
-**MVP-GAP-008B checkpoint:** COMPLETE. The controlled catalogue, versioned system templates, renderer, recipient validation/directory boundary, rule template selection, V26, and read-only catalogue/template APIs are implemented. US-77 remains PARTIAL; the next implementation slice is MVP-GAP-008C.
+**MVP-GAP-008I checkpoint:** COMPLETE. All 26 frozen US-77 criteria pass, E2E-NOT-001 through E2E-NOT-015 cover the complete notification vertical, and the complete regression is green in Chromium, Firefox, and WebKit.
 
-All current engineering gates pass: Maven clean test and verify each report 524 tests (503 passed, 21 skipped), all 15 architecture tests pass, the Spring context starts, Flyway applies V1-V25, frontend lint/build and all 94 unit tests pass, and the self-starting Playwright harness passes 111 tests across Chromium, Firefox, and WebKit.
+The 008I Maven clean test and verify gates each report 647 tests (626 passed, 21 skipped); all 15 architecture tests pass, the Spring context starts, JPA discovers 44 repositories, Flyway applies V1-V28, frontend lint/build plus all 106 unit tests pass, the notification Playwright gate passes 45/45, and the complete regression passes 156/156.
 
-The release is **NOT READY** because US-77 still lacks MVP notification-policy and delivery behavior and US-71 remains absent from the approved 39-story inventory. The exact next task is **MVP-GAP-008-US77**. This document is an audit only; it makes no production, frontend, test, migration, or dependency changes.
+The release is **NOT READY** only because US-71 remains absent from the approved 39-story inventory. The exact next task is **MVP-GAP-011-US71**.
 
 ## 2. Previous Baseline
 
@@ -21,23 +21,24 @@ The release is **NOT READY** because US-77 still lacks MVP notification-policy a
 | Verified completion | 94.87% |
 | Functional coverage | 96.15% |
 
-Remaining stories were US-77 (PARTIAL) and US-71 (NOT IMPLEMENTED). The accepted MVP interpretation treats deterministic Trip/Fuel state machines as sufficient for US-80 and requested windows, availability, blackout checks, and overlap prevention as sufficient for US-81.
+At that baseline US-77 was PARTIAL and US-71 was NOT IMPLEMENTED. The accepted MVP interpretation treats deterministic Trip/Fuel state machines as sufficient for US-80 and requested windows, availability, blackout checks, and overlap prevention as sufficient for US-81.
 
 ## 3. Current Build/Test Health
 
 | Gate | Command/evidence | Current result |
 |---|---|---|
-| Backend clean test | `mvn -B clean test` | PASS — 524 run, 503 passed, 0 failures, 0 errors, 21 skipped |
-| Backend verify | `mvn -B verify` | PASS — 524 run, 503 passed, 0 failures, 0 errors, 21 skipped; JAR packaged |
+| Backend clean test | `mvn -B clean test` | PASS — 647 run, 626 passed, 0 failures, 0 errors, 21 skipped |
+| Backend verify | `mvn -B verify` | PASS — 647 run, 626 passed, 0 failures, 0 errors, 21 skipped; JAR packaged |
 | Spring startup | `ContextSmokeTest` and the Playwright-managed Spring server | PASS |
-| Flyway | H2 startup logs during clean verification | PASS — V1 through V25 applied |
+| Flyway | H2 startup logs during clean verification | PASS — V1 through V28 applied |
 | JPA | repository/context suites inside Maven verification | PASS |
 | Frontend lint | `npm run lint` | PASS — zero warnings permitted |
-| Frontend unit | `npm test` | PASS — 22 files, 94 tests |
+| Frontend unit | `npm test` | PASS — 23 files, 106 tests |
 | Frontend build | `npm run build` | PASS — TypeScript and Vite build; non-blocking chunk-size warning |
-| Playwright | `npm run test:e2e` | PASS — 111 passed, 0 failed, 0 skipped, 4.2 minutes, three browsers |
+| Playwright notification gate | `npx playwright test e2e/tests/notifications` | PASS — 45/45; 15/15 in Chromium, Firefox, and WebKit |
+| Playwright full regression | `npm run test:e2e` | PASS — 156/156 across Chromium, Firefox, and WebKit (111 retained + 45 notification) |
 
-The first sandboxed Playwright attempt could not resolve Maven Central because network access was denied. Re-running the unchanged standard command with permitted dependency/local-server access passed 111/111; this is an execution-environment restriction, not a repository defect.
+The prior retained non-notification baseline remains 111/111. MVP-GAP-008H adds 45/45 notification executions; the standard combined command passes 156/156 with zero failures or skips.
 
 Non-blocking frontend test output includes Ant Design deprecation/context warnings and a Vite large-chunk warning. These do not fail the configured quality gates.
 
@@ -51,7 +52,7 @@ Non-blocking frontend test output includes Ant Design deprecation/context warnin
 | `LombokUsageArchitectureTest` | 3 | PASS |
 | **Total** | **15** | **PASS** |
 
-The public `notification.OperationalNotificationEvent` is the Trip-to-Notification boundary; Trip does not import notification internals. Fuel actor attribution uses an application boundary and the Spring context resolves it. The historical Trip -> Notification and Fuel -> Identity/Security regressions are not present.
+The public `notification.OperationalNotificationEvent` is the Trip-to-Notification boundary, while Fleet uses its own output port and a Spring adapter to that same public contract. Trip and Fleet do not import Notification internals. Fuel actor attribution uses an application boundary and the Spring context resolves it. The historical Trip -> Notification and Fuel -> Identity/Security regressions are not present.
 
 ## 5. Full 39-Story MVP Matrix
 
@@ -93,7 +94,7 @@ All paths are relative to the repository root. Evidence is representative rather
 | US-71 | Support Offline Data Synchronization | NOT IMPLEMENTED | NOT IMPLEMENTED | no sync API/coordinator; isolated reading idempotency only | no durable store/queue/status UI | no offline/reconnect tests | Entire slice absent; mandatory-scope release blocker |
 | US-74 | Manage Security | COMPLETE | COMPLETE | JWT, rotating refresh, BCrypt, permissions, `SecurityConfig` | auth context and permission navigation | identity/security and RBAC E2E | None |
 | US-75 | Maintain Audit and Reports | COMPLETE | COMPLETE | histories and report services/controllers | dashboard and detail histories | reporting/history/UI/E2E | advanced analytics deferred |
-| US-77 | Manage Notification Rules | PARTIAL | PARTIAL | rule engine, controlled catalogue, versioned system templates/rendering, recipient validation/directory boundary, persistence, APIs, RBAC, V25-V26; one producer | rules page/modal, notification center/hooks | 55 focused backend notification tests in the latest focused run; 10 frontend notification unit tests; no notification E2E | Quiet/suppression, durable retry/escalation, real email, remaining producers, full UI fields, diagnostics and notification E2E missing; blocker |
+| US-77 | Manage Notification Rules | PARTIAL | COMPLETE | rule engine, controlled catalogue/templates, recipient validation, quiet/suppression, durable scheduling, exact retry, terminal failure, one-level escalation, real SMTP, eight producers, RBAC, V25-V28 | complete rule modal/page, policy summaries, delivery/attempt diagnostics, notification center/hooks | backend policy/provider/concurrency/security tests; 22 notification-focused frontend tests; 106/106 total frontend; E2E-NOT-001..015 pass 45/45; full regression 156/156 | None for frozen MVP scope; US-77 blocker resolved |
 | US-79 | Manage Master Data | COMPLETE | COMPLETE | customer/department/project/location/vendor/station services | resource pages | organization/security tests; journey coverage | None |
 | US-80 | Configure Workflows | COMPLETE | COMPLETE | deterministic Trip/Fuel state machines and guarded transitions | lifecycle controls | lifecycle/authorization/E2E | Complete within approved MVP boundary |
 | US-81 | Manage Scheduling | COMPLETE | COMPLETE | requested windows, availability, blackout and overlap queries | assignment drawers | availability/concurrency/E2E | Complete within approved MVP boundary |
@@ -108,92 +109,27 @@ All paths are relative to the repository root. Evidence is representative rather
 | Routing (US-17-US-19) | 3 | 0 | 0 | Complete |
 | Fuel (US-31, 32, 33, 34, 36) | 5 | 0 | 0 | Complete |
 | Driver (US-39-US-45) | 7 | 0 | 0 | Complete |
-| Cross-cutting (US-71, 74, 75, 77, 79, 80, 81, 83) | 6 | 1 | 1 | Notification partial; offline absent |
-| **Total** | **37** | **1** | **1** | **94.87% verified completion** |
+| Cross-cutting (US-71, 74, 75, 77, 79, 80, 81, 83) | 7 | 0 | 1 | Notification complete; offline absent |
+| **Total** | **38** | **0** | **1** | **97.44% verified completion** |
 
 Identity/security and reporting evidence is included in cross-cutting US-74 and US-75. Spring Security enforcement, actor attribution, and append-only operational histories remain green in the full suite.
 
 ## 7. US-77 Deep Gap Analysis
 
-### 7.1 Acceptance and implementation
+All frozen US-77 MVP capabilities are complete. The exact catalogue contains eight production events with stable producer identities; templates and recipient resolution are validated and snapshotted; quiet hours, suppression, durable retry, terminal failure, and one-level escalation follow the frozen contract; SMTP is the real production EMAIL transport; and the operator UI exposes every applicable rule and diagnostic field.
 
-The latest accepted baseline explicitly carries templates, quiet/suppression, escalation, durable retry, operational coverage, and notification E2E as US-77 gaps. The exact historical gap title narrows production channels to IN_APP and EMAIL. Therefore SMS, PUSH, and WEBHOOK are deferred and are not artificial MVP blockers.
-
-| Item | MVP classification | Current implementation | Evidence / gap |
-|---|---|---|---|
-| A. Rule CRUD | REQUIRED FOR MVP | COMPLETE | `NotificationRuleUseCase`, `NotificationRuleService`, `NotificationRuleController`, persistence |
-| B. Enable/disable | REQUIRED FOR MVP | COMPLETE | domain operations, service/controller PATCH endpoints, UI toggles |
-| C. Event matching | REQUIRED FOR MVP | COMPLETE | `NotificationRuleEngine` exact event-type matching and severity threshold |
-| D. Recipient configuration | REQUIRED FOR MVP | COMPLETE | USER, ROLE, EMAIL_ADDRESS recipient types; request/domain/UI fields |
-| E. Templates | REQUIRED FOR MVP | MISSING | no template model, variables, rendering, or versioning; event title/message are copied |
-| F. IN_APP delivery | REQUIRED FOR MVP | COMPLETE | `InAppNotificationDeliveryAdapter`; persisted notification center/history |
-| G. EMAIL delivery | REQUIRED FOR MVP | PARTIAL | enum/config/adapter exist, but adapter logs instead of sending; UI has no channel control |
-| H. SMS delivery | DEFERRED | MISSING | no enum/config/adapter; not an MVP blocker |
-| I. PUSH delivery | DEFERRED | MISSING | no enum/config/adapter; not an MVP blocker |
-| J. WEBHOOK delivery | DEFERRED | MISSING | no enum/config/adapter; not an MVP blocker |
-| K. Quiet hours | REQUIRED FOR MVP | MISSING | no policy fields or evaluator |
-| L. Suppression | REQUIRED FOR MVP | MISSING | idempotency exists, but no suppression window/policy |
-| M. Escalation | REQUIRED FOR MVP | MISSING | no escalation rule, schedule, or recipient progression |
-| N. Delivery retry | REQUIRED FOR MVP | MISSING | no durable attempt record, retry/backoff, or recovery worker |
-| O. Failure status | REQUIRED FOR MVP | COMPLETE | FAILED state and failure reason in domain/persistence/engine |
-| P. Notification history | REQUIRED FOR MVP | COMPLETE | notification persistence/list endpoint/UI drawer |
-| Q. Read/unread | REQUIRED FOR MVP | COMPLETE | unread count, read/read-all APIs and UI |
-| R. Operational integration | REQUIRED FOR MVP | PARTIAL | only production producer is Trip delay; other advertised event types are not connected |
-| S. RBAC | REQUIRED FOR MVP | COMPLETE | V25 permissions and `SecurityConfig` endpoint mappings |
-| T. Operator-facing UI | REQUIRED FOR MVP | PARTIAL | CRUD/center work; channel and missing policy fields cannot be configured |
-| U. Notification E2E | REQUIRED FOR MVP | MISSING | no notification-specific file or scenario under `frontend/e2e` |
-
-### 7.2 Production event producers
-
-| Producer | Module | Event | Trigger | Rule mapping | Test coverage |
-|---|---|---|---|---|---|
-| `TripOperationalEventService.recordDelay` | Trip | `TRIP_DELAY_RECORDED` | a delay operational event is recorded | exact event type through public `OperationalNotificationEvent` | `TripOperationalEventServiceTest` |
-
-This is the only production publisher found. Test-only publishers are excluded. The rule UI advertises incident, maintenance, driver exception/medical/drug/licence, and fuel threshold events, but no matching production publisher exists for them. MVP-required producer scope must be frozen before implementation; at minimum the UI must not promise unmapped events.
-
-### 7.3 Delivery channels
-
-| Channel | Domain | Config | Production adapter | Failure/retry/status | Tests | MVP |
-|---|---|---|---|---|---|---|
-| IN_APP | yes | yes | yes; persistence is authoritative | failure state; no retry; SENT/FAILED/READ | rule-engine/service/UI | required, complete |
-| EMAIL | yes | yes | **no real transport**; adapter logs in mock and enabled modes | exceptions can fail, no retry; otherwise misleading SENT | adapter path indirectly covered | required, partial |
-| SMS | no | no | no | none | none | deferred |
-| PUSH | no | no | no | none | none | deferred |
-| WEBHOOK | no | no | no | none | none | deferred |
-
-`EmailNotificationDeliveryAdapter` contains a production-delivery comment but no SMTP/provider call. An enum or bean registration is not delivery evidence.
-
-### 7.4 Policy depth
-
-| Capability | Result | Exact evidence |
+| Capability group | Status | Current evidence |
 |---|---|---|
-| Template/render variables/versioning | IMPLEMENTED | `NotificationTemplate`, `NotificationTemplateRenderer`, `NotificationEventCatalogue`, `NotificationRuleEngine`, and V26 active-version lookup/snapshot columns |
-| Recipient rules | IMPLEMENTED (basic) | `RecipientType`, `recipientValue`, engine resolution |
-| Quiet hours | NOT IMPLEMENTED | no fields/evaluator in `NotificationRule`, V25, or engine |
-| Suppression | NOT IMPLEMENTED | no suppression policy/window; unique event/rule/recipient is idempotency only |
-| Escalation | NOT IMPLEMENTED | no escalation model/service/scheduler |
-| Retry/backoff/attempts | NOT IMPLEMENTED | no attempt entity, backoff policy, worker, or scheduled retry |
-| Failed delivery | IMPLEMENTED | `NotificationStatus.FAILED`, `failureReason`, engine exception handling |
-| Dead-letter/recovery | NOT IMPLEMENTED | no recovery queue or operator retry action |
+| Rule/catalogue/template/recipient | COMPLETE | `NotificationEventCatalogue`, `NotificationTemplateRenderer`, `NotificationRecipientResolver`, rule service/controller, V26, UI and NOT-001..005/011 |
+| IN_APP/read state | COMPLETE | notification service/persistence/center and NOT-006..010 |
+| Quiet hours/suppression/audit | COMPLETE | policy/evaluator/execution services, V27, diagnostics and NOT-013/014 |
+| EMAIL/retry/escalation | COMPLETE | SMTP sender, durable worker/attempts, V28, diagnostics and NOT-012/015 |
+| Production producers | COMPLETE | Trip delay/incident; Fleet maintenance/document/exception/medical/drug-test/licence producers and scanner tests |
+| RBAC/security | COMPLETE | `NOTIFICATION_RULE_VIEW`, `NOTIFICATION_RULE_MANAGE`, `NOTIFICATION_VIEW`; backend 401/403 integration coverage |
+| Frontend operability | COMPLETE | rule page/modal, delivery diagnostics, notification center, 22 focused component tests |
+| Browser acceptance | COMPLETE | 15 logical cases, 45/45 notification executions, 156/156 complete regression |
 
-### 7.5 Frontend operability
-
-`NotificationRulesPage`, `NotificationRuleModal`, `NotificationCenter`, `useNotificationRules`, and `useNotifications` provide list/create/edit/delete, enable/disable, unread badge, list, mark-read, and mark-all-read behavior with permission-aware navigation. `NotificationRuleModal` carries `channel` in types/default payload but exposes no channel form control, so an operator cannot select or change EMAIL. It also has no template, quiet-hour, suppression, escalation, or retry fields because the backend capability is absent.
-
-### 7.6 Test coverage
-
-| Criterion | Backend unit | Backend integration | Frontend unit | Playwright | Status |
-|---|---|---|---|---|---|
-| Rule CRUD/enable | yes | controller/security/persistence | yes | no | PARTIAL E2E confidence |
-| Matching/threshold/recipient | yes | listener/engine paths | indirect | no | COMPLETE below E2E |
-| Persistence/history/read state | yes | persistence/controller/security | yes | no | COMPLETE below E2E |
-| IN_APP delivery | yes | engine/persistence | center tests | no | COMPLETE below E2E |
-| EMAIL delivery | path only | no real transport integration | no channel selection | no | MISSING production proof |
-| Templates/policies/retry/escalation | no | no | no | no | MISSING |
-| Operational producer | Trip service unit | no notification journey | no | no | PARTIAL |
-| Notification operator journey | n/a | n/a | 10 tests | none | MISSING |
-
-Backend notification-specific suites contain 32 tests; frontend notification-specific suites contain 10 tests. The green 111-test Playwright suite has no notification-specific spec and is not counted as US-77 E2E coverage.
+SMS, PUSH, WEBHOOK, template editing, HTML templates, manual retry, campaigns, preferences, analytics, unread-age escalation, multi-level escalation, and provider UI are Phase 2 and do not reduce US-77 MVP completion.
 
 ## 8. US-71 Deep Gap Analysis
 
@@ -218,55 +154,54 @@ US-71 remains **NOT IMPLEMENTED**. Isolated vehicle-reading idempotency is usefu
 | Metric | Previous verified | Current verified |
 |---|---:|---:|
 | Total | 39 | 39 |
-| Complete | 37 | 37 |
-| Partial | 1 | 1 |
+| Complete | 37 | 38 |
+| Partial | 1 | 0 |
 | Not implemented | 1 | 1 |
 | Regressed | 0 | 0 |
 | Blocked | 0 | 0 |
-| Verified completion | 94.87% | 94.87% |
-| Functional coverage | 96.15% | 96.15% |
+| Verified completion | 94.87% | 97.44% |
+| Functional coverage | 96.15% | 97.44% |
 
-- Newly completed: none.
-- Still partial: US-77.
+- Newly completed: US-77.
+- Still partial: none.
 - Still not implemented: US-71.
 - Regressed: none.
-- Newly discovered gap detail: EMAIL can be selected by backend contract but the current modal has no channel control; the enabled adapter still only logs and can mark a non-delivery SENT. This refines US-77 and does not create another story.
+- Newly resolved gap detail: all frozen US-77 capabilities and acceptance criteria are complete, including real SMTP, three-attempt retry, one-level escalation, eight production producers, complete UI, and three-browser E2E.
 - Resolved engineering issues confirmed current: the 118 ApplicationContext errors, missing `FuelActorPort`, Trip -> Notification boundary violation, 67 lint errors, and 108 Playwright connection failures remain resolved.
 
 ## 10. Remaining MVP Gap Queue
 
 Dependency order is:
 
-1. **MVP-GAP-008-US77 — Complete Manage Notification Rules.**
-2. **MVP-GAP-011-US71 — Implement offline data synchronization**, unless the product authority explicitly defers US-71 out of the 39-story MVP.
-3. **MVP-RELEASE-CANDIDATE-001 — final candidate validation** after all mandatory stories close.
+1. **MVP-GAP-011-US71 — Implement offline data synchronization**, unless the product authority explicitly defers US-71 out of the 39-story MVP.
+2. **MVP-RELEASE-CANDIDATE-001 — final candidate validation** after all mandatory stories close.
 
 Required US-77 slices:
 
 1. **MVP-GAP-008A — Acceptance/domain-policy freeze: COMPLETE.** The controlled event catalogue, system-template contract, quiet/suppression semantics, terminal-failure escalation, durable EMAIL retry, provider-neutral email contract, and Phase 2 channel boundary are frozen.
 2. **MVP-GAP-008B — Templates and rule configuration: COMPLETE.** Controlled events, system templates, safe rendering, recipient validation, template-backed rules, V26, APIs, and security are implemented.
-3. **MVP-GAP-008C — Suppression and quiet hours:** implement deterministic time-zone-aware evaluation and auditable suppression outcomes.
-4. **MVP-GAP-008D — Escalation and durable retry:** persist delivery attempts, apply bounded backoff, expose failure/recovery state, and avoid false SENT statuses.
-5. **MVP-GAP-008E — Required production event producers:** connect the frozen operational event catalogue through public module boundaries.
-6. **MVP-GAP-008F — Production EMAIL adapter:** implement and integration-test real delivery behind configuration; preserve IN_APP behavior.
-7. **MVP-GAP-008G — Frontend completion:** expose channel, template, and required policy fields and present delivery outcomes.
-8. **MVP-GAP-008H — Notification Playwright coverage:** cover rule configuration, event trigger, center/unread/read, RBAC, and failure/retry where observable.
-9. **MVP-GAP-008I — Regression and story closure:** run all backend, architecture, frontend, and three-browser gates and update traceability.
+3. **MVP-GAP-008C — Suppression and quiet hours: COMPLETE.** Deterministic timezone/DST evaluation, durable quiet scheduling, concurrent non-sliding suppression, rule-execution audit/query, and V27 are implemented.
+4. **MVP-GAP-008D — Escalation and durable retry: COMPLETE.** Durable attempts, exact bounded backoff, restart/concurrency safety, terminal failure, one-level escalation, V28, and sanitized diagnostics are implemented.
+5. **MVP-GAP-008E — Required production event producers: COMPLETE.** Eight frozen events, stable source/milestone identity, public Trip/Fleet publishing boundaries, hourly/daily scanners, and failure isolation are implemented.
+6. **MVP-GAP-008F — Production EMAIL adapter: COMPLETE.** Real SMTP delivery, explicit mode selection, fail-fast production configuration, typed error mapping, message evidence, local integration tests, and 008D retry/escalation integration are implemented.
+7. **MVP-GAP-008G — Frontend completion: COMPLETE.** Catalogue/template-driven rule configuration, conditional channel/recipient/policy UX, field-error mapping, rule summaries, bounded delivery health, and sanitized attempt diagnostics are implemented and visually verified.
+8. **MVP-GAP-008H — Notification Playwright coverage: COMPLETE.** Rule configuration, event trigger, center/unread/read, RBAC, EMAIL failure, quiet/suppression, and retry pass across all supported browsers.
+9. **MVP-GAP-008I — Regression and story closure: COMPLETE.** All 26 criteria, backend/architecture/startup/Flyway/frontend gates, notification 45/45, and complete Playwright 156/156 pass.
 
 ## 11. Release Readiness
 
 **Status: NOT READY.**
 
-Engineering health is release-grade at this checkpoint, but functional scope is not closed. US-77 is an agreed story and remains partial. US-71 is still included in the approved 39-story inventory and remains not implemented; absent an explicit product/governance deferral, it is also a release blocker. No P0/P1 regression in completed functionality was found.
+Engineering health is release-grade and US-77 is closed. Functional scope is not closed because US-71 is still included in the approved 39-story inventory and remains not implemented; absent an explicit product/governance deferral, it is the remaining release blocker. No unresolved P0/P1 defect remains.
 
 ## 12. Recommended Next Task
 
-- **Task ID:** MVP-GAP-008C
-- **Story:** US-77 — Manage Notification Rules
-- **Title:** Quiet Hours and Suppression
-- **Reason:** 008B supplies the controlled catalogue, compatible templates, renderer, validated recipients, and rule contract required before deterministic policy evaluation can be added.
+- **Task ID:** MVP-GAP-011-US71
+- **Story:** US-71 — Support Offline Data Synchronization
+- **Title:** Implement Offline Data Synchronization
+- **Reason:** US-77 is complete; US-71 is the only remaining mandatory story in the current 39-story MVP.
 
-MVP-GAP-008A and MVP-GAP-008B are complete. The next authorized implementation slice is **MVP-GAP-008C — Quiet hours and suppression**.
+MVP-GAP-008A through MVP-GAP-008I are complete. The next recommended task is **MVP-GAP-011-US71 — Implement Offline Data Synchronization**. US-71 was not implemented by 008I.
 
 ## 13. Phase 2 Deferred Scope
 
@@ -296,3 +231,5 @@ Current 008B evidence supersedes those findings: 547 backend tests and Maven ver
 ### Change control record
 
 Before 008B, branch `feature/mvp-fe-quality-001` at `db56d0e1304ef54626f768720e75940e213a87d3` already contained seven modified harness/audit files, this untracked comparison document and notification contract, and six untracked JVM diagnostic logs. Those pre-existing changes were preserved. 008B changed only the notification/Identity boundary, notification tests, V26, and the required MVP documentation. No frontend source, E2E source, dependency, V1-V25, commit, or push was added by 008B.
+
+Before 008C, the working tree already contained modifications to two MVP audit documents, three Playwright QA documents, `frontend/e2e/tests/smoke/app.smoke.spec.ts`, and `frontend/playwright.config.ts`, plus six JVM diagnostic logs. Those changes were preserved. 008C changed only notification policy/audit code, the single notification audit security mapping, notification tests, V27, and the required MVP documentation. 008D added only the notification delivery/retry/escalation/diagnostics slice, V28, its tests, and required documentation/security mapping. It did not modify frontend source/E2E/config files, dependencies, V1-V27, or create a commit/push.

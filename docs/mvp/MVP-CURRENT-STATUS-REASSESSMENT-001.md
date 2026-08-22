@@ -1,5 +1,24 @@
 # MVP-CURRENT-STATUS-REASSESSMENT-001
 
+## Engineering Health Update — MVP-E2E-HARNESS-001 (2026-08-21)
+
+This update supersedes the historical Playwright and release-gate results below. Feature completion remains unchanged at **37 COMPLETE, 1 PARTIAL, and 1 NOT IMPLEMENTED (94.87%)**.
+
+| Gate | Before | After |
+|---|---|---|
+| Playwright service startup | No managed services | Spring Boot H2 backend and Vite frontend managed by Playwright `webServer` |
+| `npm run test:e2e` | 108 failed; 0 passed; connection refused before assertions | **PASS — 111/111** across Chromium, Firefox, and WebKit |
+| Chromium | Assertions not reached | **PASS — 37/37** |
+| Firefox/WebKit smoke | Assertions not reached | **PASS — 3/3 each** |
+| Real authentication smoke | Absent | **PASS** with per-run generated administrator credentials and JWT secret |
+| Backend regression | Previously restored | **PASS — 524 run, 503 passed, 21 skipped** |
+| Frontend quality | Previously restored | **PASS — lint; 94/94 tests; production build** |
+| Architecture/Modulith | Previously restored | **PASS — 15/15 architecture tests** |
+
+The harness uses the existing H2 profile, local identity bootstrap, sample-data bootstrap, Maven wrapper, Vite proxy, and `/api/health` endpoint. It adds no dependency, migration, static JWT, committed credential, or production behavior. Default concurrency is bounded to four workers with zero retries after an eight-worker Firefox timing failure passed twice in isolation; the final complete run was green.
+
+Release readiness remains **NOT READY** because US-77 remains PARTIAL and US-71 remains NOT IMPLEMENTED, not because of an engineering gate failure. Notification-specific Playwright coverage is still missing and is recorded as **MISSING E2E COVERAGE — US-77**. The mandated next task is **MVP-GAP-008**; do not begin it as part of this harness task.
+
 ## Engineering Health Update — MVP-FE-QUALITY-001 (2026-08-21)
 
 This update supersedes the frontend lint result in the reassessment below. Feature completion remains unchanged at **37 COMPLETE, 1 PARTIAL, and 1 NOT IMPLEMENTED (94.87%)**.

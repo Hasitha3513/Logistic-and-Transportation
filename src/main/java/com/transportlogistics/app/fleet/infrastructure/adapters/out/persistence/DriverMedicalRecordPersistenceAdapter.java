@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.time.LocalDate;
 
 @Component
 class DriverMedicalRecordPersistenceAdapter implements DriverMedicalRecordRepository {
@@ -42,6 +43,11 @@ class DriverMedicalRecordPersistenceAdapter implements DriverMedicalRecordReposi
     @Override
     public Optional<DriverMedicalRecord> findLatestByDriverId(UUID driverId) {
         return repository.findLatestApplicableByDriverId(driverId).map(this::toDomain);
+    }
+
+    @Override
+    public List<DriverMedicalRecord> findActiveFitExpiringBy(LocalDate cutoffInclusive) {
+        return repository.findActiveFitExpiringBy(cutoffInclusive).stream().map(this::toDomain).toList();
     }
 
     private DriverMedicalRecordEntity toEntity(DriverMedicalRecord r) {

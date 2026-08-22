@@ -31,3 +31,20 @@ security:
     issuer: transport-logistics-modulith
     access-token-ttl: PT15M
     refresh-token-ttl: P30D
+app:
+  notification:
+    email:
+      enabled: false
+      mode: test
+      provider: test
+      from: noreply@localhost.test
+      reply-to:
+      connect-timeout: PT5S
+      read-timeout: PT30S
+      smtp:
+        host: localhost
+        port: 2525
+        tls-mode: none
+        authentication-required: false
+        username:
+        password:

@@ -104,7 +104,7 @@ public class NotificationRuleEntity {
         );
     }
 
-    public NotificationRule toDomain() {
+    public NotificationRule toDomain(com.transportlogistics.app.notification.domain.model.NotificationRulePolicy policy) {
         return new NotificationRule(
             id,
             name,
@@ -114,6 +114,7 @@ public class NotificationRuleEntity {
             recipientType,
             recipientValue,
             templateCode,
+            policy,
             enabled,
             severityThreshold,
             createdAt,

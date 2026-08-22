@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import {
   Badge,
+  App,
   Button,
   Drawer,
   Empty,
@@ -11,7 +12,6 @@ import {
   Tag,
   Tooltip,
   Typography,
-  message,
 } from 'antd';
 import {
   BellOutlined,
@@ -44,6 +44,7 @@ const SEVERITY_COLORS: Record<NotificationSeverity, string> = {
 };
 
 export const NotificationCenter: React.FC = () => {
+  const { message } = App.useApp();
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
   const { hasPermission } = useAuth();
@@ -174,6 +175,7 @@ export const NotificationCenter: React.FC = () => {
                       </div>
                     </Space>
                     <Space size={6}>
+                      <Tag style={{ margin: 0 }}>{item.channel === 'IN_APP' ? 'In-app' : 'Email'}</Tag>
                       <Tag color={SEVERITY_COLORS[item.severity]} style={{ margin: 0 }}>
                         {item.severity}
                       </Tag>

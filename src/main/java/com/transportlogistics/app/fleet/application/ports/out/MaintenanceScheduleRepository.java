@@ -16,6 +16,8 @@ public interface MaintenanceScheduleRepository {
 
     List<MaintenanceSchedule> findByVehicleId(UUID vehicleId);
 
+    List<MaintenanceSchedule> findScheduledStartingBetween(OffsetDateTime fromExclusive, OffsetDateTime toInclusive);
+
     boolean hasOverlappingSchedule(UUID vehicleId, OffsetDateTime from, OffsetDateTime to, List<MaintenanceStatus> blockingStatuses);
 
     boolean hasOverlappingScheduleExcluding(UUID vehicleId, OffsetDateTime from, OffsetDateTime to, List<MaintenanceStatus> blockingStatuses, UUID excludeScheduleId);

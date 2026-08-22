@@ -220,6 +220,10 @@ class SecurityConfig {
 
                         .requestMatchers(HttpMethod.GET, "/notification-rules", "/notification-rules/*")
                         .hasAuthority("NOTIFICATION_RULE_VIEW")
+                        .requestMatchers(HttpMethod.GET, "/notification-rule-executions")
+                        .hasAuthority("NOTIFICATION_RULE_VIEW")
+                        .requestMatchers(HttpMethod.GET, "/notification-deliveries", "/notification-deliveries/*/attempts")
+                        .hasAuthority("NOTIFICATION_RULE_VIEW")
                         .requestMatchers(HttpMethod.GET, "/notification-event-catalogue", "/notification-templates", "/notification-templates/*")
                         .hasAuthority("NOTIFICATION_RULE_VIEW")
                         .requestMatchers(HttpMethod.POST, "/notification-rules")
@@ -236,13 +240,15 @@ class SecurityConfig {
                         .requestMatchers(HttpMethod.PATCH, "/notifications/*/read", "/notifications/read-all")
                         .hasAuthority("NOTIFICATION_VIEW")
 
+                        .requestMatchers("/e2e/**").hasAuthority("NOTIFICATION_RULE_MANAGE")
+
                         .requestMatchers("/vehicles/**", "/drivers/**", "/vehicle-categories/**", "/vehicle-types/**",
                                 "/routes/**", "/customers/**", "/departments/**", "/locations/**", "/projects/**",
                                 "/trips/**", "/fuel-issues/**", "/fuel-stations/**",
                                 "/fuel-purchases/**", "/fuel-prices/**", "/vendors/**",
                                 "/bunker-tanks/**", "/bunker-transfers/**",
                                 "/dashboard/**", "/reports/**",
-                                "/notification-rules/**", "/notification-event-catalogue/**", "/notification-templates/**",
+                                "/notification-rules/**", "/notification-rule-executions/**", "/notification-deliveries/**", "/notification-event-catalogue/**", "/notification-templates/**",
                                 "/notifications/**").denyAll()
                         .anyRequest().authenticated())
                 .addFilterBefore(jwt, UsernamePasswordAuthenticationFilter.class)

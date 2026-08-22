@@ -25,6 +25,10 @@ public class NotificationWebMapper {
             request.recipientType(),
             request.recipientValue(),
             request.templateCode(),
+            request.quietHoursEnabled(), request.quietStartTime(), request.quietEndTime(),
+            request.quietDays(), request.suppressionWindowMinutes(),
+            request.escalationEnabled(), request.escalationDelayMinutes(), request.escalationRecipientType(),
+            request.escalationRecipientValue(),
             request.enabled() != null ? request.enabled() : true,
             request.severityThreshold()
         );
@@ -39,6 +43,10 @@ public class NotificationWebMapper {
             request.recipientType(),
             request.recipientValue(),
             request.templateCode(),
+            request.quietHoursEnabled(), request.quietStartTime(), request.quietEndTime(),
+            request.quietDays(), request.suppressionWindowMinutes(),
+            request.escalationEnabled(), request.escalationDelayMinutes(), request.escalationRecipientType(),
+            request.escalationRecipientValue(),
             request.enabled() != null ? request.enabled() : true,
             request.severityThreshold()
         );
@@ -54,6 +62,10 @@ public class NotificationWebMapper {
             rule.recipientType(),
             rule.recipientValue(),
             rule.templateCode(),
+            rule.policy().quietHoursEnabled(), rule.policy().quietStartTime(), rule.policy().quietEndTime(),
+            rule.policy().quietDays(), rule.policy().suppressionWindowMinutes(),
+            rule.policy().escalationEnabled(), rule.policy().escalationDelayMinutes(),
+            rule.policy().escalationRecipientType(), rule.policy().escalationRecipientValue(),
             rule.enabled(),
             rule.severityThreshold(),
             rule.createdAt(),
@@ -75,11 +87,16 @@ public class NotificationWebMapper {
             notification.templateId(),
             notification.templateVersion(),
             notification.status(),
+            notification.nextDeliveryAt(),
             notification.createdAt(),
             notification.sentAt(),
             notification.readAt(),
             notification.failureReason(),
-            notification.relatedRoute()
+            notification.relatedRoute(),
+            null,
+            notification.status() == com.transportlogistics.app.notification.domain.model.NotificationStatus.FAILED,
+            notification.parentNotificationId(),
+            notification.escalationLevel()
         );
     }
 

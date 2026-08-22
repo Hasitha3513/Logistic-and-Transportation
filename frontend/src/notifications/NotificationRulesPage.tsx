@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import {
   Alert,
+  App,
   Badge,
   Button,
   Card,
@@ -10,8 +11,9 @@ import {
   Switch,
   Table,
   Tag,
+  Tabs,
+  Tooltip,
   Typography,
-  message,
 } from 'antd';
 import {
   BellOutlined,
@@ -27,8 +29,10 @@ import {
   useDisableNotificationRule,
   useEnableNotificationRule,
   useNotificationRules,
+  useNotificationEventCatalogue,
 } from './useNotificationRules';
 import { NotificationRuleModal } from './NotificationRuleModal';
+import { NotificationDeliveryDiagnostics } from './NotificationDeliveryDiagnostics';
 
 const { Text, Title, Paragraph } = Typography;
 
@@ -39,6 +43,7 @@ const SEVERITY_COLORS: Record<NotificationSeverity, string> = {
 };
 
 export const NotificationRulesPage: React.FC = () => {
+  const { message } = App.useApp();
   const { hasPermission } = useAuth();
   const [modalOpen, setModalOpen] = useState(false);
   const [ruleToEdit, setRuleToEdit] = useState<NotificationRule | null>(null);
@@ -47,6 +52,7 @@ export const NotificationRulesPage: React.FC = () => {
   const canManage = hasPermission('NOTIFICATION_RULE_MANAGE');
 
   const { data: rules = [], isLoading, isError, error, refetch } = useNotificationRules();
+  const catalogue = useNotificationEventCatalogue();
   const enableMutation = useEnableNotificationRule();
   const disableMutation = useDisableNotificationRule();
   const deleteMutation = useDeleteNotificationRule();
@@ -130,6 +136,12 @@ export const NotificationRulesPage: React.FC = () => {
       ),
     },
     {
+      title: 'Template',
+      dataIndex: 'templateCode',
+      key: 'templateCode',
+      render: (templateCode: string) => <Text code>{templateCode}</Text>,
+    },
+    {
       title: 'Recipient',
       key: 'recipient',
       render: (_: unknown, record: NotificationRule) => (
@@ -165,6 +177,16 @@ export const NotificationRulesPage: React.FC = () => {
             aria-label={`Toggle rule ${record.name}`}
           />
         );
+      },
+    },
+    {
+      title: 'Policy',
+      key: 'policy',
+      render: (_: unknown, record: NotificationRule) => {
+        const parts = [record.suppressionWindowMinutes ? `Suppress ${record.suppressionWindowMinutes} min` : 'No suppression'];
+        if (record.quietHoursEnabled) parts.push(`Quiet ${record.quietDays.join(', ')} ${record.quietStartTime}-${record.quietEndTime}`);
+        if (record.escalationEnabled) parts.push(`Fallback ${record.escalationRecipientType} ${record.escalationRecipientValue} after ${record.escalationDelayMinutes} min`);
+        return <Tooltip title={parts.join(' · ')}><Space direction="vertical" size={2}>{parts.map((part) => <Text key={part} type="secondary">{part}</Text>)}</Space></Tooltip>;
       },
     },
     {
@@ -239,14 +261,12 @@ export const NotificationRulesPage: React.FC = () => {
           />
         )}
 
-        <Table
-          dataSource={rules}
-          columns={columns}
-          rowKey="id"
-          loading={isLoading}
-          pagination={{ pageSize: 10, showSizeChanger: true }}
-          locale={{ emptyText: 'No notification rules defined yet.' }}
-        />
+        <Tabs items={[
+          { key: 'rules', label: 'Rules', children: <Table dataSource={rules} columns={columns} rowKey="id" loading={isLoading}
+            scroll={{ x: 1250 }} pagination={{ pageSize: 10, showSizeChanger: true }} locale={{ emptyText: 'No notification rules defined yet.' }} /> },
+          { key: 'deliveries', label: 'Delivery Diagnostics', children: <NotificationDeliveryDiagnostics
+            eventTypes={(catalogue.data ?? []).map((item) => item.eventType)} canManage={canManage} /> },
+        ]} />
       </Card>
 
       <NotificationRuleModal

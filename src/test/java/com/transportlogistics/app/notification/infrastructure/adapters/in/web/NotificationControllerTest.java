@@ -16,6 +16,7 @@ import com.transportlogistics.app.notification.infrastructure.adapters.in.web.dt
 import com.transportlogistics.app.notification.infrastructure.adapters.in.web.mappers.NotificationWebMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -30,6 +31,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
 class NotificationControllerTest {
 
@@ -64,7 +66,9 @@ class NotificationControllerTest {
 
         ruleMvc.perform(get("/notification-rules"))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$[0].name").value("Rule 1"));
+            .andExpect(jsonPath("$[0].name").value("Rule 1"))
+            .andExpect(jsonPath("$[0].quietHoursEnabled").value(false))
+            .andExpect(jsonPath("$[0].suppressionWindowMinutes").value(15));
     }
 
     @Test
@@ -104,6 +108,38 @@ class NotificationControllerTest {
         notifMvc.perform(get("/notifications/unread-count"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.unreadCount").value(5));
+    }
+
+    @Test
+    void createRule_mapsAdditivePolicyFields() throws Exception {
+        when(ruleUseCase.createRule(any())).thenReturn(NotificationRule.create(
+            "Email quiet", null, "TRIP_DELAY_RECORDED", NotificationChannel.EMAIL,
+            RecipientType.EMAIL_ADDRESS, "ops@example.test", "TRIP_DELAY",
+            new com.transportlogistics.app.notification.domain.model.NotificationRulePolicy(true,
+                java.time.LocalTime.of(22, 0), java.time.LocalTime.of(6, 0),
+                java.util.Set.of(java.time.DayOfWeek.MONDAY), 30, true, 10,
+                RecipientType.ROLE, "OPERATIONS"), true, NotificationSeverity.WARNING));
+
+        ruleMvc.perform(post("/notification-rules").contentType(MediaType.APPLICATION_JSON).content("""
+            {"name":"Email quiet","eventType":"TRIP_DELAY_RECORDED","channel":"EMAIL",
+             "recipientType":"EMAIL_ADDRESS","recipientValue":"ops@example.test","templateCode":"TRIP_DELAY",
+             "quietHoursEnabled":true,"quietStartTime":"22:00:00","quietEndTime":"06:00:00",
+             "quietDays":["MONDAY"],"suppressionWindowMinutes":30,
+             "escalationEnabled":true,"escalationDelayMinutes":10,
+             "escalationRecipientType":"ROLE","escalationRecipientValue":"OPERATIONS","enabled":true}
+            """))
+            .andExpect(status().isCreated())
+            .andExpect(jsonPath("$.quietHoursEnabled").value(true))
+            .andExpect(jsonPath("$.quietDays[0]").value("MONDAY"))
+            .andExpect(jsonPath("$.suppressionWindowMinutes").value(30))
+            .andExpect(jsonPath("$.escalationEnabled").value(true))
+            .andExpect(jsonPath("$.escalationDelayMinutes").value(10));
+
+        ArgumentCaptor<NotificationRuleUseCase.CreateRuleCommand> command =
+            ArgumentCaptor.forClass(NotificationRuleUseCase.CreateRuleCommand.class);
+        verify(ruleUseCase).createRule(command.capture());
+        assertThat(command.getValue().quietStartTime()).isEqualTo(java.time.LocalTime.of(22, 0));
+        assertThat(command.getValue().escalationRecipientType()).isEqualTo(RecipientType.ROLE);
     }
 
     @Test

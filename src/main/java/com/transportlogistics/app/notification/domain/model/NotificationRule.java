@@ -14,6 +14,7 @@ public record NotificationRule(
     RecipientType recipientType,
     String recipientValue,
     String templateCode,
+    NotificationRulePolicy policy,
     boolean enabled,
     NotificationSeverity severityThreshold,
     OffsetDateTime createdAt,
@@ -44,6 +45,8 @@ public record NotificationRule(
         eventType = eventType.trim().toUpperCase();
         recipientValue = recipientValue.trim();
         templateCode = templateCode == null || templateCode.isBlank() ? null : templateCode.trim().toUpperCase();
+        policy = policy == null ? NotificationRulePolicy.defaults(eventType) : policy;
+        policy.validateForChannel(channel);
         description = description != null ? description.trim() : null;
         if (createdAt == null) {
             createdAt = OffsetDateTime.now();
@@ -61,6 +64,7 @@ public record NotificationRule(
         RecipientType recipientType,
         String recipientValue,
         String templateCode,
+        NotificationRulePolicy policy,
         boolean enabled,
         NotificationSeverity severityThreshold
     ) {
@@ -75,11 +79,27 @@ public record NotificationRule(
             recipientType,
             recipientValue,
             templateCode,
+            policy,
             enabled,
             severityThreshold != null ? severityThreshold : NotificationSeverity.INFO,
             now,
             now
         );
+    }
+
+    public static NotificationRule create(
+        String name,
+        String description,
+        String eventType,
+        NotificationChannel channel,
+        RecipientType recipientType,
+        String recipientValue,
+        String templateCode,
+        boolean enabled,
+        NotificationSeverity severityThreshold
+    ) {
+        return create(name, description, eventType, channel, recipientType, recipientValue, templateCode,
+            NotificationRulePolicy.defaults(eventType), enabled, severityThreshold);
     }
 
     public static NotificationRule create(
@@ -105,6 +125,7 @@ public record NotificationRule(
         RecipientType recipientType,
         String recipientValue,
         String templateCode,
+        NotificationRulePolicy policy,
         boolean enabled,
         NotificationSeverity severityThreshold
     ) {
@@ -118,6 +139,7 @@ public record NotificationRule(
             recipientType,
             recipientValue,
             templateCode,
+            policy,
             enabled,
             severityThreshold != null ? severityThreshold : NotificationSeverity.INFO,
             this.createdAt,
@@ -138,6 +160,7 @@ public record NotificationRule(
             this.recipientType,
             this.recipientValue,
             this.templateCode,
+            this.policy,
             enabled,
             this.severityThreshold,
             this.createdAt,

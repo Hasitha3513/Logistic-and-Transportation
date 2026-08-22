@@ -5,6 +5,7 @@ import com.transportlogistics.app.fleet.domain.model.DriverMedicalRecord;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.time.LocalDate;
 
 public interface DriverMedicalRecordRepository {
 
@@ -15,4 +16,6 @@ public interface DriverMedicalRecordRepository {
     Optional<DriverMedicalRecord> findById(UUID id);
 
     Optional<DriverMedicalRecord> findLatestByDriverId(UUID driverId);
+
+    List<DriverMedicalRecord> findActiveFitExpiringBy(LocalDate cutoffInclusive);
 }

@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.time.LocalDate;
 
 @Component
 class DriverLicensePersistenceAdapter implements DriverLicenseRepository {
@@ -49,6 +50,12 @@ class DriverLicensePersistenceAdapter implements DriverLicenseRepository {
     @Override
     public List<DriverLicense> findActiveByDriverId(UUID driverId) {
         return repository.findByDriverIdAndActiveTrue(driverId).stream().map(this::map).toList();
+    }
+
+    @Override
+    public List<DriverLicense> findActiveExpiringBy(LocalDate cutoffInclusive) {
+        return repository.findByActiveTrueAndExpiryDateLessThanEqualOrderByExpiryDateAsc(cutoffInclusive)
+                .stream().map(this::map).toList();
     }
 
     @Override
