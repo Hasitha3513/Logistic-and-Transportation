@@ -7,6 +7,7 @@ import { App as AntApp, ConfigProvider } from 'antd';
 import App from './App';
 import { AuthProvider } from './auth/AuthContext';
 import { appTheme } from './app/theme/theme';
+import { OfflineSyncProvider } from './features/offlineSync/OfflineSyncProvider';
 import './styles.css';
 
 const queryClient = new QueryClient({
@@ -22,7 +23,9 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         <QueryClientProvider client={queryClient}>
           <BrowserRouter>
             <AuthProvider>
-              <App />
+              <OfflineSyncProvider>
+                <App />
+              </OfflineSyncProvider>
             </AuthProvider>
           </BrowserRouter>
         </QueryClientProvider>

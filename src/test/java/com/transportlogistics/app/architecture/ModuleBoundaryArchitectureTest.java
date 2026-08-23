@@ -45,4 +45,17 @@ public class ModuleBoundaryArchitectureTest {
                 .because("Identity module must not directly access Organization persistence adapters or repositories")
                 .check(importedClasses);
     }
+
+    @Test
+    void offlineSyncMustNotAccessOwningModuleInternals() {
+        noClasses()
+                .that().resideInAPackage("..offlinesync..")
+                .should().dependOnClassesThat().resideInAnyPackage(
+                        "..fleet.application..", "..fleet.domain..", "..fleet.infrastructure..",
+                        "..trip.application..", "..trip.domain..", "..trip.infrastructure..",
+                        "..identity.application..", "..identity.domain..", "..identity.infrastructure..",
+                        "..notification.application..", "..notification.domain..", "..notification.infrastructure..")
+                .because("Offline Sync must use only public owning-module contracts and its own ports")
+                .check(importedClasses);
+    }
 }

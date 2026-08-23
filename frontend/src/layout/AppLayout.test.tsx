@@ -9,6 +9,18 @@ import { AuthProvider } from '../auth/AuthContext';
 import type { CurrentUser } from '../auth/types';
 import { appTheme } from '../app/theme/theme';
 import { server } from '../test/server';
+import { vi } from 'vitest';
+
+vi.mock('../features/offlineSync/OfflineSyncProvider', () => ({
+  useOptionalOfflineSync: () => undefined,
+  useOfflineSync: () => ({
+    enqueueOperation: vi.fn(),
+    syncNow: vi.fn(() => Promise.resolve()),
+    registerPostApply: vi.fn(() => () => undefined),
+    getOperationsForAggregate: vi.fn(() => Promise.resolve([])),
+    operationsRevision: 0,
+  }),
+}));
 
 const operator: CurrentUser = {
   id: 'd5880745-1a9f-4f7f-bdc8-ff3e257962f1',

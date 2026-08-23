@@ -3,7 +3,7 @@
 **Document ID:** QA-AUTO-DEFECTS-001  
 **Target Baseline:** Corrected MVP Baseline v2  
 **Date:** August 22, 2026
-**Status:** CLOSED FOR US-77 MVP
+**Status:** CLOSED THROUGH MVP-GAP-011I
 
 ---
 
@@ -17,6 +17,12 @@
 | *DEF-004* | US-05 / Cross-browser | Minor | Firefox lubricant negative test under eight-worker load | One validation assertion failed once under suite contention, then passed twice in isolation | Resolved by Bounded Workers |
 | *DEF-005* | US-77 | Major | `NotificationRuleModal.tsx` | Catalogue refresh could reset an operator's EMAIL selection back to IN_APP while editing the create form | Resolved in Product UI |
 | *DEF-006* | US-77 / Cross-browser | Minor | Playwright full-suite harness | Four-worker contention caused different one-off full-suite timing failures despite isolated passes | Resolved by Bounded Workers |
+| *DEF-007* | US-71 | Major | Vehicle/Trip offline capture hooks | TanStack Query's default mutation network mode paused the mutation before the durable queue write while offline | Resolved in Product UI |
+| *DEF-008* | US-71 | Major | Offline operation validation | Client UUID validation rejected canonical Java/persisted UUID text with non-RFC version/variant digits used by repository fixtures | Resolved in Product UI |
+| *DEF-009* | US-71 / Security | Major | E2E handler decorator | Test decorator failed to delegate handlers' any-authority authorization semantics | Resolved in Harness |
+| *DEF-010* | US-71 / Cross-browser | Minor | Offline Playwright controls | Reconnect, retry, Ant Select, and drawer timing produced engine-specific races | Resolved in Tests |
+| *DEF-011* | US-71 | Minor | IndexedDB assertion helper | Initial inspection could race database initialization or accidentally open an absent database | Resolved in Harness |
+| *DEF-012* | US-71 / Cross-browser | Minor | E2E-OFF-008 retry assertion | Firefox automatic retry could advance beyond attempt 1 before an exact scheduler-timing assertion | Resolved in Test Contract |
 
 ---
 
@@ -85,3 +91,49 @@
 - **Verification:** repository-standard `npm run test:e2e` passed 156/156: 111 retained plus 45 notification executions.
 
 No unresolved notification defect remains. Notification E2E coverage and US-77 closure are complete for MVP-GAP-008I.
+
+### DEF-007: Offline Mutation Paused Before Queue Persistence
+
+- **Category:** PRODUCT DEFECT.
+- **Evidence:** With the real browser offline, TanStack Query paused the mutation function before `enqueueOperation`, so no IndexedDB operation was created.
+- **Resolution:** Set `networkMode: 'always'` only on the queue-first manual Vehicle-reading and Trip operational-event mutations. The coordinator still decides when server synchronization is possible.
+- **Verification:** E2E-OFF-001 and E2E-OFF-005 pass in all three browsers; frontend unit and full regression gates pass.
+
+### DEF-008: UUID Contract Was Narrower Than Backend Identity
+
+- **Category:** PRODUCT DEFECT.
+- **Evidence:** The client regex rejected canonical 8-4-4-4-12 hexadecimal UUID strings already parsed by Java `UUID` and present in deterministic repository data.
+- **Resolution:** Validate canonical UUID text shape without imposing version/variant digits not required by the backend contract. Added unit coverage.
+- **Verification:** 170/170 frontend tests and all 201 Playwright executions pass.
+
+### DEF-009: E2E Decorator Changed Authorization Semantics
+
+- **Category:** HARNESS DEFECT.
+- **Evidence:** The first handler wrapper delegated authority names but not `isAuthorized`, changing Trip's any-of rule into the interface default behavior.
+- **Resolution:** Delegate `isAuthorized` exactly to the production handler. Controls remain operation-ID scoped, authenticated, authority protected, and `e2e` profile only.
+- **Verification:** Permission-revocation and Trip offline cases pass; profile safety test passes.
+
+### DEF-010: Cross-Browser Offline Timing and Selector Races
+
+- **Category:** TEST DEFECT / FLAKY-TIMING / BROWSER-SPECIFIC.
+- **Evidence:** Firefox could reconnect a queued item while a mixed batch was still being assembled; scheduled retry competed with Manual Sync; WebKit/Firefox differed in Ant Select viewport behavior.
+- **Resolution:** Assemble mixed batches under one uninterrupted offline interval, isolate manual retry by reloading after deferring due time, use bounded eventual assertions, and invoke the visible Ant option DOM click without generated positional selectors. No business behavior or retry policy changed.
+- **Verification:** Offline matrix 45/45 and full suite 201/201 with retries disabled.
+
+### DEF-011: IndexedDB Read Helper Initialization Race
+
+- **Category:** HARNESS DEFECT.
+- **Evidence:** An early read could occur before the expected database/stores/metadata existed; opening by name could create an empty database and conceal initialization ordering.
+- **Resolution:** The helper first checks database existence/version and required stores/metadata, then performs read-only transactions only. Core tests never insert queue records directly.
+- **Verification:** Reload/new-page and owner-isolation cases pass in Chromium, Firefox, and WebKit.
+
+No unresolved P0/P1 US-71 defect was found in 011H. Product fixes remained inside the frozen queue-first scope; no service worker, migration, retry-policy change, or production test endpoint was introduced.
+
+### DEF-012: Mixed-Batch Retry Assertion Assumed Exact Scheduler Timing
+
+- **Category:** TEST DEFECT / FLAKY-TIMING / BROWSER-SPECIFIC.
+- **Evidence:** During the first 011I focused run, E2E-OFF-008 passed its independent-state checks but Firefox's automatic scheduler legitimately advanced the retryable operation from attempt 1 to attempt 2 before the test read IndexedDB. The isolated unchanged case passed, confirming timing sensitivity.
+- **Resolution:** Preserve the frozen acceptance behavior by asserting persisted bounded retry (`attemptCount` from 1 through the configured ceiling of 10 and a non-empty `nextAttemptAt`) instead of requiring the scheduler to remain at exactly attempt 1. Outcome, state, payload, identity, and server-mutation assertions remain unchanged. No production behavior, retry interval, timeout, sleep, skip, or Playwright retry was added.
+- **Verification:** The focused suite passes 45/45 and the full suite passes 201/201 with zero failures or skips across Chromium, Firefox, and WebKit.
+
+No unresolved P0/P1 offline defect remains after MVP-GAP-011I. US-71 acceptance and closure are complete.

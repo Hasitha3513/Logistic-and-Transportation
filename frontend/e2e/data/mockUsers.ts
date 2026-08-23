@@ -58,7 +58,7 @@ export const USERS: Record<string, TestUser> = {
     ],
   },
   DISPATCHER: {
-    id: '00000000-0000-0000-0000-000000000003',
+    id: '00000000-0000-4000-8000-000000000003',
     username: 'trip.dispatcher',
     email: 'dispatcher@example.com',
     firstName: 'Trip',

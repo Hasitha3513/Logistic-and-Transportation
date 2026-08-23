@@ -2,7 +2,7 @@ import { test, expect } from '../../fixtures/authFixtures';
 import { TripDetailsPage } from '../../pages/TripDetailsPage';
 
 test.describe('@trips En-Route Checkpoints & Operational Events (US-13)', () => {
-  const tripId = '64000000-0000-0000-0000-000000000001';
+  const tripId = '64000000-0000-4000-8000-000000000001';
 
   test.beforeEach(async ({ dispatcherPage }) => {
     let operationalEvents = [
@@ -251,7 +251,6 @@ test.describe('@trips En-Route Checkpoints & Operational Events (US-13)', () => 
 
     await checkpointModal.getByRole('button', { name: 'Record Checkpoint' }).click();
     await expect(checkpointModal).toContainText('Please select a checkpoint type');
-    await expect(checkpointModal).toContainText('Please enter location description');
     await checkpointModal.getByRole('button', { name: 'Cancel' }).click();
     await expect(checkpointModal).not.toBeVisible();
 

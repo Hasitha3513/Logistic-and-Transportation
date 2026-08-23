@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import {
+  App,
   Alert,
   Badge,
   Button,
@@ -24,7 +25,11 @@ import {
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { useAuth } from '../auth/AuthContext';
+import { OfflineOperationActions } from '../features/offlineSync/OfflineOperationActions';
+import { OFFLINE_STATUS_PRESENTATION } from '../features/offlineSync/presentation';
+import type { OfflineOperation } from '../features/offlineSync/types';
 import {
+  useLocalTripOperationalEvents,
   useRecordTripCheckpoint,
   useRecordTripDelay,
   useRecordTripIncident,
@@ -38,6 +43,11 @@ import type {
 } from './types';
 
 const { Text, Paragraph } = Typography;
+
+type TripOperationalOfflineOperation = Exclude<
+  OfflineOperation,
+  { operationType: 'VEHICLE_READING_RECORD' }
+>;
 
 const dateTimeFormat = new Intl.DateTimeFormat('en-GB', {
   dateStyle: 'medium',
@@ -71,8 +81,11 @@ interface TripOperationalEventsSectionProps {
 }
 
 export default function TripOperationalEventsSection({ trip }: TripOperationalEventsSectionProps) {
+  const { message } = App.useApp();
   const { hasPermission } = useAuth();
   const { data: events, isLoading, isError, refetch } = useTripOperationalEvents(trip.id);
+  const { data: localEvents = [] } = useLocalTripOperationalEvents(trip.id);
+  const visibleLocalEvents = localEvents.filter((operation) => operation.status !== 'SYNCED');
 
   const recordCheckpointMutation = useRecordTripCheckpoint(trip.id);
   const recordDelayMutation = useRecordTripDelay(trip.id);
@@ -104,10 +117,11 @@ export default function TripOperationalEventsSection({ trip }: TripOperationalEv
         occurredAt: values.occurredAt ? values.occurredAt.toISOString() : undefined,
         remarks: values.remarks,
       });
+      void message.success('Checkpoint queued for synchronization');
       checkpointForm.resetFields();
       setCheckpointModalOpen(false);
-    } catch {
-      // validation error handled by form
+    } catch (error: unknown) {
+      if (error instanceof Error) void message.error(error.message);
     }
   };
 
@@ -121,10 +135,11 @@ export default function TripOperationalEventsSection({ trip }: TripOperationalEv
         occurredAt: values.occurredAt ? values.occurredAt.toISOString() : undefined,
         remarks: values.remarks,
       });
+      void message.success('Delay queued for synchronization');
       delayForm.resetFields();
       setDelayModalOpen(false);
-    } catch {
-      // validation error handled by form
+    } catch (error: unknown) {
+      if (error instanceof Error) void message.error(error.message);
     }
   };
 
@@ -138,10 +153,11 @@ export default function TripOperationalEventsSection({ trip }: TripOperationalEv
         occurredAt: values.occurredAt ? values.occurredAt.toISOString() : undefined,
         remarks: values.remarks,
       });
+      void message.success('Incident queued for synchronization');
       incidentForm.resetFields();
       setIncidentModalOpen(false);
-    } catch {
-      // validation error handled by form
+    } catch (error: unknown) {
+      if (error instanceof Error) void message.error(error.message);
     }
   };
 
@@ -227,6 +243,52 @@ export default function TripOperationalEventsSection({ trip }: TripOperationalEv
     };
   };
 
+  const renderLocalTimelineItem = (operation: TripOperationalOfflineOperation) => {
+    const status = OFFLINE_STATUS_PRESENTATION[operation.status];
+    let title: React.ReactNode;
+    let summary: React.ReactNode;
+    let occurredAt: string;
+    let location: string | undefined;
+    let remarks: string | undefined;
+    if (operation.operationType === 'TRIP_CHECKPOINT_RECORD') {
+      const meta = CHECKPOINT_LABELS[operation.payload.checkpointType];
+      title = <Tag color={meta.color}>{meta.label}</Tag>;
+      summary = <Text strong>{operation.payload.locationDescription ?? 'En-route Checkpoint'}</Text>;
+      occurredAt = operation.payload.occurredAt;
+      location = operation.payload.locationDescription;
+      remarks = operation.payload.remarks;
+    } else if (operation.operationType === 'TRIP_DELAY_RECORD') {
+      title = <Tag color="orange">Delay: {operation.payload.delayMinutes} mins</Tag>;
+      summary = <Text strong>{operation.payload.reason}</Text>;
+      occurredAt = operation.payload.occurredAt;
+      location = operation.payload.locationDescription;
+      remarks = operation.payload.remarks;
+    } else {
+      const meta = INCIDENT_SEVERITY_TAGS[operation.payload.incidentSeverity];
+      title = <Tag color={meta.color}>Incident: {meta.label}</Tag>;
+      summary = <Text strong>{operation.payload.description}</Text>;
+      occurredAt = operation.payload.occurredAt;
+      location = operation.payload.locationDescription;
+      remarks = operation.payload.remarks;
+    }
+    return {
+      key: operation.operationId,
+      color: status.color,
+      children: (
+        <div className="trip-operational-event-item" data-local-operation={operation.operationId}>
+          <Space wrap size={8}>{title}{summary}<Tag color={status.color}>{status.detailLabel}</Tag></Space>
+          <div><Text type="secondary">{formatEventDate(occurredAt)}{location ? ` · ${location}` : ''} · Local capture</Text></div>
+          {remarks && <Paragraph style={{ marginTop: 4 }}>{remarks}</Paragraph>}
+          {(operation.status === 'FAILED' || operation.status === 'CONFLICT') && operation.lastErrorMessage && (
+            <Alert type={operation.status === 'CONFLICT' ? 'warning' : 'error'} showIcon
+              message={operation.lastErrorMessage} style={{ marginTop: 8 }} />
+          )}
+          <OfflineOperationActions operation={operation} compact />
+        </div>
+      ),
+    };
+  };
+
   return (
     <Card
       variant="borderless"
@@ -235,7 +297,9 @@ export default function TripOperationalEventsSection({ trip }: TripOperationalEv
         <Space>
           <EnvironmentOutlined />
           <span>En-Route Checkpoints & Operational Events</span>
-          {events && events.length > 0 && <Badge count={events.length} showZero color="#1890ff" />}
+          {(events || visibleLocalEvents.length > 0) && (
+            <Badge count={(events?.length ?? 0) + visibleLocalEvents.length} showZero color="#1890ff" />
+          )}
         </Space>
       }
       extra={
@@ -299,17 +363,20 @@ export default function TripOperationalEventsSection({ trip }: TripOperationalEv
         />
       )}
 
-      {!isLoading && !isError && (!events || events.length === 0) && (
+      {!isLoading && !isError && (!events || events.length === 0) && visibleLocalEvents.length === 0 && (
         <Empty
           image={Empty.PRESENTED_IMAGE_SIMPLE}
           description="No en-route checkpoints, delays, or incidents have been recorded yet."
         />
       )}
 
-      {events && events.length > 0 && (
+      {((events && events.length > 0) || visibleLocalEvents.length > 0) && (
         <Timeline
           pending={isLoading ? 'Loading operational log...' : undefined}
-          items={events.map(renderTimelineItem)}
+          items={[
+            ...(events?.map(renderTimelineItem) ?? []),
+            ...visibleLocalEvents.map(renderLocalTimelineItem),
+          ]}
         />
       )}
 
@@ -346,7 +413,7 @@ export default function TripOperationalEventsSection({ trip }: TripOperationalEv
           <Form.Item
             name="locationDescription"
             label="Location / Waypoint Description"
-            rules={[{ required: true, message: 'Please enter location description' }]}
+            rules={[{ max: 255, message: 'Location cannot exceed 255 characters' }]}
           >
             <Input placeholder="e.g. Colombo Port Gate 4, Expressway Toll Exit" />
           </Form.Item>
@@ -359,7 +426,8 @@ export default function TripOperationalEventsSection({ trip }: TripOperationalEv
             <DatePicker showTime format="YYYY-MM-DD HH:mm" style={{ width: '100%' }} />
           </Form.Item>
 
-          <Form.Item name="remarks" label="Remarks / Observations">
+          <Form.Item name="remarks" label="Remarks / Observations"
+            rules={[{ max: 2000, message: 'Remarks cannot exceed 2000 characters' }]}>
             <Input.TextArea rows={3} placeholder="Optional operational notes or handover remarks" />
           </Form.Item>
         </Form>
@@ -392,18 +460,20 @@ export default function TripOperationalEventsSection({ trip }: TripOperationalEv
               },
             ]}
           >
-            <InputNumber min={1} max={1440} style={{ width: '100%' }} placeholder="e.g. 30" />
+            <InputNumber min={1} precision={0} style={{ width: '100%' }} placeholder="e.g. 30" />
           </Form.Item>
 
           <Form.Item
             name="reason"
             label="Delay Reason"
-            rules={[{ required: true, message: 'Please enter the delay reason' }]}
+            rules={[{ required: true, whitespace: true, message: 'Please enter the delay reason' },
+              { max: 500, message: 'Reason cannot exceed 500 characters' }]}
           >
             <Input placeholder="e.g. Heavy traffic congestion, Customer loading delay, Road block" />
           </Form.Item>
 
-          <Form.Item name="locationDescription" label="Location / Section">
+          <Form.Item name="locationDescription" label="Location / Section"
+            rules={[{ max: 255, message: 'Location cannot exceed 255 characters' }]}>
             <Input placeholder="e.g. Expressway Mile 24, Warehouse B Loading Bay" />
           </Form.Item>
 
@@ -415,7 +485,8 @@ export default function TripOperationalEventsSection({ trip }: TripOperationalEv
             <DatePicker showTime format="YYYY-MM-DD HH:mm" style={{ width: '100%' }} />
           </Form.Item>
 
-          <Form.Item name="remarks" label="Remarks / Mitigation">
+          <Form.Item name="remarks" label="Remarks / Mitigation"
+            rules={[{ max: 2000, message: 'Remarks cannot exceed 2000 characters' }]}>
             <Input.TextArea rows={3} placeholder="Mitigation actions taken or ETA adjustment notes" />
           </Form.Item>
         </Form>
@@ -452,12 +523,14 @@ export default function TripOperationalEventsSection({ trip }: TripOperationalEv
           <Form.Item
             name="description"
             label="Incident Description / Cause"
-            rules={[{ required: true, message: 'Please describe the incident' }]}
+            rules={[{ required: true, whitespace: true, message: 'Please describe the incident' },
+              { max: 500, message: 'Description cannot exceed 500 characters' }]}
           >
             <Input placeholder="e.g. Engine coolant leak, tire puncture, police inspection" />
           </Form.Item>
 
-          <Form.Item name="locationDescription" label="Location of Occurrence">
+          <Form.Item name="locationDescription" label="Location of Occurrence"
+            rules={[{ max: 255, message: 'Location cannot exceed 255 characters' }]}>
             <Input placeholder="e.g. Kandy Road near Ambepussa" />
           </Form.Item>
 
@@ -469,7 +542,8 @@ export default function TripOperationalEventsSection({ trip }: TripOperationalEv
             <DatePicker showTime format="YYYY-MM-DD HH:mm" style={{ width: '100%' }} />
           </Form.Item>
 
-          <Form.Item name="remarks" label="Action Taken / Support Requested">
+          <Form.Item name="remarks" label="Action Taken / Support Requested"
+            rules={[{ max: 2000, message: 'Remarks cannot exceed 2000 characters' }]}>
             <Input.TextArea rows={3} placeholder="Support requested, recovery vehicle dispatched, etc." />
           </Form.Item>
         </Form>

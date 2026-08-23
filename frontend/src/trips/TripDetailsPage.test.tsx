@@ -4,10 +4,22 @@ import userEvent from '@testing-library/user-event';
 import { App as AntApp, ConfigProvider } from 'antd';
 import { HttpResponse, http } from 'msw';
 import { MemoryRouter } from 'react-router-dom';
+import { vi } from 'vitest';
 import App from '../App';
 import { AuthProvider } from '../auth/AuthContext';
 import { server } from '../test/server';
 import { appTheme } from '../app/theme/theme';
+
+vi.mock('../features/offlineSync/OfflineSyncProvider', () => ({
+  useOptionalOfflineSync: () => undefined,
+  useOfflineSync: () => ({
+    enqueueOperation: vi.fn(),
+    syncNow: vi.fn(() => Promise.resolve()),
+    registerPostApply: vi.fn(() => () => undefined),
+    getOperationsForAggregate: vi.fn(() => Promise.resolve([])),
+    operationsRevision: 0,
+  }),
+}));
 
 const trip = {
   id: 'trip-1', tripNumber: 'TRIP-000123', customerId: 'customer-1', routeId: 'route-1',

@@ -31,6 +31,7 @@ import {
 import { useAuth } from '../auth/AuthContext';
 import { findNavigationItem, navigation, permittedNavigation, type NavigationItem } from '../navigation/navigation';
 import { NotificationCenter } from '../notifications/NotificationCenter';
+import { OfflineSyncCenter } from '../features/offlineSync/OfflineSyncCenter';
 
 const { Header, Sider, Content } = Layout;
 const { Text, Title } = Typography;
@@ -134,6 +135,7 @@ export default function AppLayout() {
             </Flex>
 
             <Flex align="center" gap={12}>
+              <OfflineSyncCenter />
               <NotificationCenter />
               <Dropdown
                 menu={{
