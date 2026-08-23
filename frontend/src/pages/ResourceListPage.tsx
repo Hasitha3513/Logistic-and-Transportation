@@ -1,6 +1,7 @@
 import { DeleteOutlined, EditOutlined, EyeOutlined, PlusOutlined, ReloadOutlined, SafetyCertificateOutlined } from '@ant-design/icons';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Alert, App as AntApp, Button, Card, Descriptions, Drawer, Flex, Space, Spin, Table, Tag, Typography, type TableColumnsType } from 'antd';
 import { api } from '../api/client';
 import { useAuth } from '../auth/AuthContext';
@@ -69,12 +70,15 @@ export default function ResourceListPage({ endpoint, queryKey, title, descriptio
   const { message, modal } = AntApp.useApp();
   const { hasPermission } = useAuth();
   const queryClient = useQueryClient();
-  const [selected, setSelected] = useState<ResourceRecord>();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [selectedState, setSelected] = useState<ResourceRecord>();
   const [editor, setEditor] = useState<EditorState>();
   const resources = useQuery({
     queryKey: [queryKey],
     queryFn: async () => (await api.get<ResourceRecord[]>(endpoint)).data,
   });
+  const requestedVehicleId = endpoint === '/vehicles' ? searchParams.get('vehicleId') : null;
+  const selected = selectedState ?? resources.data?.find((resource) => resource.id === requestedVehicleId);
   const details = useQuery({
     queryKey: [queryKey, selected?.id],
     queryFn: async () => (await api.get<ResourceRecord>(`${endpoint}/${selected?.id}`)).data,
@@ -156,7 +160,14 @@ export default function ResourceListPage({ endpoint, queryKey, title, descriptio
         title={`${title} details`}
         width={760}
         open={Boolean(selected)}
-        onClose={() => setSelected(undefined)}
+        onClose={() => {
+          setSelected(undefined);
+          if (searchParams.has('vehicleId')) {
+            const next = new URLSearchParams(searchParams);
+            next.delete('vehicleId');
+            setSearchParams(next, { replace: true });
+          }
+        }}
         destroyOnHidden
       >
         {details.isLoading && <Flex justify="center"><Spin aria-label="Loading details" /></Flex>}

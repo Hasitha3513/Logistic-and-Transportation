@@ -4,11 +4,28 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { App as AntApp, ConfigProvider } from 'antd';
 import { http, HttpResponse } from 'msw';
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { server } from '../test/server';
 import { AuthProvider } from '../auth/AuthContext';
 import TripOperationalEventsSection from './TripOperationalEventsSection';
 import type { Trip } from './types';
+
+const offline = vi.hoisted(() => ({
+  enqueue: vi.fn(),
+  syncNow: vi.fn(() => Promise.resolve()),
+  register: vi.fn<(type: string, callback: unknown) => () => void>(() => () => undefined),
+  getForAggregate: vi.fn<() => Promise<unknown[]>>(() => Promise.resolve([])),
+}));
+
+vi.mock('../features/offlineSync/OfflineSyncProvider', () => ({
+  useOfflineSync: () => ({
+    enqueueOperation: offline.enqueue,
+    syncNow: offline.syncNow,
+    registerPostApply: offline.register,
+    getOperationsForAggregate: offline.getForAggregate,
+    operationsRevision: 0,
+  }),
+}));
 
 const activeTrip: Trip = {
   id: '34000000-0000-0000-0000-000000000001',
@@ -85,11 +102,17 @@ function renderSection(trip: Trip = activeTrip) {
 }
 
 describe('TripOperationalEventsSection', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    offline.enqueue.mockResolvedValue({ operationId: 'operation-new', status: 'PENDING' });
+    offline.getForAggregate.mockResolvedValue([]);
+  });
+
   it('renders existing operational events timeline with badges and tags', async () => {
     server.use(
       http.get('*/auth/me', () =>
         HttpResponse.json({
-          id: 'user-1',
+          id: '11000000-0000-4000-8000-000000000001',
           username: 'dispatcher.john',
           roles: ['OPERATIONS'],
           permissions: ['TRIP_VIEW', 'TRIP_LOG_VIEW', 'TRIP_LOG_MANAGE'],
@@ -115,7 +138,7 @@ describe('TripOperationalEventsSection', () => {
     server.use(
       http.get('*/auth/me', () =>
         HttpResponse.json({
-          id: 'user-1',
+          id: '11000000-0000-4000-8000-000000000001',
           username: 'dispatcher.john',
           roles: ['OPERATIONS'],
           permissions: ['TRIP_VIEW', 'TRIP_LOG_VIEW'],
@@ -136,12 +159,12 @@ describe('TripOperationalEventsSection', () => {
 
   it('allows recording a new checkpoint', async () => {
     const user = userEvent.setup();
-    let createdPayload: unknown;
+    let directPostCount = 0;
 
     server.use(
       http.get('*/auth/me', () =>
         HttpResponse.json({
-          id: 'user-1',
+          id: '11000000-0000-4000-8000-000000000001',
           username: 'dispatcher.john',
           roles: ['OPERATIONS'],
           permissions: ['TRIP_VIEW', 'TRIP_LOG_VIEW', 'TRIP_LOG_MANAGE'],
@@ -151,7 +174,8 @@ describe('TripOperationalEventsSection', () => {
         HttpResponse.json([])
       ),
       http.post(`*/trips/${activeTrip.id}/checkpoints`, async ({ request }) => {
-        createdPayload = await request.json();
+        directPostCount += 1;
+        await request.json();
         return HttpResponse.json({
           id: 'evt-new',
           tripId: activeTrip.id,
@@ -184,6 +208,57 @@ describe('TripOperationalEventsSection', () => {
     const submitBtn = screen.getByRole('button', { name: 'Record Checkpoint' });
     await user.click(submitBtn);
 
-    await waitFor(() => expect(createdPayload).toBeDefined());
+    await waitFor(() => expect(offline.enqueue).toHaveBeenCalledTimes(1));
+    expect(offline.enqueue).toHaveBeenCalledWith(expect.objectContaining({
+      ownerUserId: '11000000-0000-4000-8000-000000000001',
+      operationType: 'TRIP_CHECKPOINT_RECORD',
+      aggregateType: 'TRIP',
+      aggregateId: activeTrip.id,
+      payload: expect.objectContaining({ checkpointType: 'PICKUP', locationDescription: 'Dock 4' }),
+    }));
+    expect(offline.syncNow).toHaveBeenCalled();
+    expect(directPostCount).toBe(0);
+  });
+
+  it('shows pending and terminal local operations while hiding reconciled entries', async () => {
+    offline.getForAggregate.mockResolvedValue([
+      {
+        operationId: 'pending-checkpoint', operationType: 'TRIP_CHECKPOINT_RECORD',
+        aggregateType: 'TRIP', aggregateId: activeTrip.id, status: 'PENDING',
+        payload: { checkpointType: 'DELIVERY', occurredAt: '2026-08-19T12:00:00Z' },
+      },
+      {
+        operationId: 'conflict-delay', operationType: 'TRIP_DELAY_RECORD',
+        aggregateType: 'TRIP', aggregateId: activeTrip.id, status: 'CONFLICT',
+        payload: { delayMinutes: 15, reason: 'Road closed', occurredAt: '2026-08-19T12:10:00Z' },
+        lastErrorMessage: 'Trip status no longer accepts events',
+      },
+      {
+        operationId: 'failed-incident', operationType: 'TRIP_INCIDENT_RECORD',
+        aggregateType: 'TRIP', aggregateId: activeTrip.id, status: 'FAILED',
+        payload: { incidentSeverity: 'HIGH', description: 'Engine fault', occurredAt: '2026-08-19T12:20:00Z' },
+        lastErrorMessage: 'Incident could not be synchronized',
+      },
+      {
+        operationId: 'synced-hidden', operationType: 'TRIP_CHECKPOINT_RECORD',
+        aggregateType: 'TRIP', aggregateId: activeTrip.id, status: 'SYNCED',
+        payload: { checkpointType: 'ARRIVAL', occurredAt: '2026-08-19T13:00:00Z' },
+      },
+    ]);
+    server.use(
+      http.get('*/auth/me', () => HttpResponse.json({
+        id: '11000000-0000-4000-8000-000000000001', username: 'dispatcher.john',
+        roles: ['OPERATIONS'], permissions: ['TRIP_VIEW', 'TRIP_LOG_VIEW'],
+      })),
+      http.get(`*/trips/${activeTrip.id}/operational-events`, () => HttpResponse.json([])),
+    );
+
+    renderSection();
+
+    expect(await screen.findByText('Pending sync')).toBeInTheDocument();
+    expect(await screen.findByText('Trip status no longer accepts events')).toBeInTheDocument();
+    expect(await screen.findByText('Incident could not be synchronized')).toBeInTheDocument();
+    expect(screen.queryByText('Arrival')).not.toBeInTheDocument();
+    expect(offline.getForAggregate).toHaveBeenCalledWith('TRIP', activeTrip.id);
   });
 });

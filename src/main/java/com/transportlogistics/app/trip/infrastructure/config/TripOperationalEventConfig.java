@@ -21,7 +21,7 @@ public class TripOperationalEventConfig {
     }
 
     @Bean
-    public TripOperationalEventUseCase tripOperationalEventUseCase(
+    public TripOperationalEventService tripOperationalEventUseCase(
             TripRepository tripRepo,
             TripOperationalEventRepository eventRepo,
             TripHistoryRepository historyRepo,

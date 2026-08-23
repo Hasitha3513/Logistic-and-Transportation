@@ -32,10 +32,13 @@ import {
 import dayjs from 'dayjs';
 import { useState } from 'react';
 import { useAuth } from '../auth/AuthContext';
+import { OfflineOperationActions } from '../features/offlineSync/OfflineOperationActions';
+import { OfflineOperationStatusTag } from '../features/offlineSync/OfflineOperationStatusTag';
 import type { VehicleMeterReset, VehicleReading, VehicleReadingType } from './types';
 import {
   useCorrectVehicleReading,
   useLatestVehicleReadings,
+  useLocalVehicleReadingOperations,
   useRecordManualReading,
   useResetVehicleMeter,
   useVehicleMeterResets,
@@ -65,6 +68,7 @@ export default function VehicleReadingsSection({ vehicleId }: VehicleReadingsSec
   const mileageQuery = useVehicleMileage(vehicleId);
   const readingsQuery = useVehicleReadings(vehicleId, { readingType: readingTypeFilter, page, limit: 10 });
   const resetsQuery = useVehicleMeterResets(vehicleId);
+  const localReadingsQuery = useLocalVehicleReadingOperations(vehicleId);
 
   const recordMutation = useRecordManualReading(vehicleId);
   const correctMutation = useCorrectVehicleReading(vehicleId);
@@ -83,7 +87,7 @@ export default function VehicleReadingsSection({ vehicleId }: VehicleReadingsSec
         recordedAt: values.recordedAt ? values.recordedAt.toISOString() : dayjs().toISOString(),
         notes: values.notes,
       });
-      void message.success('Vehicle reading recorded successfully');
+      void message.success('Vehicle reading queued for synchronization');
       setRecordModalOpen(false);
       recordForm.resetFields();
     } catch (err: unknown) {
@@ -195,6 +199,42 @@ export default function VehicleReadingsSection({ vehicleId }: VehicleReadingsSec
           )}
         </Space>
       ),
+    },
+  ];
+
+  const localReadingColumns: TableColumnsType<NonNullable<typeof localReadingsQuery.data>[number]> = [
+    {
+      title: 'Type',
+      key: 'readingType',
+      render: (_, operation) => <Tag>{operation.payload.readingType.replace('_', ' ')}</Tag>,
+    },
+    {
+      title: 'Value',
+      key: 'value',
+      render: (_, operation) => operation.payload.value,
+    },
+    {
+      title: 'Recorded At',
+      key: 'recordedAt',
+      render: (_, operation) => dayjs(operation.payload.recordedAt).format('YYYY-MM-DD HH:mm'),
+    },
+    {
+      title: 'Sync Status',
+      dataIndex: 'status',
+      key: 'status',
+      render: (_, operation) => <OfflineOperationStatusTag status={operation.status} />,
+    },
+    {
+      title: 'Details',
+      key: 'details',
+      render: (_, operation) => operation.lastErrorMessage
+        ? <Typography.Text type="danger">{operation.lastErrorMessage}</Typography.Text>
+        : <Typography.Text type="secondary">Awaiting server reconciliation</Typography.Text>,
+    },
+    {
+      title: 'Actions',
+      key: 'offlineActions',
+      render: (_, operation) => <OfflineOperationActions operation={operation} compact />,
     },
   ];
 
@@ -390,6 +430,18 @@ export default function VehicleReadingsSection({ vehicleId }: VehicleReadingsSec
                     ]}
                   />
                 </Space>
+                {(localReadingsQuery.data ?? []).some((operation) => operation.status !== 'SYNCED') && (
+                  <Card size="small" title="Offline reading queue" style={{ marginBottom: 12 }}>
+                    <Table
+                      rowKey="operationId"
+                      size="small"
+                      columns={localReadingColumns}
+                      dataSource={(localReadingsQuery.data ?? []).filter((operation) => operation.status !== 'SYNCED')}
+                      loading={localReadingsQuery.isLoading}
+                      pagination={false}
+                    />
+                  </Card>
+                )}
                 <Table<VehicleReading>
                   rowKey="id"
                   size="small"

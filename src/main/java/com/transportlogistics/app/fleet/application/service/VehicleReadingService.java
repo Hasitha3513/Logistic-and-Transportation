@@ -6,6 +6,7 @@ import com.transportlogistics.app.fleet.TripDistanceSummary;
 import com.transportlogistics.app.fleet.VehicleMeterResetRecorded;
 import com.transportlogistics.app.fleet.VehicleMileageQuery;
 import com.transportlogistics.app.fleet.VehicleMileageSummary;
+import com.transportlogistics.app.fleet.ManualVehicleReadingRecorder;
 import com.transportlogistics.app.fleet.VehicleReadingCorrected;
 import com.transportlogistics.app.fleet.VehicleReadingRecorded;
 import com.transportlogistics.app.fleet.VehicleReadingRecorder;
@@ -40,7 +41,8 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-public final class VehicleReadingService implements VehicleReadingUseCase, VehicleReadingRecorder, VehicleMileageQuery {
+public final class VehicleReadingService implements VehicleReadingUseCase, VehicleReadingRecorder,
+        ManualVehicleReadingRecorder, VehicleMileageQuery {
     private static final int MAX_PAGE_SIZE = 100;
     private static final BigDecimal MAX_SPEED_KM_PER_HOUR = new BigDecimal("200.0");
     private static final BigDecimal MAX_DAILY_KM_JUMP = new BigDecimal("5000.0");
@@ -96,14 +98,26 @@ public final class VehicleReadingService implements VehicleReadingUseCase, Vehic
     }
 
     @Override
-    public Result record(Command command) {
+    public VehicleReadingRecorder.Result record(VehicleReadingRecorder.Command command) {
         if (command == null) invalid("Reading command is required");
         var reading = record(new RecordCommand(command.vehicleId(), domainType(command.readingType()),
                 command.value(), domainSource(command.sourceType()), command.sourceReferenceId(),
                 command.recordedAt(), command.actorId(), null, null));
-        return new Result(reading.id(), reading.vehicleId(), publicType(reading.readingType()), reading.value(),
+        return new VehicleReadingRecorder.Result(reading.id(), reading.vehicleId(), publicType(reading.readingType()), reading.value(),
                 reading.unit().name(), publicSource(reading.sourceType()), reading.sourceReferenceId(),
                 reading.recordedAt(), reading.receivedAt());
+    }
+
+    @Override
+    public ManualVehicleReadingRecorder.Result recordManual(ManualVehicleReadingRecorder.Command command) {
+        if (command == null) invalid("Reading command is required");
+        var reading = record(new RecordCommand(command.vehicleId(),
+                VehicleReadingType.valueOf(command.readingType().name()), command.value(),
+                VehicleReadingSourceType.MANUAL, null, command.recordedAt(), command.actorId(),
+                command.idempotencyKey(), command.notes()));
+        return new ManualVehicleReadingRecorder.Result(reading.id(), reading.vehicleId(),
+                ManualVehicleReadingRecorder.ReadingType.valueOf(reading.readingType().name()),
+                reading.value(), reading.recordedAt());
     }
 
     @Override

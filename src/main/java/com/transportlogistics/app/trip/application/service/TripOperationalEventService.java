@@ -3,6 +3,7 @@ package com.transportlogistics.app.trip.application.service;
 import com.transportlogistics.app.shared.domain.ConflictException;
 import com.transportlogistics.app.shared.domain.NotFoundException;
 import com.transportlogistics.app.trip.application.ports.in.TripOperationalEventUseCase;
+import com.transportlogistics.app.trip.TripOperationalEventRecorder;
 import com.transportlogistics.app.trip.application.ports.out.TripHistoryRepository;
 import com.transportlogistics.app.trip.application.ports.out.TripOperationalEventRepository;
 import com.transportlogistics.app.trip.application.ports.out.TripRepository;
@@ -25,8 +26,8 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 
-@Transactional
-public class TripOperationalEventService implements TripOperationalEventUseCase {
+@Transactional(noRollbackFor = {ConflictException.class, NotFoundException.class})
+public class TripOperationalEventService implements TripOperationalEventUseCase, TripOperationalEventRecorder {
     private static final Logger log = LoggerFactory.getLogger(TripOperationalEventService.class);
 
     private static final Set<String> INVALID_RECORDING_STATES = Set.of(
@@ -88,6 +89,15 @@ public class TripOperationalEventService implements TripOperationalEventUseCase 
     }
 
     @Override
+    public Result recordCheckpoint(CheckpointCommand command) {
+        TripOperationalEvent saved = recordCheckpoint(command.tripId(), new RecordCheckpointCommand(
+                com.transportlogistics.app.trip.domain.model.TripCheckpointType.valueOf(command.checkpointType().name()),
+                command.occurredAt(), command.locationId(), command.locationDescription(), command.remarks()),
+                command.actor());
+        return new Result(saved.id(), saved.tripId(), saved.occurredAt());
+    }
+
+    @Override
     public TripOperationalEvent recordDelay(UUID tripId, RecordDelayCommand command, String actor) {
         var trip = getAndValidateActiveTrip(tripId);
         var now = OffsetDateTime.now(clock);
@@ -129,6 +139,14 @@ public class TripOperationalEventService implements TripOperationalEventUseCase 
     }
 
     @Override
+    public Result recordDelay(DelayCommand command) {
+        TripOperationalEvent saved = recordDelay(command.tripId(), new RecordDelayCommand(
+                command.delayMinutes(), command.reason(), command.occurredAt(), command.locationId(),
+                command.locationDescription(), command.remarks()), command.actor());
+        return new Result(saved.id(), saved.tripId(), saved.occurredAt());
+    }
+
+    @Override
     public TripOperationalEvent recordIncident(UUID tripId, RecordIncidentCommand command, String actor) {
         var trip = getAndValidateActiveTrip(tripId);
         var now = OffsetDateTime.now(clock);
@@ -166,6 +184,16 @@ public class TripOperationalEventService implements TripOperationalEventUseCase 
         recordHistory(trip.id(), "INCIDENT_RECORDED", trip.status(), details, actorName, occurredAt, now);
 
         return saved;
+    }
+
+    @Override
+    public Result recordIncident(IncidentCommand command) {
+        TripOperationalEvent saved = recordIncident(command.tripId(), new RecordIncidentCommand(
+                com.transportlogistics.app.trip.domain.model.TripIncidentSeverity.valueOf(
+                        command.incidentSeverity().name()),
+                command.description(), command.occurredAt(), command.locationId(), command.locationDescription(),
+                command.remarks()), command.actor());
+        return new Result(saved.id(), saved.tripId(), saved.occurredAt());
     }
 
     @Override

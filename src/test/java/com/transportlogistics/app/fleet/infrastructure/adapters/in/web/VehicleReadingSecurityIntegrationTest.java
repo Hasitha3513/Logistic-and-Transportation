@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.transportlogistics.app.fleet.CoverageStatus;
 import com.transportlogistics.app.fleet.VehicleMileageQuery;
 import com.transportlogistics.app.fleet.VehicleMileageSummary;
+import com.transportlogistics.app.fleet.ManualVehicleReadingRecorder;
 import com.transportlogistics.app.fleet.VehicleReadingRecorder;
 import com.transportlogistics.app.fleet.application.ports.in.VehicleReadingUseCase;
 import com.transportlogistics.app.fleet.domain.model.VehicleMeterReset;
@@ -53,6 +54,7 @@ class VehicleReadingSecurityIntegrationTest {
 
     @MockBean private VehicleReadingUseCase readingUseCase;
     @MockBean private VehicleReadingRecorder readingRecorder;
+    @MockBean private ManualVehicleReadingRecorder manualReadingRecorder;
     @MockBean private VehicleMileageQuery mileageQuery;
 
     private String viewToken;

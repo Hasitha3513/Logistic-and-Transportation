@@ -138,7 +138,7 @@ class NotificationSmtpWorkerIntegrationTest {
     private NotificationEmailDeliveryWorker worker(EmailNotificationSenderPort sender,
                                                     NotificationEscalationUseCase escalation, Clock clock) {
         return new NotificationEmailDeliveryWorker(notifications, claims, escalation, sender, clock,
-            "noreply@example.test", Duration.ofMillis(250));
+            "noreply@example.test", Duration.ofSeconds(2));
     }
 
     private SmtpEmailNotificationSenderAdapter sender(int port, boolean auth) {

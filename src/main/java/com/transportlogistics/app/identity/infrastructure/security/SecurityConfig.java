@@ -42,6 +42,7 @@ class SecurityConfig {
                                 "/v3/api-docs/**", "/error").permitAll()
                         .requestMatchers("/actuator/**").hasAuthority("IDENTITY_MANAGE")
                         .requestMatchers("/users/**", "/roles/**").hasAuthority("IDENTITY_MANAGE")
+                        .requestMatchers(HttpMethod.POST, "/offline-sync/operations").authenticated()
 
                         .requestMatchers(HttpMethod.GET, "/vehicles/available", "/vehicles/*/availability")
                         .hasAuthority("VEHICLE_AVAILABILITY_VIEW")
@@ -249,7 +250,7 @@ class SecurityConfig {
                                 "/bunker-tanks/**", "/bunker-transfers/**",
                                 "/dashboard/**", "/reports/**",
                                 "/notification-rules/**", "/notification-rule-executions/**", "/notification-deliveries/**", "/notification-event-catalogue/**", "/notification-templates/**",
-                                "/notifications/**").denyAll()
+                                "/notifications/**", "/offline-sync/**").denyAll()
                         .anyRequest().authenticated())
                 .addFilterBefore(jwt, UsernamePasswordAuthenticationFilter.class)
                 .build();
