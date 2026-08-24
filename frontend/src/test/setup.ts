@@ -1,0 +1,49 @@
+import '@testing-library/jest-dom/vitest';
+import { afterAll, afterEach, beforeAll, vi } from 'vitest';
+import { cleanup, configure } from '@testing-library/react';
+import { HttpResponse, http } from 'msw';
+import { server } from './server';
+
+const defaultHandlers = [
+  http.get('*/notifications/unread-count', () => HttpResponse.json({ unreadCount: 0 })),
+  http.get('*/notifications', () => HttpResponse.json([])),
+];
+
+beforeAll(() => {
+  server.use(...defaultHandlers);
+  server.listen({ onUnhandledRequest: 'error' });
+});
+afterEach(() => {
+  cleanup();
+  server.resetHandlers();
+  server.use(...defaultHandlers);
+  localStorage.clear();
+});
+afterAll(() => server.close());
+
+configure({ asyncUtilTimeout: 15_000 });
+
+Object.defineProperty(window, 'matchMedia', {
+  writable: true,
+  value: vi.fn().mockImplementation((query: string) => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    dispatchEvent: vi.fn(),
+  })),
+});
+
+const getComputedStyle = window.getComputedStyle.bind(window);
+vi.spyOn(window, 'getComputedStyle').mockImplementation((element) => getComputedStyle(element));
+
+class ResizeObserverMock {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+}
+
+vi.stubGlobal('ResizeObserver', ResizeObserverMock);

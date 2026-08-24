@@ -1,0 +1,7 @@
+app:
+  notification:
+    email:
+      enabled: true
+      mode: test
+      provider: test
+      worker-delay: PT24H

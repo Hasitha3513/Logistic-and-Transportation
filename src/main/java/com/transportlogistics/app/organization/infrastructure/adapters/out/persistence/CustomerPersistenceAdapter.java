@@ -2,6 +2,7 @@ package com.transportlogistics.app.organization.infrastructure.adapters.out.pers
 
 import com.transportlogistics.app.organization.application.ports.out.CustomerRepository;
 import com.transportlogistics.app.organization.domain.model.Customer;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -9,12 +10,9 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Component
+@RequiredArgsConstructor
 class CustomerPersistenceAdapter implements CustomerRepository {
     private final CustomerJpaRepository repo;
-
-    CustomerPersistenceAdapter(CustomerJpaRepository repo) {
-        this.repo = repo;
-    }
 
     public Customer save(Customer v) {
         var e = new CustomerEntity();

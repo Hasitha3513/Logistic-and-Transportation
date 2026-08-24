@@ -33,6 +33,10 @@ class DriverPersistenceAdapter implements DriverRepository {
         return repo.findById(id).map(this::map);
     }
 
+    public Optional<Driver> findByIdForUpdate(UUID id) {
+        return repo.findByIdForUpdate(id).map(this::map);
+    }
+
     public List<Driver> findAll() {
         return repo.findAll().stream().map(this::map).toList();
     }

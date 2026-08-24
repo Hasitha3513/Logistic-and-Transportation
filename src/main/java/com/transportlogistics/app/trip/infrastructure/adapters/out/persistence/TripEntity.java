@@ -16,56 +16,56 @@ import java.util.UUID;
 @Getter
 @Setter
 @NoArgsConstructor
-class TripEntity {
+public class TripEntity {
     @Id
-    UUID id;
+    private UUID id;
     @Column(name = "trip_number")
-    String tripNumber;
+    private String tripNumber;
     @Column(name = "customer_id")
-    UUID customerId;
+    private UUID customerId;
     @Column(name = "department_id")
-    UUID departmentId;
+    private UUID departmentId;
     @Column(name = "project_id")
-    UUID projectId;
+    private UUID projectId;
     @Column(name = "route_id")
-    UUID routeId;
-    String priority;
-    String status;
+    private UUID routeId;
+    private String priority;
+    private String status;
     @Column(name = "origin_location_id")
-    UUID originLocationId;
+    private UUID originLocationId;
     @Column(name = "destination_location_id")
-    UUID destinationLocationId;
+    private UUID destinationLocationId;
     @Column(name = "requested_start_time")
-    OffsetDateTime requestedStartTime;
+    private OffsetDateTime requestedStartTime;
     @Column(name = "requested_end_time")
-    OffsetDateTime requestedEndTime;
+    private OffsetDateTime requestedEndTime;
     @Column(name = "required_vehicle_type_id")
-    UUID requiredVehicleTypeId;
+    private UUID requiredVehicleTypeId;
     @Column(name = "required_capacity_kg")
-    Double requiredCapacityKg;
+    private Double requiredCapacityKg;
     @Column(name = "cargo_description")
-    String cargoDescription;
+    private String cargoDescription;
     @Column(name = "passenger_count")
-    Integer passengerCount;
+    private Integer passengerCount;
     @Column(name = "customer_instructions")
-    String customerInstructions;
-    String notes;
+    private String customerInstructions;
+    private String notes;
     @Column(name = "vehicle_id")
-    UUID vehicleId;
+    private UUID vehicleId;
     @Column(name = "driver_id")
-    UUID driverId;
+    private UUID driverId;
     @Column(name = "actual_start_time")
-    OffsetDateTime actualStartTime;
+    private OffsetDateTime actualStartTime;
     @Column(name = "actual_end_time")
-    OffsetDateTime actualEndTime;
+    private OffsetDateTime actualEndTime;
     @Column(name = "start_odometer_km")
-    Double startOdometerKm;
+    private Double startOdometerKm;
     @Column(name = "end_odometer_km")
-    Double endOdometerKm;
+    private Double endOdometerKm;
     @Column(name = "completion_remarks")
-    String completionRemarks;
+    private String completionRemarks;
     @Column(name = "created_at")
-    OffsetDateTime createdAt;
+    private OffsetDateTime createdAt;
     @Column(name = "updated_at")
-    OffsetDateTime updatedAt;
+    private OffsetDateTime updatedAt;
 }

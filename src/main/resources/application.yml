@@ -1,8 +1,10 @@
 spring:
   application:
     name: transport-logistics-modulith
+  autoconfigure:
+    exclude: org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration
   profiles:
-    default: h2
+    default: postgres
   threads:
     virtual:
       enabled: true
@@ -12,6 +14,7 @@ spring:
       ddl-auto: validate
   flyway:
     enabled: true
+    repair-on-migrate: true
 server:
   port: 8080
   servlet:
@@ -24,3 +27,25 @@ management:
 springdoc:
   swagger-ui:
     path: /swagger-ui.html
+security:
+  jwt:
+    issuer: transport-logistics-modulith
+    access-token-ttl: PT15M
+    refresh-token-ttl: P30D
+app:
+  notification:
+    email:
+      enabled: false
+      mode: test
+      provider: test
+      from: noreply@localhost.test
+      reply-to:
+      connect-timeout: PT5S
+      read-timeout: PT30S
+      smtp:
+        host: localhost
+        port: 2525
+        tls-mode: none
+        authentication-required: false
+        username:
+        password:

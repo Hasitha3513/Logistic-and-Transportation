@@ -1,1 +1,1 @@
-package com.transportlogistics.app; import org.junit.jupiter.api.Test; import org.springframework.boot.test.context.SpringBootTest; @SpringBootTest class ContextSmokeTest { @Test void contextLoads(){} }
+package com.transportlogistics.app; import org.junit.jupiter.api.Test; import org.springframework.boot.test.context.SpringBootTest; @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT) class ContextSmokeTest { @Test void contextLoads(){} }

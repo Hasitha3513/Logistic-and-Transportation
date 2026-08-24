@@ -2,6 +2,7 @@ package com.transportlogistics.app.organization.infrastructure.adapters.out.pers
 
 import com.transportlogistics.app.organization.application.ports.out.ProjectRepository;
 import com.transportlogistics.app.organization.domain.model.Project;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -9,12 +10,9 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Component
+@RequiredArgsConstructor
 class ProjectPersistenceAdapter implements ProjectRepository {
     private final ProjectJpaRepository repo;
-
-    ProjectPersistenceAdapter(ProjectJpaRepository repo) {
-        this.repo = repo;
-    }
 
     public Project save(Project v) {
         var e = new ProjectEntity();

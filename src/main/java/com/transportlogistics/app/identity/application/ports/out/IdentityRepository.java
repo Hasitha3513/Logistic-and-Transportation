@@ -5,16 +5,23 @@ import com.transportlogistics.app.identity.domain.model.User;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 public interface IdentityRepository {
     User saveUser(User user);
+
+    User saveUserWithRoles(User user, Set<UUID> roleIds);
 
     Optional<User> findUser(UUID id);
 
     Optional<User> findUserByUsername(String username);
 
     List<User> findUsers();
+
+    void replaceUserRoles(UUID userId, Set<UUID> roleIds);
+
+    Set<Role> findRolesByIds(Set<UUID> roleIds);
 
     Role saveRole(Role role);
 

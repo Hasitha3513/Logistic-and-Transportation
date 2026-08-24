@@ -1,2 +1,16 @@
 /target/
 /.idea/
+/frontend/node_modules/
+/frontend/dist/
+/frontend/coverage/
+/frontend/*.tsbuildinfo
+/frontend/vite.config.js
+/frontend/vite.config.d.ts
+/frontend/*.log
+/.env
+/full_diff.txt
+/tech-ref-001.diff
+/docs/refactoring/TECH-REF-001-scope-audit.md.txt
+
+/frontend/test-results/
+/frontend/playwright-report/

@@ -2,6 +2,7 @@ package com.transportlogistics.app.organization.infrastructure.adapters.out.pers
 
 import com.transportlogistics.app.organization.application.ports.out.DepartmentRepository;
 import com.transportlogistics.app.organization.domain.model.Department;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -9,12 +10,9 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Component
+@RequiredArgsConstructor
 class DepartmentPersistenceAdapter implements DepartmentRepository {
     private final DepartmentJpaRepository repo;
-
-    DepartmentPersistenceAdapter(DepartmentJpaRepository repo) {
-        this.repo = repo;
-    }
 
     public Department save(Department v) {
         var e = new DepartmentEntity();

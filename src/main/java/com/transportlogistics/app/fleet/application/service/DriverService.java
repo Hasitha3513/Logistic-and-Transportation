@@ -35,4 +35,5 @@ public final class DriverService implements DriverUseCase {
         var v = get(id);
         repo.save(new Driver(v.id(), v.employeeNumber(), v.firstName(), v.lastName(), v.phone(), v.email(), v.status(), false));
     }
+
 }

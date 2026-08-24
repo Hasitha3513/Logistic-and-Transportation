@@ -12,6 +12,8 @@ public interface RouteUseCase {
 
     List<Route> list();
 
+    List<Route> search(String query, UUID originLocationId, UUID destinationLocationId, Boolean active);
+
     Route update(UUID id, Route value);
 
     void deactivate(UUID id);

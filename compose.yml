@@ -1,0 +1,82 @@
+name: transport-logistics
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-transport_logistics}
+      POSTGRES_USER: ${POSTGRES_USER:-transport_app}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in your environment or .env file}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      SPRING_PROFILES_ACTIVE: postgres,docker
+      DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-transport_logistics}
+      DB_USERNAME: ${POSTGRES_USER:-transport_app}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in your environment or .env file}
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET to a random value of at least 32 bytes}
+      APP_DEV_IDENTITY_BOOTSTRAP_ENABLED: "true"
+      APP_DEV_IDENTITY_BOOTSTRAP_USERNAME: ${APP_ADMIN_USERNAME:-admin}
+      APP_DEV_IDENTITY_BOOTSTRAP_PASSWORD: ${APP_ADMIN_PASSWORD:?Set APP_ADMIN_PASSWORD to at least 12 characters}
+      APP_DEV_IDENTITY_BOOTSTRAP_EMAIL: ${APP_ADMIN_EMAIL:-admin@localhost.test}
+      APP_DEV_SAMPLE_DATA_ENABLED: "true"
+      NOTIFICATION_EMAIL_ENABLED: ${NOTIFICATION_EMAIL_ENABLED:-false}
+      NOTIFICATION_EMAIL_MODE: ${NOTIFICATION_EMAIL_MODE:-production}
+      NOTIFICATION_EMAIL_PROVIDER: ${NOTIFICATION_EMAIL_PROVIDER:-smtp}
+      NOTIFICATION_EMAIL_FROM: ${NOTIFICATION_EMAIL_FROM:-}
+      NOTIFICATION_EMAIL_REPLY_TO: ${NOTIFICATION_EMAIL_REPLY_TO:-}
+      NOTIFICATION_EMAIL_CONNECT_TIMEOUT: ${NOTIFICATION_EMAIL_CONNECT_TIMEOUT:-PT5S}
+      NOTIFICATION_EMAIL_READ_TIMEOUT: ${NOTIFICATION_EMAIL_READ_TIMEOUT:-PT30S}
+      NOTIFICATION_EMAIL_SMTP_HOST: ${NOTIFICATION_EMAIL_SMTP_HOST:-}
+      NOTIFICATION_EMAIL_SMTP_PORT: ${NOTIFICATION_EMAIL_SMTP_PORT:-587}
+      NOTIFICATION_EMAIL_SMTP_TLS_MODE: ${NOTIFICATION_EMAIL_SMTP_TLS_MODE:-starttls}
+      NOTIFICATION_EMAIL_SMTP_AUTH_REQUIRED: ${NOTIFICATION_EMAIL_SMTP_AUTH_REQUIRED:-true}
+      NOTIFICATION_EMAIL_SMTP_USERNAME: ${NOTIFICATION_EMAIL_SMTP_USERNAME:-}
+      NOTIFICATION_EMAIL_SMTP_PASSWORD: ${NOTIFICATION_EMAIL_SMTP_PASSWORD:-}
+      DB_POOL_MIN: 1
+      DB_POOL_MAX: 10
+    ports:
+      - "${BACKEND_PORT:-8080}:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "http://localhost:8080/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 45s
+    init: true
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "${FRONTEND_PORT:-5173}:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://127.0.0.1/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+volumes:
+  postgres-data:

@@ -1,13 +1,47 @@
 spring:
   datasource:
     url: ${DB_URL:jdbc:postgresql://localhost:5432/transport_logistics}
-    username: ${DB_USERNAME:transport}
-    password: ${DB_PASSWORD:transport}
+    username: ${DB_USERNAME:transport_app}
+    password: ${DB_PASSWORD:transport_app}
     hikari:
       maximum-pool-size: ${DB_POOL_MAX:10}
       minimum-idle: ${DB_POOL_MIN:2}
+  flyway:
+    placeholders:
+      vehicleReadingSourceIdentityIndex: >-
+        CREATE UNIQUE INDEX uq_vehicle_reading_source
+        ON vehicle_reading(vehicle_id, reading_type, source_type, source_reference_id)
+        WHERE source_reference_id IS NOT NULL AND correction_of_reading_id IS NULL
   jpa:
     properties:
       hibernate:
         jdbc:
           time_zone: UTC
+security:
+  jwt:
+    secret: ${JWT_SECRET:super_secret_jwt_key_that_is_at_least_32_bytes_long_for_security_2026}
+app:
+  notification:
+    email:
+      enabled: ${NOTIFICATION_EMAIL_ENABLED:false}
+      mode: ${NOTIFICATION_EMAIL_MODE:production}
+      provider: ${NOTIFICATION_EMAIL_PROVIDER:smtp}
+      from: ${NOTIFICATION_EMAIL_FROM:}
+      reply-to: ${NOTIFICATION_EMAIL_REPLY_TO:}
+      connect-timeout: ${NOTIFICATION_EMAIL_CONNECT_TIMEOUT:PT5S}
+      read-timeout: ${NOTIFICATION_EMAIL_READ_TIMEOUT:PT30S}
+      smtp:
+        host: ${NOTIFICATION_EMAIL_SMTP_HOST:}
+        port: ${NOTIFICATION_EMAIL_SMTP_PORT:587}
+        tls-mode: ${NOTIFICATION_EMAIL_SMTP_TLS_MODE:starttls}
+        authentication-required: ${NOTIFICATION_EMAIL_SMTP_AUTH_REQUIRED:true}
+        username: ${NOTIFICATION_EMAIL_SMTP_USERNAME:}
+        password: ${NOTIFICATION_EMAIL_SMTP_PASSWORD:}
+  dev:
+    identity-bootstrap:
+      enabled: ${APP_DEV_IDENTITY_BOOTSTRAP_ENABLED:${DEV_IDENTITY_BOOTSTRAP_ENABLED:true}}
+      username: ${APP_DEV_IDENTITY_BOOTSTRAP_USERNAME:${DEV_IDENTITY_USERNAME:admin}}
+      password: ${APP_DEV_IDENTITY_BOOTSTRAP_PASSWORD:${DEV_IDENTITY_PASSWORD:AdminPass!2026}}
+      email: ${APP_DEV_IDENTITY_BOOTSTRAP_EMAIL:${DEV_IDENTITY_EMAIL:admin@transport.local}}
+    sample-data:
+      enabled: ${APP_DEV_SAMPLE_DATA_ENABLED:${DEV_SAMPLE_DATA_ENABLED:true}}

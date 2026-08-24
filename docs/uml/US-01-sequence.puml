@@ -1,0 +1,75 @@
+@startuml US-01-sequence
+skinparam shadowing false
+autonumber
+
+actor "Fleet Manager" as User
+participant "React UI\n(ResourceEditorModal)" as UI
+participant "FleetController" as Controller
+participant "VehicleService" as Service
+participant "VehicleCategory / Type\nRepositories" as MasterDataRepo
+participant "VehicleRepository" as Repo
+database "PostgreSQL" as DB
+
+== Vehicle Creation Flow ==
+User -> UI: Submits Create Vehicle form
+UI -> Controller: POST /api/vehicles (VehicleRequest)
+Controller -> Service: create(Vehicle)
+Service -> MasterDataRepo: findById(categoryId), findById(typeId)
+MasterDataRepo -> DB: SELECT category, type
+DB --> MasterDataRepo: Record data
+MasterDataRepo --> Service: Category & Type entities
+
+alt Inactive category/type or mismatched hierarchy
+    Service --> Controller: throw BusinessRuleException("VEHICLE_MASTER_REFERENCE_INVALID")
+    Controller --> UI: 400 Bad Request (ApiError)
+    UI --> User: Shows validation error under type field
+else Valid Master Data Reference
+    Service -> Repo: findByRegistrationNumber(regNo)
+    Repo -> DB: SELECT * FROM vehicle WHERE UPPER(registration_number) = ?
+    DB --> Repo: Result
+    Repo --> Service: Optional<Vehicle>
+
+    alt Duplicate Registration Found
+        Service --> Controller: throw ConflictException("VEHICLE_REGISTRATION_DUPLICATE")
+        Controller --> UI: 409 Conflict (ApiError)
+        UI --> User: Displays "Registration number already exists"
+    else Unique Registration
+        Service -> Repo: save(vehicle)
+        Repo -> DB: INSERT INTO vehicle (...)
+        DB --> Repo: Saved Entity
+        Repo --> Service: Saved Vehicle
+        Service --> Controller: Vehicle domain record
+        Controller --> UI: 201 Created (VehicleResponse)
+        UI --> User: Displays success notification & updates list
+    end
+end
+
+== Vehicle Update Flow ==
+User -> UI: Submits Edit Vehicle form
+UI -> Controller: PUT /api/vehicles/{id} (VehicleRequest)
+Controller -> Service: update(id, Vehicle)
+Service -> Repo: findById(id)
+Repo -> DB: SELECT * FROM vehicle WHERE id = ?
+DB --> Repo: Entity
+Repo --> Service: Existing Vehicle
+
+Service -> Service: validateStatusTransition(from, to)
+alt Invalid Status Transition
+    Service --> Controller: throw ConflictException("VEHICLE_STATUS_TRANSITION_INVALID")
+    Controller --> UI: 409 Conflict (ApiError)
+    UI --> User: Displays invalid status transition warning
+else Valid Status Transition
+    Service -> Repo: existsByRegistrationNumberAndIdNot(regNo, id)
+    Repo -> DB: SELECT COUNT(*) > 0 FROM vehicle WHERE UPPER(reg) = ? AND id != ?
+    DB --> Repo: boolean
+    Repo --> Service: false
+    Service -> Repo: save(vehicle)
+    Repo -> DB: UPDATE vehicle SET ... WHERE id = ?
+    DB --> Repo: Updated Entity
+    Repo --> Service: Updated Vehicle
+    Service --> Controller: Vehicle domain record
+    Controller --> UI: 200 OK (VehicleResponse)
+    UI --> User: Displays updated vehicle details
+end
+
+@enduml
