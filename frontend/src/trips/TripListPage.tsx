@@ -45,7 +45,7 @@ import type {
 
 const { RangePicker } = DatePicker;
 const { Search } = Input;
-const { Text, Title } = Typography;
+const { Text } = Typography;
 
 const statusOptions = [
   'DRAFT', 'SUBMITTED', 'APPROVED', 'ASSIGNED', 'DISPATCHED',
@@ -207,7 +207,6 @@ export default function TripListPage() {
     <Flex vertical gap={18}>
       <Flex justify="space-between" align="flex-start" wrap gap={16}>
         <div>
-          <Title level={3} className="trip-list__title">Trip operations</Title>
           <Text type="secondary">Review planned movement, assignments, and lifecycle status.</Text>
         </div>
         <Space>

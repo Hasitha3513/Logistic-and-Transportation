@@ -259,7 +259,6 @@ export const DriverDrugTestSection: React.FC<DriverDrugTestSectionProps> = ({ dr
         onCancel={() => setIsScheduleOpen(false)}
         onOk={() => scheduleForm.submit()}
         confirmLoading={scheduleMutation.isPending}
-        destroyOnClose
       >
         <Form form={scheduleForm} layout="vertical" onFinish={handleSchedule}>
           <Form.Item
@@ -269,12 +268,12 @@ export const DriverDrugTestSection: React.FC<DriverDrugTestSectionProps> = ({ dr
             initialValue="RANDOM"
           >
             <Select>
-              <Select.Option value="RANDOM">RANDOM</Select.Option>
-              <Select.Option value="SCHEDULED">SCHEDULED</Select.Option>
               <Select.Option value="PRE_EMPLOYMENT">PRE EMPLOYMENT</Select.Option>
-              <Select.Option value="POST_INCIDENT">POST INCIDENT</Select.Option>
+              <Select.Option value="RANDOM">RANDOM</Select.Option>
+              <Select.Option value="POST_ACCIDENT">POST ACCIDENT</Select.Option>
               <Select.Option value="REASONABLE_SUSPICION">REASONABLE SUSPICION</Select.Option>
               <Select.Option value="RETURN_TO_DUTY">RETURN TO DUTY</Select.Option>
+              <Select.Option value="FOLLOW_UP">FOLLOW UP</Select.Option>
             </Select>
           </Form.Item>
 
@@ -287,16 +286,16 @@ export const DriverDrugTestSection: React.FC<DriverDrugTestSectionProps> = ({ dr
             <DatePicker style={{ width: '100%' }} />
           </Form.Item>
 
-          <Form.Item name="laboratoryOrProvider" label="Laboratory / Provider">
-            <Input placeholder="e.g. LabCorp / Quest Diagnostics" />
+          <Form.Item name="providerOrLab" label="Provider / Certified Lab">
+            <Input placeholder="e.g. Asiri Hospital Laboratory / Quest Diagnostics" />
           </Form.Item>
 
-          <Form.Item name="referenceNumber" label="Chain of Custody / Reference #">
-            <Input placeholder="e.g. CCF-2026-4455" />
+          <Form.Item name="testReference" label="Test Reference / Order #">
+            <Input placeholder="e.g. DT-2026-0044" />
           </Form.Item>
 
-          <Form.Item name="remarks" label="Remarks">
-            <Input.TextArea rows={2} />
+          <Form.Item name="remarks" label="Notes / Reason">
+            <Input.TextArea rows={2} placeholder="e.g. Annual mandatory fleet compliance check" />
           </Form.Item>
         </Form>
       </Modal>
@@ -308,7 +307,6 @@ export const DriverDrugTestSection: React.FC<DriverDrugTestSectionProps> = ({ dr
         onCancel={() => setResultModalTest(null)}
         onOk={() => resultForm.submit()}
         confirmLoading={recordResultMutation.isPending}
-        destroyOnClose
       >
         <Form form={resultForm} layout="vertical" onFinish={handleRecordResult}>
           <Form.Item
@@ -350,7 +348,6 @@ export const DriverDrugTestSection: React.FC<DriverDrugTestSectionProps> = ({ dr
         onCancel={() => setRtdModalTest(null)}
         onOk={() => rtdForm.submit()}
         confirmLoading={clearRtdMutation.isPending}
-        destroyOnClose
       >
         <Form form={rtdForm} layout="vertical" onFinish={handleClearRtd}>
           <Alert

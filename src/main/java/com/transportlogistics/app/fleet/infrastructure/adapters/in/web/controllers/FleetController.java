@@ -749,9 +749,9 @@ public class FleetController {
             Principal principal
     ) {
         var command = new LubricantLogUseCase.CreateCommand(
-                com.transportlogistics.app.fleet.domain.model.FluidType.valueOf(r.fluidType()),
+                com.transportlogistics.app.fleet.domain.model.FluidType.fromString(r.fluidType()),
                 r.quantity(),
-                com.transportlogistics.app.fleet.domain.model.MeasurementUnit.valueOf(r.unit()),
+                com.transportlogistics.app.fleet.domain.model.MeasurementUnit.fromString(r.unit()),
                 r.recordedAt(),
                 r.odometerKm(),
                 r.engineHours(),

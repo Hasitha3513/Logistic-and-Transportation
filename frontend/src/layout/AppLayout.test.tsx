@@ -89,7 +89,8 @@ describe('AppLayout', () => {
     renderApp(operator, '/fleet/vehicles');
 
     expect(await screen.findByRole('heading', { name: 'Vehicles', level: 2 })).toBeInTheDocument();
-    expect(screen.getByText('Vehicle registry')).toBeInTheDocument();
+    expect(screen.getAllByRole('heading', { level: 2 })).toHaveLength(1);
+    expect(screen.getByText('Live vehicle master data from the fleet module.')).toBeInTheDocument();
     await waitFor(() => expect(screen.getAllByText('Fleet').length).toBeGreaterThan(0));
   });
 
@@ -118,6 +119,8 @@ describe('AppLayout', () => {
       http.get(`*/vehicles/${vehicle.id}/readings`, () => HttpResponse.json({ content: [], page: 0, limit: 50, totalElements: 0, totalPages: 0 })),
       http.get(`*/vehicles/${vehicle.id}/readings/latest`, () => HttpResponse.json({ vehicleId: vehicle.id, odometer: null, engineHours: null })),
       http.get(`*/vehicles/${vehicle.id}/meter-resets`, () => HttpResponse.json([])),
+      http.get(`*/vehicles/${vehicle.id}/maintenance-schedules`, () => HttpResponse.json([])),
+      http.get(`*/vehicles/${vehicle.id}/lubricant-logs`, () => HttpResponse.json([])),
       http.get(`*/vehicles/${vehicle.id}/mileage*`, () => HttpResponse.json({
         vehicleId: vehicle.id, from: '2026-07-17T00:00:00Z', to: '2026-08-16T23:59:59Z',
         openingOdometer: null, closingOdometer: null, distanceTravelledKm: 0,

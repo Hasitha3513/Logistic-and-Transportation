@@ -80,9 +80,9 @@ class LubricantLogPersistenceAdapter implements LubricantLogRepository {
         return new LubricantLog(
                 e.getId(),
                 e.getVehicleId(),
-                FluidType.valueOf(e.getFluidType()),
+                FluidType.fromString(e.getFluidType()),
                 e.getQuantity(),
-                MeasurementUnit.valueOf(e.getUnit()),
+                MeasurementUnit.fromString(e.getUnit()),
                 e.getRecordedAt(),
                 e.getOdometerKm(),
                 e.getEngineHours(),

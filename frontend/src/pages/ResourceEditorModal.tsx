@@ -3,7 +3,7 @@ import { useQueries, useQueryClient } from '@tanstack/react-query';
 import { App as AntApp, DatePicker, Input, InputNumber, Modal, Select, Switch } from 'antd';
 import axios from 'axios';
 import dayjs from 'dayjs';
-import { Controller, useForm } from 'react-hook-form';
+import { Controller, useForm, useWatch } from 'react-hook-form';
 import { z } from 'zod';
 import { api } from '../api/client';
 
@@ -18,9 +18,12 @@ export interface ResourceField {
   options?: { value: string; label: string }[];
   referenceEndpoint?: string;
   referenceLabel?: string;
+  dependsOn?: string;
+  dependsOnKey?: string;
 }
 
 interface ApiErrorBody {
+  code?: string;
   message?: string;
   fieldErrors?: { field: string; message: string }[];
 }
@@ -85,6 +88,7 @@ export default function ResourceEditorModal({ open, title, endpoint, queryKey, f
     resolver: zodResolver(schemaFor(fields)),
     values: defaults(fields, initial),
   });
+  const watchedValues = useWatch({ control: form.control });
 
   const submit = form.handleSubmit(async (values) => {
     try {
@@ -94,8 +98,20 @@ export default function ResourceEditorModal({ open, title, endpoint, queryKey, f
       onClose();
     } catch (error) {
       if (axios.isAxiosError<ApiErrorBody>(error)) {
-        error.response?.data.fieldErrors?.forEach((violation) => form.setError(violation.field, { message: violation.message }));
-        void message.error(error.response?.data.message ?? `${title} could not be saved`);
+        const errorData = error.response?.data;
+        errorData?.fieldErrors?.forEach((violation) => form.setError(violation.field, { message: violation.message }));
+        if (errorData?.code === 'VEHICLE_REGISTRATION_DUPLICATE') {
+          form.setError('registrationNumber', { message: errorData.message || 'Registration number already exists' });
+        } else if (errorData?.code === 'VEHICLE_CHASSIS_DUPLICATE') {
+          form.setError('chassisNumber', { message: errorData.message || 'Chassis number already exists' });
+        } else if (errorData?.code === 'VEHICLE_ENGINE_DUPLICATE') {
+          form.setError('engineNumber', { message: errorData.message || 'Engine number already exists' });
+        } else if (errorData?.code === 'VEHICLE_STATUS_TRANSITION_INVALID') {
+          form.setError('operationalStatus', { message: errorData.message || 'Invalid status transition' });
+        } else if (errorData?.code === 'VEHICLE_MASTER_REFERENCE_INVALID') {
+          form.setError('typeId', { message: errorData.message || 'Invalid master data reference' });
+        }
+        void message.error(errorData?.message ?? `${title} could not be saved`);
         return;
       }
       void message.error(`${title} could not be saved`);
@@ -107,7 +123,14 @@ export default function ResourceEditorModal({ open, title, endpoint, queryKey, f
       onOk={() => void submit()} onCancel={onClose} destroyOnHidden>
       <form className="resource-editor-form" onSubmit={(event) => void submit(event)}>
         {fields.map((field, index) => {
-          const reference = references[index]?.data ?? [];
+          let reference = references[index]?.data ?? [];
+          if (field.dependsOn) {
+            const parentVal = watchedValues ? watchedValues[field.dependsOn] : undefined;
+            if (parentVal) {
+              const filterKey = field.dependsOnKey ?? field.dependsOn;
+              reference = reference.filter((item) => String(item[filterKey]) === String(parentVal));
+            }
+          }
           const options = field.options ?? reference.map((item) => ({
             value: String(item.id),
             label: String(item[field.referenceLabel ?? 'name'] ?? item.id),

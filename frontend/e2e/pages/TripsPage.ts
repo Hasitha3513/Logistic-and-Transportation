@@ -16,6 +16,6 @@ export class TripsPage extends BasePage {
 
   async goto() {
     await this.page.goto('/trips');
-    await expect(this.page.getByRole('heading', { name: 'Trips' }).first()).toBeVisible({ timeout: 15000 });
+    await expect(this.page.getByRole('heading', { name: 'Trips', level: 2 })).toBeVisible({ timeout: 15000 });
   }
 }

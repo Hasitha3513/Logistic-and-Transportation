@@ -36,4 +36,14 @@ class FleetReportReadAdapter implements FleetReportReadPort {
     public List<FleetDriverSummary> findAllDrivers() {
         return query.findAllDrivers();
     }
+
+    @Override
+    public List<com.transportlogistics.app.fleet.FleetDocumentAlert> findExpiringDocuments(java.time.LocalDate cutoff) {
+        return query.findExpiringDocuments(cutoff);
+    }
+
+    @Override
+    public List<com.transportlogistics.app.fleet.FleetExceptionAlert> findActiveExceptions() {
+        return query.findActiveExceptions();
+    }
 }

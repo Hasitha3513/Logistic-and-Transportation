@@ -12,6 +12,6 @@ export class BunkerTanksPage extends BasePage {
 
   async goto() {
     await this.page.goto('/fuel/bunker-tanks');
-    await expect(this.page.getByRole('heading', { name: 'Bunker Tanks' }).first()).toBeVisible({ timeout: 15000 });
+    await expect(this.page.getByRole('heading', { name: 'Bunker Tanks', level: 2 })).toBeVisible({ timeout: 15000 });
   }
 }

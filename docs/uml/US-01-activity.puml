@@ -1,0 +1,72 @@
+@startuml US-01-activity
+skinparam shadowing false
+skinparam conditionStyle inside
+
+start
+
+:Fleet Manager submits Vehicle request (Create / Update / Deactivate);
+
+if (Authorized with VEHICLE_CREATE / VEHICLE_UPDATE / VEHICLE_STATUS_UPDATE?) then (yes)
+  :Parse and validate input DTO constraints (not blank, positive values, year bounds);
+  if (DTO Valid?) then (yes)
+    :Validate Vehicle Domain Invariants;
+    if (Invariants Satisfied?) then (yes)
+      :Validate Master Data Reference & Hierarchy (Category & Type exist, Type in Category);
+      if (Master Data Valid?) then (yes)
+        :Check Unique Identifiers (Registration, Chassis, Engine);
+        if (No Duplicate Conflict?) then (yes)
+          if (Is Operation Update or Status Change?) then (yes)
+            :Validate Operational Status Transition (allowed state machine matrix);
+            if (Valid Status Transition?) then (yes)
+              :Check Monotonic Meter Readings (odometer/hours not decreased);
+              if (Meters Valid?) then (yes)
+                :Persist Vehicle in Repository;
+                :Return 200 OK with Vehicle Response;
+                stop
+              else (no)
+                :Return 400 Bad Request (VEHICLE_DATA_INVALID);
+                stop
+              endif
+            else (no)
+              :Return 409 Conflict (VEHICLE_STATUS_TRANSITION_INVALID);
+              stop
+            endif
+          else (Is Deactivate?)
+            if (Is Operation Deactivate?) then (yes)
+              :Check for Active Trip Allocations;
+              if (No Overlapping Active Allocations?) then (yes)
+                :Set active = false and Persist;
+                :Return 200 OK (Vehicle deactivated);
+                stop
+              else (no)
+                :Return 409 Conflict (VEHICLE_RETIREMENT_BLOCKED);
+                stop
+              endif
+            else (Create)
+              :Persist Vehicle in Repository;
+              :Return 201 Created with Vehicle Response;
+              stop
+            endif
+          endif
+        else (no)
+          :Return 409 Conflict (VEHICLE_REGISTRATION_DUPLICATE / VEHICLE_CHASSIS_DUPLICATE);
+          stop
+        endif
+      else (no)
+        :Return 400 Bad Request (VEHICLE_MASTER_REFERENCE_INVALID);
+        stop
+      endif
+    else (no)
+      :Return 400 Bad Request (VEHICLE_DATA_INVALID);
+      stop
+    endif
+  else (no)
+    :Return 400 Bad Request (VALIDATION_ERROR);
+    stop
+  endif
+else (no)
+  :Return 403 Forbidden;
+  stop
+endif
+
+@enduml

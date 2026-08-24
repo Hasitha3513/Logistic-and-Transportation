@@ -72,7 +72,7 @@ public class DriverViolationPersistenceAdapter implements DriverViolationReposit
                 entity.getId(),
                 entity.getDriverId(),
                 entity.getTripId(),
-                DriverViolationType.valueOf(entity.getViolationType()),
+                DriverViolationType.fromString(entity.getViolationType()),
                 ViolationSeverity.valueOf(entity.getSeverity()),
                 entity.getViolationDate(),
                 entity.getPenaltyPoints(),

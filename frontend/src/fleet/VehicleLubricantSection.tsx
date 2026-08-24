@@ -65,9 +65,10 @@ const UNIT_OPTIONS: { label: string; value: MeasurementUnit }[] = [
 
 export const VehicleLubricantSection: React.FC<VehicleLubricantSectionProps> = ({ vehicleId }) => {
   const { hasPermission } = useAuth();
+  const canView = hasPermission('LUBRICANT_LOG_VIEW') || hasPermission('VEHICLE_VIEW') || hasPermission('FLEET_MANAGER') || hasPermission('ADMIN');
   const canManage = hasPermission('LUBRICANT_LOG_MANAGE') || hasPermission('FLEET_MANAGER') || hasPermission('ADMIN');
 
-  const { data: logs = [], isLoading, error } = useVehicleLubricantLogs(vehicleId);
+  const { data: logs = [], isLoading, error } = useVehicleLubricantLogs(canView ? vehicleId : undefined);
   const createMutation = useCreateVehicleLubricantLog(vehicleId);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -132,20 +133,20 @@ export const VehicleLubricantSection: React.FC<VehicleLubricantSectionProps> = (
       title: 'Supplier',
       dataIndex: 'supplierName',
       key: 'supplierName',
-      render: (name?: string | null) => name || '-',
+      render: (text?: string) => text || '-',
     },
     {
-      title: 'Reference #',
+      title: 'Invoice / Ref #',
       dataIndex: 'referenceNumber',
       key: 'referenceNumber',
-      render: (ref?: string | null) => ref || '-',
+      render: (text?: string) => text || '-',
     },
     {
       title: 'Remarks',
       dataIndex: 'remarks',
       key: 'remarks',
       ellipsis: true,
-      render: (rem?: string | null) => rem || '-',
+      render: (text?: string) => text || '-',
     },
   ];
 
@@ -154,7 +155,7 @@ export const VehicleLubricantSection: React.FC<VehicleLubricantSectionProps> = (
       title={
         <Space>
           <ExperimentOutlined />
-          <span>Lubricant & Fluid Consumption Logs</span>
+          <span>Lubricant & Fluid Consumption Logs (US-05)</span>
         </Space>
       }
       extra={
@@ -163,11 +164,6 @@ export const VehicleLubricantSection: React.FC<VehicleLubricantSectionProps> = (
             type="primary"
             icon={<PlusOutlined />}
             onClick={() => {
-              form.resetFields();
-              form.setFieldsValue({
-                unit: 'LITRE',
-                recordedAt: dayjs(),
-              });
               setIsModalOpen(true);
             }}
           >
@@ -200,10 +196,12 @@ export const VehicleLubricantSection: React.FC<VehicleLubricantSectionProps> = (
       <Modal
         title="Record Lubricant / Fluid Consumption"
         open={isModalOpen}
-        onCancel={() => setIsModalOpen(false)}
+        onCancel={() => {
+          setIsModalOpen(false);
+          form.resetFields();
+        }}
         onOk={() => form.submit()}
         confirmLoading={createMutation.isPending}
-        destroyOnHidden
       >
         {createMutation.error && (
           <Alert
@@ -215,7 +213,12 @@ export const VehicleLubricantSection: React.FC<VehicleLubricantSectionProps> = (
           />
         )}
 
-        <Form form={form} layout="vertical" onFinish={handleCreate}>
+        <Form
+          form={form}
+          layout="vertical"
+          initialValues={{ unit: 'LITRE', recordedAt: dayjs() }}
+          onFinish={handleCreate}
+        >
           <Form.Item
             name="fluidType"
             label="Fluid / Lubricant Type"

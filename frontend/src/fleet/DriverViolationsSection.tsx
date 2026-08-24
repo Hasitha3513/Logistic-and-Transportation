@@ -297,7 +297,6 @@ export const DriverViolationsSection: React.FC<DriverViolationsSectionProps> = (
         onCancel={() => setCreateModalOpen(false)}
         onOk={() => createForm.submit()}
         confirmLoading={recordMutation.isPending}
-        destroyOnHidden
       >
         <Form form={createForm} layout="vertical" onFinish={handleCreate}>
           <Form.Item
@@ -363,7 +362,6 @@ export const DriverViolationsSection: React.FC<DriverViolationsSectionProps> = (
         onCancel={() => setPayModalViolation(null)}
         onOk={() => payForm.submit()}
         confirmLoading={payMutation.isPending}
-        destroyOnHidden
       >
         <Form form={payForm} layout="vertical" onFinish={handlePay}>
           <Text style={{ display: 'block', marginBottom: 16 }}>
@@ -388,7 +386,6 @@ export const DriverViolationsSection: React.FC<DriverViolationsSectionProps> = (
         onCancel={() => setWaiveModalViolation(null)}
         onOk={() => waiveForm.submit()}
         confirmLoading={waiveMutation.isPending}
-        destroyOnHidden
       >
         <Form form={waiveForm} layout="vertical" onFinish={handleWaive}>
           <Form.Item
@@ -408,7 +405,6 @@ export const DriverViolationsSection: React.FC<DriverViolationsSectionProps> = (
         onCancel={() => setDisputeModalViolation(null)}
         onOk={() => disputeForm.submit()}
         confirmLoading={disputeMutation.isPending}
-        destroyOnHidden
       >
         <Form form={disputeForm} layout="vertical" onFinish={handleDispute}>
           <Form.Item

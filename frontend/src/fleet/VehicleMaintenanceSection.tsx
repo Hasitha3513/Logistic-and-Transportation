@@ -346,7 +346,6 @@ export default function VehicleMaintenanceSection({ vehicleId }: VehicleMaintena
         onCancel={() => setCreateModalOpen(false)}
         confirmLoading={createMutation.isPending}
         okText="Create Schedule"
-        destroyOnHidden
       >
         <Form form={createForm} layout="vertical" style={{ marginTop: 16 }}>
           <Form.Item
@@ -387,7 +386,6 @@ export default function VehicleMaintenanceSection({ vehicleId }: VehicleMaintena
         onCancel={() => setEditingSchedule(null)}
         confirmLoading={updateMutation.isPending}
         okText="Save Changes"
-        destroyOnHidden
       >
         <Form form={editForm} layout="vertical" style={{ marginTop: 16 }}>
           <Form.Item

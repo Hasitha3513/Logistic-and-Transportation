@@ -34,4 +34,9 @@ class TripReportReadAdapter implements TripReportReadPort {
     public List<VehicleTripReportItem> findVehicleTrips(OffsetDateTime from, OffsetDateTime to, UUID vehicleId) {
         return query.findVehicleTrips(from, to, vehicleId);
     }
+
+    @Override
+    public List<TripReportItem> findAllTrips() {
+        return query.findAllTripSummaries();
+    }
 }

@@ -34,21 +34,26 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.transportlogistics.app.reporting.application.ports.in.OperationsDashboardUseCase;
+import com.transportlogistics.app.reporting.domain.model.OperationsDashboard;
+
 class ReportingControllerTest {
 
     private MockMvc mockMvc;
+    private OperationsDashboardUseCase operationsDashboard;
     private TripReportUseCase tripReports;
     private DriverAssignmentUseCase driverAssignments;
     private VehicleUtilizationUseCase vehicleUtilization;
 
     @BeforeEach
     void setUp() {
+        operationsDashboard = mock(OperationsDashboardUseCase.class);
         tripReports = mock(TripReportUseCase.class);
         driverAssignments = mock(DriverAssignmentUseCase.class);
         vehicleUtilization = mock(VehicleUtilizationUseCase.class);
         var mapper = Mappers.getMapper(ReportingWebMapper.class);
 
-        mockMvc = MockMvcBuilders.standaloneSetup(new ReportingController(tripReports, driverAssignments, vehicleUtilization, mapper))
+        mockMvc = MockMvcBuilders.standaloneSetup(new ReportingController(operationsDashboard, tripReports, driverAssignments, vehicleUtilization, mapper))
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .build();
     }
@@ -167,5 +172,31 @@ class ReportingControllerTest {
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("INVALID_DATE_RANGE"));
+    }
+
+    @Test
+    void getOperationsDashboardReturnsFullMetrics() throws Exception {
+        var response = new OperationsDashboard(
+                LocalDate.of(2026, 8, 23),
+                "READY",
+                new OperationsDashboard.VehicleMetrics(5, 3, 1, 1, 50),
+                new OperationsDashboard.DriverMetrics(4, 2, 67),
+                new OperationsDashboard.TripMetrics(1, 1, 1, 1, 1, 1, 4, 40),
+                new OperationsDashboard.DashboardAlerts(
+                        List.of(new OperationsDashboard.DashboardAlertItem("a-1", "Insurance expiring", "WP-CAB-1201", "WARNING", "2026-09-01")),
+                        List.of()
+                )
+        );
+
+        when(operationsDashboard.getOperationsDashboard(any())).thenReturn(response);
+
+        mockMvc.perform(get("/dashboard/operations")
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("READY"))
+                .andExpect(jsonPath("$.vehicles.available").value(5))
+                .andExpect(jsonPath("$.drivers.available").value(4))
+                .andExpect(jsonPath("$.trips.completed").value(4))
+                .andExpect(jsonPath("$.alerts.expiringDocuments[0].title").value("Insurance expiring"));
     }
 }

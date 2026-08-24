@@ -73,6 +73,13 @@ class OfflineSyncIntegrationTest {
         jdbc.execute("CREATE TABLE IF NOT EXISTS offline_sync_test_mutation (operation_id UUID PRIMARY KEY, aggregate_id UUID NOT NULL)");
         jdbc.update("DELETE FROM offline_sync_test_mutation");
         jdbc.update("DELETE FROM offline_sync_operation");
+        jdbc.update("DELETE FROM fuel_issue_history");
+        jdbc.update("DELETE FROM fuel_issue");
+        jdbc.update("DELETE FROM fuel_purchase_history");
+        jdbc.update("DELETE FROM fuel_purchase");
+        jdbc.update("DELETE FROM bunker_stock_adjustment");
+        jdbc.update("DELETE FROM bunker_dip_reading");
+        jdbc.update("DELETE FROM bunker_stock_movement");
         jdbc.update("DELETE FROM app_user_role");
         jdbc.update("DELETE FROM refresh_token");
         jdbc.update("DELETE FROM app_user");

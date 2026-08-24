@@ -15,6 +15,12 @@ public record UserRequest(@NotBlank String username,
                           String phone,
                           Boolean active,
                           Set<UUID> roleIds) {
+    public UserRequest {
+        if (password != null && password.isBlank()) {
+            password = null;
+        }
+    }
+
     @Override
     public String toString() {
         return "UserRequest[username=" + username + ", email=" + email + ", password=***, firstName=" + firstName +

@@ -253,6 +253,24 @@ class VehicleReadingServiceTest {
         @Override public Optional<Vehicle> findById(UUID id) { return Optional.ofNullable(store.get(id)); }
         @Override public Optional<Vehicle> findByIdForUpdate(UUID id) { return findById(id); }
         @Override public List<Vehicle> findAll() { return List.copyOf(store.values()); }
+        @Override public Optional<Vehicle> findByRegistrationNumber(String registrationNumber) {
+            return store.values().stream().filter(v -> v.registrationNumber().equalsIgnoreCase(registrationNumber)).findFirst();
+        }
+        @Override public Optional<Vehicle> findByChassisNumber(String chassisNumber) {
+            return store.values().stream().filter(v -> v.chassisNumber() != null && v.chassisNumber().equalsIgnoreCase(chassisNumber)).findFirst();
+        }
+        @Override public Optional<Vehicle> findByEngineNumber(String engineNumber) {
+            return store.values().stream().filter(v -> v.engineNumber() != null && v.engineNumber().equalsIgnoreCase(engineNumber)).findFirst();
+        }
+        @Override public boolean existsByRegistrationNumberAndIdNot(String registrationNumber, UUID id) {
+            return store.values().stream().anyMatch(v -> !v.id().equals(id) && v.registrationNumber().equalsIgnoreCase(registrationNumber));
+        }
+        @Override public boolean existsByChassisNumberAndIdNot(String chassisNumber, UUID id) {
+            return store.values().stream().anyMatch(v -> !v.id().equals(id) && v.chassisNumber() != null && v.chassisNumber().equalsIgnoreCase(chassisNumber));
+        }
+        @Override public boolean existsByEngineNumberAndIdNot(String engineNumber, UUID id) {
+            return store.values().stream().anyMatch(v -> !v.id().equals(id) && v.engineNumber() != null && v.engineNumber().equalsIgnoreCase(engineNumber));
+        }
     }
 
     private static class InMemoryVehicleMeterResetRepository implements VehicleMeterResetRepository {

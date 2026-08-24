@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useParams, Link, Navigate } from 'react-router-dom';
 import {
   Alert,
-  Breadcrumb,
   Button,
   Card,
   Col,
@@ -84,13 +83,13 @@ export default function BunkerTankDetailsPage() {
 
   if (!tank) {
     return (
-      <div style={{ padding: 24 }}>
+      <>
         <Empty description="Bunker tank not found">
           <Link to="/fuel/bunker-tanks">
             <Button type="primary">Back to Tanks</Button>
           </Link>
         </Empty>
-      </div>
+      </>
     );
   }
 
@@ -212,16 +211,7 @@ export default function BunkerTankDetailsPage() {
   ];
 
   return (
-    <div style={{ padding: 24 }}>
-      <Breadcrumb
-        style={{ marginBottom: 16 }}
-        items={[
-          { title: <Link to="/">Home</Link> },
-          { title: <Link to="/fuel/bunker-tanks">Bunker Tanks</Link> },
-          { title: tank.tankCode },
-        ]}
-      />
-
+    <>
       <Row justify="space-between" align="middle" style={{ marginBottom: 20 }}>
         <Col>
           <Space align="center" size="middle">
@@ -472,6 +462,6 @@ export default function BunkerTankDetailsPage() {
         open={transferModalOpen}
         onClose={() => setTransferModalOpen(false)}
       />
-    </div>
+    </>
   );
 }

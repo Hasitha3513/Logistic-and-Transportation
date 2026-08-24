@@ -42,22 +42,85 @@ export default function FuelIssueListPage() {
     { title: 'Actions', key: 'actions', render: (_, row) => <Link to={`/fuel/issues/${row.id}`}><Button type="link" icon={<EyeOutlined />}>View</Button></Link> },
   ];
 
-  return <Flex vertical gap={18}>
-    <Flex justify="space-between" align="center" wrap gap={12}>
-      <div><Typography.Title level={3}>Fuel issues</Typography.Title><Typography.Text type="secondary">Authorize and record controlled fuel dispensing.</Typography.Text></div>
-      <Space>{hasPermission('FUEL_ISSUE_CREATE') && <Link to="/fuel/issues/new"><Button type="primary" icon={<PlusOutlined />}>Create fuel issue</Button></Link>}
-        <Button icon={<ReloadOutlined />} loading={query.isFetching} onClick={() => void query.refetch()}>Refresh</Button></Space>
+  return (
+    <Flex vertical gap={18}>
+      <Flex justify="space-between" align="center" wrap gap={12}>
+        <div>
+          <Typography.Text type="secondary">Authorize and record controlled fuel dispensing.</Typography.Text>
+        </div>
+        <Space>
+          {hasPermission('FUEL_ISSUE_CREATE') && (
+            <Link to="/fuel/issues/new">
+              <Button type="primary" icon={<PlusOutlined />}>Create fuel issue</Button>
+            </Link>
+          )}
+          <Button icon={<ReloadOutlined />} loading={query.isFetching} onClick={() => void query.refetch()}>
+            Refresh
+          </Button>
+        </Space>
+      </Flex>
+
+      <Card variant="borderless">
+        <Flex wrap gap={12} align="center">
+          <Input.Search
+            aria-label="Voucher number"
+            placeholder="Voucher number"
+            allowClear
+            onSearch={(value) => { setVoucherNumber(value || undefined); setPage(1); }}
+            style={{ maxWidth: 240 }}
+          />
+          <Input.Search
+            aria-label="Vehicle ID"
+            placeholder="Vehicle ID"
+            allowClear
+            onSearch={(value) => { setVehicleId(value || undefined); setPage(1); }}
+            style={{ maxWidth: 220 }}
+          />
+          <Input.Search
+            aria-label="Trip ID"
+            placeholder="Trip ID"
+            allowClear
+            onSearch={(value) => { setTripId(value || undefined); setPage(1); }}
+            style={{ maxWidth: 220 }}
+          />
+          <Select
+            aria-label="Fuel issue status"
+            placeholder="All statuses"
+            allowClear
+            options={statuses}
+            onChange={(value) => { setStatus(value); setPage(1); }}
+            style={{ minWidth: 210 }}
+          />
+          <RangePicker value={period} onChange={(value) => { setPeriod(value); setPage(1); }} />
+        </Flex>
+      </Card>
+
+      {query.isError && (
+        <Alert
+          type="error"
+          showIcon
+          message="Fuel issues could not be loaded"
+          description="Check the backend connection and your permission."
+        />
+      )}
+
+      <Card>
+        <Table
+          rowKey="id"
+          columns={columns}
+          dataSource={query.data?.content ?? []}
+          loading={query.isLoading}
+          scroll={{ x: 1000 }}
+          pagination={{
+            current: page,
+            pageSize: limit,
+            total: query.data?.totalElements ?? 0,
+            showSizeChanger: true,
+            onChange: (next, size) => { setPage(next); setLimit(size); },
+          }}
+          locale={{ emptyText: 'No fuel issues found' }}
+        />
+      </Card>
     </Flex>
-    <Card variant="borderless"><Flex wrap gap={12}>
-      <Input.Search aria-label="Voucher number" placeholder="Voucher number" allowClear onSearch={(value) => { setVoucherNumber(value || undefined); setPage(1); }} style={{ maxWidth: 240 }} />
-      <Input.Search aria-label="Vehicle ID" placeholder="Vehicle ID" allowClear onSearch={(value) => { setVehicleId(value || undefined); setPage(1); }} style={{ maxWidth: 220 }} />
-      <Input.Search aria-label="Trip ID" placeholder="Trip ID" allowClear onSearch={(value) => { setTripId(value || undefined); setPage(1); }} style={{ maxWidth: 220 }} />
-      <Select aria-label="Fuel issue status" placeholder="All statuses" allowClear options={statuses} onChange={(value) => { setStatus(value); setPage(1); }} style={{ minWidth: 210 }} />
-      <RangePicker value={period} onChange={(value) => { setPeriod(value); setPage(1); }} />
-    </Flex></Card>
-    {query.isError && <Alert type="error" showIcon message="Fuel issues could not be loaded" description="Check the backend connection and your permission." />}
-    <Card><Table rowKey="id" columns={columns} dataSource={query.data?.content ?? []} loading={query.isLoading}
-      scroll={{ x: 1000 }} pagination={{ current: page, pageSize: limit, total: query.data?.totalElements ?? 0, showSizeChanger: true,
-        onChange: (next, size) => { setPage(next); setLimit(size); } }} locale={{ emptyText: 'No fuel issues found' }} /></Card>
-  </Flex>;
+  );
 }

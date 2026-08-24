@@ -482,7 +482,6 @@ export default function VehicleReadingsSection({ vehicleId }: VehicleReadingsSec
         onOk={handleRecordSubmit}
         onCancel={() => setRecordModalOpen(false)}
         confirmLoading={recordMutation.isPending}
-        destroyOnHidden
       >
         <Form form={recordForm} layout="vertical">
           <Form.Item name="readingType" label="Reading Type" rules={[{ required: true }]}>
@@ -516,7 +515,6 @@ export default function VehicleReadingsSection({ vehicleId }: VehicleReadingsSec
         onOk={handleCorrectSubmit}
         onCancel={() => setCorrectingReading(null)}
         confirmLoading={correctMutation.isPending}
-        destroyOnHidden
       >
         <Alert
           type="info"
@@ -550,7 +548,6 @@ export default function VehicleReadingsSection({ vehicleId }: VehicleReadingsSec
         onOk={handleResetSubmit}
         onCancel={() => setResetModalOpen(false)}
         confirmLoading={resetMutation.isPending}
-        destroyOnHidden
       >
         <Alert
           type="warning"

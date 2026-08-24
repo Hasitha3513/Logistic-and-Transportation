@@ -38,7 +38,7 @@ class LocalIdentityBootstrapIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.firstName").value("Local"))
                 .andExpect(jsonPath("$.lastName").value("Administrator"))
-                .andExpect(jsonPath("$.permissions.length()").value(79))
+                .andExpect(jsonPath("$.permissions.length()").value(87))
                 .andExpect(jsonPath("$.permissions").value(org.hamcrest.Matchers.hasItem("NOTIFICATION_VIEW")))
                 .andExpect(jsonPath("$.permissions").value(org.hamcrest.Matchers.hasItem("NOTIFICATION_RULE_VIEW")))
                 .andExpect(jsonPath("$.permissions").value(org.hamcrest.Matchers.hasItem("NOTIFICATION_RULE_MANAGE")))

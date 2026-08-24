@@ -6,6 +6,7 @@ import {
   Button,
   Card,
   Col,
+  Flex,
   Form,
   Input,
   InputNumber,
@@ -48,7 +49,7 @@ import type {
 } from './bunkerTypes';
 import { BunkerStockStatusTag, BunkerTankStatusTag } from '../components/status/StatusTags';
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
 export default function BunkerTankListPage() {
   const { hasPermission } = useAuth();
@@ -217,12 +218,9 @@ export default function BunkerTankListPage() {
   ];
 
   return (
-    <div style={{ padding: 24 }}>
+    <>
       <Row justify="space-between" align="middle" style={{ marginBottom: 16 }}>
         <Col>
-          <Title level={3} style={{ margin: 0 }}>
-            Bunker Tanks
-          </Title>
           <Text type="secondary">
             Manage bulk internal depot fuel storage, dip measurements, stock adjustments, and transfers.
           </Text>
@@ -246,63 +244,57 @@ export default function BunkerTankListPage() {
         </Col>
       </Row>
 
-      <Card style={{ marginBottom: 16 }}>
-        <Row gutter={16} align="middle">
-          <Col xs={24} sm={8} md={6}>
-            <Text strong>Station: </Text>
-            <Select
-              allowClear
-              placeholder="All Stations"
-              aria-label="Station filter"
-              style={{ width: '100%', marginTop: 4 }}
-              value={stationFilter}
-              onChange={(val) => setStationFilter(val)}
-              options={stations.map((s) => ({ label: `${s.name} (${s.code})`, value: s.id }))}
-            />
-          </Col>
-          <Col xs={24} sm={8} md={6}>
-            <Text strong>Fuel Type: </Text>
-            <Select
-              allowClear
-              placeholder="All Fuel Types"
-              aria-label="Fuel type filter"
-              style={{ width: '100%', marginTop: 4 }}
-              value={fuelTypeFilter}
-              onChange={(val) => setFuelTypeFilter(val)}
-              options={[
-                { label: 'DIESEL', value: 'DIESEL' },
-                { label: 'PETROL', value: 'PETROL' },
-                { label: 'OCTANE_95', value: 'OCTANE_95' },
-                { label: 'SUPER_DIESEL', value: 'SUPER_DIESEL' },
-              ]}
-            />
-          </Col>
-          <Col xs={24} sm={8} md={6}>
-            <Text strong>Active Status: </Text>
-            <Select
-              aria-label="Active status filter"
-              style={{ width: '100%', marginTop: 4 }}
-              value={activeFilter}
-              onChange={(val) => setActiveFilter(val)}
-              options={[
-                { label: 'Active Tanks Only', value: true },
-                { label: 'Inactive / All', value: undefined },
-              ]}
-            />
-          </Col>
-        </Row>
+      <Card variant="borderless" style={{ marginBottom: 16 }}>
+        <Flex wrap gap={12} align="center">
+          <Select
+            allowClear
+            placeholder="All Stations"
+            aria-label="Station filter"
+            style={{ minWidth: 220, flex: '1 1 200px', maxWidth: 320 }}
+            value={stationFilter}
+            onChange={(val) => setStationFilter(val)}
+            options={stations.map((s) => ({ label: `${s.name} (${s.code})`, value: s.id }))}
+          />
+          <Select
+            allowClear
+            placeholder="All Fuel Types"
+            aria-label="Fuel type filter"
+            style={{ minWidth: 160, flex: '1 1 150px', maxWidth: 220 }}
+            value={fuelTypeFilter}
+            onChange={(val) => setFuelTypeFilter(val)}
+            options={[
+              { label: 'DIESEL', value: 'DIESEL' },
+              { label: 'PETROL', value: 'PETROL' },
+              { label: 'OCTANE_95', value: 'OCTANE_95' },
+              { label: 'SUPER_DIESEL', value: 'SUPER_DIESEL' },
+            ]}
+          />
+          <Select
+            aria-label="Active status filter"
+            style={{ minWidth: 180, flex: '1 1 160px', maxWidth: 220 }}
+            value={activeFilter}
+            onChange={(val) => setActiveFilter(val)}
+            options={[
+              { label: 'Active Tanks Only', value: true },
+              { label: 'Inactive / All', value: undefined },
+            ]}
+          />
+        </Flex>
       </Card>
 
-      <Table
-        rowKey="id"
-        dataSource={tanks}
-        columns={columns}
-        loading={isLoading}
-        pagination={{ pageSize: 15, showTotal: (total) => `Total ${total} bunker tanks` }}
-        locale={{
-          emptyText: 'No bunker tanks configured. Click "New Tank" to register a fuel tank.',
-        }}
-      />
+      <Card className="resource-list-card">
+        <Table
+          rowKey="id"
+          dataSource={tanks}
+          columns={columns}
+          loading={isLoading}
+          scroll={{ x: 'max-content' }}
+          pagination={{ pageSize: 15, showSizeChanger: true, showTotal: (total) => `Total ${total} bunker tanks` }}
+          locale={{
+            emptyText: 'No bunker tanks configured. Click "New Tank" to register a fuel tank.',
+          }}
+        />
+      </Card>
 
       {/* Modals */}
       <CreateTankModal
@@ -336,7 +328,7 @@ export default function BunkerTankListPage() {
         open={transferModalOpen}
         onClose={() => setTransferModalOpen(false)}
       />
-    </div>
+    </>
   );
 }
 
@@ -407,7 +399,7 @@ function CreateTankModal({
       }}
       onOk={() => form.submit()}
       confirmLoading={createMutation.isPending}
-      destroyOnClose
+      destroyOnHidden
     >
       {errorMsg && <Alert type="error" showIcon message={errorMsg} style={{ marginBottom: 16 }} />}
       <Form form={form} layout="vertical" onFinish={handleFinish}>
@@ -538,7 +530,7 @@ function EditTankModal({
       }}
       onOk={() => form.submit()}
       confirmLoading={updateMutation.isPending}
-      destroyOnClose
+      destroyOnHidden
     >
       {errorMsg && <Alert type="error" showIcon message={errorMsg} style={{ marginBottom: 16 }} />}
       <Alert
@@ -634,7 +626,7 @@ export function RecordDipModal({
       }}
       onOk={() => form.submit()}
       confirmLoading={dipMutation.isPending}
-      destroyOnClose
+      destroyOnHidden
     >
       {errorMsg && <Alert type="error" showIcon message={errorMsg} style={{ marginBottom: 16 }} />}
       <Alert
@@ -728,7 +720,7 @@ export function StockAdjustmentModal({
       }}
       onOk={() => form.submit()}
       confirmLoading={adjustMutation.isPending}
-      destroyOnClose
+      destroyOnHidden
     >
       {errorMsg && <Alert type="error" showIcon message={errorMsg} style={{ marginBottom: 16 }} />}
       <Alert
@@ -862,7 +854,7 @@ export function TransferModal({
       }}
       onOk={() => form.submit()}
       confirmLoading={transferMutation.isPending}
-      destroyOnClose
+      destroyOnHidden
     >
       {errorMsg && <Alert type="error" showIcon message={errorMsg} style={{ marginBottom: 16 }} />}
       <Alert

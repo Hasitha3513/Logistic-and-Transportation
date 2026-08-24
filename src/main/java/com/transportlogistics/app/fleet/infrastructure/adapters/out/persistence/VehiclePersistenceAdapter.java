@@ -48,6 +48,30 @@ class VehiclePersistenceAdapter implements VehicleRepository {
         return repo.findAll().stream().map(this::map).toList();
     }
 
+    public Optional<Vehicle> findByRegistrationNumber(String registrationNumber) {
+        return repo.findByRegistrationNumberIgnoreCase(registrationNumber).map(this::map);
+    }
+
+    public Optional<Vehicle> findByChassisNumber(String chassisNumber) {
+        return repo.findByChassisNumberIgnoreCase(chassisNumber).map(this::map);
+    }
+
+    public Optional<Vehicle> findByEngineNumber(String engineNumber) {
+        return repo.findByEngineNumberIgnoreCase(engineNumber).map(this::map);
+    }
+
+    public boolean existsByRegistrationNumberAndIdNot(String registrationNumber, UUID id) {
+        return repo.existsByRegistrationNumberIgnoreCaseAndIdNot(registrationNumber, id);
+    }
+
+    public boolean existsByChassisNumberAndIdNot(String chassisNumber, UUID id) {
+        return repo.existsByChassisNumberIgnoreCaseAndIdNot(chassisNumber, id);
+    }
+
+    public boolean existsByEngineNumberAndIdNot(String engineNumber, UUID id) {
+        return repo.existsByEngineNumberIgnoreCaseAndIdNot(engineNumber, id);
+    }
+
     private Vehicle map(VehicleEntity e) {
         return new Vehicle(e.getId(), e.getRegistrationNumber(), e.getChassisNumber(), e.getEngineNumber(), e.getCategoryId(), e.getTypeId(), e.getManufacturer(), e.getModel(), e.getManufactureYear(), e.getOwnershipType(), e.getOperationalStatus(), e.getCurrentOdometerKm(), e.getEngineHours(), e.getCapacityKg(), e.isActive());
     }

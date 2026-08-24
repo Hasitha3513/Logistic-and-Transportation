@@ -84,9 +84,10 @@ export default function ResourceListPage({ endpoint, queryKey, title, descriptio
     queryFn: async () => (await api.get<ResourceRecord>(`${endpoint}/${selected?.id}`)).data,
     enabled: Boolean(selected?.id),
   });
-  const relatedEndpoint = endpoint === '/vehicles'
-    ? `${endpoint}/${selected?.id}/documents`
-    : endpoint === '/drivers' ? `${endpoint}/${selected?.id}/licenses` : undefined;
+  const relatedEndpoint = selected?.id ? (endpoint === '/vehicles'
+    ? `${endpoint}/${selected.id}/documents`
+    : endpoint === '/drivers' ? `${endpoint}/${selected.id}/licenses` : undefined)
+    : undefined;
   const related = useQuery({
     queryKey: [queryKey, selected?.id, 'compliance'],
     queryFn: async () => (await api.get<ResourceRecord[]>(relatedEndpoint!)).data,
@@ -113,38 +114,59 @@ export default function ResourceListPage({ endpoint, queryKey, title, descriptio
   const tableColumns: TableColumnsType<ResourceRecord> = [
     ...columns,
     {
-      title: 'Actions', key: 'actions', fixed: 'right', width: 280,
-      render: (_value, row) => <Space size={2}>
-        <Button type="link" icon={<EyeOutlined />} onClick={() => setSelected(row)}>View details</Button>
-        {fields.length > 0 && updatePermission && hasPermission(updatePermission) &&
-          <Button type="link" icon={<EditOutlined />} onClick={() => openEdit(row)}>Edit</Button>}
-        {deactivatePermission && hasPermission(deactivatePermission) &&
-          <Button type="link" danger icon={<DeleteOutlined />} onClick={() => deactivate(row)}>Deactivate</Button>}
-      </Space>,
+      title: 'Actions',
+      key: 'actions',
+      width: 240,
+      render: (_value, row) => (
+        <Space size={0} wrap={false}>
+          <Button type="link" size="small" icon={<EyeOutlined />} onClick={() => setSelected(row)}>
+            View details
+          </Button>
+          {fields.length > 0 && updatePermission && hasPermission(updatePermission) && (
+            <Button type="link" size="small" icon={<EditOutlined />} onClick={() => openEdit(row)}>
+              Edit
+            </Button>
+          )}
+          {deactivatePermission && hasPermission(deactivatePermission) && (
+            <Button type="link" size="small" danger icon={<DeleteOutlined />} onClick={() => deactivate(row)}>
+              Deactivate
+            </Button>
+          )}
+        </Space>
+      ),
     },
   ];
 
   return (
     <Flex vertical gap={18}>
       <Flex align="flex-start" justify="space-between" gap={16} wrap>
-        <div>
-          <Typography.Title level={3} className="resource-list__title">{title}</Typography.Title>
-          <Space direction="vertical" size={6}>
-            <Typography.Text type="secondary">{description}</Typography.Text>
-            {controlPermissions.length > 0 && (
-              <Tag icon={<SafetyCertificateOutlined />} color={fullControl ? 'success' : 'warning'}>
-                {fullControl ? 'Full management access' : 'Read-only access'}
-              </Tag>
-            )}
-          </Space>
-        </div>
+        <Space direction="vertical" size={4}>
+          <Typography.Text type="secondary">{description}</Typography.Text>
+          {controlPermissions.length > 0 && (
+            <Tag icon={<SafetyCertificateOutlined />} color={fullControl ? 'success' : 'warning'}>
+              {fullControl ? 'Full management access' : 'Read-only access'}
+            </Tag>
+          )}
+        </Space>
         <Space>
-          {fields.length > 0 && createPermission && hasPermission(createPermission) &&
-            <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>Create</Button>}
-          <Button icon={<ReloadOutlined />} loading={resources.isFetching} onClick={() => void resources.refetch()}>Refresh</Button>
+          {fields.length > 0 && createPermission && hasPermission(createPermission) && (
+            <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>
+              Create
+            </Button>
+          )}
+          <Button icon={<ReloadOutlined />} loading={resources.isFetching} onClick={() => void resources.refetch()}>
+            Refresh
+          </Button>
         </Space>
       </Flex>
-      {resources.isError && <Alert type="error" showIcon message={`${title} could not be loaded`} description="Check your permission and backend connection, then retry." />}
+      {resources.isError && (
+        <Alert
+          type="error"
+          showIcon
+          message={`${title} could not be loaded`}
+          description="Check your permission and backend connection, then retry."
+        />
+      )}
       <Card className="resource-list-card">
         <Table<ResourceRecord>
           rowKey="id"
@@ -152,7 +174,7 @@ export default function ResourceListPage({ endpoint, queryKey, title, descriptio
           dataSource={resources.data ?? []}
           loading={resources.isLoading}
           pagination={{ pageSize: 10, showSizeChanger: true, showTotal: (total) => `${total} records` }}
-          scroll={{ x: 760 }}
+          scroll={{ x: 'max-content' }}
           locale={{ emptyText: `No ${title.toLowerCase()} found` }}
         />
       </Card>
@@ -242,7 +264,7 @@ export const resourcePages = {
       { name: 'registrationNumber', label: 'Registration number', required: true },
       { name: 'chassisNumber', label: 'Chassis number' }, { name: 'engineNumber', label: 'Engine number' },
       { name: 'categoryId', label: 'Category', kind: 'select', required: true, referenceEndpoint: '/vehicle-categories' },
-      { name: 'typeId', label: 'Vehicle type', kind: 'select', required: true, referenceEndpoint: '/vehicle-types' },
+      { name: 'typeId', label: 'Vehicle type', kind: 'select', required: true, referenceEndpoint: '/vehicle-types', dependsOn: 'categoryId', dependsOnKey: 'categoryId' },
       { name: 'manufacturer', label: 'Manufacturer' }, { name: 'model', label: 'Model' },
       { name: 'manufactureYear', label: 'Manufacture year', kind: 'number', positive: true },
       { name: 'ownershipType', label: 'Ownership', kind: 'select', required: true, options: [
@@ -360,6 +382,17 @@ export const resourcePages = {
   users: {
     endpoint: '/users', queryKey: 'users-page', title: 'Users', description: 'Identity accounts and assigned backend roles.',
     controlPermissions: ['IDENTITY_MANAGE'],
+    createPermission: 'IDENTITY_MANAGE', updatePermission: 'IDENTITY_MANAGE', deactivatePermission: 'IDENTITY_MANAGE',
+    fields: [
+      { name: 'username', label: 'Username', required: true },
+      { name: 'email', label: 'Email', required: true },
+      { name: 'firstName', label: 'First name', required: true },
+      { name: 'lastName', label: 'Last name', required: true },
+      { name: 'phone', label: 'Phone' },
+      { name: 'password', label: 'Password (min 12 characters)' },
+      { name: 'roleIds', label: 'Assigned roles', kind: 'multi-select', referenceEndpoint: '/roles' },
+      { name: 'active', label: 'Active', kind: 'switch' },
+    ] as ResourceField[],
     columns: [
       { title: 'Username', dataIndex: 'username', render: text },
       { title: 'Name', render: (_value, row) => `${text(row.firstName)} ${text(row.lastName)}` },
@@ -371,6 +404,12 @@ export const resourcePages = {
   roles: {
     endpoint: '/roles', queryKey: 'roles-page', title: 'Roles', description: 'Backend roles and their granted business permissions.',
     controlPermissions: ['IDENTITY_MANAGE'],
+    createPermission: 'IDENTITY_MANAGE', updatePermission: 'IDENTITY_MANAGE', deactivatePermission: 'IDENTITY_MANAGE',
+    fields: [
+      { name: 'name', label: 'Name', required: true },
+      { name: 'description', label: 'Description', kind: 'textarea' },
+      { name: 'active', label: 'Active', kind: 'switch' },
+    ] as ResourceField[],
     columns: [
       { title: 'Name', dataIndex: 'name', render: text }, { title: 'Description', dataIndex: 'description', render: text },
       { title: 'Permissions', dataIndex: 'permissions', render: (value) => Array.isArray(value) ? `${value.length} permissions` : '0 permissions' },

@@ -70,7 +70,7 @@ public class DriverExceptionPersistenceAdapter implements DriverExceptionReposit
         return new DriverException(
                 entity.getId(),
                 entity.getDriverId(),
-                DriverExceptionType.valueOf(entity.getExceptionType()),
+                DriverExceptionType.fromString(entity.getExceptionType()),
                 entity.getStartTime(),
                 entity.getEndTime(),
                 DriverExceptionStatus.valueOf(entity.getStatus()),

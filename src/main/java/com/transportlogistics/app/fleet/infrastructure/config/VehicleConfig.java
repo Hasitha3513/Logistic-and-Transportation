@@ -15,11 +15,18 @@ import org.springframework.context.annotation.Configuration;
 
 import java.math.BigDecimal;
 
+import com.transportlogistics.app.fleet.application.ports.out.VehicleCategoryRepository;
+import com.transportlogistics.app.fleet.application.ports.out.VehicleTypeRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+
 @Configuration
 class VehicleConfig {
     @Bean
-    VehicleUseCase vehicleUseCase(VehicleRepository repo) {
-        return new VehicleService(repo);
+    VehicleUseCase vehicleUseCase(VehicleRepository repo,
+                                  VehicleCategoryRepository categories,
+                                  VehicleTypeRepository types,
+                                  @Autowired(required = false) VehicleAllocationAvailability allocations) {
+        return new VehicleService(repo, categories, types, allocations);
     }
 
     @Bean

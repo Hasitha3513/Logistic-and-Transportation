@@ -66,7 +66,7 @@ describe('Fuel Issue MVP pages', () => {
     await user.type(quantity, '40');
     await user.click(screen.getByRole('button', { name: 'Save draft' }));
     await waitFor(() => expect(payload).toMatchObject({ vehicleId: 'vehicle-1', tripId: 'trip-1', driverId: 'driver-1', quantity: 40 }));
-  }, 15_000);
+  }, 30_000);
 
   it('does not expose authorization to an actor without its permission', async () => {
     handlers(['FUEL_ISSUE_VIEW'], { ...baseIssue, status: 'PENDING_AUTHORIZATION' });

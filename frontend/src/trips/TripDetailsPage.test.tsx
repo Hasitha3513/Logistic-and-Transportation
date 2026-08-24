@@ -53,6 +53,7 @@ function renderDetails() {
         details: 'Driver assigned', occurredAt: '2026-08-14T08:00:00Z',
       },
     ])),
+    http.get('*/trips/:tripId/operational-events', () => HttpResponse.json([])),
     http.get('*/trips/:tripId', () => HttpResponse.json(trip)),
     http.get('*/customers', () => HttpResponse.json([{ id: 'customer-1', code: 'CUS-1', name: 'Central Hospital' }])),
     http.get('*/locations', () => HttpResponse.json([

@@ -1,8 +1,8 @@
 spring:
   datasource:
-    url: ${DB_URL}
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/transport_logistics}
+    username: ${DB_USERNAME:transport_app}
+    password: ${DB_PASSWORD:transport_app}
     hikari:
       maximum-pool-size: ${DB_POOL_MAX:10}
       minimum-idle: ${DB_POOL_MIN:2}
@@ -19,7 +19,7 @@ spring:
           time_zone: UTC
 security:
   jwt:
-    secret: ${JWT_SECRET}
+    secret: ${JWT_SECRET:super_secret_jwt_key_that_is_at_least_32_bytes_long_for_security_2026}
 app:
   notification:
     email:
@@ -39,9 +39,9 @@ app:
         password: ${NOTIFICATION_EMAIL_SMTP_PASSWORD:}
   dev:
     identity-bootstrap:
-      enabled: ${APP_DEV_IDENTITY_BOOTSTRAP_ENABLED:${DEV_IDENTITY_BOOTSTRAP_ENABLED:false}}
+      enabled: ${APP_DEV_IDENTITY_BOOTSTRAP_ENABLED:${DEV_IDENTITY_BOOTSTRAP_ENABLED:true}}
       username: ${APP_DEV_IDENTITY_BOOTSTRAP_USERNAME:${DEV_IDENTITY_USERNAME:admin}}
-      password: ${APP_DEV_IDENTITY_BOOTSTRAP_PASSWORD:${DEV_IDENTITY_PASSWORD:}}
-      email: ${APP_DEV_IDENTITY_BOOTSTRAP_EMAIL:${DEV_IDENTITY_EMAIL:admin@localhost.test}}
+      password: ${APP_DEV_IDENTITY_BOOTSTRAP_PASSWORD:${DEV_IDENTITY_PASSWORD:AdminPass!2026}}
+      email: ${APP_DEV_IDENTITY_BOOTSTRAP_EMAIL:${DEV_IDENTITY_EMAIL:admin@transport.local}}
     sample-data:
-      enabled: ${APP_DEV_SAMPLE_DATA_ENABLED:${DEV_SAMPLE_DATA_ENABLED:false}}
+      enabled: ${APP_DEV_SAMPLE_DATA_ENABLED:${DEV_SAMPLE_DATA_ENABLED:true}}

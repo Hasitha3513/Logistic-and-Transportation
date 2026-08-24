@@ -17,4 +17,6 @@ public interface TripReportingQuery {
     List<DriverAssignmentReportItem> findDriverAssignments(OffsetDateTime from, OffsetDateTime to, UUID driverId);
 
     List<VehicleTripReportItem> findVehicleTrips(OffsetDateTime from, OffsetDateTime to, UUID vehicleId);
+
+    List<TripReportItem> findAllTripSummaries();
 }

@@ -4,7 +4,6 @@ import {
   App,
   Badge,
   Button,
-  Card,
   Flex,
   Popconfirm,
   Space,
@@ -34,7 +33,7 @@ import {
 import { NotificationRuleModal } from './NotificationRuleModal';
 import { NotificationDeliveryDiagnostics } from './NotificationDeliveryDiagnostics';
 
-const { Text, Title, Paragraph } = Typography;
+const { Text, Paragraph } = Typography;
 
 const SEVERITY_COLORS: Record<NotificationSeverity, string> = {
   INFO: 'blue',
@@ -229,52 +228,49 @@ export const NotificationRulesPage: React.FC = () => {
   ];
 
   return (
-    <div style={{ padding: 24 }}>
-      <Card>
-        <Flex justify="space-between" align="center" style={{ marginBottom: 20 }}>
-          <div>
-            <Title level={3} style={{ margin: 0 }}>Notification Rules & Alerting</Title>
-            <Paragraph type="secondary" style={{ margin: 0 }}>
-              Configure automated event triggers, delivery channels, and recipient routing for operational events.
-            </Paragraph>
-          </div>
-          {canManage && (
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={handleOpenCreate}
-              aria-label="Create Notification Rule"
-            >
-              Create Notification Rule
-            </Button>
-          )}
-        </Flex>
-
-        {isError && (
-          <Alert
-            message="Failed to load notification rules"
-            description={String(error)}
-            type="error"
-            showIcon
-            action={<Button size="small" onClick={() => refetch()}>Retry</Button>}
-            style={{ marginBottom: 16 }}
-          />
+    <>
+      <Flex justify="space-between" align="center" style={{ marginBottom: 20 }}>
+        <div>
+          <Paragraph type="secondary" style={{ margin: 0 }}>
+            Configure automated event triggers, delivery channels, and recipient routing for operational events.
+          </Paragraph>
+        </div>
+        {canManage && (
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={handleOpenCreate}
+            aria-label="Create Notification Rule"
+          >
+            Create Notification Rule
+          </Button>
         )}
+      </Flex>
 
-        <Tabs items={[
-          { key: 'rules', label: 'Rules', children: <Table dataSource={rules} columns={columns} rowKey="id" loading={isLoading}
-            scroll={{ x: 1250 }} pagination={{ pageSize: 10, showSizeChanger: true }} locale={{ emptyText: 'No notification rules defined yet.' }} /> },
-          { key: 'deliveries', label: 'Delivery Diagnostics', children: <NotificationDeliveryDiagnostics
-            eventTypes={(catalogue.data ?? []).map((item) => item.eventType)} canManage={canManage} /> },
-        ]} />
-      </Card>
+      {isError && (
+        <Alert
+          message="Failed to load notification rules"
+          description={String(error)}
+          type="error"
+          showIcon
+          action={<Button size="small" onClick={() => refetch()}>Retry</Button>}
+          style={{ marginBottom: 16 }}
+        />
+      )}
+
+      <Tabs items={[
+        { key: 'rules', label: 'Rules', children: <Table dataSource={rules} columns={columns} rowKey="id" loading={isLoading}
+          scroll={{ x: 1250 }} pagination={{ pageSize: 10, showSizeChanger: true }} locale={{ emptyText: 'No notification rules defined yet.' }} /> },
+        { key: 'deliveries', label: 'Delivery Diagnostics', children: <NotificationDeliveryDiagnostics
+          eventTypes={(catalogue.data ?? []).map((item) => item.eventType)} canManage={canManage} /> },
+      ]} />
 
       <NotificationRuleModal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
         ruleToEdit={ruleToEdit}
       />
-    </div>
+    </>
   );
 };
 

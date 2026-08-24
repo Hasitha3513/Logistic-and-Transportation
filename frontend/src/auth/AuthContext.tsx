@@ -46,8 +46,13 @@ export function AuthProvider({ children }: PropsWithChildren) {
   });
 
   const logout = async () => {
-    await logoutMutation.mutateAsync();
-    window.location.assign('/login');
+    try {
+      await logoutMutation.mutateAsync();
+    } catch {
+      // Ignore network errors on logout
+    } finally {
+      window.location.assign('/login');
+    }
   };
 
   useEffect(() => {

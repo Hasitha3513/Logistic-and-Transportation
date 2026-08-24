@@ -46,7 +46,7 @@ test.describe('US-77 notification rule administration', () => {
     await modal.getByRole('button', { name: 'Update Rule' }).click();
     await expect(modal).toBeHidden();
     await page.reload();
-    await expect(page.getByRole('heading', { name: 'Notification Rules & Alerting' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Notification Rules', level: 2 })).toBeVisible();
     const response = await request.get(`/api/notification-rules/${rule.id}`, { headers: headers(admin) });
     expect(await response.json()).toMatchObject({ name: renamed, severityThreshold: 'CRITICAL', suppressionWindowMinutes: 12, templateCode: 'TRIP_DELAY', recipientType: 'USER' });
     await deleteRule(request, admin, rule.id);

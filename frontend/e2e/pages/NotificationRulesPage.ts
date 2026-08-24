@@ -7,7 +7,7 @@ export class NotificationRulesPageObject {
     const loaded = this.page.waitForResponse((response) => response.url().includes('/api/notification-rules') && response.request().method() === 'GET');
     await this.page.goto('/notification-rules');
     await loaded;
-    await expect(this.page.getByRole('heading', { name: 'Notification Rules & Alerting' })).toBeVisible();
+    await expect(this.page.getByRole('heading', { name: 'Notification Rules', level: 2 })).toBeVisible();
     await expect(this.page.getByRole('table')).toBeVisible();
   }
 

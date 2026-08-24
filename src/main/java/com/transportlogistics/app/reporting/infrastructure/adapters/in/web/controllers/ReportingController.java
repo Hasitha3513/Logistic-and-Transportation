@@ -1,9 +1,11 @@
 package com.transportlogistics.app.reporting.infrastructure.adapters.in.web.controllers;
 
 import com.transportlogistics.app.reporting.application.ports.in.DriverAssignmentUseCase;
+import com.transportlogistics.app.reporting.application.ports.in.OperationsDashboardUseCase;
 import com.transportlogistics.app.reporting.application.ports.in.TripReportUseCase;
 import com.transportlogistics.app.reporting.application.ports.in.VehicleUtilizationUseCase;
 import com.transportlogistics.app.reporting.infrastructure.adapters.in.web.dto.response.DriverAssignmentResponse;
+import com.transportlogistics.app.reporting.web.dto.response.OperationsDashboardResponse;
 import com.transportlogistics.app.reporting.infrastructure.adapters.in.web.dto.response.PageResponse;
 import com.transportlogistics.app.reporting.infrastructure.adapters.in.web.dto.response.TripReportResponse;
 import com.transportlogistics.app.reporting.infrastructure.adapters.in.web.dto.response.VehicleUtilizationResponse;
@@ -15,21 +17,22 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
 public class ReportingController {
 
+    private final OperationsDashboardUseCase operationsDashboard;
     private final TripReportUseCase tripReports;
     private final DriverAssignmentUseCase driverAssignments;
     private final VehicleUtilizationUseCase vehicleUtilization;
     private final ReportingWebMapper mapper;
 
     @GetMapping("/dashboard/operations")
-    public Map<String, Object> dashboard(@RequestParam(required = false) LocalDate date) {
-        return Map.of("date", date == null ? LocalDate.now() : date, "status", "READY");
+    public OperationsDashboardResponse dashboard(@RequestParam(required = false) LocalDate date) {
+        var domain = operationsDashboard.getOperationsDashboard(date);
+        return mapper.toResponse(domain);
     }
 
     @GetMapping("/reports/trips")

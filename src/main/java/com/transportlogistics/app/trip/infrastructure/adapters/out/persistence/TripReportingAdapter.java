@@ -33,4 +33,9 @@ class TripReportingAdapter implements TripReportingQuery {
     public List<VehicleTripReportItem> findVehicleTrips(OffsetDateTime from, OffsetDateTime to, UUID vehicleId) {
         return repository.findVehicleTripItems(from, to, vehicleId);
     }
+
+    @Override
+    public List<TripReportItem> findAllTripSummaries() {
+        return repository.findAllTripReportItems();
+    }
 }

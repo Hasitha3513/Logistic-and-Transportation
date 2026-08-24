@@ -8,7 +8,12 @@ import com.transportlogistics.app.reporting.infrastructure.adapters.in.web.dto.r
 import com.transportlogistics.app.reporting.infrastructure.adapters.in.web.dto.response.VehicleUtilizationResponse;
 import org.mapstruct.Mapper;
 
+import com.transportlogistics.app.reporting.domain.model.OperationsDashboard;
+import com.transportlogistics.app.reporting.web.dto.response.OperationsDashboardResponse;
 import java.util.List;
+
+
+
 
 @Mapper(componentModel = "spring")
 public interface ReportingWebMapper {
@@ -22,6 +27,6 @@ public interface ReportingWebMapper {
     List<DriverAssignmentResponse> toDriverAssignmentResponseList(List<DriverAssignmentReportRecord> records);
 
     VehicleUtilizationResponse toResponse(VehicleUtilizationReportRecord record);
-
+    OperationsDashboardResponse toResponse(OperationsDashboard domain);
     List<VehicleUtilizationResponse> toVehicleUtilizationResponseList(List<VehicleUtilizationReportRecord> records);
 }

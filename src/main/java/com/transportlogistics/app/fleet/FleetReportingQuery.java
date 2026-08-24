@@ -16,4 +16,8 @@ public interface FleetReportingQuery {
     Optional<FleetDriverSummary> findDriver(UUID driverId);
 
     List<FleetDriverSummary> findAllDrivers();
+
+    List<FleetDocumentAlert> findExpiringDocuments(java.time.LocalDate cutoff);
+
+    List<FleetExceptionAlert> findActiveExceptions();
 }

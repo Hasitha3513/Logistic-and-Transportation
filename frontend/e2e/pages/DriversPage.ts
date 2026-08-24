@@ -17,7 +17,7 @@ export class DriversPage extends BasePage {
 
   async goto() {
     await this.page.goto('/drivers');
-    await expect(this.page.locator('.resource-list__title')).toContainText('Driver registry', { timeout: 15000 });
+    await expect(this.page.getByRole('heading', { name: 'Drivers', level: 2 })).toBeVisible({ timeout: 15000 });
   }
 
   async openCreateModal() {

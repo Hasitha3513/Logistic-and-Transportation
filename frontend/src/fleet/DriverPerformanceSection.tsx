@@ -20,7 +20,10 @@ export const DriverPerformanceSection: React.FC<DriverPerformanceSectionProps> =
   if (isLoading) {
     return (
       <div style={{ textAlign: 'center', padding: 24 }}>
-        <Spin tip="Loading driver performance scorecard..." />
+        <Spin />
+        <div style={{ marginTop: 8 }}>
+          <Text type="secondary">Loading driver performance scorecard...</Text>
+        </div>
       </div>
     );
   }
@@ -83,7 +86,7 @@ export const DriverPerformanceSection: React.FC<DriverPerformanceSectionProps> =
       <Row gutter={[16, 16]}>
         {/* Safety Score Card */}
         <Col xs={24} sm={12} md={8}>
-          <Card size="small" title="Safety Score" bordered>
+          <Card size="small" title="Safety Score" variant="outlined">
             <div style={{ textAlign: 'center', padding: '8px 0' }}>
               <Progress
                 type="dashboard"
@@ -103,7 +106,7 @@ export const DriverPerformanceSection: React.FC<DriverPerformanceSectionProps> =
 
         {/* Trip Reliability Card */}
         <Col xs={24} sm={12} md={8}>
-          <Card size="small" title="Trip Reliability" bordered>
+          <Card size="small" title="Trip Reliability" variant="outlined">
             <Statistic
               title="Completion Rate"
               value={performance.tripCompletionRate}
@@ -129,7 +132,7 @@ export const DriverPerformanceSection: React.FC<DriverPerformanceSectionProps> =
 
         {/* Compliance & Fines Card */}
         <Col xs={24} sm={24} md={8}>
-          <Card size="small" title="Compliance & Penalties" bordered>
+          <Card size="small" title="Compliance & Penalties" variant="outlined">
             <Row gutter={[8, 8]}>
               <Col span={12}>
                 <Statistic

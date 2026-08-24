@@ -109,4 +109,15 @@ interface TripJpaRepository extends JpaRepository<TripEntity, UUID> {
             @Param("from") OffsetDateTime from,
             @Param("to") OffsetDateTime to,
             @Param("vehicleId") UUID vehicleId);
+
+    @Query("""
+            select new com.transportlogistics.app.trip.TripReportItem(
+                t.id, t.tripNumber, t.status, t.customerId, t.vehicleId, t.driverId, t.routeId,
+                t.requestedStartTime, t.requestedEndTime, t.actualStartTime, t.actualEndTime,
+                t.startOdometerKm, t.endOdometerKm, t.completionRemarks, t.createdAt
+            )
+            from TripEntity t
+            order by t.requestedStartTime desc
+            """)
+    java.util.List<com.transportlogistics.app.trip.TripReportItem> findAllTripReportItems();
 }

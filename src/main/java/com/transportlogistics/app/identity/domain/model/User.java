@@ -22,6 +22,10 @@ public record User(UUID id, String username, String email, String passwordHash, 
         return roles.stream().filter(Role::active).map(Role::name).collect(java.util.stream.Collectors.toUnmodifiableSet());
     }
 
+    public Set<UUID> roleIds() {
+        return roles.stream().map(Role::id).collect(java.util.stream.Collectors.toUnmodifiableSet());
+    }
+
     public Set<String> permissions() {
         return roles.stream().filter(Role::active).flatMap(role -> role.permissions().stream())
                 .collect(java.util.stream.Collectors.toUnmodifiableSet());

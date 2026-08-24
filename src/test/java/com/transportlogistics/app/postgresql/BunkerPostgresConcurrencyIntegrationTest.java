@@ -37,7 +37,10 @@ class BunkerPostgresConcurrencyIntegrationTest extends PostgreSqlIntegrationTest
         if (POSTGRES != null && POSTGRES.isRunning()) {
             return true;
         }
-        try (var socket = new Socket("localhost", 5432)) {
+        String url = System.getProperty("DB_URL", "jdbc:postgresql://localhost:5432/transport_integration");
+        String user = System.getProperty("DB_USERNAME", "transport_app");
+        String pass = System.getProperty("DB_PASSWORD", "LocalDb-Transport-2026");
+        try (var conn = java.sql.DriverManager.getConnection(url, user, pass)) {
             return true;
         } catch (Exception ignored) {
             return false;

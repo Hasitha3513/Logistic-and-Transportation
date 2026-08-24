@@ -1,0 +1,41 @@
+@startuml US-01-use-case
+left to right direction
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam actorStyle awesome
+
+actor "Fleet Manager" as FM
+
+rectangle "US-01 Manage Vehicle Master" {
+    usecase "Create Vehicle" as UC_Create
+    usecase "View Vehicle Details" as UC_View
+    usecase "Update Vehicle Specifications" as UC_Update
+    usecase "Change Vehicle Status" as UC_Status
+    usecase "Deactivate / Retire Vehicle" as UC_Deactivate
+
+    usecase "Validate Vehicle Invariants" as UC_ValInvariants
+    usecase "Validate Master-Data Hierarchy" as UC_ValHierarchy
+    usecase "Detect Duplicate Identifiers" as UC_DetectDup
+    usecase "Validate Status Transition" as UC_ValTransition
+    usecase "Guard Against Active Allocations" as UC_GuardAlloc
+}
+
+FM --> UC_Create
+FM --> UC_View
+FM --> UC_Update
+FM --> UC_Status
+FM --> UC_Deactivate
+
+UC_Create ..> UC_ValInvariants : <<include>>
+UC_Create ..> UC_ValHierarchy : <<include>>
+UC_Create ..> UC_DetectDup : <<include>>
+
+UC_Update ..> UC_ValInvariants : <<include>>
+UC_Update ..> UC_ValHierarchy : <<include>>
+UC_Update ..> UC_DetectDup : <<include>>
+UC_Update ..> UC_ValTransition : <<include>>
+
+UC_Status ..> UC_ValTransition : <<include>>
+UC_Deactivate ..> UC_GuardAlloc : <<include>>
+
+@enduml

@@ -13,4 +13,16 @@ interface VehicleJpaRepository extends JpaRepository<VehicleEntity, UUID> {
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select vehicle from VehicleEntity vehicle where vehicle.id = :id")
     Optional<VehicleEntity> findByIdForUpdate(@Param("id") UUID id);
+
+    Optional<VehicleEntity> findByRegistrationNumberIgnoreCase(String registrationNumber);
+
+    Optional<VehicleEntity> findByChassisNumberIgnoreCase(String chassisNumber);
+
+    Optional<VehicleEntity> findByEngineNumberIgnoreCase(String engineNumber);
+
+    boolean existsByRegistrationNumberIgnoreCaseAndIdNot(String registrationNumber, UUID id);
+
+    boolean existsByChassisNumberIgnoreCaseAndIdNot(String chassisNumber, UUID id);
+
+    boolean existsByEngineNumberIgnoreCaseAndIdNot(String engineNumber, UUID id);
 }

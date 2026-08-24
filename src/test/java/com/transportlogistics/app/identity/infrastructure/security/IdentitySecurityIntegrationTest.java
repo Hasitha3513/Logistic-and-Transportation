@@ -27,6 +27,14 @@ class IdentitySecurityIntegrationTest {
 
     @BeforeEach
     void seedIdentity() {
+        jdbc.update("DELETE FROM offline_sync_operation");
+        jdbc.update("DELETE FROM fuel_issue_history");
+        jdbc.update("DELETE FROM fuel_issue");
+        jdbc.update("DELETE FROM fuel_purchase_history");
+        jdbc.update("DELETE FROM fuel_purchase");
+        jdbc.update("DELETE FROM bunker_stock_adjustment");
+        jdbc.update("DELETE FROM bunker_dip_reading");
+        jdbc.update("DELETE FROM bunker_stock_movement");
         jdbc.update("DELETE FROM vehicle_meter_reset");
         jdbc.update("DELETE FROM vehicle_reading");
         jdbc.update("DELETE FROM refresh_token");

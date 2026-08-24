@@ -16,13 +16,14 @@ public record UserResponse(UUID id,
                            OffsetDateTime createdAt,
                            OffsetDateTime updatedAt,
                            Set<String> roles,
-                           Set<String> permissions) {
+                           Set<String> permissions,
+                           Set<UUID> roleIds) {
 
     public static UserResponse from(User user) {
         if (user == null) {
             return null;
         }
         return new UserResponse(user.id(), user.username(), user.email(), user.firstName(), user.lastName(),
-                user.phone(), user.active(), user.createdAt(), user.updatedAt(), user.roleNames(), user.permissions());
+                user.phone(), user.active(), user.createdAt(), user.updatedAt(), user.roleNames(), user.permissions(), user.roleIds());
     }
 }

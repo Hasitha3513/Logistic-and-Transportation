@@ -49,6 +49,14 @@ class ReportingSecurityIntegrationTest {
 
     @BeforeEach
     void setUpSecurity() throws Exception {
+        jdbc.update("DELETE FROM offline_sync_operation");
+        jdbc.update("DELETE FROM fuel_issue_history");
+        jdbc.update("DELETE FROM fuel_issue");
+        jdbc.update("DELETE FROM fuel_purchase_history");
+        jdbc.update("DELETE FROM fuel_purchase");
+        jdbc.update("DELETE FROM bunker_stock_adjustment");
+        jdbc.update("DELETE FROM bunker_dip_reading");
+        jdbc.update("DELETE FROM bunker_stock_movement");
         jdbc.update("DELETE FROM refresh_token");
         jdbc.update("DELETE FROM app_user_role");
         jdbc.update("DELETE FROM app_role_permission");

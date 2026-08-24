@@ -31,7 +31,7 @@ test.describe('Driver Management', () => {
 
   test('create a driver with valid data', async ({ page }) => {
     await page.goto('/drivers');
-    await expect(page.locator('.resource-list__title')).toContainText('Driver registry', { timeout: 10000 });
+    await expect(page.getByRole('heading', { name: 'Drivers', level: 2 })).toBeVisible({ timeout: 10000 });
     await page.click('button:has-text("Create")');
 
     await page.fill('#resource-employeeNumber', 'DR12345');
@@ -48,7 +48,7 @@ test.describe('Driver Management', () => {
 
   test('validation errors when required fields are missing', async ({ page }) => {
     await page.goto('/drivers');
-    await expect(page.locator('.resource-list__title')).toContainText('Driver registry', { timeout: 10000 });
+    await expect(page.getByRole('heading', { name: 'Drivers', level: 2 })).toBeVisible({ timeout: 10000 });
     await page.click('button:has-text("Create")');
     // Submit without filling fields
     await page.click('.ant-modal-footer button.ant-btn-primary');

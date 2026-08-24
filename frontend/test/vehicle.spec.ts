@@ -46,7 +46,7 @@ test.describe('Vehicle Management', () => {
 
   test('create vehicle with valid VIN', async ({ page }) => {
     await page.goto('/fleet/vehicles');
-    await expect(page.locator('.resource-list__title')).toContainText('Vehicle registry', { timeout: 10000 });
+    await expect(page.getByRole('heading', { name: 'Vehicles', level: 2 })).toBeVisible({ timeout: 10000 });
     await page.click('button:has-text("Create")');
 
     await page.fill('#resource-registrationNumber', 'WP-ABC-1234');
@@ -68,7 +68,7 @@ test.describe('Vehicle Management', () => {
 
   test('validation errors when required fields are missing', async ({ page }) => {
     await page.goto('/fleet/vehicles');
-    await expect(page.locator('.resource-list__title')).toContainText('Vehicle registry', { timeout: 10000 });
+    await expect(page.getByRole('heading', { name: 'Vehicles', level: 2 })).toBeVisible({ timeout: 10000 });
     await page.click('button:has-text("Create")');
     await page.click('.ant-modal-footer button.ant-btn-primary');
     const errors = page.locator('.resource-editor-error');

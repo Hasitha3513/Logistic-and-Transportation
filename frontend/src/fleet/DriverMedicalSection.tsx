@@ -180,7 +180,6 @@ export const DriverMedicalSection: React.FC<DriverMedicalSectionProps> = ({ driv
         onCancel={() => setIsModalOpen(false)}
         onOk={() => form.submit()}
         confirmLoading={createMutation.isPending}
-        destroyOnClose
       >
         <Form form={form} layout="vertical" onFinish={handleCreate}>
           <Form.Item

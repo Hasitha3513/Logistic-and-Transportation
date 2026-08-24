@@ -133,7 +133,7 @@ export const NotificationCenter: React.FC = () => {
         width={420}
         onClose={() => setOpen(false)}
         open={open}
-        destroyOnClose={false}
+        destroyOnHidden={false}
       >
         {isLoading ? (
           <Flex justify="center" align="center" style={{ minHeight: 200 }}>

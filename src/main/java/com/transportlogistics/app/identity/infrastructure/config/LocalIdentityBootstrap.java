@@ -6,9 +6,9 @@ import com.transportlogistics.app.identity.domain.model.User;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.annotation.Profile;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.env.Environment;
-import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 import java.time.OffsetDateTime;
@@ -42,7 +42,12 @@ class LocalIdentityBootstrap implements ApplicationRunner {
             "FUEL_COST_VIEW",
             "BUNKER_VIEW", "BUNKER_CREATE", "BUNKER_UPDATE", "BUNKER_LEDGER_VIEW", "BUNKER_DIP_RECORD", "BUNKER_ADJUST", "BUNKER_TRANSFER",
             "VEHICLE_READING_VIEW", "VEHICLE_READING_CREATE", "VEHICLE_READING_CORRECT", "VEHICLE_READING_RESET_METER",
-            "VEHICLE_MAINTENANCE_MANAGE", "DRIVER_EXCEPTION_MANAGE", "DRIVER_VIOLATION_MANAGE");
+            "VEHICLE_MAINTENANCE_MANAGE", "DRIVER_EXCEPTION_MANAGE", "DRIVER_VIOLATION_MANAGE",
+            "DRIVER_MEDICAL_VIEW", "DRIVER_MEDICAL_MANAGE",
+            "DRIVER_DRUG_TEST_VIEW", "DRIVER_DRUG_TEST_MANAGE",
+            "LUBRICANT_LOG_VIEW", "LUBRICANT_LOG_MANAGE",
+            "TRIP_LOG_VIEW", "TRIP_LOG_MANAGE"
+    );
 
     private final IdentityUseCase identities;
     private final Environment environment;
@@ -64,7 +69,10 @@ class LocalIdentityBootstrap implements ApplicationRunner {
                 .orElseGet(() -> identities.createRole(new Role(UUID.randomUUID(), "LOCAL_MVP_ADMIN",
                         "Opt-in local administrator with all implemented business permissions", true,
                         MVP_PERMISSIONS)));
-        if (existingUser.isPresent()) return;
+        if (existingUser.isPresent()) {
+            identities.updateUser(existingUser.get().id(), existingUser.get(), password, Set.of(role.id()));
+            return;
+        }
         var now = OffsetDateTime.now();
         identities.createUser(new User(UUID.randomUUID(), username,
                         environment.getProperty("app.dev.identity-bootstrap.email", "local.operator@example.test"), null,

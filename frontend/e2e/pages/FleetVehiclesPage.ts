@@ -19,7 +19,7 @@ export class FleetVehiclesPage extends BasePage {
 
   async goto() {
     await this.page.goto('/fleet/vehicles');
-    await expect(this.page.locator('.resource-list__title')).toContainText('Vehicle registry', { timeout: 15000 });
+    await expect(this.page.getByRole('heading', { name: 'Vehicles', level: 2 })).toBeVisible({ timeout: 15000 });
   }
 
   async openCreateModal() {
