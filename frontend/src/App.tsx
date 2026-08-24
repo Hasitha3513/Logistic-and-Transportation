@@ -6,6 +6,7 @@ import AppLayout from './layout/AppLayout';
 import DashboardPage from './pages/DashboardPage';
 import ModulePage from './pages/ModulePage';
 import ResourceListPage, { resourcePages } from './pages/ResourceListPage';
+import VehicleListPage from './features/fleet/vehicleMaster/pages/VehicleListPage';
 import TripListPage from './trips/TripListPage';
 import TripDetailsPage from './trips/TripDetailsPage';
 import TripEditorPage from './trips/TripEditorPage';
@@ -49,7 +50,7 @@ export default function App() {
       <Route path="login" element={<LoginPage />} />
       <Route element={<ProtectedRoute />}>
         <Route index element={<HomePage />} />
-        <Route path="fleet/vehicles" element={<ResourceListPage {...resourcePages.vehicles} />} />
+        <Route path="fleet/vehicles" element={<VehicleListPage />} />
         <Route path="fleet/vehicle-categories" element={<ResourceListPage {...resourcePages.categories} />} />
         <Route path="fleet/vehicle-types" element={<ResourceListPage {...resourcePages.types} />} />
         <Route path="drivers" element={<ResourceListPage {...resourcePages.drivers} />} />

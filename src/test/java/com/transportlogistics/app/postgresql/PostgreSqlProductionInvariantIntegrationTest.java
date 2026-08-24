@@ -2,13 +2,13 @@ package com.transportlogistics.app.postgresql;
 
 import com.transportlogistics.app.fleet.application.ports.out.DriverLicenseRepository;
 import com.transportlogistics.app.fleet.application.ports.out.DriverRepository;
-import com.transportlogistics.app.fleet.application.ports.out.VehicleRepository;
+import com.transportlogistics.app.fleet.vehiclemaster.ports.outbound.VehicleRepository;
 import com.transportlogistics.app.fleet.application.ports.in.VehicleReadingUseCase;
 import com.transportlogistics.app.fleet.application.ports.out.VehicleReadingRepository;
 import com.transportlogistics.app.fleet.domain.model.Driver;
 import com.transportlogistics.app.fleet.domain.model.DriverLicense;
 import com.transportlogistics.app.fleet.domain.model.DriverLicenseStatus;
-import com.transportlogistics.app.fleet.domain.model.Vehicle;
+import com.transportlogistics.app.fleet.vehiclemaster.domain.model.Vehicle;
 import com.transportlogistics.app.fleet.domain.model.VehicleReading;
 import com.transportlogistics.app.fleet.domain.model.VehicleReadingSourceType;
 import com.transportlogistics.app.fleet.domain.model.VehicleReadingType;

@@ -7,7 +7,7 @@ import com.transportlogistics.app.fleet.application.ports.out.VehicleMeterResetR
 import com.transportlogistics.app.fleet.application.ports.out.VehicleReadingEventPublisher;
 import com.transportlogistics.app.fleet.application.ports.out.VehicleReadingRepository;
 import com.transportlogistics.app.fleet.application.ports.out.VehicleReadingTransaction;
-import com.transportlogistics.app.fleet.application.ports.out.VehicleRepository;
+import com.transportlogistics.app.fleet.vehiclemaster.ports.outbound.VehicleRepository;
 import com.transportlogistics.app.fleet.application.service.VehicleReadingService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

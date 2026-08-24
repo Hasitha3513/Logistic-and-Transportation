@@ -3,7 +3,6 @@ package com.transportlogistics.app.fleet.infrastructure.adapters.out.persistence
 import com.transportlogistics.app.fleet.domain.model.FluidType;
 import com.transportlogistics.app.fleet.domain.model.LubricantLog;
 import com.transportlogistics.app.fleet.domain.model.MeasurementUnit;
-import com.transportlogistics.app.fleet.domain.model.Vehicle;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,14 +19,11 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-@Import({LubricantLogPersistenceAdapter.class, VehiclePersistenceAdapter.class})
+@Import(LubricantLogPersistenceAdapter.class)
 class LubricantLogPersistenceIntegrationTest {
 
     @Autowired
     private LubricantLogPersistenceAdapter adapter;
-
-    @Autowired
-    private VehiclePersistenceAdapter vehicleAdapter;
 
     @Autowired
     private JdbcTemplate jdbc;
@@ -42,10 +38,13 @@ class LubricantLogPersistenceIntegrationTest {
                 categoryId, "CAT-" + vehicleId.toString().substring(0, 6), "Test Category", true);
         jdbc.update("INSERT INTO vehicle_type (id, category_id, code, name, active) VALUES (?, ?, ?, ?, ?)",
                 typeId, categoryId, "TYPE-" + vehicleId.toString().substring(0, 6), "Test Type", true);
-        var vehicle = new Vehicle(vehicleId, "WP-LUB-" + vehicleId.toString().substring(0, 6), "VIN-LUB", "ENG-LUB",
+        jdbc.update("INSERT INTO vehicle (id, registration_number, chassis_number, engine_number, category_id, " +
+                        "type_id, manufacturer, model, manufacture_year, ownership_type, operational_status, " +
+                        "current_odometer_km, engine_hours, capacity_kg, active) " +
+                        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                vehicleId, "WP-LUB-" + vehicleId.toString().substring(0, 6), "VIN-LUB", "ENG-LUB",
                 categoryId, typeId, "Toyota", "Dyna", 2021, "COMPANY_OWNED", "AVAILABLE",
                 25000.0, 500.0, 3000.0, true);
-        vehicleAdapter.save(vehicle);
 
         var now = OffsetDateTime.now();
         var log = new LubricantLog(

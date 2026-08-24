@@ -22,6 +22,7 @@ const TRIP_STATUS: PresentationMap = {
 
 const VEHICLE_STATUS: PresentationMap = {
   AVAILABLE: { color: 'success', label: 'Available' },
+  ALLOCATED: { color: 'blue', label: 'Allocated' },
   BROKEN_DOWN: { color: 'error', label: 'Broken down' },
   BREAKDOWN: { color: 'error', label: 'Breakdown' },
   OUT_OF_SERVICE: { color: 'error', label: 'Out of service' },

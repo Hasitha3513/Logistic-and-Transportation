@@ -5,6 +5,7 @@ import com.transportlogistics.app.fleet.FleetDriverSummary;
 import com.transportlogistics.app.fleet.FleetExceptionAlert;
 import com.transportlogistics.app.fleet.FleetReportingQuery;
 import com.transportlogistics.app.fleet.FleetVehicleSummary;
+import com.transportlogistics.app.fleet.vehiclemaster.ports.outbound.VehicleRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -17,7 +18,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 class FleetReportingAdapter implements FleetReportingQuery {
 
-    private final VehicleJpaRepository vehicleRepo;
+    private final VehicleRepository vehicleRepo;
     private final DriverJpaRepository driverRepo;
     private final VehicleDocumentJpaRepository documentRepo;
     private final DriverExceptionJpaRepository exceptionRepo;
@@ -25,13 +26,15 @@ class FleetReportingAdapter implements FleetReportingQuery {
     @Override
     public Optional<FleetVehicleSummary> findVehicle(UUID vehicleId) {
         return vehicleRepo.findById(vehicleId)
-                .map(v -> new FleetVehicleSummary(v.getId(), v.getRegistrationNumber(), v.getOperationalStatus(), v.getCurrentOdometerKm(), v.isActive()));
+                .map(v -> new FleetVehicleSummary(v.id(), v.registrationNumber(), v.operationalStatus(),
+                        v.currentOdometerKm(), v.active()));
     }
 
     @Override
     public List<FleetVehicleSummary> findAllVehicles() {
         return vehicleRepo.findAll().stream()
-                .map(v -> new FleetVehicleSummary(v.getId(), v.getRegistrationNumber(), v.getOperationalStatus(), v.getCurrentOdometerKm(), v.isActive()))
+                .map(v -> new FleetVehicleSummary(v.id(), v.registrationNumber(), v.operationalStatus(),
+                        v.currentOdometerKm(), v.active()))
                 .toList();
     }
 
@@ -53,7 +56,8 @@ class FleetReportingAdapter implements FleetReportingQuery {
         var today = LocalDate.now();
         return documentRepo.findByActiveTrueAndMandatoryForDispatchTrueAndExpiryDateLessThanEqualOrderByExpiryDateAsc(cutoff).stream()
                 .map(doc -> {
-                    var regNo = vehicleRepo.findById(doc.getVehicleId()).map(VehicleEntity::getRegistrationNumber).orElse(doc.getVehicleId().toString());
+                    var regNo = vehicleRepo.findById(doc.getVehicleId()).map(vehicle -> vehicle.registrationNumber())
+                            .orElse(doc.getVehicleId().toString());
                     var severity = doc.getExpiryDate() != null && doc.getExpiryDate().isBefore(today) ? "CRITICAL" : "WARNING";
                     return new FleetDocumentAlert(doc.getId(), doc.getDocumentType(), doc.getDocumentNumber(), regNo, doc.getExpiryDate(), severity);
                 })

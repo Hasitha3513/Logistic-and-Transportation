@@ -45,7 +45,7 @@ class FleetControllerDriverExceptionTest {
                 mock(com.transportlogistics.app.fleet.application.ports.in.DriverAvailabilityUseCase.class),
                 mock(com.transportlogistics.app.fleet.application.ports.in.DriverLicenseUseCase.class),
                 driverExceptions,
-                mock(com.transportlogistics.app.fleet.application.ports.in.VehicleUseCase.class),
+                mock(com.transportlogistics.app.fleet.vehiclemaster.ports.inbound.VehicleUseCase.class),
                 mock(com.transportlogistics.app.fleet.application.ports.in.VehicleAvailabilityUseCase.class),
                 mock(com.transportlogistics.app.fleet.application.ports.in.VehicleCategoryUseCase.class),
                 mock(com.transportlogistics.app.fleet.application.ports.in.VehicleTypeUseCase.class),

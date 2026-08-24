@@ -4,7 +4,7 @@ import com.transportlogistics.app.fleet.VehicleAllocationAvailability;
 import com.transportlogistics.app.fleet.application.ports.in.VehicleAvailabilityUseCase;
 import com.transportlogistics.app.fleet.application.ports.out.MaintenanceScheduleRepository;
 import com.transportlogistics.app.fleet.application.ports.out.VehicleDocumentRepository;
-import com.transportlogistics.app.fleet.application.ports.out.VehicleRepository;
+import com.transportlogistics.app.fleet.vehiclemaster.ports.outbound.VehicleRepository;
 import com.transportlogistics.app.fleet.domain.model.MaintenanceStatus;
 import com.transportlogistics.app.fleet.domain.model.VehicleAvailability;
 import com.transportlogistics.app.shared.domain.NotFoundException;

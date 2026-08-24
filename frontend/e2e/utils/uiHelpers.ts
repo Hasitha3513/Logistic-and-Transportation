@@ -3,7 +3,11 @@ import { Page, expect } from '@playwright/test';
 
 export class UiHelpers {
   static async selectOption(page: Page, selectSelector: string, optionText: string) {
-    const trigger = page.locator(selectSelector);
+    const input = page.locator(selectSelector);
+    const trigger = input.locator(
+      'xpath=ancestor::*[contains(concat(" ", normalize-space(@class), " "), " ant-select ")][1]',
+    );
+    await expect(trigger).toBeVisible({ timeout: 10000 });
     await trigger.click();
     const dropdown = page.locator('.ant-select-dropdown:visible');
     await expect(dropdown).toBeVisible({ timeout: 10000 });

@@ -302,3 +302,191 @@ In these situations:
 ---
 
 Before changing existing architecture, explain why.
+
+# Architecture Governance — Feature-First Hexagonal Architecture
+
+## Mandatory Architecture
+
+All new and modified backend Fleet code must follow Feature-First / Domain-First Hexagonal Architecture, Ports and Adapters, and the existing Spring Modulith modular-monolith boundary.
+
+## Fleet Feature Map
+
+Fleet remains the single top-level business module. Its internal business features are:
+
+- `fleet/vehiclemaster`
+- `fleet/category`
+- `fleet/document`
+- `fleet/allocation`
+- `fleet/fuellubricant`
+- `fleet/runninglog`
+- `fleet/maintenance`
+
+Fleet edge cases are policies inside their owning features. Do not implement a separate `edgecases` CRUD package.
+
+## Dependency Direction
+
+The required direction is `domain <- ports/application <- adapters`.
+
+Domain:
+
+- no Spring, JPA, Hibernate, Jackson, web, persistence, or adapter imports;
+- only the Java standard library and approved pure Fleet domain primitives.
+
+Ports:
+
+- framework-neutral;
+- no persistence implementation or HTTP types;
+- depend only on domain or provider-neutral application types.
+
+Application:
+
+- no Spring, JPA, Hibernate, Jackson, or adapter implementation dependencies;
+- orchestrates domain behavior through inbound and outbound ports.
+
+Adapters:
+
+- framework dependencies are allowed;
+- implement or invoke ports;
+- map external representations to and from domain types.
+
+## Persistence Rule
+
+A JPA entity is not a domain entity. JPA models belong only under `adapters/outbound/persistence` and must be mapped explicitly:
+
+`JpaEntity <-> persistence mapper <-> Domain`
+
+Domain and application code must never receive JPA entity types.
+
+## Web Rule
+
+REST controllers, request/response DTOs, validation annotations, and web mappers belong only under `adapters/inbound/web`. Controllers depend on inbound ports and must never access a JPA repository directly.
+
+## Transactions
+
+Do not place Spring transaction annotations inside pure domain or application packages. Define atomicity from use-case needs and use the repository-approved infrastructure transaction adapter/proxy mechanism.
+
+## Events
+
+Domain and application code must not use `ApplicationEventPublisher` directly. Publish provider-neutral events through outbound ports and map them in a Spring event adapter.
+
+## Spring Modulith
+
+Fleet remains one top-level Spring Modulith module. Feature packages are internal slices. Do not expose adapter implementations as public module contracts.
+
+## Database
+
+Never modify historical Flyway migrations. Package-only architecture refactors must not create database migrations.
+
+## API Compatibility
+
+Architecture refactors must preserve existing REST paths, methods, JSON contracts, status/error semantics, authorization, and event behavior unless a change is explicitly approved.
+
+## Refactor Workflow
+
+Before changing a feature:
+
+1. Inspect current classes and behavior.
+2. Identify internal and external consumers.
+3. Create or update the current-to-target mapping.
+4. Add or confirm characterization tests.
+5. Extract the pure domain.
+6. Define focused inbound and outbound ports.
+7. Extract framework-free application services.
+8. Move or create the web adapter.
+9. Move or create the persistence adapter and mapper.
+10. Run focused tests.
+11. Run architecture and Spring Modulith tests.
+12. Run the full regression suite and inspect the complete diff.
+
+## Git Safety
+
+- preserve pre-existing changes;
+- prefer `git mv` for moves;
+- never use destructive reset to perform a refactor;
+- do not commit or push unless explicitly requested.
+
+## Agent Stop Conditions
+
+Stop instead of guessing when business semantics are unclear, an API contract or migration would need to change, a public module contract would break, status semantics conflict, transaction behavior would change, or tests cannot prove compatibility.
+
+## Fleet Feature-Specific Rules
+
+### Vehicle Master
+
+Fleet Dashboard, Company Fleet, Rental Fleet, QR, Vehicle Status, Available, Allocated, Maintenance, Out of Service, and Retired are use cases or policies—not separate Java packages.
+
+### Fleet Categories
+
+Vehicle Type, Capacity Class, Usage, Ownership Classification, and Special Equipment belong to the cohesive Category feature when supported by the existing model.
+
+### Vehicle Documents
+
+RC, Insurance, Permit, Fitness, Emission, Lease, Expiry, Renewal, missing-document detection, and version history belong to the cohesive Document feature.
+
+### Allocation
+
+Matching, Calendar, Reservation, Conflict, Overbooking, Priority, Replacement, and Approval belong to the cohesive Allocation feature and its policies.
+
+### Fuel/Lubricant
+
+Fuel entry, Lubricant entry, Consumption, Refill, Vendor, and Trends belong to Fleet usage history and must not duplicate the separate Fuel business module.
+
+### Running Log
+
+Kilometres, engine hours, trip usage, idle time, and validation belong to Running Log. Preserve offline Vehicle Reading integration.
+
+### Maintenance
+
+Preventive-maintenance triggers, Breakdown, schedule dependencies, and allocation blocking belong to Fleet Maintenance Linkage, not a speculative full Maintenance ERP module.
+
+# Frontend Architecture Governance
+
+## Feature-First Frontend
+
+Frontend code must be organized by business domain, then feature, then the smallest useful set of `api`, `hooks`, `components`, `pages`, `types`, `validation`, and `utils` folders. Do not create empty feature folders or broad cross-domain feature containers.
+
+## Fleet Feature Map
+
+Fleet frontend features are:
+
+- `features/fleet/vehicleMaster`
+- `features/fleet/category`
+- `features/fleet/document`
+- `features/fleet/allocation`
+- `features/fleet/fuelLubricant`
+- `features/fleet/runningLog`
+- `features/fleet/maintenance`
+
+Fleet edge-case UX belongs to the owning feature. Do not create a `FleetEdgeCasesPage` or an equivalent catch-all feature.
+
+## Global Layout
+
+`AppLayout` is the single owner of the sidebar, top header, breadcrumb, route page title, and global content spacing. Child pages must not duplicate that application chrome. Feature pages may render section headings that do not repeat the current route title.
+
+## Server State
+
+Use TanStack Query for backend server state. Feature-owned query keys and hooks live with the feature. Do not replace an existing query boundary with ad-hoc `useEffect` fetching, and preserve established cache keys during controlled moves.
+
+## Forms
+
+Use React Hook Form with Zod as the client validation source and Ant Design controls as the visual layer. Map backend field errors into React Hook Form. Backend validation remains authoritative. Do not maintain a second independent client validation system.
+
+## API
+
+Feature API clients live within the owning feature and use the shared Axios client. Do not create a giant cross-domain API module. API clients must preserve existing backend paths, methods, payloads, and error contracts during architecture refactors.
+
+## RBAC
+
+Centralized navigation metadata and action visibility may use actual backend permission constants. Hide inaccessible children and hide an empty parent menu. Never invent permissions or treat frontend visibility as authorization; the backend remains authoritative.
+
+## Routes
+
+Preserve current public routes and deep links during architecture refactors. Route changes require explicit approval and compatibility redirects.
+
+## Dependencies
+
+Do not introduce Refine, Ant Design Pro Components, Tailwind CSS, Radix UI, another UI framework, or another state-management framework without explicit architecture approval.
+
+## Test Safety
+
+Do not weaken Playwright selectors or assertions to hide refactor regressions. Prefer accessible locators such as `getByRole`, `getByLabel`, and `getByText`. Preserve current E2E intent, RBAC coverage, offline Vehicle reading behavior, and backend contract verification.

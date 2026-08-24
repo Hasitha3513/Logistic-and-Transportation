@@ -15,9 +15,9 @@ import {
 export interface NavigationItem {
   key: string;
   label: string;
-  path?: string;
+  route?: string;
   icon?: ReactNode;
-  permission?: string;
+  requiredPermission?: string;
   children?: NavigationItem[];
 }
 
@@ -25,27 +25,33 @@ export const navigation: NavigationItem[] = [
   {
     key: 'dashboard',
     label: 'Dashboard',
-    path: '/',
+    route: '/',
     icon: <DashboardOutlined />,
-    permission: 'DASHBOARD_VIEW',
+    requiredPermission: 'DASHBOARD_VIEW',
   },
   {
     key: 'fleet',
-    label: 'Fleet',
+    label: 'Fleet Management',
     icon: <CarOutlined />,
     children: [
-      { key: 'vehicles', label: 'Vehicles', path: '/fleet/vehicles', permission: 'VEHICLE_VIEW' },
+      { key: 'fleet-vehicle-master', label: 'Vehicle Master', route: '/fleet/vehicles', requiredPermission: 'VEHICLE_VIEW' },
       {
-        key: 'vehicle-categories',
-        label: 'Vehicle Categories',
-        path: '/fleet/vehicle-categories',
-        permission: 'VEHICLE_VIEW',
-      },
-      {
-        key: 'vehicle-types',
-        label: 'Vehicle Types',
-        path: '/fleet/vehicle-types',
-        permission: 'VEHICLE_VIEW',
+        key: 'fleet-categories',
+        label: 'Fleet Categories',
+        children: [
+          {
+            key: 'vehicle-categories',
+            label: 'Vehicle Categories',
+            route: '/fleet/vehicle-categories',
+            requiredPermission: 'VEHICLE_VIEW',
+          },
+          {
+            key: 'vehicle-types',
+            label: 'Vehicle Types',
+            route: '/fleet/vehicle-types',
+            requiredPermission: 'VEHICLE_VIEW',
+          },
+        ],
       },
     ],
   },
@@ -54,30 +60,30 @@ export const navigation: NavigationItem[] = [
     label: 'Drivers',
     icon: <UserOutlined />,
     children: [
-      { key: 'driver-list', label: 'Drivers', path: '/drivers', permission: 'DRIVER_VIEW' },
+      { key: 'driver-list', label: 'Drivers', route: '/drivers', requiredPermission: 'DRIVER_VIEW' },
     ],
   },
   {
     key: 'routes',
     label: 'Routes',
     icon: <EnvironmentOutlined />,
-    children: [{ key: 'route-list', label: 'Routes', path: '/routes', permission: 'ROUTE_VIEW' }],
+    children: [{ key: 'route-list', label: 'Routes', route: '/routes', requiredPermission: 'ROUTE_VIEW' }],
   },
   {
     key: 'trips',
     label: 'Trips',
     icon: <ScheduleOutlined />,
-    children: [{ key: 'trip-list', label: 'Trips', path: '/trips', permission: 'TRIP_VIEW' }],
+    children: [{ key: 'trip-list', label: 'Trips', route: '/trips', requiredPermission: 'TRIP_VIEW' }],
   },
   {
     key: 'fuel',
     label: 'Fuel Management',
     icon: <ThunderboltOutlined />,
     children: [
-      { key: 'fuel-issues', label: 'Fuel Issues', path: '/fuel/issues', permission: 'FUEL_ISSUE_VIEW' },
-      { key: 'fuel-purchases', label: 'Fuel Purchases', path: '/fuel/purchases', permission: 'FUEL_PURCHASE_VIEW' },
-      { key: 'bunker-tanks', label: 'Bunker Tanks', path: '/fuel/bunker-tanks', permission: 'BUNKER_VIEW' },
-      { key: 'fuel-prices', label: 'Fuel Prices', path: '/fuel/prices', permission: 'FUEL_PRICE_VIEW' },
+      { key: 'fuel-issues', label: 'Fuel Issues', route: '/fuel/issues', requiredPermission: 'FUEL_ISSUE_VIEW' },
+      { key: 'fuel-purchases', label: 'Fuel Purchases', route: '/fuel/purchases', requiredPermission: 'FUEL_PURCHASE_VIEW' },
+      { key: 'bunker-tanks', label: 'Bunker Tanks', route: '/fuel/bunker-tanks', requiredPermission: 'BUNKER_VIEW' },
+      { key: 'fuel-prices', label: 'Fuel Prices', route: '/fuel/prices', requiredPermission: 'FUEL_PRICE_VIEW' },
     ],
   },
   {
@@ -85,19 +91,19 @@ export const navigation: NavigationItem[] = [
     label: 'Administration',
     icon: <SettingOutlined />,
     children: [
-      { key: 'users', label: 'Users', path: '/administration/users', permission: 'IDENTITY_MANAGE', icon: <TeamOutlined /> },
+      { key: 'users', label: 'Users', route: '/administration/users', requiredPermission: 'IDENTITY_MANAGE', icon: <TeamOutlined /> },
       {
         key: 'roles',
         label: 'Roles',
-        path: '/administration/roles',
-        permission: 'IDENTITY_MANAGE',
+        route: '/administration/roles',
+        requiredPermission: 'IDENTITY_MANAGE',
         icon: <SafetyCertificateOutlined />,
       },
       {
         key: 'notification-rules',
         label: 'Notification Rules',
-        path: '/notification-rules',
-        permission: 'NOTIFICATION_RULE_VIEW',
+        route: '/notification-rules',
+        requiredPermission: 'NOTIFICATION_RULE_VIEW',
         icon: <BellOutlined />,
       },
     ],
@@ -110,12 +116,21 @@ export function permittedNavigation(items: NavigationItem[], permissions: string
       const children = permittedNavigation(item.children, permissions);
       return children.length ? [{ ...item, children }] : [];
     }
-    return !item.permission || permissions.includes(item.permission) ? [item] : [];
+    return !item.requiredPermission || permissions.includes(item.requiredPermission) ? [item] : [];
   });
 }
 
+export function findNavigationTrail(pathname: string, items: NavigationItem[] = navigation): NavigationItem[] {
+  for (const item of items) {
+    if (item.route === pathname || (item.route && item.route !== '/' && pathname.startsWith(`${item.route}/`))) {
+      return [item];
+    }
+    const childTrail = item.children ? findNavigationTrail(pathname, item.children) : [];
+    if (childTrail.length) return [item, ...childTrail];
+  }
+  return [];
+}
+
 export function findNavigationItem(pathname: string) {
-  const items = navigation.flatMap((item) => item.children ?? [item]);
-  return items.find((item) => item.path === pathname)
-    ?? items.find((item) => item.path && pathname.startsWith(`${item.path}/`));
+  return findNavigationTrail(pathname).at(-1);
 }

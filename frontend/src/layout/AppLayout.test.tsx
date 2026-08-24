@@ -74,24 +74,31 @@ describe('AppLayout', () => {
   });
 
   it('shows only navigation authorized by backend permissions', async () => {
+    const user = userEvent.setup();
     renderApp();
 
     await screen.findByText('TransportOps');
-    expect(screen.getByText('Fleet')).toBeInTheDocument();
+    await user.click(screen.getByText('Fleet Management'));
+    expect(screen.getByText('Vehicle Master')).toBeInTheDocument();
+    expect(screen.getByText('Fleet Categories')).toBeInTheDocument();
     expect(screen.getAllByText('Drivers').length).toBeGreaterThan(0);
-    expect(screen.getByText('Trips')).toBeInTheDocument();
+    expect(screen.getAllByText('Trips').length).toBeGreaterThan(0);
     expect(screen.queryByText('Routes')).not.toBeInTheDocument();
     expect(screen.queryByText('Administration')).not.toBeInTheDocument();
   });
 
   it('renders route title and breadcrumbs for permitted module pages', async () => {
-    server.use(http.get('*/vehicles', () => HttpResponse.json([])));
+    server.use(
+      http.get('*/vehicles', () => HttpResponse.json([])),
+      http.get('*/vehicle-categories', () => HttpResponse.json([])),
+      http.get('*/vehicle-types', () => HttpResponse.json([])),
+    );
     renderApp(operator, '/fleet/vehicles');
 
-    expect(await screen.findByRole('heading', { name: 'Vehicles', level: 2 })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Vehicle Master', level: 2 })).toBeInTheDocument();
     expect(screen.getAllByRole('heading', { level: 2 })).toHaveLength(1);
     expect(screen.getByText('Live vehicle master data from the fleet module.')).toBeInTheDocument();
-    await waitFor(() => expect(screen.getAllByText('Fleet').length).toBeGreaterThan(0));
+    await waitFor(() => expect(screen.getAllByText('Fleet Management').length).toBeGreaterThan(0));
   });
 
   it('shows the signed-in actor roles and business permissions', async () => {
@@ -114,6 +121,8 @@ describe('AppLayout', () => {
     };
     server.use(
       http.get('*/vehicles', () => HttpResponse.json([vehicle])),
+      http.get('*/vehicle-categories', () => HttpResponse.json([])),
+      http.get('*/vehicle-types', () => HttpResponse.json([])),
       http.get(`*/vehicles/${vehicle.id}`, () => HttpResponse.json(vehicle)),
       http.get(`*/vehicles/${vehicle.id}/documents`, () => HttpResponse.json([{ id: 'doc-1', documentNumber: 'INS-WP-1201', status: 'ACTIVE' }])),
       http.get(`*/vehicles/${vehicle.id}/readings`, () => HttpResponse.json({ content: [], page: 0, limit: 50, totalElements: 0, totalPages: 0 })),

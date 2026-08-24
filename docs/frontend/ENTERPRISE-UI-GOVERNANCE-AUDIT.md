@@ -166,5 +166,7 @@ The application shell is centralized in [`frontend/src/layout/AppLayout.tsx`](fi
 4. **`UI-HARDEN-004` (Filter Bar Consistency) — [COMPLETE]:**
    - Standardized search and filter controls across Trip, Fuel Issue, Fuel Purchase, and Bunker lists using consistent Ant Design `<Flex gap={12} wrap align="center">` within `<Card variant="borderless">`.
    - Verified 100% clean passes across ESLint (0 warnings), Vitest (170/170 tests), Vite build, and Playwright fuel and trip suites (30/30 tests across Chromium, Firefox, WebKit).
-5. **`UI-HARDEN-005` (Test & Regression Validation):**
-   - Run full frontend test suite (`npm run lint`, `npm test`, `npm run build`, `npm run test:e2e`).
+5. **`UI-HARDEN-005` (Form Layout, Section Hierarchy, Validation, & Action Ownership) — [COMPLETE]:**
+   - Standardized form action ownership (modal footers vs full-page bottom action bars), action order (`Cancel` first, `Save` second), and Zod validation error mappings across all create/edit workflows.
+   - Verified 100% clean passes: ESLint (0 errors, 0 warnings), Vitest (35 files / 178 tests passed), Production Build (`tsc -b && vite build`), and Playwright full suite (210/210 tests passed).
+

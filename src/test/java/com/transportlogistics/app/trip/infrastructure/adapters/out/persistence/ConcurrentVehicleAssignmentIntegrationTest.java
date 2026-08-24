@@ -1,7 +1,7 @@
 package com.transportlogistics.app.trip.infrastructure.adapters.out.persistence;
 
-import com.transportlogistics.app.fleet.application.ports.out.VehicleRepository;
-import com.transportlogistics.app.fleet.domain.model.Vehicle;
+import com.transportlogistics.app.fleet.vehiclemaster.ports.outbound.VehicleRepository;
+import com.transportlogistics.app.fleet.vehiclemaster.domain.model.Vehicle;
 import com.transportlogistics.app.shared.domain.ConflictException;
 import com.transportlogistics.app.trip.application.ports.in.TripUseCase;
 import com.transportlogistics.app.trip.application.ports.out.TripHistoryRepository;

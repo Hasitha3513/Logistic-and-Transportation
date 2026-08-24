@@ -3,6 +3,7 @@ package com.transportlogistics.app.fleet.infrastructure.config;
 import com.transportlogistics.app.fleet.application.ports.out.*;
 import com.transportlogistics.app.fleet.application.service.ComplianceNotificationScanner;
 import com.transportlogistics.app.fleet.application.service.MaintenanceDueNotificationScanner;
+import com.transportlogistics.app.fleet.vehiclemaster.ports.outbound.VehicleRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

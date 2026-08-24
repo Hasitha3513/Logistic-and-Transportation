@@ -2,7 +2,7 @@ package com.transportlogistics.app.fleet.application.service;
 
 import com.transportlogistics.app.fleet.application.ports.in.LubricantLogUseCase;
 import com.transportlogistics.app.fleet.application.ports.out.LubricantLogRepository;
-import com.transportlogistics.app.fleet.application.ports.out.VehicleRepository;
+import com.transportlogistics.app.fleet.vehiclemaster.ports.outbound.VehicleRepository;
 import com.transportlogistics.app.fleet.domain.model.FluidType;
 import com.transportlogistics.app.fleet.domain.model.LubricantLog;
 import com.transportlogistics.app.shared.domain.NotFoundException;

@@ -4,12 +4,13 @@ import com.transportlogistics.app.fleet.application.ports.in.*;
 import com.transportlogistics.app.fleet.domain.model.Driver;
 import com.transportlogistics.app.fleet.domain.model.DriverExceptionStatus;
 import com.transportlogistics.app.fleet.domain.model.DriverExceptionType;
-import com.transportlogistics.app.fleet.domain.model.Vehicle;
 import com.transportlogistics.app.fleet.domain.model.VehicleCategory;
 import com.transportlogistics.app.fleet.domain.model.VehicleType;
 import com.transportlogistics.app.fleet.infrastructure.adapters.in.web.dto.request.*;
 import com.transportlogistics.app.fleet.infrastructure.adapters.in.web.dto.response.*;
 import com.transportlogistics.app.fleet.infrastructure.adapters.in.web.mappers.FleetWebMapper;
+import com.transportlogistics.app.fleet.vehiclemaster.adapters.inbound.web.dto.response.VehicleResponse;
+import com.transportlogistics.app.fleet.vehiclemaster.ports.inbound.VehicleUseCase;
 import com.transportlogistics.app.shared.utils.PrincipalUtils;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -558,34 +559,6 @@ public class FleetController {
         return mapper.toResponse(driverDrugTests.cancel(driverId, testId, remarks, actor(principal)));
     }
 
-    @PostMapping("/vehicles")
-    public ResponseEntity<VehicleResponse> createVehicle(@Valid @RequestBody VehicleRequest r) {
-        var created = vehicles.create(vehicle(UUID.randomUUID(), r));
-        return ResponseEntity.status(201).body(mapper.toResponse(created));
-    }
-
-    @GetMapping("/vehicles")
-    public List<VehicleResponse> listVehicles() {
-        return mapper.toVehicleResponseList(vehicles.list());
-    }
-
-    @GetMapping("/vehicles/{id}")
-    public VehicleResponse getVehicle(@PathVariable UUID id) {
-        return mapper.toResponse(vehicles.get(id));
-    }
-
-    @PutMapping("/vehicles/{id}")
-    public VehicleResponse updateVehicle(@PathVariable UUID id, @Valid @RequestBody VehicleRequest r) {
-        var updated = vehicles.update(id, vehicle(id, r));
-        return mapper.toResponse(updated);
-    }
-
-    @DeleteMapping("/vehicles/{id}")
-    public MessageResponse deactivateVehicle(@PathVariable UUID id) {
-        vehicles.deactivate(id);
-        return new MessageResponse("Vehicle deactivated");
-    }
-
     @GetMapping("/vehicles/{id}/availability")
     public VehicleAvailabilityResponse vehicleAvailability(@PathVariable UUID id,
                                                            @RequestParam OffsetDateTime from,
@@ -830,15 +803,6 @@ public class FleetController {
     public MessageResponse deactivateType(@PathVariable UUID id) {
         types.deactivate(id);
         return new MessageResponse("Vehicle type deactivated");
-    }
-
-    private Vehicle vehicle(UUID id, VehicleRequest r) {
-        return new Vehicle(id, r.registrationNumber(), r.chassisNumber(), r.engineNumber(), r.categoryId(),
-                r.typeId(), r.manufacturer(), r.model(), r.manufactureYear(),
-                r.ownershipType() == null ? "COMPANY_OWNED" : r.ownershipType(),
-                r.operationalStatus() == null ? "AVAILABLE" : r.operationalStatus(),
-                r.currentOdometerKm(), r.engineHours(), r.capacityKg(),
-                r.active() == null || r.active());
     }
 
     private String actor(Principal principal) {

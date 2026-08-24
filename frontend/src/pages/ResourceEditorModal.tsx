@@ -100,17 +100,6 @@ export default function ResourceEditorModal({ open, title, endpoint, queryKey, f
       if (axios.isAxiosError<ApiErrorBody>(error)) {
         const errorData = error.response?.data;
         errorData?.fieldErrors?.forEach((violation) => form.setError(violation.field, { message: violation.message }));
-        if (errorData?.code === 'VEHICLE_REGISTRATION_DUPLICATE') {
-          form.setError('registrationNumber', { message: errorData.message || 'Registration number already exists' });
-        } else if (errorData?.code === 'VEHICLE_CHASSIS_DUPLICATE') {
-          form.setError('chassisNumber', { message: errorData.message || 'Chassis number already exists' });
-        } else if (errorData?.code === 'VEHICLE_ENGINE_DUPLICATE') {
-          form.setError('engineNumber', { message: errorData.message || 'Engine number already exists' });
-        } else if (errorData?.code === 'VEHICLE_STATUS_TRANSITION_INVALID') {
-          form.setError('operationalStatus', { message: errorData.message || 'Invalid status transition' });
-        } else if (errorData?.code === 'VEHICLE_MASTER_REFERENCE_INVALID') {
-          form.setError('typeId', { message: errorData.message || 'Invalid master data reference' });
-        }
         void message.error(errorData?.message ?? `${title} could not be saved`);
         return;
       }

@@ -2,6 +2,8 @@ package com.transportlogistics.app.fleet.application.service;
 
 import com.transportlogistics.app.fleet.application.ports.out.*;
 import com.transportlogistics.app.fleet.domain.model.*;
+import com.transportlogistics.app.fleet.vehiclemaster.domain.model.Vehicle;
+import com.transportlogistics.app.fleet.vehiclemaster.ports.outbound.VehicleRepository;
 import com.transportlogistics.app.notification.OperationalNotificationEvent;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;

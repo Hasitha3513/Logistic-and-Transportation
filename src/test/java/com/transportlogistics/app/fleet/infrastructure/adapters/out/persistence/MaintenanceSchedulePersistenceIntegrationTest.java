@@ -1,9 +1,9 @@
 package com.transportlogistics.app.fleet.infrastructure.adapters.out.persistence;
 
-import com.transportlogistics.app.fleet.application.ports.out.VehicleRepository;
+import com.transportlogistics.app.fleet.vehiclemaster.ports.outbound.VehicleRepository;
 import com.transportlogistics.app.fleet.domain.model.MaintenanceSchedule;
 import com.transportlogistics.app.fleet.domain.model.MaintenanceStatus;
-import com.transportlogistics.app.fleet.domain.model.Vehicle;
+import com.transportlogistics.app.fleet.vehiclemaster.domain.model.Vehicle;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

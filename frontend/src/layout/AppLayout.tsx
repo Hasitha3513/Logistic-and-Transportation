@@ -29,7 +29,7 @@ import {
   type MenuProps,
 } from 'antd';
 import { useAuth } from '../auth/AuthContext';
-import { findNavigationItem, navigation, permittedNavigation, type NavigationItem } from '../navigation/navigation';
+import { findNavigationTrail, navigation, permittedNavigation, type NavigationItem } from '../navigation/navigation';
 import { NotificationCenter } from '../notifications/NotificationCenter';
 import { OfflineSyncCenter } from '../features/offlineSync/OfflineSyncCenter';
 
@@ -40,7 +40,7 @@ function toMenuItems(items: NavigationItem[]): MenuProps['items'] {
   return items.map((item) => ({
     key: item.key,
     icon: item.icon,
-    label: item.path ? <Link to={item.path}>{item.label}</Link> : item.label,
+    label: item.route ? <Link to={item.route}>{item.label}</Link> : item.label,
     children: item.children ? toMenuItems(item.children) : undefined,
   }));
 }
@@ -55,9 +55,10 @@ export default function AppLayout() {
     () => permittedNavigation(navigation, user?.permissions ?? []),
     [user?.permissions],
   );
-  const current = findNavigationItem(location.pathname);
+  const navigationTrail = findNavigationTrail(location.pathname);
+  const current = navigationTrail.at(-1);
   const selectedKey = current?.key ?? 'dashboard';
-  const parent = navigation.find((item) => item.children?.some((child) => child.key === selectedKey));
+  const ancestors = navigationTrail.slice(0, -1);
   const pageTitle = current?.label ?? 'Workspace';
   const initials = `${user?.firstName?.[0] ?? ''}${user?.lastName?.[0] ?? ''}` || user?.username?.[0] || 'U';
 
@@ -106,7 +107,7 @@ export default function AppLayout() {
           mode="inline"
           theme="dark"
           selectedKeys={[selectedKey]}
-          defaultOpenKeys={parent ? [parent.key] : []}
+          defaultOpenKeys={ancestors.map((item) => item.key)}
           items={toMenuItems(permittedItems)}
         />
         <div className="sider-status">
@@ -141,7 +142,10 @@ export default function AppLayout() {
                 menu={{
                   items: userMenu,
                   onClick: ({ key }) => {
-                    if (key === 'logout') void logout();
+                    if (key === 'logout') {
+                      void logout();
+                      navigate('/login', { replace: true });
+                    }
                     if (key === 'access') setAccessOpen(true);
                   },
                 }}
@@ -165,13 +169,15 @@ export default function AppLayout() {
 
         <Content className="app-content">
           <div className="page-heading">
-            <Breadcrumb
-              items={[
-                { title: <Link to="/">Home</Link> },
-                ...(parent ? [{ title: parent.label }] : []),
-                ...(location.pathname === '/' ? [] : [{ title: pageTitle }]),
-              ]}
-            />
+            <nav aria-label="Breadcrumb">
+              <Breadcrumb
+                items={[
+                  { title: <Link to="/">Home</Link> },
+                  ...ancestors.map((item) => ({ title: item.label })),
+                  ...(location.pathname === '/' ? [] : [{ title: pageTitle }]),
+                ]}
+              />
+            </nav>
             <Title level={2}>{pageTitle}</Title>
           </div>
           <main className="page-surface">

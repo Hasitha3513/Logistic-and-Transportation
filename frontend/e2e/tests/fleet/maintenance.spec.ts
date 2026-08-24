@@ -11,6 +11,11 @@ test.describe('@fleet Vehicle Maintenance Scheduling (US-07)', () => {
       contentType: 'application/json',
       body: JSON.stringify([{ id: vehicleId, registrationNumber: 'WP-CAB-1201', manufacturer: 'Isuzu', operationalStatus: 'AVAILABLE', active: true }]),
     }));
+    await fleetManagerPage.route(`**/api/vehicles/${vehicleId}`, (r) => r.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ id: vehicleId, registrationNumber: 'WP-CAB-1201', manufacturer: 'Isuzu', operationalStatus: 'AVAILABLE', active: true }),
+    }));
 
     await fleetManagerPage.route(`**/api/vehicles/${vehicleId}/maintenance-schedules`, (r) => r.fulfill({
       status: 200,

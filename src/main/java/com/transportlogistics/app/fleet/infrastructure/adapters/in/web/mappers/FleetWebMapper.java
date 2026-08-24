@@ -2,6 +2,8 @@ package com.transportlogistics.app.fleet.infrastructure.adapters.in.web.mappers;
 
 import com.transportlogistics.app.fleet.domain.model.*;
 import com.transportlogistics.app.fleet.infrastructure.adapters.in.web.dto.response.*;
+import com.transportlogistics.app.fleet.vehiclemaster.adapters.inbound.web.dto.response.VehicleResponse;
+import com.transportlogistics.app.fleet.vehiclemaster.domain.model.Vehicle;
 import org.mapstruct.Mapper;
 
 import java.util.List;

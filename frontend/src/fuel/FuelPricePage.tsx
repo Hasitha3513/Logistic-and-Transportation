@@ -18,7 +18,7 @@ import {
   Typography,
   type TableColumnsType,
 } from 'antd';
-import { PlusOutlined, ReloadOutlined, SafetyCertificateOutlined } from '@ant-design/icons';
+import { ReloadOutlined, SafetyCertificateOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { Navigate } from 'react-router-dom';
 import { isAxiosError } from 'axios';

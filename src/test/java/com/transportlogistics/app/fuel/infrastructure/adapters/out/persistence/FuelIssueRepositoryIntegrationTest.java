@@ -1,7 +1,7 @@
 package com.transportlogistics.app.fuel.infrastructure.adapters.out.persistence;
 
-import com.transportlogistics.app.fleet.application.ports.out.VehicleRepository;
-import com.transportlogistics.app.fleet.domain.model.Vehicle;
+import com.transportlogistics.app.fleet.vehiclemaster.ports.outbound.VehicleRepository;
+import com.transportlogistics.app.fleet.vehiclemaster.domain.model.Vehicle;
 import com.transportlogistics.app.fuel.application.ports.in.FuelIssueUseCase;
 import com.transportlogistics.app.fuel.application.ports.out.FuelIssueHistoryRepository;
 import com.transportlogistics.app.fuel.application.ports.out.FuelIssueRepository;

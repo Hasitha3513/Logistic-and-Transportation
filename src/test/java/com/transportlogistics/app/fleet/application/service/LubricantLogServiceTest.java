@@ -2,11 +2,11 @@ package com.transportlogistics.app.fleet.application.service;
 
 import com.transportlogistics.app.fleet.application.ports.in.LubricantLogUseCase;
 import com.transportlogistics.app.fleet.application.ports.out.LubricantLogRepository;
-import com.transportlogistics.app.fleet.application.ports.out.VehicleRepository;
+import com.transportlogistics.app.fleet.vehiclemaster.ports.outbound.VehicleRepository;
 import com.transportlogistics.app.fleet.domain.model.FluidType;
 import com.transportlogistics.app.fleet.domain.model.LubricantLog;
 import com.transportlogistics.app.fleet.domain.model.MeasurementUnit;
-import com.transportlogistics.app.fleet.domain.model.Vehicle;
+import com.transportlogistics.app.fleet.vehiclemaster.domain.model.Vehicle;
 import com.transportlogistics.app.shared.domain.NotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

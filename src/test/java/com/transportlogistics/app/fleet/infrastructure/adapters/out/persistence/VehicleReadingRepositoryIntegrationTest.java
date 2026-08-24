@@ -2,8 +2,8 @@ package com.transportlogistics.app.fleet.infrastructure.adapters.out.persistence
 
 import com.transportlogistics.app.fleet.application.ports.in.VehicleReadingUseCase;
 import com.transportlogistics.app.fleet.application.ports.out.VehicleReadingRepository;
-import com.transportlogistics.app.fleet.application.ports.out.VehicleRepository;
-import com.transportlogistics.app.fleet.domain.model.Vehicle;
+import com.transportlogistics.app.fleet.vehiclemaster.ports.outbound.VehicleRepository;
+import com.transportlogistics.app.fleet.vehiclemaster.domain.model.Vehicle;
 import com.transportlogistics.app.fleet.domain.model.VehicleReading;
 import com.transportlogistics.app.fleet.domain.model.VehicleReadingSourceType;
 import com.transportlogistics.app.fleet.domain.model.VehicleReadingType;

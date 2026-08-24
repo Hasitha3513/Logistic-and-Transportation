@@ -1,7 +1,6 @@
 import { DeleteOutlined, EditOutlined, EyeOutlined, PlusOutlined, ReloadOutlined, SafetyCertificateOutlined } from '@ant-design/icons';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
 import { Alert, App as AntApp, Button, Card, Descriptions, Drawer, Flex, Space, Spin, Table, Tag, Typography, type TableColumnsType } from 'antd';
 import { api } from '../api/client';
 import { useAuth } from '../auth/AuthContext';
@@ -10,9 +9,6 @@ import DriverViolationsSection from '../fleet/DriverViolationsSection';
 import DriverPerformanceSection from '../fleet/DriverPerformanceSection';
 import { DriverMedicalSection } from '../fleet/DriverMedicalSection';
 import { DriverDrugTestSection } from '../fleet/DriverDrugTestSection';
-import VehicleMaintenanceSection from '../fleet/VehicleMaintenanceSection';
-import VehicleReadingsSection from '../fleet/VehicleReadingsSection';
-import { VehicleLubricantSection } from '../fleet/VehicleLubricantSection';
 import ResourceEditorModal, { type ResourceField, type ResourceValues } from './ResourceEditorModal';
 
 type ResourceRecord = Record<string, unknown> & { id: string };
@@ -70,23 +66,19 @@ export default function ResourceListPage({ endpoint, queryKey, title, descriptio
   const { message, modal } = AntApp.useApp();
   const { hasPermission } = useAuth();
   const queryClient = useQueryClient();
-  const [searchParams, setSearchParams] = useSearchParams();
   const [selectedState, setSelected] = useState<ResourceRecord>();
   const [editor, setEditor] = useState<EditorState>();
   const resources = useQuery({
     queryKey: [queryKey],
     queryFn: async () => (await api.get<ResourceRecord[]>(endpoint)).data,
   });
-  const requestedVehicleId = endpoint === '/vehicles' ? searchParams.get('vehicleId') : null;
-  const selected = selectedState ?? resources.data?.find((resource) => resource.id === requestedVehicleId);
+  const selected = selectedState;
   const details = useQuery({
     queryKey: [queryKey, selected?.id],
     queryFn: async () => (await api.get<ResourceRecord>(`${endpoint}/${selected?.id}`)).data,
     enabled: Boolean(selected?.id),
   });
-  const relatedEndpoint = selected?.id ? (endpoint === '/vehicles'
-    ? `${endpoint}/${selected.id}/documents`
-    : endpoint === '/drivers' ? `${endpoint}/${selected.id}/licenses` : undefined)
+  const relatedEndpoint = selected?.id ? (endpoint === '/drivers' ? `${endpoint}/${selected.id}/licenses` : undefined)
     : undefined;
   const related = useQuery({
     queryKey: [queryKey, selected?.id, 'compliance'],
@@ -184,11 +176,6 @@ export default function ResourceListPage({ endpoint, queryKey, title, descriptio
         open={Boolean(selected)}
         onClose={() => {
           setSelected(undefined);
-          if (searchParams.has('vehicleId')) {
-            const next = new URLSearchParams(searchParams);
-            next.delete('vehicleId');
-            setSearchParams(next, { replace: true });
-          }
         }}
         destroyOnHidden
       >
@@ -200,7 +187,7 @@ export default function ResourceListPage({ endpoint, queryKey, title, descriptio
               key, label: fieldLabel(key), children: detailValue(value),
             }))} />
             {relatedEndpoint && (
-              <Card size="small" title={endpoint === '/vehicles' ? 'Vehicle documents' : 'Driver licences'}
+              <Card size="small" title="Driver licences"
                 extra={relatedConfig && hasPermission(relatedConfig.permission) ? <Button size="small" type="primary" icon={<PlusOutlined />}
                   onClick={() => setEditor({ title: `Add ${relatedConfig.title}`, endpoint: relatedEndpoint, method: 'post',
                     fields: relatedConfig.fields, queryKey: `${queryKey}-compliance` })}>Add</Button> : undefined}>
@@ -226,13 +213,6 @@ export default function ResourceListPage({ endpoint, queryKey, title, descriptio
                 </Card>)}
               </Card>
             )}
-            {endpoint === '/vehicles' && selected?.id && (
-              <>
-                <VehicleMaintenanceSection vehicleId={selected.id} />
-                <VehicleReadingsSection vehicleId={selected.id} />
-                <VehicleLubricantSection vehicleId={selected.id} />
-              </>
-            )}
             {endpoint === '/drivers' && selected?.id && (
               <>
                 <DriverPerformanceSection driverId={selected.id} />
@@ -256,51 +236,6 @@ export default function ResourceListPage({ endpoint, queryKey, title, descriptio
 }
 
 export const resourcePages = {
-  vehicles: {
-    endpoint: '/vehicles', queryKey: 'vehicles-page', title: 'Vehicle registry', description: 'Live vehicle master data from the fleet module.',
-    controlPermissions: ['VEHICLE_CREATE', 'VEHICLE_UPDATE', 'VEHICLE_STATUS_UPDATE', 'VEHICLE_DOCUMENT_MANAGE'],
-    createPermission: 'VEHICLE_CREATE', updatePermission: 'VEHICLE_UPDATE', deactivatePermission: 'VEHICLE_STATUS_UPDATE',
-    fields: [
-      { name: 'registrationNumber', label: 'Registration number', required: true },
-      { name: 'chassisNumber', label: 'Chassis number' }, { name: 'engineNumber', label: 'Engine number' },
-      { name: 'categoryId', label: 'Category', kind: 'select', required: true, referenceEndpoint: '/vehicle-categories' },
-      { name: 'typeId', label: 'Vehicle type', kind: 'select', required: true, referenceEndpoint: '/vehicle-types', dependsOn: 'categoryId', dependsOnKey: 'categoryId' },
-      { name: 'manufacturer', label: 'Manufacturer' }, { name: 'model', label: 'Model' },
-      { name: 'manufactureYear', label: 'Manufacture year', kind: 'number', positive: true },
-      { name: 'ownershipType', label: 'Ownership', kind: 'select', required: true, options: [
-        { value: 'COMPANY_OWNED', label: 'Company owned' }, { value: 'LEASED', label: 'Leased' },
-      ] },
-      { name: 'operationalStatus', label: 'Operational status', kind: 'select', required: true, options: [
-        { value: 'AVAILABLE', label: 'Available' }, { value: 'ALLOCATED', label: 'Allocated' },
-        { value: 'MAINTENANCE', label: 'Maintenance' }, { value: 'OUT_OF_SERVICE', label: 'Out of service' },
-        { value: 'BROKEN_DOWN', label: 'Broken down' },
-      ] },
-      { name: 'currentOdometerKm', label: 'Current odometer (km)', kind: 'number', positive: true },
-      { name: 'engineHours', label: 'Engine hours', kind: 'number', positive: true },
-      { name: 'capacityKg', label: 'Capacity (kg)', kind: 'number', positive: true },
-      { name: 'active', label: 'Active', kind: 'switch' },
-    ] as ResourceField[],
-    related: { title: 'vehicle document', permission: 'VEHICLE_DOCUMENT_MANAGE', fields: [
-      { name: 'documentType', label: 'Document type', required: true },
-      { name: 'documentNumber', label: 'Document number', required: true },
-      { name: 'issueDate', label: 'Issue date', kind: 'date' },
-      { name: 'expiryDate', label: 'Expiry date', kind: 'date' },
-      { name: 'fileReference', label: 'File reference / URL' },
-      { name: 'mandatoryForDispatch', label: 'Mandatory for dispatch', kind: 'switch' },
-      { name: 'status', label: 'Status', kind: 'select', required: true, options: [
-        { value: 'ACTIVE', label: 'Active' }, { value: 'INACTIVE', label: 'Inactive' },
-      ] },
-      { name: 'active', label: 'Active', kind: 'switch' },
-    ] as ResourceField[] },
-    columns: [
-      { title: 'Registration', dataIndex: 'registrationNumber', render: text },
-      { title: 'Manufacturer', dataIndex: 'manufacturer', render: text },
-      { title: 'Model', dataIndex: 'model', render: text },
-      { title: 'Capacity (kg)', dataIndex: 'capacityKg', render: text },
-      { title: 'Operational status', dataIndex: 'operationalStatus', render: status },
-      { title: 'State', dataIndex: 'active', render: state },
-    ] as TableColumnsType<ResourceRecord>,
-  },
   categories: {
     endpoint: '/vehicle-categories', queryKey: 'vehicle-categories-page', title: 'Vehicle categories', description: 'Fleet category definitions used by vehicle types.',
     controlPermissions: ['VEHICLE_CREATE', 'VEHICLE_UPDATE', 'VEHICLE_STATUS_UPDATE'],

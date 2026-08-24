@@ -1,8 +1,8 @@
 package com.transportlogistics.app.offlinesync;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.transportlogistics.app.fleet.application.ports.out.VehicleRepository;
-import com.transportlogistics.app.fleet.domain.model.Vehicle;
+import com.transportlogistics.app.fleet.vehiclemaster.ports.outbound.VehicleRepository;
+import com.transportlogistics.app.fleet.vehiclemaster.domain.model.Vehicle;
 import com.transportlogistics.app.offlinesync.application.ports.in.OfflineSyncUseCase;
 import com.transportlogistics.app.offlinesync.domain.model.OfflineSyncResult;
 import com.transportlogistics.app.offlinesync.domain.model.OfflineSyncResultStatus;

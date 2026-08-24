@@ -2,7 +2,7 @@ package com.transportlogistics.app.fleet.application.service;
 
 import com.transportlogistics.app.fleet.application.ports.out.FleetOperationalNotificationPublisher;
 import com.transportlogistics.app.fleet.application.ports.out.MaintenanceScheduleRepository;
-import com.transportlogistics.app.fleet.application.ports.out.VehicleRepository;
+import com.transportlogistics.app.fleet.vehiclemaster.ports.outbound.VehicleRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

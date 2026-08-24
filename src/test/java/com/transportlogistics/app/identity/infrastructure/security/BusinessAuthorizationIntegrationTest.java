@@ -2,7 +2,7 @@ package com.transportlogistics.app.identity.infrastructure.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.transportlogistics.app.fleet.application.ports.in.DriverUseCase;
-import com.transportlogistics.app.fleet.application.ports.in.VehicleUseCase;
+import com.transportlogistics.app.fleet.vehiclemaster.ports.inbound.VehicleUseCase;
 import com.transportlogistics.app.fuel.application.ports.in.FuelIssueUseCase;
 import com.transportlogistics.app.fuel.application.ports.in.FuelStationUseCase;
 import com.transportlogistics.app.fuel.application.ports.in.FuelPurchaseUseCase;

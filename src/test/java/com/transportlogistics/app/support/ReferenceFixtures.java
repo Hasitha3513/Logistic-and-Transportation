@@ -1,6 +1,6 @@
 package com.transportlogistics.app.support;
 
-import com.transportlogistics.app.fleet.domain.model.Vehicle;
+import com.transportlogistics.app.fleet.vehiclemaster.domain.model.Vehicle;
 import com.transportlogistics.app.trip.domain.model.Trip;
 import org.springframework.jdbc.core.JdbcTemplate;
 

@@ -11,20 +11,20 @@ export class FleetVehiclesPage extends BasePage {
 
   constructor(page: Page) {
     super(page);
-    this.createButton = page.locator('button:has-text("Create")');
-    this.refreshButton = page.locator('button:has-text("Refresh")');
-    this.vehicleTable = page.locator('.resource-list-card table');
-    this.detailsDrawer = page.locator('.ant-drawer');
+    this.createButton = page.getByRole('button', { name: 'Create' });
+    this.refreshButton = page.getByRole('button', { name: 'Refresh' });
+    this.vehicleTable = page.getByRole('table');
+    this.detailsDrawer = page.getByRole('dialog', { name: 'Vehicle registry details' });
   }
 
   async goto() {
     await this.page.goto('/fleet/vehicles');
-    await expect(this.page.getByRole('heading', { name: 'Vehicles', level: 2 })).toBeVisible({ timeout: 15000 });
+    await expect(this.page.getByRole('heading', { name: 'Vehicle Master', level: 2 })).toBeVisible({ timeout: 15000 });
   }
 
   async openCreateModal() {
     await this.createButton.click();
-    await expect(this.page.locator('.ant-modal-title')).toContainText('Create Vehicle registry');
+    await expect(this.page.getByRole('dialog', { name: 'Create Vehicle registry' })).toBeVisible();
   }
 
   async createVehicle(payload: { registrationNumber: string; manufacturer?: string; model?: string }) {
@@ -42,7 +42,7 @@ export class FleetVehiclesPage extends BasePage {
 
   async openDetails(registrationNumber: string) {
     const row = this.vehicleTable.locator('tr', { hasText: registrationNumber });
-    await row.locator('button:has-text("View details")').click();
+    await row.getByRole('button', { name: 'View details' }).click();
     await expect(this.detailsDrawer).toBeVisible({ timeout: 10000 });
   }
 }

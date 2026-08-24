@@ -1,6 +1,7 @@
 package com.transportlogistics.app.fleet.infrastructure.adapters.in.web;
 
 import com.transportlogistics.app.fleet.application.ports.in.*;
+import com.transportlogistics.app.fleet.vehiclemaster.ports.inbound.VehicleUseCase;
 import com.transportlogistics.app.fleet.domain.model.VehicleDocument;
 import com.transportlogistics.app.fleet.domain.model.VehicleDocumentStatus;
 import com.transportlogistics.app.fleet.infrastructure.adapters.in.web.controllers.FleetController;

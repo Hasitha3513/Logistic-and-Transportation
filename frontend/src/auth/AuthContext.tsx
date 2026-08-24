@@ -36,7 +36,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
   const logoutMutation = useMutation({
     mutationFn: async () => {
       const refreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
-      if (refreshToken) await api.post('/auth/logout', { refreshToken });
+      if (refreshToken) await api.post('/auth/logout', { refreshToken }, { timeout: 3000 });
     },
     onSettled: () => {
       localStorage.removeItem(ACCESS_TOKEN_KEY);
@@ -46,12 +46,18 @@ export function AuthProvider({ children }: PropsWithChildren) {
   });
 
   const logout = async () => {
+    const refreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
+    localStorage.removeItem(ACCESS_TOKEN_KEY);
+    localStorage.removeItem(REFRESH_TOKEN_KEY);
+    queryClient.clear();
     try {
-      await logoutMutation.mutateAsync();
+      if (refreshToken) {
+        await api.post('/auth/logout', { refreshToken }, { timeout: 1500 });
+      }
     } catch {
       // Ignore network errors on logout
     } finally {
-      window.location.assign('/login');
+      window.location.replace('/login');
     }
   };
 

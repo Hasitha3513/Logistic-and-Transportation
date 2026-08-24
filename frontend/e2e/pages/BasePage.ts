@@ -30,8 +30,9 @@ export class BasePage {
 
   async logout() {
     await this.userMenu.click();
-    const logoutItem = this.page.locator('.ant-dropdown-menu-item', { hasText: 'Log out' });
+    const logoutItem = this.page.getByRole('menuitem', { name: /log out/i });
     await expect(logoutItem).toBeVisible({ timeout: 5000 });
+    await this.page.waitForTimeout(150);
     await logoutItem.click();
     await expect(this.page).toHaveURL(/.*\/login/, { timeout: 15000 });
   }

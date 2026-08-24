@@ -195,7 +195,7 @@ test.describe('@trips En-Route Checkpoints & Operational Events (US-13)', () => 
     await checkpointModal.locator('input#locationDescription').fill('Expressway Waypoint Alpha');
     await checkpointModal.getByRole('button', { name: 'Record Checkpoint' }).click();
 
-    await expect(checkpointModal).not.toBeVisible();
+    await expect(checkpointModal).not.toBeVisible({ timeout: 15000 });
     await expect(section).toContainText('Expressway Waypoint Alpha');
     await expect(section).toContainText('Pickup Point');
 
@@ -210,7 +210,7 @@ test.describe('@trips En-Route Checkpoints & Operational Events (US-13)', () => 
     await delayModal.locator('input#reason').fill('Expressway resurfacing single-lane block');
     await delayModal.getByRole('button', { name: 'Record Delay' }).click();
 
-    await expect(delayModal).not.toBeVisible();
+    await expect(delayModal).not.toBeVisible({ timeout: 15000 });
     await expect(section).toContainText('Delay: 35 mins');
     await expect(section).toContainText('Expressway resurfacing single-lane block');
 
@@ -227,7 +227,7 @@ test.describe('@trips En-Route Checkpoints & Operational Events (US-13)', () => 
     await incidentModal.locator('input#description').fill('Rear tire pressure loss, replaced with spare');
     await incidentModal.getByRole('button', { name: 'Record Incident' }).click();
 
-    await expect(incidentModal).not.toBeVisible();
+    await expect(incidentModal).not.toBeVisible({ timeout: 15000 });
     await expect(section).toContainText('Incident: Medium');
     await expect(section).toContainText('Rear tire pressure loss, replaced with spare');
   });

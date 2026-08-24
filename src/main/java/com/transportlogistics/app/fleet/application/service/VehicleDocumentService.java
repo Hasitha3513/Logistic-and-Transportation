@@ -2,7 +2,7 @@ package com.transportlogistics.app.fleet.application.service;
 
 import com.transportlogistics.app.fleet.application.ports.in.VehicleDocumentUseCase;
 import com.transportlogistics.app.fleet.application.ports.out.VehicleDocumentRepository;
-import com.transportlogistics.app.fleet.application.ports.out.VehicleRepository;
+import com.transportlogistics.app.fleet.vehiclemaster.ports.outbound.VehicleRepository;
 import com.transportlogistics.app.fleet.domain.model.VehicleDocument;
 import com.transportlogistics.app.fleet.domain.model.VehicleDocumentStatus;
 import com.transportlogistics.app.shared.domain.NotFoundException;

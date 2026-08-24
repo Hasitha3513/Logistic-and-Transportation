@@ -95,6 +95,11 @@ public class SmtpEmailNotificationSenderAdapter implements EmailNotificationSend
             if (current instanceof AddressException) {
                 return rejected(EmailDeliveryErrorCategory.INVALID_RECIPIENT, "INVALID_EMAIL_ADDRESS", "EMAIL address is invalid");
             }
+            int candidateCode = smtpReturnCode(current);
+            if (candidateCode > 0) smtpCode = candidateCode;
+            if (candidateCode >= 400 && candidateCode < 500) {
+                return rejected(EmailDeliveryErrorCategory.PROVIDER_5XX, "SMTP_" + candidateCode, "SMTP server temporarily rejected the message");
+            }
             if (current instanceof SMTPAddressFailedException smtpAddress) {
                 return smtpCodeResult(smtpAddress.getReturnCode(), true);
             }
@@ -105,7 +110,9 @@ public class SmtpEmailNotificationSenderAdapter implements EmailNotificationSend
                 return smtpCodeResult(smtpSend.getReturnCode(), false);
             }
             if (current instanceof SendFailedException sendFailed && hasInvalidAddresses(sendFailed)) {
-                return rejected(EmailDeliveryErrorCategory.INVALID_RECIPIENT, "SMTP_RECIPIENT_REJECTED", "SMTP server rejected the recipient");
+                if (smtpCode == -1 || smtpCode >= 500) {
+                    return rejected(EmailDeliveryErrorCategory.INVALID_RECIPIENT, "SMTP_RECIPIENT_REJECTED", "SMTP server rejected the recipient");
+                }
             }
             if (current instanceof SocketTimeoutException) {
                 return rejected(EmailDeliveryErrorCategory.TIMEOUT, "SMTP_TIMEOUT", "SMTP operation timed out");
@@ -116,8 +123,6 @@ public class SmtpEmailNotificationSenderAdapter implements EmailNotificationSend
             if (current instanceof SSLException) {
                 return rejected(EmailDeliveryErrorCategory.CONFIGURATION, "SMTP_TLS", "SMTP TLS negotiation failed");
             }
-            int candidateCode = smtpReturnCode(current);
-            if (candidateCode > 0) smtpCode = candidateCode;
             current = nextCause(current);
         }
         if (smtpCode >= 400 && smtpCode < 500) {
