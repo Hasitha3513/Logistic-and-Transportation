@@ -169,4 +169,24 @@ public class HexagonalLayerArchitectureTest {
                 .because("Fleet adapters are internal implementation details")
                 .check(importedClasses);
     }
+
+    @Test
+    void freightDomainPortsAndApplicationMustRemainFrameworkFree() {
+        noClasses()
+                .that().resideInAnyPackage("..freight..domain..", "..freight..ports..", "..freight..application..")
+                .should().dependOnClassesThat().resideInAnyPackage(
+                        "org.springframework..", "jakarta.persistence..", "org.hibernate..", "com.fasterxml.jackson..",
+                        "..freight..adapters..")
+                .because("Freight core code must remain provider-neutral and depend inward")
+                .check(importedClasses);
+    }
+
+    @Test
+    void freightWebMustNotAccessPersistenceAdapters() {
+        noClasses()
+                .that().resideInAPackage("..freight..adapters.inbound.web..")
+                .should().dependOnClassesThat().resideInAPackage("..freight..adapters.outbound.persistence..")
+                .because("Freight web adapters must invoke inbound ports")
+                .check(importedClasses);
+    }
 }

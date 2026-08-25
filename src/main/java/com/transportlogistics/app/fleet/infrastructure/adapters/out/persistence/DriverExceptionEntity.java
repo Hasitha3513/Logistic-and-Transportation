@@ -4,22 +4,13 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Entity
 @Table(name = "driver_exception")
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-class
-DriverExceptionEntity {
+public class DriverExceptionEntity {
 
     @Id
     @Column(name = "id", nullable = false)
@@ -57,4 +48,59 @@ DriverExceptionEntity {
 
     @Column(name = "updated_by", length = 128)
     private String updatedBy;
+
+    public DriverExceptionEntity() {}
+
+    public DriverExceptionEntity(UUID id, UUID driverId, String exceptionType, OffsetDateTime startTime,
+                                 OffsetDateTime endTime, String status, String reason, String remarks,
+                                 OffsetDateTime createdAt, OffsetDateTime updatedAt, String createdBy, String updatedBy) {
+        this.id = id;
+        this.driverId = driverId;
+        this.exceptionType = exceptionType;
+        this.startTime = startTime;
+        this.endTime = endTime;
+        this.status = status;
+        this.reason = reason;
+        this.remarks = remarks;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+        this.createdBy = createdBy;
+        this.updatedBy = updatedBy;
+    }
+
+    public UUID getId() { return id; }
+    public void setId(UUID id) { this.id = id; }
+
+    public UUID getDriverId() { return driverId; }
+    public void setDriverId(UUID driverId) { this.driverId = driverId; }
+
+    public String getExceptionType() { return exceptionType; }
+    public void setExceptionType(String exceptionType) { this.exceptionType = exceptionType; }
+
+    public OffsetDateTime getStartTime() { return startTime; }
+    public void setStartTime(OffsetDateTime startTime) { this.startTime = startTime; }
+
+    public OffsetDateTime getEndTime() { return endTime; }
+    public void setEndTime(OffsetDateTime endTime) { this.endTime = endTime; }
+
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
+
+    public String getReason() { return reason; }
+    public void setReason(String reason) { this.reason = reason; }
+
+    public String getRemarks() { return remarks; }
+    public void setRemarks(String remarks) { this.remarks = remarks; }
+
+    public OffsetDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(OffsetDateTime createdAt) { this.createdAt = createdAt; }
+
+    public OffsetDateTime getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(OffsetDateTime updatedAt) { this.updatedAt = updatedAt; }
+
+    public String getCreatedBy() { return createdBy; }
+    public void setCreatedBy(String createdBy) { this.createdBy = createdBy; }
+
+    public String getUpdatedBy() { return updatedBy; }
+    public void setUpdatedBy(String updatedBy) { this.updatedBy = updatedBy; }
 }

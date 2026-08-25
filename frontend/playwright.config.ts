@@ -49,7 +49,7 @@ export default defineConfig({
   ],
   webServer: [
     {
-      command: `${mavenWrapper} -q -f ../pom.xml spring-boot:run -Dspring-boot.run.profiles=h2,e2e`,
+      command: `${mavenWrapper} -q -f ../pom.xml spring-boot:run "-Dspring-boot.run.profiles=h2,e2e"`,
       url: 'http://localhost:8080/api/health',
       timeout: 180_000,
       reuseExistingServer: false,

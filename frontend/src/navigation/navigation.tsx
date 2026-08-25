@@ -10,6 +10,7 @@ import {
   TeamOutlined,
   UserOutlined,
   ThunderboltOutlined,
+  ContainerOutlined,
 } from '@ant-design/icons';
 
 export interface NavigationItem {
@@ -84,6 +85,18 @@ export const navigation: NavigationItem[] = [
       { key: 'fuel-purchases', label: 'Fuel Purchases', route: '/fuel/purchases', requiredPermission: 'FUEL_PURCHASE_VIEW' },
       { key: 'bunker-tanks', label: 'Bunker Tanks', route: '/fuel/bunker-tanks', requiredPermission: 'BUNKER_VIEW' },
       { key: 'fuel-prices', label: 'Fuel Prices', route: '/fuel/prices', requiredPermission: 'FUEL_PRICE_VIEW' },
+    ],
+  },
+  {
+    key: 'freight',
+    label: 'Freight',
+    icon: <ContainerOutlined />,
+    children: [
+      { key: 'freight-orders', label: 'Freight Orders', route: '/freight/orders', requiredPermission: 'FREIGHT_ORDER_VIEW' },
+      { key: 'cargo-manifests', label: 'Cargo Manifests', route: '/freight/manifests', requiredPermission: 'CARGO_MANIFEST_VIEW' },
+      { key: 'load-plans', label: 'Load Plans', route: '/freight/load-plans', requiredPermission: 'LOAD_PLAN_VIEW' },
+      { key: 'freight-policies', label: 'Insurance Policies', route: '/freight/insurance/policies', requiredPermission: 'CARGO_INSURANCE_VIEW' },
+      { key: 'freight-claims', label: 'Insurance Claims', route: '/freight/insurance/claims', requiredPermission: 'CARGO_INSURANCE_VIEW' },
     ],
   },
   {

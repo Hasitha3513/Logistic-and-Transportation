@@ -129,10 +129,16 @@ class SecurityConfig {
                                 "/drivers/*/drug-tests/*/cancel")
                         .hasAuthority("DRIVER_DRUG_TEST_MANAGE")
 
-                        .requestMatchers(HttpMethod.GET, "/routes", "/routes/*").hasAuthority("ROUTE_VIEW")
+                        .requestMatchers(HttpMethod.GET, "/routes", "/routes/*", "/routes/*/revisions", "/routes/*/revisions/*",
+                                "/routes/*/disruptions", "/routes/*/disruptions/*", "/routes/disruptions/active",
+                                "/routes/*/performance")
+                        .hasAnyAuthority("ROUTE_VIEW", "REPORT_VIEW")
                         .requestMatchers(HttpMethod.POST, "/routes").hasAuthority("ROUTE_CREATE")
                         .requestMatchers(HttpMethod.PUT, "/routes/*").hasAuthority("ROUTE_UPDATE")
                         .requestMatchers(HttpMethod.DELETE, "/routes/*").hasAuthority("ROUTE_UPDATE")
+                        .requestMatchers(HttpMethod.POST, "/routes/*/optimize", "/routes/*/apply-optimization").hasAuthority("ROUTE_UPDATE")
+                        .requestMatchers(HttpMethod.POST, "/routes/*/disruptions", "/routes/*/disruptions/*/resolve")
+                        .hasAuthority("ROUTE_DISRUPTION_MANAGE")
 
                         .requestMatchers(HttpMethod.GET, "/customers", "/customers/*")
                         .hasAuthority("CUSTOMER_VIEW")
@@ -206,6 +212,13 @@ class SecurityConfig {
                         .requestMatchers(HttpMethod.PUT, "/fuel-prices/*", "/vendors/*").hasAuthority("FUEL_PRICE_MANAGE")
                         .requestMatchers(HttpMethod.DELETE, "/vendors/*").hasAuthority("FUEL_PRICE_MANAGE")
 
+                        .requestMatchers(HttpMethod.GET, "/v1/freight/orders", "/v1/freight/orders/*")
+                        .hasAuthority("FREIGHT_ORDER_VIEW")
+                        .requestMatchers(HttpMethod.POST, "/v1/freight/orders")
+                        .hasAuthority("FREIGHT_ORDER_MANAGE")
+                        .requestMatchers(HttpMethod.PATCH, "/v1/freight/orders/*")
+                        .hasAuthority("FREIGHT_ORDER_MANAGE")
+
                         .requestMatchers(HttpMethod.GET, "/bunker-tanks/*/movements").hasAuthority("BUNKER_LEDGER_VIEW")
                         .requestMatchers(HttpMethod.GET, "/bunker-tanks", "/bunker-tanks/*", "/bunker-tanks/*/balance", "/bunker-tanks/*/dip-readings")
                         .hasAuthority("BUNKER_VIEW")
@@ -218,6 +231,33 @@ class SecurityConfig {
 
                         .requestMatchers(HttpMethod.GET, "/dashboard/**").hasAuthority("DASHBOARD_VIEW")
                         .requestMatchers(HttpMethod.GET, "/reports/**").hasAuthority("REPORT_VIEW")
+
+                        .requestMatchers(HttpMethod.GET, "/v1/freight/manifests", "/v1/freight/manifests/*", "/v1/freight/manifests/*/readiness")
+                        .hasAuthority("CARGO_MANIFEST_VIEW")
+                        .requestMatchers(HttpMethod.POST, "/v1/freight/manifests/*/finalize")
+                        .hasAuthority("CARGO_MANIFEST_FINALIZE")
+                        .requestMatchers(HttpMethod.POST, "/v1/freight/manifests", "/v1/freight/manifests/*/items")
+                        .hasAuthority("CARGO_MANIFEST_MANAGE")
+                        .requestMatchers(HttpMethod.PATCH, "/v1/freight/manifests/*", "/v1/freight/manifests/*/items/*")
+                        .hasAuthority("CARGO_MANIFEST_MANAGE")
+
+                        .requestMatchers(HttpMethod.GET, "/v1/freight/load-plans", "/v1/freight/load-plans/*")
+                        .hasAuthority("LOAD_PLAN_VIEW")
+                        .requestMatchers(HttpMethod.POST, "/v1/freight/load-plans", "/v1/freight/load-plans/*/validate-layout", "/v1/freight/load-plans/*/validate-weight-volume")
+                        .hasAuthority("LOAD_PLAN_MANAGE")
+                        .requestMatchers(HttpMethod.PATCH, "/v1/freight/load-plans/*")
+                        .hasAuthority("LOAD_PLAN_MANAGE")
+
+                        .requestMatchers(HttpMethod.GET, "/v1/freight/insurance/policies", "/v1/freight/insurance/policies/*",
+                                "/v1/freight/insurance/claims", "/v1/freight/insurance/claims/*")
+                        .hasAuthority("CARGO_INSURANCE_VIEW")
+                        .requestMatchers(HttpMethod.POST, "/v1/freight/insurance/policies",
+                                "/v1/freight/insurance/claims", "/v1/freight/insurance/claims/*/assess",
+                                "/v1/freight/insurance/claims/*/approve", "/v1/freight/insurance/claims/*/reject",
+                                "/v1/freight/insurance/claims/*/dispute", "/v1/freight/insurance/claims/*/settlements")
+                        .hasAuthority("CARGO_INSURANCE_MANAGE")
+                        .requestMatchers(HttpMethod.PATCH, "/v1/freight/insurance/policies/*")
+                        .hasAuthority("CARGO_INSURANCE_MANAGE")
 
                         .requestMatchers(HttpMethod.GET, "/notification-rules", "/notification-rules/*")
                         .hasAuthority("NOTIFICATION_RULE_VIEW")
@@ -245,7 +285,8 @@ class SecurityConfig {
 
                         .requestMatchers("/vehicles/**", "/drivers/**", "/vehicle-categories/**", "/vehicle-types/**",
                                 "/routes/**", "/customers/**", "/departments/**", "/locations/**", "/projects/**",
-                                "/trips/**", "/fuel-issues/**", "/fuel-stations/**",
+                                "/trips/**", "/fuel-issues/**", "/fuel-stations/**", "/v1/freight/orders/**", "/v1/freight/manifests/**",
+                                "/v1/freight/load-plans/**",
                                 "/fuel-purchases/**", "/fuel-prices/**", "/vendors/**",
                                 "/bunker-tanks/**", "/bunker-transfers/**",
                                 "/dashboard/**", "/reports/**",

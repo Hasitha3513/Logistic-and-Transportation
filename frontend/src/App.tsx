@@ -22,6 +22,21 @@ import FuelPricePage from './fuel/FuelPricePage';
 import BunkerTankListPage from './fuel/BunkerTankListPage';
 import BunkerTankDetailsPage from './fuel/BunkerTankDetailsPage';
 import NotificationRulesPage from './notifications/NotificationRulesPage';
+import FreightOrderListPage from './features/freight/orders/pages/FreightOrderListPage';
+import FreightOrderFormPage from './features/freight/orders/pages/FreightOrderFormPage';
+import FreightOrderDetailsPage from './features/freight/orders/pages/FreightOrderDetailsPage';
+import CargoManifestListPage from './features/freight/manifests/pages/CargoManifestListPage';
+import CargoManifestCreatePage from './features/freight/manifests/pages/CargoManifestCreatePage';
+import CargoManifestDetailsPage from './features/freight/manifests/pages/CargoManifestDetailsPage';
+import LoadPlanListPage from './features/freight/loadPlanning/pages/LoadPlanListPage';
+import LoadPlanCreatePage from './features/freight/loadPlanning/pages/LoadPlanCreatePage';
+import LoadPlanDetailsPage from './features/freight/loadPlanning/pages/LoadPlanDetailsPage';
+import { PolicyListPage } from './features/freight/insurance/pages/PolicyListPage';
+import { PolicyCreatePage } from './features/freight/insurance/pages/PolicyCreatePage';
+import { PolicyDetailsPage } from './features/freight/insurance/pages/PolicyDetailsPage';
+import { ClaimListPage } from './features/freight/insurance/pages/ClaimListPage';
+import { ClaimCreatePage } from './features/freight/insurance/pages/ClaimCreatePage';
+import { ClaimDetailsPage } from './features/freight/insurance/pages/ClaimDetailsPage';
 
 function ProtectedRoute() {
   const { user, isLoading } = useAuth();
@@ -40,6 +55,10 @@ function HomePage() {
   if (hasPermission('FUEL_PURCHASE_VIEW')) return <Navigate to="/fuel/purchases" replace />;
   if (hasPermission('BUNKER_VIEW')) return <Navigate to="/fuel/bunker-tanks" replace />;
   if (hasPermission('FUEL_PRICE_VIEW')) return <Navigate to="/fuel/prices" replace />;
+  if (hasPermission('FREIGHT_ORDER_VIEW')) return <Navigate to="/freight/orders" replace />;
+  if (hasPermission('CARGO_MANIFEST_VIEW')) return <Navigate to="/freight/manifests" replace />;
+  if (hasPermission('LOAD_PLAN_VIEW')) return <Navigate to="/freight/load-plans" replace />;
+  if (hasPermission('CARGO_INSURANCE_VIEW')) return <Navigate to="/freight/insurance/policies" replace />;
   if (hasPermission('IDENTITY_MANAGE')) return <Navigate to="/administration/users" replace />;
   return <Navigate to="/workspace" replace />;
 }
@@ -70,6 +89,23 @@ export default function App() {
         <Route path="fuel/bunker-tanks" element={<BunkerTankListPage />} />
         <Route path="fuel/bunker-tanks/:bunkerTankId" element={<BunkerTankDetailsPage />} />
         <Route path="fuel/prices" element={<FuelPricePage />} />
+        <Route path="freight/orders" element={<FreightOrderListPage />} />
+        <Route path="freight/orders/new" element={<FreightOrderFormPage />} />
+        <Route path="freight/orders/:freightOrderId/edit" element={<FreightOrderFormPage />} />
+        <Route path="freight/orders/:freightOrderId" element={<FreightOrderDetailsPage />} />
+        <Route path="freight/manifests" element={<CargoManifestListPage />} />
+        <Route path="freight/manifests/new" element={<CargoManifestCreatePage />} />
+        <Route path="freight/manifests/:cargoManifestId/edit" element={<CargoManifestDetailsPage />} />
+        <Route path="freight/manifests/:cargoManifestId" element={<CargoManifestDetailsPage />} />
+        <Route path="freight/load-plans" element={<LoadPlanListPage />} />
+        <Route path="freight/load-plans/new" element={<LoadPlanCreatePage />} />
+        <Route path="freight/load-plans/:id" element={<LoadPlanDetailsPage />} />
+        <Route path="freight/insurance/policies" element={<PolicyListPage />} />
+        <Route path="freight/insurance/policies/new" element={<PolicyCreatePage />} />
+        <Route path="freight/insurance/policies/:id" element={<PolicyDetailsPage />} />
+        <Route path="freight/insurance/claims" element={<ClaimListPage />} />
+        <Route path="freight/insurance/claims/new" element={<ClaimCreatePage />} />
+        <Route path="freight/insurance/claims/:id" element={<ClaimDetailsPage />} />
         <Route path="administration/users" element={<ResourceListPage {...resourcePages.users} />} />
         <Route path="administration/roles" element={<ResourceListPage {...resourcePages.roles} />} />
         <Route path="notification-rules" element={<NotificationRulesPage />} />

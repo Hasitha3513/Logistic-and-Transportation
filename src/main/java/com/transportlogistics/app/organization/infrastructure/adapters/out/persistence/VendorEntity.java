@@ -4,18 +4,12 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 import java.util.UUID;
 
 @Entity
 @Table(name = "vendor")
-@Getter
-@Setter
-@NoArgsConstructor
-class VendorEntity {
+public class VendorEntity {
     @Id
     private UUID id;
     @Column(nullable = false, unique = true, length = 40)
@@ -30,4 +24,27 @@ class VendorEntity {
     private String email;
     @Column(nullable = false)
     private boolean active;
+
+    public VendorEntity() {}
+
+    public UUID getId() { return id; }
+    public void setId(UUID id) { this.id = id; }
+
+    public String getCode() { return code; }
+    public void setCode(String code) { this.code = code; }
+
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+
+    public String getContactPerson() { return contactPerson; }
+    public void setContactPerson(String contactPerson) { this.contactPerson = contactPerson; }
+
+    public String getPhone() { return phone; }
+    public void setPhone(String phone) { this.phone = phone; }
+
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
+
+    public boolean isActive() { return active; }
+    public void setActive(boolean active) { this.active = active; }
 }

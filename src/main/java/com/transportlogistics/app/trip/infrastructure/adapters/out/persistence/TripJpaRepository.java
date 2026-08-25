@@ -120,4 +120,16 @@ interface TripJpaRepository extends JpaRepository<TripEntity, UUID> {
             order by t.requestedStartTime desc
             """)
     java.util.List<com.transportlogistics.app.trip.TripReportItem> findAllTripReportItems();
+
+    @Query("""
+            select t from TripEntity t
+            where t.routeId = :routeId
+              and (:from is null or coalesce(t.actualStartTime, t.requestedStartTime) >= :from)
+              and (:to is null or coalesce(t.actualEndTime, t.requestedEndTime, t.actualStartTime, t.requestedStartTime) <= :to)
+            order by coalesce(t.actualStartTime, t.requestedStartTime) desc
+            """)
+    java.util.List<TripEntity> findByRouteIdAndDateRange(
+            @Param("routeId") UUID routeId,
+            @Param("from") OffsetDateTime from,
+            @Param("to") OffsetDateTime to);
 }

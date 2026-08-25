@@ -1,4 +1,4 @@
-import { DeleteOutlined, EditOutlined, EyeOutlined, PlusOutlined, ReloadOutlined, SafetyCertificateOutlined } from '@ant-design/icons';
+import { DeleteOutlined, EditOutlined, EyeOutlined, PlusOutlined, ReloadOutlined, SafetyCertificateOutlined, ThunderboltOutlined } from '@ant-design/icons';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Alert, App as AntApp, Button, Card, Descriptions, Drawer, Flex, Space, Spin, Table, Tag, Typography, type TableColumnsType } from 'antd';
@@ -9,6 +9,11 @@ import DriverViolationsSection from '../fleet/DriverViolationsSection';
 import DriverPerformanceSection from '../fleet/DriverPerformanceSection';
 import { DriverMedicalSection } from '../fleet/DriverMedicalSection';
 import { DriverDrugTestSection } from '../fleet/DriverDrugTestSection';
+import { RouteRevisionSection } from '../features/routing/components/RouteRevisionSection';
+import { RouteDisruptionsSection } from '../features/routing/components/RouteDisruptionsSection';
+import { ActiveDisruptionsBanner } from '../features/routing/components/ActiveDisruptionsBanner';
+import { RouteOptimizerModal } from '../features/routing/components/RouteOptimizerModal';
+import { RoutePerformanceSection } from '../features/routing/components/RoutePerformanceSection';
 import ResourceEditorModal, { type ResourceField, type ResourceValues } from './ResourceEditorModal';
 
 type ResourceRecord = Record<string, unknown> & { id: string };
@@ -68,6 +73,7 @@ export default function ResourceListPage({ endpoint, queryKey, title, descriptio
   const queryClient = useQueryClient();
   const [selectedState, setSelected] = useState<ResourceRecord>();
   const [editor, setEditor] = useState<EditorState>();
+  const [optimizerOpen, setOptimizerOpen] = useState(false);
   const resources = useQuery({
     queryKey: [queryKey],
     queryFn: async () => (await api.get<ResourceRecord[]>(endpoint)).data,
@@ -159,6 +165,7 @@ export default function ResourceListPage({ endpoint, queryKey, title, descriptio
           description="Check your permission and backend connection, then retry."
         />
       )}
+      {endpoint === '/routes' && <ActiveDisruptionsBanner />}
       <Card className="resource-list-card">
         <Table<ResourceRecord>
           rowKey="id"
@@ -222,9 +229,39 @@ export default function ResourceListPage({ endpoint, queryKey, title, descriptio
                 <DriverDrugTestSection driverId={selected.id} />
               </>
             )}
+            {endpoint === '/routes' && selected?.id && (
+              <>
+                <Flex justify="flex-end">
+                  {hasPermission('ROUTE_UPDATE') && selected.active !== false
+                    && ((selected.stopLocationIds as unknown[] | undefined)?.length ?? 0) >= 2 && (
+                    <Button
+                      type="primary"
+                      icon={<ThunderboltOutlined />}
+                      onClick={() => setOptimizerOpen(true)}
+                    >
+                      Optimize Stops
+                    </Button>
+                  )}
+                </Flex>
+                <RoutePerformanceSection routeId={selected.id} />
+                <RouteDisruptionsSection routeId={selected.id} />
+                <RouteRevisionSection routeId={selected.id} />
+              </>
+            )}
           </Flex>
         )}
       </Drawer>
+      {optimizerOpen && selected?.id && (
+        <RouteOptimizerModal
+          open={optimizerOpen}
+          routeId={selected.id}
+          onClose={() => setOptimizerOpen(false)}
+          onApplied={() => {
+            void resources.refetch();
+            void details.refetch();
+          }}
+        />
+      )}
       {editor && <ResourceEditorModal open title={editor.title} endpoint={editor.endpoint} method={editor.method}
         fields={editor.fields} initial={editor.initial} queryKey={editor.queryKey} onClose={() => {
           setEditor(undefined);

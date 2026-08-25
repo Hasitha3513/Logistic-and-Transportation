@@ -58,4 +58,13 @@ public class ModuleBoundaryArchitectureTest {
                 .because("Offline Sync must use only public owning-module contracts and its own ports")
                 .check(importedClasses);
     }
+
+    @Test
+    void freightMustNotDirectlyAccessOrganizationInternals() {
+        noClasses()
+                .that().resideInAPackage("..freight..")
+                .should().dependOnClassesThat().resideInAnyPackage("..organization.application..", "..organization.domain..", "..organization.infrastructure..")
+                .because("Freight must use organization-owned public lookup contracts")
+                .check(importedClasses);
+    }
 }

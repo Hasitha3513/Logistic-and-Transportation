@@ -10,6 +10,11 @@ import com.transportlogistics.app.fuel.domain.model.FuelIssue;
 import com.transportlogistics.app.fuel.domain.model.FuelIssueStatus;
 import com.transportlogistics.app.fuel.domain.model.FuelStation;
 import com.transportlogistics.app.fuel.domain.model.FuelStationType;
+import com.transportlogistics.app.freight.order.domain.model.FreightOrder;
+import com.transportlogistics.app.freight.order.domain.model.FreightOrderLine;
+import com.transportlogistics.app.freight.order.ports.inbound.FreightOrderUseCase;
+import com.transportlogistics.app.freight.manifest.domain.model.CargoManifest;
+import com.transportlogistics.app.freight.manifest.ports.inbound.CargoManifestUseCase;
 import com.transportlogistics.app.organization.application.ports.in.CustomerUseCase;
 import com.transportlogistics.app.organization.application.ports.in.DepartmentUseCase;
 import com.transportlogistics.app.organization.application.ports.in.LocationUseCase;
@@ -42,6 +47,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -52,7 +58,7 @@ class BusinessAuthorizationIntegrationTest {
     private static final List<String> TEST_PERMISSIONS = List.of(
             "TRIP_APPROVE", "TRIP_REJECT", "TRIP_DISPATCH", "TRIP_START", "TRIP_COMPLETE",
             "TRIP_ASSIGN_ROUTE",
-            "VEHICLE_CREATE", "DRIVER_CREATE", "ROUTE_CREATE", "REPORT_VIEW", "DASHBOARD_VIEW",
+            "VEHICLE_CREATE", "DRIVER_CREATE", "ROUTE_CREATE", "ROUTE_UPDATE", "REPORT_VIEW", "DASHBOARD_VIEW",
             "CUSTOMER_VIEW", "CUSTOMER_CREATE", "CUSTOMER_UPDATE",
             "DEPARTMENT_VIEW", "DEPARTMENT_CREATE", "DEPARTMENT_UPDATE",
             "LOCATION_VIEW", "LOCATION_CREATE", "LOCATION_UPDATE",
@@ -60,6 +66,8 @@ class BusinessAuthorizationIntegrationTest {
             "FUEL_ISSUE_AUTHORIZE",
             "FUEL_PURCHASE_APPROVE",
             "FUEL_PRICE_VIEW",
+            "FREIGHT_ORDER_VIEW", "FREIGHT_ORDER_MANAGE",
+            "CARGO_MANIFEST_VIEW", "CARGO_MANIFEST_MANAGE", "CARGO_MANIFEST_FINALIZE",
             "IDENTITY_MANAGE");
 
     @Autowired MockMvc mvc;
@@ -74,6 +82,8 @@ class BusinessAuthorizationIntegrationTest {
     @MockBean FuelIssueUseCase fuelIssues;
     @MockBean FuelStationUseCase fuelStations;
     @MockBean FuelPurchaseUseCase fuelPurchases;
+    @MockBean FreightOrderUseCase freightOrders;
+    @MockBean CargoManifestUseCase cargoManifests;
     @MockBean CustomerUseCase customers;
     @MockBean DepartmentUseCase departments;
     @MockBean LocationUseCase locations;
@@ -113,6 +123,15 @@ class BusinessAuthorizationIntegrationTest {
         var vendorId = UUID.fromString("a3000000-0000-0000-0000-000000000001");
         when(fuelPurchases.approve(eq(purchaseId), any(), eq("permitted"))).thenReturn(purchase(purchaseId, vendorId));
         when(fuelPurchases.vendor(vendorId)).thenReturn(new FuelPurchaseUseCase.VendorReference(vendorId, "V-1", "Vendor", true));
+        var freightOrder = freightOrder();
+        when(freightOrders.create(any(), eq("permitted"))).thenReturn(freightOrder);
+        when(freightOrders.update(eq(freightOrder.id()), any(), eq("permitted"))).thenReturn(freightOrder);
+        when(freightOrders.search(any())).thenReturn(new FreightOrderUseCase.PageResult<>(List.of(freightOrder), 0, 20, 1, 1));
+        var cargoManifest = cargoManifest();
+        when(cargoManifests.search(any())).thenReturn(new CargoManifestUseCase.PageResult<>(List.of(cargoManifest), 0, 20, 1, 1));
+        when(cargoManifests.create(any(), eq("permitted"))).thenReturn(cargoManifest);
+        when(cargoManifests.addItem(eq(cargoManifest.id()), any(), eq("permitted"))).thenReturn(cargoManifest);
+        when(cargoManifests.finalizeManifest(eq(cargoManifest.id()), eq(0L), eq("permitted"))).thenReturn(cargoManifest);
     }
 
     @Test
@@ -130,7 +149,7 @@ class BusinessAuthorizationIntegrationTest {
         }
 
         verifyNoInteractions(trips, vehicles, drivers, routes, fuelIssues, fuelStations, fuelPurchases,
-                customers, departments, locations, projects, vendors);
+                customers, departments, locations, projects, vendors, freightOrders, cargoManifests);
     }
 
     @Test
@@ -145,7 +164,10 @@ class BusinessAuthorizationIntegrationTest {
         verify(trips).assignRoute(any(), any(), eq("permitted"));
         verify(vehicles).create(any());
         verify(drivers).create(any());
-        verify(routes).create(any());
+        verify(routes).create(any(), eq("permitted"));
+        verify(routes).optimizeRoute(any());
+        verify(routes).applyOptimization(any(), any(), eq("permitted"));
+        verify(routes).getRoutePerformance(any(), any(), any());
         verify(customers).create(any());
         verify(customers).update(any(), any());
         verify(customers).list();
@@ -161,6 +183,13 @@ class BusinessAuthorizationIntegrationTest {
         verify(vendors).list(null);
         verify(fuelIssues).authorize(any(), any(), eq("permitted"));
         verify(fuelPurchases).approve(any(), any(), eq("permitted"));
+        verify(freightOrders).create(any(), eq("permitted"));
+        verify(freightOrders).update(any(), any(), eq("permitted"));
+        verify(freightOrders).search(any());
+        verify(cargoManifests).search(any());
+        verify(cargoManifests).create(any(), eq("permitted"));
+        verify(cargoManifests).addItem(any(), any(), eq("permitted"));
+        verify(cargoManifests).finalizeManifest(any(), eq(0L), eq("permitted"));
     }
 
     @Test
@@ -201,6 +230,11 @@ class BusinessAuthorizationIntegrationTest {
                          "destinationLocationId":"%s","plannedDistanceKm":10,"estimatedDurationMinutes":30,
                          "stops":[]}
                         """.formatted(originId, destinationId)),
+                post("/routes/{id}/optimize", UUID.randomUUID()),
+                post("/routes/{id}/apply-optimization", UUID.randomUUID()).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"optimizedStopLocationIds\":[\"" + UUID.randomUUID() + "\",\"" + UUID.randomUUID() + "\"]}"),
+                get("/routes/{id}/performance", UUID.randomUUID())
+                        .param("from", "2026-01-01T00:00:00Z").param("to", "2026-01-31T00:00:00Z"),
                 post("/customers").contentType(MediaType.APPLICATION_JSON).content("""
                         {"code":"AUTH-CUSTOMER","name":"Authorization Customer"}
                         """),
@@ -234,6 +268,17 @@ class BusinessAuthorizationIntegrationTest {
                         .content("{\"comment\":\"Approved by fuel manager\"}"),
                 post("/fuel-purchases/{id}/approve", UUID.fromString("a2000000-0000-0000-0000-000000000001"))
                         .contentType(MediaType.APPLICATION_JSON).content("{\"comment\":\"Approved\"}"),
+                get("/v1/freight/orders"),
+                post("/v1/freight/orders").contentType(MediaType.APPLICATION_JSON).content(freightCreateJson()),
+                patch("/v1/freight/orders/{id}", freightOrder().id()).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"version\":0,\"priority\":\"URGENT\"}"),
+                get("/v1/freight/manifests"),
+                post("/v1/freight/manifests").contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"freightOrderId\":\"" + freightOrder().id() + "\"}"),
+                post("/v1/freight/manifests/{id}/items", cargoManifest().id()).contentType(MediaType.APPLICATION_JSON)
+                        .content(manifestItemJson()),
+                post("/v1/freight/manifests/{id}/finalize", cargoManifest().id()).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"version\":0}"),
                 get("/reports/trips").param("fromDate", "2026-01-01").param("toDate", "2026-01-31"),
                 get("/dashboard/operations"));
     }
@@ -274,5 +319,37 @@ class BusinessAuthorizationIntegrationTest {
                 new BigDecimal("20.00"), "LKR", com.transportlogistics.app.fuel.domain.model.FuelPurchaseStatus.APPROVED,
                 com.transportlogistics.app.fuel.domain.model.ReconciliationStatus.PENDING, null, null, null, null,
                 null, null, null, UUID.randomUUID(), now, null, null, null, null, null, UUID.randomUUID(), now, now);
+    }
+
+    private FreightOrder freightOrder() {
+        var now = OffsetDateTime.parse("2026-01-01T00:00:00Z");
+        var id = UUID.fromString("b1000000-0000-0000-0000-000000000001");
+        return new FreightOrder(id, "FO-2026-000001", UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(),
+                now.plusDays(1), now.plusDays(2), "STANDARD", "NORMAL", null,
+                List.of(new FreightOrderLine(UUID.randomUUID(), "Pallets", BigDecimal.ONE)), 0,
+                now, now, "permitted", "permitted");
+    }
+
+    private String freightCreateJson() {
+        return """
+                {"customerId":"%s","originLocationId":"%s","destinationLocationId":"%s",
+                 "requestedPickupAt":"2026-02-01T08:00:00Z","requestedDeliveryAt":"2026-02-02T08:00:00Z",
+                 "serviceLevel":"STANDARD","priority":"NORMAL","lines":[{"description":"Pallets","quantity":2}]}
+                """.formatted(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID());
+    }
+
+    private CargoManifest cargoManifest() {
+        var now = OffsetDateTime.parse("2026-01-01T00:00:00Z");
+        return new CargoManifest(UUID.fromString("b2000000-0000-0000-0000-000000000001"), "CM-2026-000001",
+                freightOrder().id(), freightOrder().orderNumber(), List.of(), 0, now, now,
+                "permitted", "permitted", null, null);
+    }
+
+    private String manifestItemJson() {
+        return """
+                {"version":0,"freightOrderLineId":"%s","description":"Cargo","quantity":1,
+                 "packingInformation":"Wrapped","commodityClassification":"SUPPLIER.CODE",
+                 "customsApplicable":false,"hazardous":false}
+                """.formatted(freightOrder().lines().getFirst().id());
     }
 }

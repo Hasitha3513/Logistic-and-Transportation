@@ -1,0 +1,3 @@
+package com.transportlogistics.app.freight.manifest.adapters.outbound.persistence;
+import com.transportlogistics.app.freight.manifest.ports.outbound.CargoManifestNumberGenerator; import org.springframework.jdbc.core.JdbcTemplate; import org.springframework.stereotype.Component; import java.time.Year;
+@Component class DatabaseCargoManifestNumberGenerator implements CargoManifestNumberGenerator {private final JdbcTemplate jdbc;DatabaseCargoManifestNumberGenerator(JdbcTemplate jdbc){this.jdbc=jdbc;}public String next(){Long value=jdbc.queryForObject("SELECT nextval('cargo_manifest_number_sequence')",Long.class);return "CM-%04d-%06d".formatted(Year.now().getValue(),value);}}
