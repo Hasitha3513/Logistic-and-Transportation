@@ -32,6 +32,9 @@ public class LoadPlanPersistenceAdapter implements LoadPlanRepository {
             entity = existingOpt.get();
             entity.setVehicleId(loadPlan.getVehicleId());
             entity.setNotes(loadPlan.getNotes());
+            entity.setReadinessStatus(loadPlan.getReadinessStatus());
+            entity.setReadyAt(loadPlan.getReadyAt());
+            entity.setReadyBy(loadPlan.getReadyBy());
             entity.setUpdatedAt(loadPlan.getUpdatedAt());
             entity.setUpdatedBy(loadPlan.getUpdatedBy());
             entity.setVersion(loadPlan.getVersion());

@@ -1,4 +1,11 @@
-import { ArrowLeftOutlined, CheckCircleOutlined, CloseCircleOutlined, ExclamationCircleOutlined, ExperimentOutlined, ReloadOutlined } from '@ant-design/icons';
+import {
+  ArrowLeftOutlined,
+  CheckCircleOutlined,
+  CloseCircleOutlined,
+  ExclamationCircleOutlined,
+  ExperimentOutlined,
+  ReloadOutlined,
+} from '@ant-design/icons';
 import { Alert, Badge, Button, Card, Descriptions, Flex, Space, Table, Tag, Typography, message } from 'antd';
 import { useState } from 'react';
 import { Link, Navigate, useParams } from 'react-router-dom';
@@ -14,6 +21,7 @@ export default function LoadPlanDetailsPage() {
 
   const [layoutResult, setLayoutResult] = useState<LoadPlanValidationResponse | null>(null);
   const [wvResult, setWvResult] = useState<LoadValidationResultResponse | null>(null);
+  const [readyError, setReadyError] = useState<string | null>(null);
 
   if (!hasPermission('LOAD_PLAN_VIEW')) {
     return <Navigate to="/workspace" replace />;
@@ -49,6 +57,20 @@ export default function LoadPlanDetailsPage() {
     }
   };
 
+  const handleMarkReady = async () => {
+    if (!query.data) return;
+    setReadyError(null);
+    try {
+      await actions.markReady.mutateAsync({ version: query.data.version });
+      void message.success('Load plan marked structurally ready');
+    } catch (err: unknown) {
+      const errorObj = err as { response?: { data?: { code?: string; message?: string } }; message?: string };
+      const serverMsg = errorObj.response?.data?.message || errorObj.message || 'Failed to mark load plan structurally ready';
+      setReadyError(serverMsg);
+      void message.error('Failed to mark load plan structurally ready: ' + serverMsg);
+    }
+  };
+
   const plan = query.data;
 
   return (
@@ -66,6 +88,15 @@ export default function LoadPlanDetailsPage() {
           {hasPermission('LOAD_PLAN_MANAGE') && (
             <>
               <Button
+                type="primary"
+                icon={<CheckCircleOutlined />}
+                onClick={handleMarkReady}
+                loading={actions.markReady.isPending}
+                disabled={plan?.readinessStatus === 'STRUCTURALLY_READY'}
+              >
+                Mark Structurally Ready
+              </Button>
+              <Button
                 icon={<ExperimentOutlined />}
                 onClick={handleValidateLayout}
                 loading={actions.validateLayout.isPending}
@@ -73,7 +104,6 @@ export default function LoadPlanDetailsPage() {
                 Validate Layout
               </Button>
               <Button
-                type="primary"
                 icon={<ExperimentOutlined />}
                 onClick={handleValidateWeightVolume}
                 loading={actions.validateWeightVolume.isPending}
@@ -90,11 +120,29 @@ export default function LoadPlanDetailsPage() {
 
       {query.isError && <Alert type="error" showIcon message="Load plan could not be loaded" />}
 
+      {readyError && (
+        <Alert
+          type="error"
+          showIcon
+          closable
+          onClose={() => setReadyError(null)}
+          message="Structural Readiness Failed"
+          description={readyError}
+        />
+      )}
+
       {plan && (
         <>
           <Card title="Plan Summary">
             <Descriptions bordered column={{ xs: 1, sm: 2, md: 3 }}>
               <Descriptions.Item label="Plan Number">{plan.loadPlanNumber}</Descriptions.Item>
+              <Descriptions.Item label="Readiness Status">
+                {plan.readinessStatus === 'STRUCTURALLY_READY' ? (
+                  <Tag color="green">STRUCTURALLY READY</Tag>
+                ) : (
+                  <Tag color="default">DRAFT</Tag>
+                )}
+              </Descriptions.Item>
               <Descriptions.Item label="Cargo Manifest ID">
                 <Link to={`/freight/manifests/${plan.cargoManifestId}`}>{plan.cargoManifestId}</Link>
               </Descriptions.Item>
@@ -102,6 +150,12 @@ export default function LoadPlanDetailsPage() {
               <Descriptions.Item label="Version">{plan.version}</Descriptions.Item>
               <Descriptions.Item label="Created">{new Date(plan.createdAt).toLocaleString()}</Descriptions.Item>
               <Descriptions.Item label="Created By">{plan.createdBy}</Descriptions.Item>
+              {plan.readyAt && (
+                <Descriptions.Item label="Ready At">{new Date(plan.readyAt).toLocaleString()}</Descriptions.Item>
+              )}
+              {plan.readyBy && (
+                <Descriptions.Item label="Ready By">{plan.readyBy}</Descriptions.Item>
+              )}
               <Descriptions.Item label="Notes" span={3}>
                 {plan.notes || '—'}
               </Descriptions.Item>

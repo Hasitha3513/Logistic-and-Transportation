@@ -601,4 +601,189 @@ class LoadPlanDomainTest {
         List<LoadPlanViolation> violations = plan.validate(facts);
         assertThat(violations).isEmpty();
     }
+
+    // ──────────────────────────────────────────────────────────
+    // US26-AC3 Structural Readiness Lifecycle & Invalidation Tests
+    // ──────────────────────────────────────────────────────────
+
+    @Test
+    @DisplayName("New LoadPlan starts as DRAFT with null readyAt and readyBy")
+    void shouldStartAsDraftByDefault() {
+        OffsetDateTime now = OffsetDateTime.now();
+        LoadPlan plan = new LoadPlan(
+                UUID.randomUUID(), "LP-001", UUID.randomUUID(), UUID.randomUUID(),
+                List.of(), "Notes", now, now, "admin", "admin", 0L
+        );
+
+        assertThat(plan.getReadinessStatus()).isEqualTo(LoadPlanReadinessStatus.DRAFT);
+        assertThat(plan.getReadyAt()).isNull();
+        assertThat(plan.getReadyBy()).isNull();
+    }
+
+    @Test
+    @DisplayName("Rejects creation of DRAFT plan with populated ready audit fields")
+    void shouldRejectDraftWithReadyAudit() {
+        OffsetDateTime now = OffsetDateTime.now();
+        UUID validId = UUID.randomUUID();
+
+        assertThatThrownBy(() -> new LoadPlan(
+                validId, "LP-001", validId, validId, List.of(), "Notes",
+                LoadPlanReadinessStatus.DRAFT, now, "admin", now, now, "admin", "admin", 0L
+        )).isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Draft load plan must not have readyAt or readyBy");
+    }
+
+    @Test
+    @DisplayName("Rejects creation of STRUCTURALLY_READY plan without ready audit fields")
+    void shouldRejectStructurallyReadyWithoutAudit() {
+        OffsetDateTime now = OffsetDateTime.now();
+        UUID validId = UUID.randomUUID();
+
+        assertThatThrownBy(() -> new LoadPlan(
+                validId, "LP-001", validId, validId, List.of(), "Notes",
+                LoadPlanReadinessStatus.STRUCTURALLY_READY, null, null, now, now, "admin", "admin", 0L
+        )).isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Structurally ready load plan requires readyAt and readyBy");
+
+        assertThatThrownBy(() -> new LoadPlan(
+                validId, "LP-001", validId, validId, List.of(), "Notes",
+                LoadPlanReadinessStatus.STRUCTURALLY_READY, now, "   ", now, now, "admin", "admin", 0L
+        )).isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Structurally ready load plan requires readyAt and readyBy");
+    }
+
+    @Test
+    @DisplayName("Transitions from DRAFT to STRUCTURALLY_READY and records ready audit")
+    void shouldMarkStructurallyReady() {
+        OffsetDateTime created = OffsetDateTime.now();
+        OffsetDateTime readyTime = created.plusMinutes(5);
+        LoadPlan plan = new LoadPlan(
+                UUID.randomUUID(), "LP-001", UUID.randomUUID(), UUID.randomUUID(),
+                List.of(), "Notes", created, created, "planner", "planner", 0L
+        );
+
+        LoadPlan readyPlan = plan.markStructurallyReady("lead-planner", readyTime);
+
+        assertThat(readyPlan.getReadinessStatus()).isEqualTo(LoadPlanReadinessStatus.STRUCTURALLY_READY);
+        assertThat(readyPlan.getReadyAt()).isEqualTo(readyTime);
+        assertThat(readyPlan.getReadyBy()).isEqualTo("lead-planner");
+        assertThat(readyPlan.getUpdatedAt()).isEqualTo(readyTime);
+        assertThat(readyPlan.getUpdatedBy()).isEqualTo("lead-planner");
+    }
+
+    @Test
+    @DisplayName("Material mutation: vehicle change returns STRUCTURALLY_READY plan to DRAFT")
+    void shouldInvalidateReadinessOnVehicleChange() {
+        OffsetDateTime now = OffsetDateTime.now();
+        UUID initialVehicle = UUID.randomUUID();
+        UUID newVehicle = UUID.randomUUID();
+        UUID item1 = UUID.randomUUID();
+
+        List<LoadPlanItemPlacement> placements = List.of(
+                new LoadPlanItemPlacement(UUID.randomUUID(), item1, 0, "FRONT", null, null, 1, null)
+        );
+
+        LoadPlan readyPlan = new LoadPlan(
+                UUID.randomUUID(), "LP-001", UUID.randomUUID(), initialVehicle,
+                placements, "Original notes", LoadPlanReadinessStatus.STRUCTURALLY_READY,
+                now, "lead-planner", now, now, "planner", "lead-planner", 1L
+        );
+
+        OffsetDateTime updateTime = now.plusMinutes(10);
+        LoadPlan updated = readyPlan.update(newVehicle, placements, "Original notes", "planner2", updateTime);
+
+        assertThat(updated.getReadinessStatus()).isEqualTo(LoadPlanReadinessStatus.DRAFT);
+        assertThat(updated.getReadyAt()).isNull();
+        assertThat(updated.getReadyBy()).isNull();
+        assertThat(updated.getVehicleId()).isEqualTo(newVehicle);
+        assertThat(updated.getUpdatedBy()).isEqualTo("planner2");
+    }
+
+    @Test
+    @DisplayName("Material mutation: placement changes return STRUCTURALLY_READY plan to DRAFT")
+    void shouldInvalidateReadinessOnPlacementChanges() {
+        OffsetDateTime now = OffsetDateTime.now();
+        UUID vehicle = UUID.randomUUID();
+        UUID item1 = UUID.randomUUID();
+
+        List<LoadPlanItemPlacement> originalPlacements = List.of(
+                new LoadPlanItemPlacement(UUID.randomUUID(), item1, 0, "FRONT", "STACK-1", "P-1", 1, null)
+        );
+
+        LoadPlan readyPlan = new LoadPlan(
+                UUID.randomUUID(), "LP-001", UUID.randomUUID(), vehicle,
+                originalPlacements, "Notes", LoadPlanReadinessStatus.STRUCTURALLY_READY,
+                now, "lead-planner", now, now, "planner", "lead-planner", 1L
+        );
+
+        OffsetDateTime updateTime = now.plusMinutes(10);
+
+        // Change zone
+        List<LoadPlanItemPlacement> changedZone = List.of(
+                new LoadPlanItemPlacement(UUID.randomUUID(), item1, 0, "REAR", "STACK-1", "P-1", 1, null)
+        );
+        LoadPlan zoneUpdated = readyPlan.update(vehicle, changedZone, "Notes", "planner2", updateTime);
+        assertThat(zoneUpdated.getReadinessStatus()).isEqualTo(LoadPlanReadinessStatus.DRAFT);
+        assertThat(zoneUpdated.getReadyAt()).isNull();
+
+        // Change stack group
+        List<LoadPlanItemPlacement> changedStack = List.of(
+                new LoadPlanItemPlacement(UUID.randomUUID(), item1, 0, "FRONT", "STACK-2", "P-1", 1, null)
+        );
+        LoadPlan stackUpdated = readyPlan.update(vehicle, changedStack, "Notes", "planner2", updateTime);
+        assertThat(stackUpdated.getReadinessStatus()).isEqualTo(LoadPlanReadinessStatus.DRAFT);
+
+        // Change loading sequence
+        List<LoadPlanItemPlacement> changedSeq = List.of(
+                new LoadPlanItemPlacement(UUID.randomUUID(), item1, 0, "FRONT", "STACK-1", "P-1", 2, null)
+        );
+        LoadPlan seqUpdated = readyPlan.update(vehicle, changedSeq, "Notes", "planner2", updateTime);
+        assertThat(seqUpdated.getReadinessStatus()).isEqualTo(LoadPlanReadinessStatus.DRAFT);
+    }
+
+    @Test
+    @DisplayName("Notes-only mutation: preserves STRUCTURALLY_READY status and audit fields")
+    void shouldPreserveReadinessOnNotesOnlyChange() {
+        OffsetDateTime now = OffsetDateTime.now();
+        UUID vehicle = UUID.randomUUID();
+        UUID item1 = UUID.randomUUID();
+
+        List<LoadPlanItemPlacement> placements = List.of(
+                new LoadPlanItemPlacement(UUID.randomUUID(), item1, 0, "FRONT", "STACK-1", "P-1", 1, "Special handle")
+        );
+
+        LoadPlan readyPlan = new LoadPlan(
+                UUID.randomUUID(), "LP-001", UUID.randomUUID(), vehicle,
+                placements, "Original notes", LoadPlanReadinessStatus.STRUCTURALLY_READY,
+                now, "lead-planner", now, now, "planner", "lead-planner", 1L
+        );
+
+        OffsetDateTime updateTime = now.plusMinutes(10);
+        LoadPlan notesUpdated = readyPlan.update(vehicle, placements, "Typo fixed in notes", "planner2", updateTime);
+
+        assertThat(notesUpdated.getReadinessStatus()).isEqualTo(LoadPlanReadinessStatus.STRUCTURALLY_READY);
+        assertThat(notesUpdated.getReadyAt()).isEqualTo(now);
+        assertThat(notesUpdated.getReadyBy()).isEqualTo("lead-planner");
+        assertThat(notesUpdated.getNotes()).isEqualTo("Typo fixed in notes");
+        assertThat(notesUpdated.getUpdatedBy()).isEqualTo("planner2");
+    }
+
+    @Test
+    @DisplayName("Input invalidation boundary: invalidateReadiness returns plan to DRAFT")
+    void shouldInvalidateReadinessExplicitly() {
+        OffsetDateTime now = OffsetDateTime.now();
+        LoadPlan readyPlan = new LoadPlan(
+                UUID.randomUUID(), "LP-001", UUID.randomUUID(), UUID.randomUUID(),
+                List.of(), "Notes", LoadPlanReadinessStatus.STRUCTURALLY_READY,
+                now, "lead-planner", now, now, "planner", "lead-planner", 1L
+        );
+
+        OffsetDateTime invTime = now.plusMinutes(15);
+        LoadPlan invalidated = readyPlan.invalidateReadiness("system", invTime);
+
+        assertThat(invalidated.getReadinessStatus()).isEqualTo(LoadPlanReadinessStatus.DRAFT);
+        assertThat(invalidated.getReadyAt()).isNull();
+        assertThat(invalidated.getReadyBy()).isNull();
+        assertThat(invalidated.getUpdatedBy()).isEqualTo("system");
+    }
 }

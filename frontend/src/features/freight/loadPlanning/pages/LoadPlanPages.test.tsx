@@ -33,6 +33,9 @@ const loadPlan: LoadPlan = {
     },
   ],
   notes: 'Planning test notes',
+  readinessStatus: 'DRAFT',
+  readyAt: null,
+  readyBy: null,
   version: 0,
   createdAt: '2026-08-25T00:00:00Z',
   updatedAt: '2026-08-25T00:00:00Z',
@@ -41,6 +44,7 @@ const loadPlan: LoadPlan = {
 };
 
 function handlers(permissions: string[], plan: LoadPlan = loadPlan) {
+  let currentPlan = { ...plan };
   server.use(
     http.get('*/auth/me', () =>
       HttpResponse.json({
@@ -53,8 +57,18 @@ function handlers(permissions: string[], plan: LoadPlan = loadPlan) {
         permissions,
       })
     ),
-    http.get(`*/v1/freight/load-plans/${plan.id}`, () => HttpResponse.json(plan)),
-    http.get('*/v1/freight/load-plans', () => HttpResponse.json([plan])),
+    http.get(`*/v1/freight/load-plans/${plan.id}`, () => HttpResponse.json(currentPlan)),
+    http.get('*/v1/freight/load-plans', () => HttpResponse.json([currentPlan])),
+    http.post('*/v1/freight/load-plans/:id/ready', async () => {
+      currentPlan = {
+        ...currentPlan,
+        readinessStatus: 'STRUCTURALLY_READY',
+        readyAt: '2026-08-27T10:00:00Z',
+        readyBy: 'manager',
+        version: currentPlan.version + 1,
+      };
+      return HttpResponse.json(currentPlan);
+    }),
     http.post('*/v1/freight/load-plans/:id/validate-layout', () =>
       HttpResponse.json({ valid: true, violations: [] })
     ),
@@ -126,11 +140,12 @@ function renderAt(path: string) {
 }
 
 describe('Load planning pages', () => {
-  it('renders permission-aware load plan list', async () => {
+  it('renders permission-aware load plan list with readiness status', async () => {
     handlers(['LOAD_PLAN_VIEW']);
     renderAt('/freight/load-plans');
 
     expect(await screen.findByText('LP-2026-000001')).toBeInTheDocument();
+    expect(screen.getByText('DRAFT')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'New load plan' })).not.toBeInTheDocument();
   });
 
@@ -140,6 +155,7 @@ describe('Load planning pages', () => {
     renderAt(`/freight/load-plans/${planId}`);
 
     expect((await screen.findAllByText('LP-2026-000001')).length).toBeGreaterThan(0);
+    expect(screen.getByRole('button', { name: /Mark Structurally Ready/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Validate Layout/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Validate Weight & Volume/i })).toBeInTheDocument();
 
@@ -150,6 +166,30 @@ describe('Load planning pages', () => {
     expect(await screen.findByText(/Weight, Volume & Capacity Validation/i)).toBeInTheDocument();
     expect(screen.getAllByText('INCOMPLETE').length).toBeGreaterThan(0);
     expect(screen.getByText('CARGO_ITEM_WEIGHT_DATA_MISSING')).toBeInTheDocument();
+  });
+
+  it('marks load plan structurally ready and reflects updated status and audit', async () => {
+    handlers(['LOAD_PLAN_VIEW', 'LOAD_PLAN_MANAGE']);
+    const user = userEvent.setup();
+    renderAt(`/freight/load-plans/${planId}`);
+
+    expect((await screen.findAllByText('LP-2026-000001')).length).toBeGreaterThan(0);
+    const readyBtn = screen.getByRole('button', { name: /Mark Structurally Ready/i });
+    expect(readyBtn).toBeEnabled();
+
+    await user.click(readyBtn);
+    expect(await screen.findByText('STRUCTURALLY READY')).toBeInTheDocument();
+    expect(screen.getAllByText('manager').length).toBeGreaterThanOrEqual(2);
+  });
+
+  it('hides ready and validation actions for view-only users', async () => {
+    handlers(['LOAD_PLAN_VIEW']);
+    renderAt(`/freight/load-plans/${planId}`);
+
+    expect((await screen.findAllByText('LP-2026-000001')).length).toBeGreaterThan(0);
+    expect(screen.queryByRole('button', { name: /Mark Structurally Ready/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Validate Layout/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Validate Weight & Volume/i })).not.toBeInTheDocument();
   });
 
   it('guards the load plans route without view permission', async () => {

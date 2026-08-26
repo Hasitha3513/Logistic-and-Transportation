@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
  * placement entries that describe how manifested cargo items should be physically
  * arranged, stacked, sequenced, and separated within the vehicle.</p>
  *
- * <p>Structural validation is performed via {@link #validate(List)} which returns
+ * <p>Structural validation is performed via {@link #validate(Collection)} which returns
  * planning-level violations. Authoritative weight/capacity validation belongs to US-27.</p>
  */
 public final class LoadPlan {
@@ -32,6 +32,9 @@ public final class LoadPlan {
     private final UUID vehicleId;
     private final List<LoadPlanItemPlacement> placements;
     private final String notes;
+    private final LoadPlanReadinessStatus readinessStatus;
+    private final OffsetDateTime readyAt;
+    private final String readyBy;
     private final OffsetDateTime createdAt;
     private final OffsetDateTime updatedAt;
     private final String createdBy;
@@ -44,6 +47,9 @@ public final class LoadPlan {
                     UUID vehicleId,
                     List<LoadPlanItemPlacement> placements,
                     String notes,
+                    LoadPlanReadinessStatus readinessStatus,
+                    OffsetDateTime readyAt,
+                    String readyBy,
                     OffsetDateTime createdAt,
                     OffsetDateTime updatedAt,
                     String createdBy,
@@ -58,17 +64,44 @@ public final class LoadPlan {
         if (version < 0) {
             throw new IllegalArgumentException("version must be >= 0");
         }
+        this.readinessStatus = readinessStatus != null ? readinessStatus : LoadPlanReadinessStatus.DRAFT;
+        if (this.readinessStatus == LoadPlanReadinessStatus.DRAFT) {
+            if (readyAt != null || readyBy != null) {
+                throw new IllegalArgumentException("Draft load plan must not have readyAt or readyBy audit fields");
+            }
+        } else if (this.readinessStatus == LoadPlanReadinessStatus.STRUCTURALLY_READY) {
+            if (readyAt == null || readyBy == null || readyBy.isBlank()) {
+                throw new IllegalArgumentException("Structurally ready load plan requires readyAt and readyBy audit fields");
+            }
+        }
         this.loadPlanId = loadPlanId;
         this.loadPlanNumber = loadPlanNumber;
         this.cargoManifestId = cargoManifestId;
         this.vehicleId = vehicleId;
         this.placements = placements == null ? List.of() : List.copyOf(placements);
         this.notes = notes;
+        this.readyAt = readyAt;
+        this.readyBy = readyBy;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
         this.createdBy = createdBy;
         this.updatedBy = updatedBy;
         this.version = version;
+    }
+
+    public LoadPlan(UUID loadPlanId,
+                    String loadPlanNumber,
+                    UUID cargoManifestId,
+                    UUID vehicleId,
+                    List<LoadPlanItemPlacement> placements,
+                    String notes,
+                    OffsetDateTime createdAt,
+                    OffsetDateTime updatedAt,
+                    String createdBy,
+                    String updatedBy,
+                    long version) {
+        this(loadPlanId, loadPlanNumber, cargoManifestId, vehicleId, placements, notes,
+                LoadPlanReadinessStatus.DRAFT, null, null, createdAt, updatedAt, createdBy, updatedBy, version);
     }
 
     // ──────────────────────────────────────────────────────────
@@ -81,6 +114,9 @@ public final class LoadPlan {
     public UUID getVehicleId() { return vehicleId; }
     public List<LoadPlanItemPlacement> getPlacements() { return placements; }
     public String getNotes() { return notes; }
+    public LoadPlanReadinessStatus getReadinessStatus() { return readinessStatus; }
+    public OffsetDateTime getReadyAt() { return readyAt; }
+    public String getReadyBy() { return readyBy; }
     public OffsetDateTime getCreatedAt() { return createdAt; }
     public OffsetDateTime getUpdatedAt() { return updatedAt; }
     public String getCreatedBy() { return createdBy; }
@@ -93,25 +129,116 @@ public final class LoadPlan {
 
     /**
      * Returns a new LoadPlan with updated placements, vehicle, notes, and audit info.
+     * Material changes (vehicle, placements, order, zone, stack, container, sequence)
+     * automatically return readiness to DRAFT and clear readiness audit.
+     * Notes-only updates preserve existing readiness status and audit.
      */
-    public LoadPlan update(UUID vehicleId,
+    public LoadPlan update(UUID newVehicleId,
                            List<LoadPlanItemPlacement> newPlacements,
-                           String notes,
+                           String newNotes,
                            String actor,
                            OffsetDateTime now) {
+        boolean materialChange = isMaterialChange(newVehicleId, newPlacements);
+        LoadPlanReadinessStatus newStatus = materialChange ? LoadPlanReadinessStatus.DRAFT : this.readinessStatus;
+        OffsetDateTime newReadyAt = materialChange ? null : this.readyAt;
+        String newReadyBy = materialChange ? null : this.readyBy;
+
         return new LoadPlan(
                 this.loadPlanId,
                 this.loadPlanNumber,
                 this.cargoManifestId,
-                vehicleId,
+                newVehicleId,
                 newPlacements,
-                notes,
+                newNotes,
+                newStatus,
+                newReadyAt,
+                newReadyBy,
                 this.createdAt,
                 now,
                 this.createdBy,
                 actor,
                 this.version
         );
+    }
+
+    /**
+     * Marks the load plan as structurally ready.
+     */
+    public LoadPlan markStructurallyReady(String actor, OffsetDateTime now) {
+        if (actor == null || actor.isBlank()) {
+            throw new IllegalArgumentException("Actor is required to mark structurally ready");
+        }
+        Objects.requireNonNull(now, "now is required");
+        return new LoadPlan(
+                this.loadPlanId,
+                this.loadPlanNumber,
+                this.cargoManifestId,
+                this.vehicleId,
+                this.placements,
+                this.notes,
+                LoadPlanReadinessStatus.STRUCTURALLY_READY,
+                now,
+                actor,
+                this.createdAt,
+                now,
+                this.createdBy,
+                actor,
+                this.version
+        );
+    }
+
+    /**
+     * Invalidation boundary: returns the load plan to DRAFT status and clears ready audit.
+     */
+    public LoadPlan invalidateReadiness(String actor, OffsetDateTime now) {
+        return new LoadPlan(
+                this.loadPlanId,
+                this.loadPlanNumber,
+                this.cargoManifestId,
+                this.vehicleId,
+                this.placements,
+                this.notes,
+                LoadPlanReadinessStatus.DRAFT,
+                null,
+                null,
+                this.createdAt,
+                now,
+                this.createdBy,
+                actor,
+                this.version
+        );
+    }
+
+    private boolean isMaterialChange(UUID newVehicleId, List<LoadPlanItemPlacement> newPlacements) {
+        if (!Objects.equals(this.vehicleId, newVehicleId)) {
+            return true;
+        }
+        return !arePlacementsStructurallyEqual(this.placements, newPlacements);
+    }
+
+    private static boolean arePlacementsStructurallyEqual(List<LoadPlanItemPlacement> current,
+                                                          List<LoadPlanItemPlacement> updated) {
+        if (current == null && updated == null) return true;
+        if (current == null || updated == null) return false;
+        if (current.size() != updated.size()) return false;
+
+        Map<UUID, LoadPlanItemPlacement> currentMap = current.stream()
+                .collect(Collectors.toMap(LoadPlanItemPlacement::manifestItemId, p -> p, (a, b) -> a));
+
+        for (LoadPlanItemPlacement up : updated) {
+            LoadPlanItemPlacement cur = currentMap.get(up.manifestItemId());
+            if (cur == null) return false;
+            if (cur.placementOrder() != up.placementOrder()) return false;
+            if (!Objects.equals(normalize(cur.zoneReference()), normalize(up.zoneReference()))) return false;
+            if (!Objects.equals(normalize(cur.stackGroup()), normalize(up.stackGroup()))) return false;
+            if (!Objects.equals(normalize(cur.containerReference()), normalize(up.containerReference()))) return false;
+            if (cur.loadingSequence() != up.loadingSequence()) return false;
+        }
+        return true;
+    }
+
+    private static String normalize(String s) {
+        return (s == null || s.isBlank()) ? null : s.trim();
     }
 
     // ──────────────────────────────────────────────────────────

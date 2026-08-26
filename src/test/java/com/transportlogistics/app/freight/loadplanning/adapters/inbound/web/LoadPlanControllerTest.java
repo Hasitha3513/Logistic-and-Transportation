@@ -172,6 +172,79 @@ class LoadPlanControllerTest {
                 .andExpect(jsonPath("$.missingData[0]").value("CARGO_ITEM_WEIGHT_DATA_MISSING"));
     }
 
+    @Test
+    void marksLoadPlanStructurallyReady() throws Exception {
+        OffsetDateTime now = OffsetDateTime.parse("2026-08-25T10:00:00Z");
+        LoadPlanItemPlacement placement = new LoadPlanItemPlacement(
+                UUID.randomUUID(), UUID.randomUUID(), 0, "FRONT", "S1", "PALLET-1", 1, null
+        );
+        LoadPlan readyPlan = new LoadPlan(
+                id,
+                "LP-2026-000001",
+                manifestId,
+                vehicleId,
+                List.of(placement),
+                "Notes",
+                com.transportlogistics.app.freight.loadplanning.domain.LoadPlanReadinessStatus.STRUCTURALLY_READY,
+                now,
+                "manager",
+                now,
+                now,
+                "manager",
+                "manager",
+                1L
+        );
+
+        when(loadPlanUseCase.markReady(eq(id), eq(0L), eq("manager"))).thenReturn(readyPlan);
+
+        mvc.perform(post("/v1/freight/load-plans/{id}/ready", id)
+                        .principal(() -> "manager")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"version\": 0}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.readinessStatus").value("STRUCTURALLY_READY"))
+                .andExpect(jsonPath("$.readyBy").value("manager"))
+                .andExpect(jsonPath("$.version").value(1));
+    }
+
+    @Test
+    void rejectsMarkReadyWithoutVersion() throws Exception {
+        mvc.perform(post("/v1/freight/load-plans/{id}/ready", id)
+                        .principal(() -> "manager")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
+    }
+
+    @Test
+    void rejectsMarkReadyOnStaleVersion() throws Exception {
+        when(loadPlanUseCase.markReady(eq(id), eq(0L), eq("manager")))
+                .thenThrow(new ConflictException("LOAD_PLAN_STALE_VERSION", "Stale ready attempt"));
+
+        mvc.perform(post("/v1/freight/load-plans/{id}/ready", id)
+                        .principal(() -> "manager")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"version\": 0}"))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("LOAD_PLAN_STALE_VERSION"));
+    }
+
+    @Test
+    void rejectsMarkReadyOnStructuralViolations() throws Exception {
+        when(loadPlanUseCase.markReady(eq(id), eq(0L), eq("manager")))
+                .thenThrow(new com.transportlogistics.app.shared.domain.BusinessRuleException(
+                        "LOAD_PLAN_STRUCTURAL_VIOLATIONS", "ITEM_NOT_PLACED: Item unplaced"
+                ));
+
+        mvc.perform(post("/v1/freight/load-plans/{id}/ready", id)
+                        .principal(() -> "manager")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"version\": 0}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("LOAD_PLAN_STRUCTURAL_VIOLATIONS"));
+    }
+
     private LoadPlan samplePlan() {
         OffsetDateTime now = OffsetDateTime.parse("2026-08-25T10:00:00Z");
         LoadPlanItemPlacement placement = new LoadPlanItemPlacement(

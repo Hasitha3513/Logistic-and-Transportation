@@ -168,6 +168,66 @@ class LoadPlanPersistenceIntegrationTest {
                 .hasMessageContaining("changed by another user");
     }
 
+    @Test
+    @DisplayName("Persists readiness lifecycle: DRAFT -> STRUCTURALLY_READY -> DRAFT on material edit, preserves on notes edit")
+    void testReadinessLifecyclePersistence() {
+        var placement = new LoadPlanUseCase.ItemPlacementCommand(
+                manifestItemId, 0, "BAY-FRONT", "STACK-1", "PALLET-101", 1, null
+        );
+        var createCmd = new LoadPlanUseCase.CreateCommand(
+                manifestId, vehicleId, List.of(placement), "Ready test plan"
+        );
+
+        LoadPlan saved = loadPlanUseCase.create(createCmd, "planner");
+        assertThat(saved.getReadinessStatus()).isEqualTo(com.transportlogistics.app.freight.loadplanning.domain.LoadPlanReadinessStatus.DRAFT);
+        assertThat(saved.getReadyAt()).isNull();
+        assertThat(saved.getReadyBy()).isNull();
+
+        // Verify DB raw columns for DRAFT
+        var dbRow = jdbc.queryForMap("SELECT readiness_status, ready_at, ready_by, version FROM load_plan WHERE id = ?", saved.getLoadPlanId());
+        assertThat(dbRow.get("readiness_status")).isEqualTo("DRAFT");
+        assertThat(dbRow.get("ready_at")).isNull();
+        assertThat(dbRow.get("ready_by")).isNull();
+
+        // Mark structurally ready
+        LoadPlan ready = loadPlanUseCase.markReady(saved.getLoadPlanId(), saved.getVersion(), "lead-planner");
+        assertThat(ready.getReadinessStatus()).isEqualTo(com.transportlogistics.app.freight.loadplanning.domain.LoadPlanReadinessStatus.STRUCTURALLY_READY);
+        assertThat(ready.getReadyBy()).isEqualTo("lead-planner");
+        assertThat(ready.getReadyAt()).isNotNull();
+
+        // Verify DB raw columns for STRUCTURALLY_READY
+        var dbReadyRow = jdbc.queryForMap("SELECT readiness_status, ready_at, ready_by, version FROM load_plan WHERE id = ?", saved.getLoadPlanId());
+        assertThat(dbReadyRow.get("readiness_status")).isEqualTo("STRUCTURALLY_READY");
+        assertThat(dbReadyRow.get("ready_at")).isNotNull();
+        assertThat(dbReadyRow.get("ready_by")).isEqualTo("lead-planner");
+
+        // Notes-only update preserves STRUCTURALLY_READY
+        var notesOnlyCmd = new LoadPlanUseCase.UpdateCommand(
+                vehicleId, List.of(placement), "Notes updated only", ready.getVersion()
+        );
+        LoadPlan notesUpdated = loadPlanUseCase.update(saved.getLoadPlanId(), notesOnlyCmd, "planner2");
+        assertThat(notesUpdated.getReadinessStatus()).isEqualTo(com.transportlogistics.app.freight.loadplanning.domain.LoadPlanReadinessStatus.STRUCTURALLY_READY);
+        assertThat(notesUpdated.getReadyBy()).isEqualTo("lead-planner");
+        assertThat(notesUpdated.getReadyAt()).isNotNull();
+
+        // Material update (placement order change) invalidates to DRAFT
+        var materialPlacement = new LoadPlanUseCase.ItemPlacementCommand(
+                manifestItemId, 0, "BAY-REAR", "STACK-1", "PALLET-101", 1, null
+        );
+        var materialCmd = new LoadPlanUseCase.UpdateCommand(
+                vehicleId, List.of(materialPlacement), "Zone changed to rear", notesUpdated.getVersion()
+        );
+        LoadPlan materialUpdated = loadPlanUseCase.update(saved.getLoadPlanId(), materialCmd, "planner3");
+        assertThat(materialUpdated.getReadinessStatus()).isEqualTo(com.transportlogistics.app.freight.loadplanning.domain.LoadPlanReadinessStatus.DRAFT);
+        assertThat(materialUpdated.getReadyAt()).isNull();
+        assertThat(materialUpdated.getReadyBy()).isNull();
+
+        var dbMaterialRow = jdbc.queryForMap("SELECT readiness_status, ready_at, ready_by FROM load_plan WHERE id = ?", saved.getLoadPlanId());
+        assertThat(dbMaterialRow.get("readiness_status")).isEqualTo("DRAFT");
+        assertThat(dbMaterialRow.get("ready_at")).isNull();
+        assertThat(dbMaterialRow.get("ready_by")).isNull();
+    }
+
     private String shortId(UUID id) {
         return id.toString().substring(0, 8);
     }

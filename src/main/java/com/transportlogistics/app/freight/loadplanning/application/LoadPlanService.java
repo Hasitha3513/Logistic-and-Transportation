@@ -2,6 +2,7 @@ package com.transportlogistics.app.freight.loadplanning.application;
 
 import com.transportlogistics.app.freight.loadplanning.domain.LoadPlan;
 import com.transportlogistics.app.freight.loadplanning.domain.LoadPlanItemPlacement;
+import com.transportlogistics.app.freight.loadplanning.domain.LoadPlanReadinessStatus;
 import com.transportlogistics.app.freight.loadplanning.domain.LoadPlanViolation;
 import com.transportlogistics.app.freight.loadplanning.domain.ManifestItemFact;
 import com.transportlogistics.app.freight.loadplanning.domain.LoadValidationResult;
@@ -23,7 +24,6 @@ import com.transportlogistics.app.shared.domain.BusinessRuleException;
 import com.transportlogistics.app.shared.domain.ConflictException;
 import com.transportlogistics.app.shared.domain.NotFoundException;
 
-import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -95,6 +95,9 @@ public final class LoadPlanService implements LoadPlanUseCase {
                     vehicle.vehicleId(),
                     placements,
                     command.notes(),
+                    LoadPlanReadinessStatus.DRAFT,
+                    null,
+                    null,
                     now,
                     now,
                     actor,
@@ -149,6 +152,36 @@ public final class LoadPlanService implements LoadPlanUseCase {
             );
 
             LoadPlan saved = repository.save(updated);
+            eventPublisher.publishLoadPlanUpdated(new LoadPlanUpdated(saved.getLoadPlanId(), now));
+            return saved;
+        });
+    }
+
+    @Override
+    public LoadPlan markReady(UUID id, Long expectedVersion, String actor) {
+        return transactions.execute(() -> {
+            requireActor(actor);
+            LoadPlan current = get(id);
+            requireVersion(current, expectedVersion);
+
+            ManifestPlanningView manifest = getAndValidateManifest(current.getCargoManifestId());
+            VehiclePlanningView vehicle = getAndValidateVehicle(current.getVehicleId());
+
+            List<ManifestItemFact> itemFacts = manifest.items().stream()
+                    .map(i -> new ManifestItemFact(i.itemId(), i.hazardous(), i.fragile(), i.temperatureSensitive()))
+                    .toList();
+
+            List<LoadPlanViolation> violations = current.validate(itemFacts);
+            if (!violations.isEmpty()) {
+                String details = violations.stream()
+                        .map(v -> v.code().name() + ": " + v.message())
+                        .collect(Collectors.joining("; "));
+                throw new BusinessRuleException("LOAD_PLAN_STRUCTURAL_VIOLATIONS", details);
+            }
+
+            OffsetDateTime now = OffsetDateTime.now(clock);
+            LoadPlan readyPlan = current.markStructurallyReady(actor, now);
+            LoadPlan saved = repository.save(readyPlan);
             eventPublisher.publishLoadPlanUpdated(new LoadPlanUpdated(saved.getLoadPlanId(), now));
             return saved;
         });
@@ -271,10 +304,10 @@ public final class LoadPlanService implements LoadPlanUseCase {
 
     private void requireVersion(LoadPlan current, Long version) {
         if (version == null) {
-            throw new BusinessRuleException("LOAD_PLAN_VERSION_REQUIRED", "Version is required for update");
+            throw new BusinessRuleException("LOAD_PLAN_VERSION_REQUIRED", "Version is required");
         }
         if (version != current.getVersion()) {
-            throw new ConflictException("LOAD_PLAN_CONCURRENT_UPDATE", "Load plan was changed by another user");
+            throw new ConflictException("LOAD_PLAN_STALE_VERSION", "Load plan was changed by another user");
         }
     }
 

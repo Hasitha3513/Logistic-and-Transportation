@@ -1,6 +1,7 @@
 package com.transportlogistics.app.freight.loadplanning.adapters.inbound.web.controllers;
 
 import com.transportlogistics.app.freight.loadplanning.adapters.inbound.web.dto.request.CreateLoadPlanRequest;
+import com.transportlogistics.app.freight.loadplanning.adapters.inbound.web.dto.request.MarkLoadPlanReadyRequest;
 import com.transportlogistics.app.freight.loadplanning.adapters.inbound.web.dto.request.UpdateLoadPlanRequest;
 import com.transportlogistics.app.freight.loadplanning.adapters.inbound.web.dto.response.LoadPlanResponse;
 import com.transportlogistics.app.freight.loadplanning.adapters.inbound.web.dto.response.LoadPlanValidationResponse;
@@ -63,6 +64,14 @@ public class LoadPlanController {
                                    Principal principal) {
         LoadPlan updated = loadPlanUseCase.update(id, mapper.toUpdateCommand(request), actor(principal));
         return mapper.toResponse(updated);
+    }
+
+    @PostMapping("/{id}/ready")
+    public LoadPlanResponse markReady(@PathVariable UUID id,
+                                      @Valid @RequestBody MarkLoadPlanReadyRequest request,
+                                      Principal principal) {
+        LoadPlan ready = loadPlanUseCase.markReady(id, request.version(), actor(principal));
+        return mapper.toResponse(ready);
     }
 
     @PostMapping("/{id}/validate-layout")

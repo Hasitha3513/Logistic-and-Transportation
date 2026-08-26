@@ -243,7 +243,7 @@ class SecurityConfig {
 
                         .requestMatchers(HttpMethod.GET, "/v1/freight/load-plans", "/v1/freight/load-plans/*")
                         .hasAuthority("LOAD_PLAN_VIEW")
-                        .requestMatchers(HttpMethod.POST, "/v1/freight/load-plans", "/v1/freight/load-plans/*/validate-layout", "/v1/freight/load-plans/*/validate-weight-volume")
+                        .requestMatchers(HttpMethod.POST, "/v1/freight/load-plans", "/v1/freight/load-plans/*/validate-layout", "/v1/freight/load-plans/*/validate-weight-volume", "/v1/freight/load-plans/*/ready")
                         .hasAuthority("LOAD_PLAN_MANAGE")
                         .requestMatchers(HttpMethod.PATCH, "/v1/freight/load-plans/*")
                         .hasAuthority("LOAD_PLAN_MANAGE")

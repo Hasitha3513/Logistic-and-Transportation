@@ -270,4 +270,103 @@ class LoadPlanServiceTest {
         assertThat(result.missingData()).contains("CARGO_ITEM_WEIGHT_DATA_MISSING", "CARGO_ITEM_DIMENSIONS_DATA_MISSING");
         assertThat(result.violations()).isNotEmpty();
     }
+
+    // ──────────────────────────────────────────────────────────
+    // US26-AC3 markReady Application Service Tests
+    // ──────────────────────────────────────────────────────────
+
+    @Test
+    @DisplayName("markReady succeeds when all structural checks pass, persists atomically, and publishes event")
+    void shouldMarkReadySuccessfully() {
+        UUID planId = UUID.randomUUID();
+        UUID manifestId = UUID.randomUUID();
+        UUID vehicleId = UUID.randomUUID();
+        UUID itemId = UUID.randomUUID();
+        OffsetDateTime now = OffsetDateTime.now(clock);
+
+        LoadPlan plan = new LoadPlan(
+                planId, "LP-001", manifestId, vehicleId,
+                List.of(new LoadPlanItemPlacement(UUID.randomUUID(), itemId, 0, "FRONT", "S1", "PALLET-1", 1, null)),
+                "notes", now, now, "user", "user", 0L
+        );
+
+        ManifestPlanningView manifest = new ManifestPlanningView(
+                manifestId, "CM-001", true, List.of(
+                new ManifestItemPlanningView(itemId, "Item 1", BigDecimal.ONE, "Box", "GEN", false, null, false, false)
+        )
+        );
+        VehiclePlanningView vehicle = new VehiclePlanningView(
+                vehicleId, "TRK-100", 10000.0, "AVAILABLE", true
+        );
+
+        when(repository.findById(planId)).thenReturn(Optional.of(plan));
+        when(manifestLookup.findManifest(manifestId)).thenReturn(Optional.of(manifest));
+        when(vehicleLookup.findVehicle(vehicleId)).thenReturn(Optional.of(vehicle));
+        when(repository.save(any(LoadPlan.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        LoadPlan readyPlan = service.markReady(planId, 0L, "lead-planner");
+
+        assertThat(readyPlan).isNotNull();
+        assertThat(readyPlan.getReadinessStatus()).isEqualTo(com.transportlogistics.app.freight.loadplanning.domain.LoadPlanReadinessStatus.STRUCTURALLY_READY);
+        assertThat(readyPlan.getReadyAt()).isEqualTo(now);
+        assertThat(readyPlan.getReadyBy()).isEqualTo("lead-planner");
+        assertThat(readyPlan.getUpdatedBy()).isEqualTo("lead-planner");
+
+        verify(eventPublisher).publishLoadPlanUpdated(any());
+        verify(repository).save(any(LoadPlan.class));
+    }
+
+    @Test
+    @DisplayName("markReady rejects stale version with 409 conflict")
+    void shouldRejectStaleVersionOnMarkReady() {
+        UUID planId = UUID.randomUUID();
+        OffsetDateTime now = OffsetDateTime.now(clock);
+
+        LoadPlan plan = new LoadPlan(
+                planId, "LP-001", UUID.randomUUID(), UUID.randomUUID(),
+                List.of(), "notes", now, now, "user", "user", 2L
+        );
+
+        when(repository.findById(planId)).thenReturn(Optional.of(plan));
+
+        assertThatThrownBy(() -> service.markReady(planId, 1L, "lead-planner"))
+                .isInstanceOf(ConflictException.class)
+                .hasMessageContaining("changed by another user");
+    }
+
+    @Test
+    @DisplayName("markReady rejects when structural violations exist and throws BusinessRuleException")
+    void shouldRejectMarkReadyWhenStructuralViolationsExist() {
+        UUID planId = UUID.randomUUID();
+        UUID manifestId = UUID.randomUUID();
+        UUID vehicleId = UUID.randomUUID();
+        UUID item1 = UUID.randomUUID();
+        UUID item2 = UUID.randomUUID();
+        OffsetDateTime now = OffsetDateTime.now(clock);
+
+        // Only item1 placed, item2 is unplaced
+        LoadPlan plan = new LoadPlan(
+                planId, "LP-001", manifestId, vehicleId,
+                List.of(new LoadPlanItemPlacement(UUID.randomUUID(), item1, 0, "FRONT", "S1", "PALLET-1", 1, null)),
+                "notes", now, now, "user", "user", 0L
+        );
+
+        ManifestPlanningView manifest = new ManifestPlanningView(
+                manifestId, "CM-001", true, List.of(
+                new ManifestItemPlanningView(item1, "Item 1", BigDecimal.ONE, "Box", "GEN", false, null, false, false),
+                new ManifestItemPlanningView(item2, "Item 2", BigDecimal.ONE, "Box", "GEN", false, null, false, false)
+        )
+        );
+        VehiclePlanningView vehicle = new VehiclePlanningView(
+                vehicleId, "TRK-100", 10000.0, "AVAILABLE", true
+        );
+
+        when(repository.findById(planId)).thenReturn(Optional.of(plan));
+        when(manifestLookup.findManifest(manifestId)).thenReturn(Optional.of(manifest));
+        when(vehicleLookup.findVehicle(vehicleId)).thenReturn(Optional.of(vehicle));
+
+        assertThatThrownBy(() -> service.markReady(planId, 0L, "lead-planner"))
+                .isInstanceOf(com.transportlogistics.app.shared.domain.BusinessRuleException.class)
+                .hasMessageContaining("ITEM_NOT_PLACED");
+    }
 }

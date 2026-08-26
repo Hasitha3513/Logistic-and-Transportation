@@ -1,8 +1,11 @@
 package com.transportlogistics.app.freight.loadplanning.adapters.outbound.persistence;
 
+import com.transportlogistics.app.freight.loadplanning.domain.LoadPlanReadinessStatus;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
@@ -34,6 +37,16 @@ public class LoadPlanEntity {
 
     @Column(name = "notes", length = 2000)
     private String notes;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "readiness_status", nullable = false, length = 40)
+    private LoadPlanReadinessStatus readinessStatus = LoadPlanReadinessStatus.DRAFT;
+
+    @Column(name = "ready_at")
+    private OffsetDateTime readyAt;
+
+    @Column(name = "ready_by", length = 128)
+    private String readyBy;
 
     @Version
     @Column(name = "version", nullable = false)
@@ -81,6 +94,15 @@ public class LoadPlanEntity {
 
     public String getNotes() { return notes; }
     public void setNotes(String notes) { this.notes = notes; }
+
+    public LoadPlanReadinessStatus getReadinessStatus() { return readinessStatus; }
+    public void setReadinessStatus(LoadPlanReadinessStatus readinessStatus) { this.readinessStatus = readinessStatus; }
+
+    public OffsetDateTime getReadyAt() { return readyAt; }
+    public void setReadyAt(OffsetDateTime readyAt) { this.readyAt = readyAt; }
+
+    public String getReadyBy() { return readyBy; }
+    public void setReadyBy(String readyBy) { this.readyBy = readyBy; }
 
     public long getVersion() { return version; }
     public void setVersion(long version) { this.version = version; }
