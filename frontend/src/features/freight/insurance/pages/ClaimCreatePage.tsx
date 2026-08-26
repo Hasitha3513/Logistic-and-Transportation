@@ -1,6 +1,8 @@
 import React from 'react';
 import { Button, Card, Col, DatePicker, Form, Input, InputNumber, Row, Typography, message } from 'antd';
 import { ArrowLeftOutlined, SaveOutlined } from '@ant-design/icons';
+import { isAxiosError } from 'axios';
+import type { Dayjs } from 'dayjs';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useCreateClaim } from '../hooks/useInsurance';
 import { CreateClaimPayload } from '../types/insurance';
@@ -8,15 +10,23 @@ import { CreateClaimPayload } from '../types/insurance';
 const { Title, Text } = Typography;
 const { TextArea } = Input;
 
+interface ClaimCreateFormValues {
+  policyId: string;
+  incidentDate: Dayjs;
+  description: string;
+  claimedAmount: number;
+  currencyCode: string;
+}
+
 export const ClaimCreatePage: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const [form] = Form.useForm();
+  const [form] = Form.useForm<ClaimCreateFormValues>();
   const createClaimMutation = useCreateClaim();
 
   const defaultPolicyId = searchParams.get('policyId') || '';
 
-  const handleSubmit = async (values: any) => {
+  const handleSubmit = async (values: ClaimCreateFormValues) => {
     try {
       const payload: CreateClaimPayload = {
         policyId: values.policyId,
@@ -29,8 +39,10 @@ export const ClaimCreatePage: React.FC = () => {
       const result = await createClaimMutation.mutateAsync(payload);
       message.success('Insurance claim filed successfully');
       navigate(`/freight/insurance/claims/${result.id}`);
-    } catch (err: any) {
-      const msg = err.response?.data?.message || 'Failed to file claim';
+    } catch (err: unknown) {
+      const msg = isAxiosError<{ message?: string }>(err)
+        ? err.response?.data?.message ?? 'Failed to file claim'
+        : 'Failed to file claim';
       message.error(msg);
     }
   };

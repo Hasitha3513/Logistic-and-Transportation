@@ -94,7 +94,9 @@ class LoadPlanPersistenceIntegrationTest {
                 null,
                 false,
                 null,
-                null
+                null,
+                false,
+                false
         );
         var added = manifests.addItem(manifestId, item, "planner");
         manifestItemId = added.items().getFirst().id();

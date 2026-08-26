@@ -2,6 +2,7 @@ package com.transportlogistics.app.freight.loadplanning.domain;
 
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -118,16 +119,21 @@ public final class LoadPlan {
     // ──────────────────────────────────────────────────────────
 
     /**
-     * Validates the load plan against the set of manifest item IDs that should
-     * be placed, and checks structural placement rules.
+     * Validates the load plan against the manifest-owned facts of cargo items,
+     * enforcing structured fragile, temperature-sensitive, hazardous, stacking,
+     * and sequence rules.
      *
-     * @param manifestItemIds the complete set of manifest item IDs from the finalized manifest
-     * @param hazardousItemIds set of manifest item IDs flagged as hazardous
+     * @param manifestItems collection of planning facts for each manifested item
      * @return list of violations; empty means structurally valid
      */
-    public List<LoadPlanViolation> validate(Set<UUID> manifestItemIds,
-                                            Set<UUID> hazardousItemIds) {
+    public List<LoadPlanViolation> validate(Collection<ManifestItemFact> manifestItems) {
         List<LoadPlanViolation> violations = new ArrayList<>();
+        if (manifestItems == null) {
+            return Collections.emptyList();
+        }
+
+        Map<UUID, ManifestItemFact> manifestItemMap = manifestItems.stream()
+                .collect(Collectors.toMap(ManifestItemFact::itemId, f -> f, (a, b) -> a));
 
         Set<UUID> placedItemIds = new HashSet<>();
 
@@ -141,21 +147,27 @@ public final class LoadPlan {
             }
         }
 
-        // Check all manifest items are placed
-        for (UUID itemId : manifestItemIds) {
-            if (!placedItemIds.contains(itemId)) {
+        // Check all manifest items are placed and classifications are known
+        for (ManifestItemFact item : manifestItems) {
+            if (!placedItemIds.contains(item.itemId())) {
                 violations.add(new LoadPlanViolation(
                         LoadPlanViolationCode.ITEM_NOT_PLACED,
-                        "Manifest item " + itemId + " has not been placed"
+                        "Manifest item " + item.itemId() + " has not been placed"
+                ));
+            }
+            if (item.fragile() == null || item.temperatureSensitive() == null) {
+                violations.add(new LoadPlanViolation(
+                        LoadPlanViolationCode.LOAD_PLAN_SPECIAL_CARGO_CLASSIFICATION_MISSING,
+                        "Manifest item " + item.itemId() + " has unknown special cargo classification"
                 ));
             }
         }
 
-        // Check stacking conflicts — items in the same stack group should be compatible
-        validateStackingRules(violations, hazardousItemIds);
+        // Check stacking conflicts — fragile separation and hazardous separation
+        validateStackingRules(violations, manifestItemMap);
 
-        // Check compatibility — hazardous items should not share zones with non-hazardous unless explicitly noted
-        validateCompatibility(violations, hazardousItemIds);
+        // Check compatibility — temperature-sensitive separation and hazardous separation
+        validateCompatibility(violations, manifestItemMap);
 
         // Check loading sequence validity
         validateLoadingSequence(violations);
@@ -163,30 +175,51 @@ public final class LoadPlan {
         return Collections.unmodifiableList(violations);
     }
 
+    /**
+     * Backward-compatible delegation for callers supplying item IDs and hazardous flags.
+     */
+    public List<LoadPlanViolation> validate(Set<UUID> manifestItemIds,
+                                            Set<UUID> hazardousItemIds) {
+        List<ManifestItemFact> facts = manifestItemIds.stream()
+                .map(id -> new ManifestItemFact(id, hazardousItemIds != null && hazardousItemIds.contains(id), false, false))
+                .toList();
+        return validate(facts);
+    }
+
     private void validateStackingRules(List<LoadPlanViolation> violations,
-                                       Set<UUID> hazardousItemIds) {
-        // Group placements by stack group
+                                       Map<UUID, ManifestItemFact> manifestItemMap) {
         Map<String, List<LoadPlanItemPlacement>> stackGroups = placements.stream()
                 .filter(p -> p.stackGroup() != null && !p.stackGroup().isBlank())
                 .collect(Collectors.groupingBy(LoadPlanItemPlacement::stackGroup));
 
         for (Map.Entry<String, List<LoadPlanItemPlacement>> entry : stackGroups.entrySet()) {
             List<LoadPlanItemPlacement> group = entry.getValue();
-            // Items requiring special handling (fragile) should not be stacked with other items
-            for (LoadPlanItemPlacement placement : group) {
-                if (hasSpecialHandling(placement, "FRAGILE") && group.size() > 1) {
-                    violations.add(new LoadPlanViolation(
-                            LoadPlanViolationCode.FRAGILE_SEPARATION_REQUIRED,
-                            "Fragile item " + placement.manifestItemId()
-                                    + " in stack group '" + entry.getKey() + "' requires separation"
-                    ));
+
+            // Fragile rule: fragile items must not share a nonblank stack group with any other placement
+            if (group.size() > 1) {
+                for (LoadPlanItemPlacement placement : group) {
+                    ManifestItemFact fact = manifestItemMap.get(placement.manifestItemId());
+                    if (fact != null && Boolean.TRUE.equals(fact.fragile())) {
+                        violations.add(new LoadPlanViolation(
+                                LoadPlanViolationCode.LOAD_PLAN_FRAGILE_RULE_FAILED,
+                                "Fragile item " + placement.manifestItemId()
+                                        + " in stack group '" + entry.getKey() + "' must not share a stack group with other cargo"
+                        ));
+                    }
                 }
             }
+
             // Hazardous items should not be stacked with non-hazardous
             boolean hasHazardous = group.stream()
-                    .anyMatch(p -> hazardousItemIds.contains(p.manifestItemId()));
+                    .anyMatch(p -> {
+                        ManifestItemFact fact = manifestItemMap.get(p.manifestItemId());
+                        return fact != null && fact.hazardous();
+                    });
             boolean hasNonHazardous = group.stream()
-                    .anyMatch(p -> !hazardousItemIds.contains(p.manifestItemId()));
+                    .anyMatch(p -> {
+                        ManifestItemFact fact = manifestItemMap.get(p.manifestItemId());
+                        return fact == null || !fact.hazardous();
+                    });
             if (hasHazardous && hasNonHazardous) {
                 violations.add(new LoadPlanViolation(
                         LoadPlanViolationCode.STACKING_CONFLICT,
@@ -198,19 +231,40 @@ public final class LoadPlan {
     }
 
     private void validateCompatibility(List<LoadPlanViolation> violations,
-                                        Set<UUID> hazardousItemIds) {
-        // Group placements by zone
+                                        Map<UUID, ManifestItemFact> manifestItemMap) {
+        // Temperature-sensitive rule: temperature-sensitive item requires non-blank zoneReference
+        for (LoadPlanItemPlacement placement : placements) {
+            ManifestItemFact fact = manifestItemMap.get(placement.manifestItemId());
+            if (fact != null && Boolean.TRUE.equals(fact.temperatureSensitive())) {
+                if (placement.zoneReference() == null || placement.zoneReference().isBlank()) {
+                    violations.add(new LoadPlanViolation(
+                            LoadPlanViolationCode.LOAD_PLAN_TEMPERATURE_RULE_FAILED,
+                            "Temperature-sensitive item " + placement.manifestItemId()
+                                    + " requires a designated zone reference"
+                    ));
+                }
+            }
+        }
+
+        // Group placements by non-blank zone
         Map<String, List<LoadPlanItemPlacement>> zones = placements.stream()
                 .filter(p -> p.zoneReference() != null && !p.zoneReference().isBlank())
                 .collect(Collectors.groupingBy(LoadPlanItemPlacement::zoneReference));
 
         for (Map.Entry<String, List<LoadPlanItemPlacement>> entry : zones.entrySet()) {
             List<LoadPlanItemPlacement> zonePlacements = entry.getValue();
+
             // Hazardous and non-hazardous should not share a zone
             boolean hasHazardous = zonePlacements.stream()
-                    .anyMatch(p -> hazardousItemIds.contains(p.manifestItemId()));
+                    .anyMatch(p -> {
+                        ManifestItemFact fact = manifestItemMap.get(p.manifestItemId());
+                        return fact != null && fact.hazardous();
+                    });
             boolean hasNonHazardous = zonePlacements.stream()
-                    .anyMatch(p -> !hazardousItemIds.contains(p.manifestItemId()));
+                    .anyMatch(p -> {
+                        ManifestItemFact fact = manifestItemMap.get(p.manifestItemId());
+                        return fact == null || !fact.hazardous();
+                    });
             if (hasHazardous && hasNonHazardous) {
                 violations.add(new LoadPlanViolation(
                         LoadPlanViolationCode.COMPATIBILITY_CONFLICT,
@@ -219,14 +273,20 @@ public final class LoadPlan {
                 ));
             }
 
-            // Temperature-sensitive items should not share zones with items lacking temp handling
+            // Temperature-sensitive rule: temperature-sensitive and standard cargo must not share a zone
             boolean hasTempSensitive = zonePlacements.stream()
-                    .anyMatch(p -> hasSpecialHandling(p, "TEMPERATURE"));
+                    .anyMatch(p -> {
+                        ManifestItemFact fact = manifestItemMap.get(p.manifestItemId());
+                        return fact != null && Boolean.TRUE.equals(fact.temperatureSensitive());
+                    });
             boolean hasNonTemp = zonePlacements.stream()
-                    .anyMatch(p -> !hasSpecialHandling(p, "TEMPERATURE"));
+                    .anyMatch(p -> {
+                        ManifestItemFact fact = manifestItemMap.get(p.manifestItemId());
+                        return fact == null || !Boolean.TRUE.equals(fact.temperatureSensitive());
+                    });
             if (hasTempSensitive && hasNonTemp) {
                 violations.add(new LoadPlanViolation(
-                        LoadPlanViolationCode.TEMPERATURE_SEPARATION_REQUIRED,
+                        LoadPlanViolationCode.LOAD_PLAN_TEMPERATURE_RULE_FAILED,
                         "Zone '" + entry.getKey()
                                 + "' mixes temperature-sensitive and standard cargo"
                 ));
@@ -245,13 +305,5 @@ public final class LoadPlan {
                 ));
             }
         }
-    }
-
-    /**
-     * Checks if a placement's special handling notes contain a keyword (case-insensitive).
-     */
-    private static boolean hasSpecialHandling(LoadPlanItemPlacement placement, String keyword) {
-        return placement.specialHandlingNotes() != null
-                && placement.specialHandlingNotes().toUpperCase().contains(keyword.toUpperCase());
     }
 }

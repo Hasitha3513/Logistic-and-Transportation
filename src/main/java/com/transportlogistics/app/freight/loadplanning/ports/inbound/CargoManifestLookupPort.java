@@ -17,8 +17,23 @@ public interface CargoManifestLookupPort {
             String packingInformation,
             String commodityClassification,
             boolean hazardous,
-            String hazardousClassification
-    ) {}
+            String hazardousClassification,
+            Boolean fragile,
+            Boolean temperatureSensitive
+    ) {
+        public ManifestItemPlanningView(
+                UUID itemId,
+                String description,
+                BigDecimal quantity,
+                String packingInformation,
+                String commodityClassification,
+                boolean hazardous,
+                String hazardousClassification
+        ) {
+            this(itemId, description, quantity, packingInformation, commodityClassification,
+                    hazardous, hazardousClassification, null, null);
+        }
+    }
 
     record ManifestPlanningView(
             UUID manifestId,

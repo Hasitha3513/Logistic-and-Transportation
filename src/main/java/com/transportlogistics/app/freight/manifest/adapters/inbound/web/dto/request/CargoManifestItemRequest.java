@@ -6,4 +6,4 @@ public record CargoManifestItemRequest(@NotNull @PositiveOrZero Long version,@No
  @NotBlank @Size(max=120) @Pattern(regexp="[A-Za-z0-9][A-Za-z0-9_.-]*") String commodityClassification,
  boolean customsApplicable,@Size(max=1000) String customsInformation,boolean hazardous,
  @Size(max=120) @Pattern(regexp="[A-Za-z0-9][A-Za-z0-9_.-]*") String hazardousClassification,
- @Size(max=1000) String hazardousDetails) { }
+ @Size(max=1000) String hazardousDetails,Boolean fragile,Boolean temperatureSensitive) { }

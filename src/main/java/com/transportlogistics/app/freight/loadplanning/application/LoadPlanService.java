@@ -3,6 +3,7 @@ package com.transportlogistics.app.freight.loadplanning.application;
 import com.transportlogistics.app.freight.loadplanning.domain.LoadPlan;
 import com.transportlogistics.app.freight.loadplanning.domain.LoadPlanItemPlacement;
 import com.transportlogistics.app.freight.loadplanning.domain.LoadPlanViolation;
+import com.transportlogistics.app.freight.loadplanning.domain.ManifestItemFact;
 import com.transportlogistics.app.freight.loadplanning.domain.LoadValidationResult;
 import com.transportlogistics.app.freight.loadplanning.domain.LoadValidationViolation;
 import com.transportlogistics.app.freight.loadplanning.domain.ValidationOutcome;
@@ -158,16 +159,11 @@ public final class LoadPlanService implements LoadPlanUseCase {
         LoadPlan loadPlan = get(id);
         ManifestPlanningView manifest = getAndValidateManifest(loadPlan.getCargoManifestId());
 
-        Set<UUID> allManifestItemIds = manifest.items().stream()
-                .map(ManifestItemPlanningView::itemId)
-                .collect(Collectors.toSet());
+        List<ManifestItemFact> itemFacts = manifest.items().stream()
+                .map(i -> new ManifestItemFact(i.itemId(), i.hazardous(), i.fragile(), i.temperatureSensitive()))
+                .toList();
 
-        Set<UUID> hazardousItemIds = manifest.items().stream()
-                .filter(ManifestItemPlanningView::hazardous)
-                .map(ManifestItemPlanningView::itemId)
-                .collect(Collectors.toSet());
-
-        return loadPlan.validate(allManifestItemIds, hazardousItemIds);
+        return loadPlan.validate(itemFacts);
     }
 
     @Override

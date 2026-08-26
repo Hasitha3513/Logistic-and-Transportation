@@ -86,10 +86,15 @@ class LoadPlanDomainTest {
                 0L
         );
 
-        List<LoadPlanViolation> violations = plan.validate(Set.of(item1, item2), Set.of());
+        List<ManifestItemFact> facts = List.of(
+                new ManifestItemFact(item1, false, false, false),
+                new ManifestItemFact(item2, false, false, false)
+        );
+
+        List<LoadPlanViolation> violations = plan.validate(facts);
         assertThat(violations).hasSize(1);
-        assertThat(violations.get(0).code()).isEqualTo(LoadPlanViolationCode.ITEM_NOT_PLACED);
-        assertThat(violations.get(0).message()).contains(item2.toString());
+        assertThat(violations.getFirst().code()).isEqualTo(LoadPlanViolationCode.ITEM_NOT_PLACED);
+        assertThat(violations.getFirst().message()).contains(item2.toString());
     }
 
     @Test
@@ -115,9 +120,355 @@ class LoadPlanDomainTest {
                 0L
         );
 
-        List<LoadPlanViolation> violations = plan.validate(Set.of(item1), Set.of());
+        List<ManifestItemFact> facts = List.of(
+                new ManifestItemFact(item1, false, false, false)
+        );
+
+        List<LoadPlanViolation> violations = plan.validate(facts);
         assertThat(violations).anyMatch(v -> v.code() == LoadPlanViolationCode.DUPLICATE_PLACEMENT);
     }
+
+    @Test
+    @DisplayName("Validates load plan layout: reports unknown special cargo classification")
+    void shouldReportUnknownSpecialCargoClassification() {
+        UUID item1 = UUID.randomUUID();
+        UUID item2 = UUID.randomUUID();
+        OffsetDateTime now = OffsetDateTime.now();
+
+        LoadPlan plan = new LoadPlan(
+                UUID.randomUUID(),
+                "LP-001",
+                UUID.randomUUID(),
+                UUID.randomUUID(),
+                List.of(
+                        new LoadPlanItemPlacement(UUID.randomUUID(), item1, 0, "FRONT", null, null, 1, null),
+                        new LoadPlanItemPlacement(UUID.randomUUID(), item2, 1, "REAR", null, null, 2, null)
+                ),
+                null,
+                now,
+                now,
+                "admin",
+                "admin",
+                0L
+        );
+
+        List<ManifestItemFact> facts = List.of(
+                new ManifestItemFact(item1, false, null, false),
+                new ManifestItemFact(item2, false, false, null)
+        );
+
+        List<LoadPlanViolation> violations = plan.validate(facts);
+        assertThat(violations)
+                .filteredOn(v -> v.code() == LoadPlanViolationCode.LOAD_PLAN_SPECIAL_CARGO_CLASSIFICATION_MISSING)
+                .hasSize(2);
+    }
+
+    @Test
+    @DisplayName("Validates load plan layout: fragile item in shared stack group fails fragile rule")
+    void shouldReportFragileRuleFailedOnSharedStackGroup() {
+        UUID item1 = UUID.randomUUID(); // fragile
+        UUID item2 = UUID.randomUUID(); // standard
+        OffsetDateTime now = OffsetDateTime.now();
+
+        LoadPlan plan = new LoadPlan(
+                UUID.randomUUID(),
+                "LP-001",
+                UUID.randomUUID(),
+                UUID.randomUUID(),
+                List.of(
+                        new LoadPlanItemPlacement(UUID.randomUUID(), item1, 0, "FRONT", "STACK-B", null, 1, null),
+                        new LoadPlanItemPlacement(UUID.randomUUID(), item2, 1, "FRONT", "STACK-B", null, 2, null)
+                ),
+                null,
+                now,
+                now,
+                "admin",
+                "admin",
+                0L
+        );
+
+        List<ManifestItemFact> facts = List.of(
+                new ManifestItemFact(item1, false, true, false),
+                new ManifestItemFact(item2, false, false, false)
+        );
+
+        List<LoadPlanViolation> violations = plan.validate(facts);
+        assertThat(violations).anyMatch(v -> v.code() == LoadPlanViolationCode.LOAD_PLAN_FRAGILE_RULE_FAILED);
+    }
+
+    @Test
+    @DisplayName("Validates load plan layout: fragile item with unique or no stack group passes fragile rule")
+    void shouldPassFragileWithUniqueOrNoStackGroup() {
+        UUID item1 = UUID.randomUUID(); // fragile, no stackGroup
+        UUID item2 = UUID.randomUUID(); // fragile, unique stackGroup
+        UUID item3 = UUID.randomUUID(); // standard
+        UUID item4 = UUID.randomUUID(); // standard, sharing stackGroup with item3
+        OffsetDateTime now = OffsetDateTime.now();
+
+        LoadPlan plan = new LoadPlan(
+                UUID.randomUUID(),
+                "LP-001",
+                UUID.randomUUID(),
+                UUID.randomUUID(),
+                List.of(
+                        new LoadPlanItemPlacement(UUID.randomUUID(), item1, 0, "FRONT", null, null, 1, null),
+                        new LoadPlanItemPlacement(UUID.randomUUID(), item2, 1, "FRONT", "STACK-FRAGILE-SOLO", null, 2, null),
+                        new LoadPlanItemPlacement(UUID.randomUUID(), item3, 2, "REAR", "STACK-SHARED-STD", null, 3, null),
+                        new LoadPlanItemPlacement(UUID.randomUUID(), item4, 3, "REAR", "STACK-SHARED-STD", null, 4, null)
+                ),
+                null,
+                now,
+                now,
+                "admin",
+                "admin",
+                0L
+        );
+
+        List<ManifestItemFact> facts = List.of(
+                new ManifestItemFact(item1, false, true, false),
+                new ManifestItemFact(item2, false, true, false),
+                new ManifestItemFact(item3, false, false, false),
+                new ManifestItemFact(item4, false, false, false)
+        );
+
+        List<LoadPlanViolation> violations = plan.validate(facts);
+        assertThat(violations).noneMatch(v -> v.code() == LoadPlanViolationCode.LOAD_PLAN_FRAGILE_RULE_FAILED);
+    }
+
+    @Test
+    @DisplayName("Validates load plan layout: temperature-sensitive item requires non-blank zoneReference")
+    void shouldReportTemperatureRuleFailedWhenMissingZoneReference() {
+        UUID item1 = UUID.randomUUID(); // temperature-sensitive
+        OffsetDateTime now = OffsetDateTime.now();
+
+        LoadPlan plan = new LoadPlan(
+                UUID.randomUUID(),
+                "LP-001",
+                UUID.randomUUID(),
+                UUID.randomUUID(),
+                List.of(
+                        new LoadPlanItemPlacement(UUID.randomUUID(), item1, 0, null, null, null, 1, null)
+                ),
+                null,
+                now,
+                now,
+                "admin",
+                "admin",
+                0L
+        );
+
+        List<ManifestItemFact> facts = List.of(
+                new ManifestItemFact(item1, false, false, true)
+        );
+
+        List<LoadPlanViolation> violations = plan.validate(facts);
+        assertThat(violations).anyMatch(v -> v.code() == LoadPlanViolationCode.LOAD_PLAN_TEMPERATURE_RULE_FAILED);
+    }
+
+    @Test
+    @DisplayName("Validates load plan layout: temperature-sensitive and standard cargo sharing zone fails temperature rule")
+    void shouldReportTemperatureRuleFailedOnMixedZone() {
+        UUID item1 = UUID.randomUUID(); // temperature-sensitive
+        UUID item2 = UUID.randomUUID(); // standard cargo
+        OffsetDateTime now = OffsetDateTime.now();
+
+        LoadPlan plan = new LoadPlan(
+                UUID.randomUUID(),
+                "LP-001",
+                UUID.randomUUID(),
+                UUID.randomUUID(),
+                List.of(
+                        new LoadPlanItemPlacement(UUID.randomUUID(), item1, 0, "REEFER-ZONE", null, null, 1, null),
+                        new LoadPlanItemPlacement(UUID.randomUUID(), item2, 1, "REEFER-ZONE", null, null, 2, null)
+                ),
+                null,
+                now,
+                now,
+                "admin",
+                "admin",
+                0L
+        );
+
+        List<ManifestItemFact> facts = List.of(
+                new ManifestItemFact(item1, false, false, true),
+                new ManifestItemFact(item2, false, false, false)
+        );
+
+        List<LoadPlanViolation> violations = plan.validate(facts);
+        assertThat(violations).anyMatch(v -> v.code() == LoadPlanViolationCode.LOAD_PLAN_TEMPERATURE_RULE_FAILED);
+    }
+
+    @Test
+    @DisplayName("Validates load plan layout: dedicated temperature-sensitive zone passes")
+    void shouldPassDedicatedTemperatureZone() {
+        UUID item1 = UUID.randomUUID(); // temperature-sensitive
+        UUID item2 = UUID.randomUUID(); // temperature-sensitive
+        UUID item3 = UUID.randomUUID(); // standard
+        OffsetDateTime now = OffsetDateTime.now();
+
+        LoadPlan plan = new LoadPlan(
+                UUID.randomUUID(),
+                "LP-001",
+                UUID.randomUUID(),
+                UUID.randomUUID(),
+                List.of(
+                        new LoadPlanItemPlacement(UUID.randomUUID(), item1, 0, "REEFER-ZONE", null, null, 1, null),
+                        new LoadPlanItemPlacement(UUID.randomUUID(), item2, 1, "REEFER-ZONE", null, null, 2, null),
+                        new LoadPlanItemPlacement(UUID.randomUUID(), item3, 2, "AMBIENT-ZONE", null, null, 3, null)
+                ),
+                null,
+                now,
+                now,
+                "admin",
+                "admin",
+                0L
+        );
+
+        List<ManifestItemFact> facts = List.of(
+                new ManifestItemFact(item1, false, false, true),
+                new ManifestItemFact(item2, false, false, true),
+                new ManifestItemFact(item3, false, false, false)
+        );
+
+        List<LoadPlanViolation> violations = plan.validate(facts);
+        assertThat(violations).isEmpty();
+    }
+
+    // ──────────────────────────────────────────────────────────
+    // Mandatory Free-Text Regression Tests (Section 18)
+    // ──────────────────────────────────────────────────────────
+
+    @Test
+    @DisplayName("Regression Case A: fragile=false with notes='FRAGILE' is NOT fragile")
+    void shouldNotTreatNotesAsFragileWhenStructuredFalse() {
+        UUID item1 = UUID.randomUUID();
+        UUID item2 = UUID.randomUUID();
+        OffsetDateTime now = OffsetDateTime.now();
+
+        LoadPlan plan = new LoadPlan(
+                UUID.randomUUID(),
+                "LP-001",
+                UUID.randomUUID(),
+                UUID.randomUUID(),
+                List.of(
+                        new LoadPlanItemPlacement(UUID.randomUUID(), item1, 0, "FRONT", "STACK-1", null, 1, "FRAGILE GLASSWARE"),
+                        new LoadPlanItemPlacement(UUID.randomUUID(), item2, 1, "FRONT", "STACK-1", null, 2, null)
+                ),
+                null,
+                now,
+                now,
+                "admin",
+                "admin",
+                0L
+        );
+
+        List<ManifestItemFact> facts = List.of(
+                new ManifestItemFact(item1, false, false, false),
+                new ManifestItemFact(item2, false, false, false)
+        );
+
+        List<LoadPlanViolation> violations = plan.validate(facts);
+        assertThat(violations).noneMatch(v -> v.code() == LoadPlanViolationCode.LOAD_PLAN_FRAGILE_RULE_FAILED);
+    }
+
+    @Test
+    @DisplayName("Regression Case B: fragile=true with empty notes enforces fragile rule")
+    void shouldEnforceFragileRuleWhenNotesEmpty() {
+        UUID item1 = UUID.randomUUID();
+        UUID item2 = UUID.randomUUID();
+        OffsetDateTime now = OffsetDateTime.now();
+
+        LoadPlan plan = new LoadPlan(
+                UUID.randomUUID(),
+                "LP-001",
+                UUID.randomUUID(),
+                UUID.randomUUID(),
+                List.of(
+                        new LoadPlanItemPlacement(UUID.randomUUID(), item1, 0, "FRONT", "STACK-1", null, 1, ""),
+                        new LoadPlanItemPlacement(UUID.randomUUID(), item2, 1, "FRONT", "STACK-1", null, 2, null)
+                ),
+                null,
+                now,
+                now,
+                "admin",
+                "admin",
+                0L
+        );
+
+        List<ManifestItemFact> facts = List.of(
+                new ManifestItemFact(item1, false, true, false),
+                new ManifestItemFact(item2, false, false, false)
+        );
+
+        List<LoadPlanViolation> violations = plan.validate(facts);
+        assertThat(violations).anyMatch(v -> v.code() == LoadPlanViolationCode.LOAD_PLAN_FRAGILE_RULE_FAILED);
+    }
+
+    @Test
+    @DisplayName("Regression Case C: temperatureSensitive=false with notes='TEMPERATURE CONTROLLED' is NOT temperature-sensitive")
+    void shouldNotTreatNotesAsTemperatureWhenStructuredFalse() {
+        UUID item1 = UUID.randomUUID();
+        OffsetDateTime now = OffsetDateTime.now();
+
+        // No zoneReference provided
+        LoadPlan plan = new LoadPlan(
+                UUID.randomUUID(),
+                "LP-001",
+                UUID.randomUUID(),
+                UUID.randomUUID(),
+                List.of(
+                        new LoadPlanItemPlacement(UUID.randomUUID(), item1, 0, null, null, null, 1, "TEMPERATURE CONTROLLED REQUIRED")
+                ),
+                null,
+                now,
+                now,
+                "admin",
+                "admin",
+                0L
+        );
+
+        List<ManifestItemFact> facts = List.of(
+                new ManifestItemFact(item1, false, false, false)
+        );
+
+        List<LoadPlanViolation> violations = plan.validate(facts);
+        assertThat(violations).noneMatch(v -> v.code() == LoadPlanViolationCode.LOAD_PLAN_TEMPERATURE_RULE_FAILED);
+    }
+
+    @Test
+    @DisplayName("Regression Case D: temperatureSensitive=true with empty notes enforces temperature rule")
+    void shouldEnforceTemperatureRuleWhenNotesEmpty() {
+        UUID item1 = UUID.randomUUID();
+        OffsetDateTime now = OffsetDateTime.now();
+
+        // No zoneReference provided
+        LoadPlan plan = new LoadPlan(
+                UUID.randomUUID(),
+                "LP-001",
+                UUID.randomUUID(),
+                UUID.randomUUID(),
+                List.of(
+                        new LoadPlanItemPlacement(UUID.randomUUID(), item1, 0, null, null, null, 1, "")
+                ),
+                null,
+                now,
+                now,
+                "admin",
+                "admin",
+                0L
+        );
+
+        List<ManifestItemFact> facts = List.of(
+                new ManifestItemFact(item1, false, false, true)
+        );
+
+        List<LoadPlanViolation> violations = plan.validate(facts);
+        assertThat(violations).anyMatch(v -> v.code() == LoadPlanViolationCode.LOAD_PLAN_TEMPERATURE_RULE_FAILED);
+    }
+
+    // ──────────────────────────────────────────────────────────
+    // Hazardous Stacking and Zone Compatibility Tests
+    // ──────────────────────────────────────────────────────────
 
     @Test
     @DisplayName("Validates load plan layout: reports stacking conflict when mixing hazardous and non-hazardous")
@@ -143,40 +494,17 @@ class LoadPlanDomainTest {
                 0L
         );
 
-        List<LoadPlanViolation> violations = plan.validate(Set.of(item1, item2), Set.of(item1));
+        List<ManifestItemFact> facts = List.of(
+                new ManifestItemFact(item1, true, false, false),
+                new ManifestItemFact(item2, false, false, false)
+        );
+
+        List<LoadPlanViolation> violations = plan.validate(facts);
         assertThat(violations).anyMatch(v -> v.code() == LoadPlanViolationCode.STACKING_CONFLICT);
     }
 
     @Test
-    @DisplayName("Validates load plan layout: reports fragile separation required in multi-item stack")
-    void shouldReportFragileSeparationRequired() {
-        UUID item1 = UUID.randomUUID();
-        UUID item2 = UUID.randomUUID();
-        OffsetDateTime now = OffsetDateTime.now();
-
-        LoadPlan plan = new LoadPlan(
-                UUID.randomUUID(),
-                "LP-001",
-                UUID.randomUUID(),
-                UUID.randomUUID(),
-                List.of(
-                        new LoadPlanItemPlacement(UUID.randomUUID(), item1, 0, "FRONT", "STACK-B", null, 1, "Fragile glassware"),
-                        new LoadPlanItemPlacement(UUID.randomUUID(), item2, 1, "FRONT", "STACK-B", null, 2, null)
-                ),
-                null,
-                now,
-                now,
-                "admin",
-                "admin",
-                0L
-        );
-
-        List<LoadPlanViolation> violations = plan.validate(Set.of(item1, item2), Set.of());
-        assertThat(violations).anyMatch(v -> v.code() == LoadPlanViolationCode.FRAGILE_SEPARATION_REQUIRED);
-    }
-
-    @Test
-    @DisplayName("Validates load plan layout: reports compatibility conflict in same zone")
+    @DisplayName("Validates load plan layout: reports compatibility conflict in same zone for hazardous")
     void shouldReportZoneCompatibilityConflict() {
         UUID item1 = UUID.randomUUID(); // hazardous
         UUID item2 = UUID.randomUUID(); // non-hazardous
@@ -199,8 +527,46 @@ class LoadPlanDomainTest {
                 0L
         );
 
-        List<LoadPlanViolation> violations = plan.validate(Set.of(item1, item2), Set.of(item1));
+        List<ManifestItemFact> facts = List.of(
+                new ManifestItemFact(item1, true, false, false),
+                new ManifestItemFact(item2, false, false, false)
+        );
+
+        List<LoadPlanViolation> violations = plan.validate(facts);
         assertThat(violations).anyMatch(v -> v.code() == LoadPlanViolationCode.COMPATIBILITY_CONFLICT);
+    }
+
+    @Test
+    @DisplayName("Validates load plan layout: reports duplicate loading sequence")
+    void shouldReportDuplicateLoadingSequence() {
+        UUID item1 = UUID.randomUUID();
+        UUID item2 = UUID.randomUUID();
+        OffsetDateTime now = OffsetDateTime.now();
+
+        LoadPlan plan = new LoadPlan(
+                UUID.randomUUID(),
+                "LP-001",
+                UUID.randomUUID(),
+                UUID.randomUUID(),
+                List.of(
+                        new LoadPlanItemPlacement(UUID.randomUUID(), item1, 0, "ZONE-1", null, null, 1, null),
+                        new LoadPlanItemPlacement(UUID.randomUUID(), item2, 1, "ZONE-2", null, null, 1, null)
+                ),
+                null,
+                now,
+                now,
+                "admin",
+                "admin",
+                0L
+        );
+
+        List<ManifestItemFact> facts = List.of(
+                new ManifestItemFact(item1, false, false, false),
+                new ManifestItemFact(item2, false, false, false)
+        );
+
+        List<LoadPlanViolation> violations = plan.validate(facts);
+        assertThat(violations).anyMatch(v -> v.code() == LoadPlanViolationCode.INVALID_LOADING_SEQUENCE);
     }
 
     @Test
@@ -227,7 +593,12 @@ class LoadPlanDomainTest {
                 0L
         );
 
-        List<LoadPlanViolation> violations = plan.validate(Set.of(item1, item2), Set.of(item1));
+        List<ManifestItemFact> facts = List.of(
+                new ManifestItemFact(item1, true, false, false),
+                new ManifestItemFact(item2, false, false, false)
+        );
+
+        List<LoadPlanViolation> violations = plan.validate(facts);
         assertThat(violations).isEmpty();
     }
 }

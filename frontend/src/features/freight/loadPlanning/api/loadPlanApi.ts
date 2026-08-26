@@ -7,7 +7,7 @@ import type {
   UpdateLoadPlanPayload,
 } from '../types/loadPlan';
 import type { CargoManifest, ManifestPage } from '../../manifests/types/cargoManifest';
-import type { Vehicle } from '../../fleet/vehicleMaster/types/vehicle';
+import type { Vehicle } from '../../../fleet/vehicleMaster/types/vehicle';
 
 export const loadPlanApi = {
   list: async () => (await api.get<LoadPlan[]>('/v1/freight/load-plans')).data,

@@ -1,6 +1,7 @@
 package com.transportlogistics.app.freight.loadplanning.application;
 
 import com.transportlogistics.app.freight.loadplanning.domain.LoadPlan;
+import com.transportlogistics.app.freight.loadplanning.domain.LoadPlanItemPlacement;
 import com.transportlogistics.app.freight.loadplanning.domain.LoadPlanViolation;
 import com.transportlogistics.app.freight.loadplanning.domain.LoadPlanViolationCode;
 import com.transportlogistics.app.freight.loadplanning.domain.LoadValidationResult;
@@ -184,8 +185,8 @@ class LoadPlanServiceTest {
         );
         ManifestPlanningView manifest = new ManifestPlanningView(
                 manifestId, "CM-001", true, List.of(
-                new ManifestItemPlanningView(item1, "Item 1", BigDecimal.ONE, "Box", "GEN", false, null),
-                new ManifestItemPlanningView(item2, "Item 2", BigDecimal.TEN, "Box", "GEN", false, null)
+                new ManifestItemPlanningView(item1, "Item 1", BigDecimal.ONE, "Box", "GEN", false, null, false, false),
+                new ManifestItemPlanningView(item2, "Item 2", BigDecimal.TEN, "Box", "GEN", false, null, false, false)
         )
         );
 
@@ -195,6 +196,47 @@ class LoadPlanServiceTest {
         List<LoadPlanViolation> violations = service.validateLayout(planId);
         assertThat(violations).hasSize(2);
         assertThat(violations).allMatch(v -> v.code() == LoadPlanViolationCode.ITEM_NOT_PLACED);
+    }
+
+    @Test
+    @DisplayName("Validates layout and evaluates structured fragile, temperature, and UNKNOWN violations")
+    void shouldEvaluateStructuredSpecialCargoRulesInLayoutValidation() {
+        UUID planId = UUID.randomUUID();
+        UUID manifestId = UUID.randomUUID();
+        UUID vehicleId = UUID.randomUUID();
+        UUID itemFragile = UUID.randomUUID();
+        UUID itemStandard = UUID.randomUUID();
+        UUID itemTemp = UUID.randomUUID();
+        UUID itemUnknown = UUID.randomUUID();
+        OffsetDateTime now = OffsetDateTime.now(clock);
+
+        LoadPlan plan = new LoadPlan(
+                planId, "LP-001", manifestId, vehicleId,
+                List.of(
+                        new LoadPlanItemPlacement(UUID.randomUUID(), itemFragile, 0, "ZONE-1", "STACK-SHARED", null, 1, null),
+                        new LoadPlanItemPlacement(UUID.randomUUID(), itemStandard, 1, "ZONE-1", "STACK-SHARED", null, 2, null),
+                        new LoadPlanItemPlacement(UUID.randomUUID(), itemTemp, 2, null, null, null, 3, null),
+                        new LoadPlanItemPlacement(UUID.randomUUID(), itemUnknown, 3, "ZONE-2", "STACK-2", null, 4, null)
+                ),
+                "notes", now, now, "user", "user", 0L
+        );
+
+        ManifestPlanningView manifest = new ManifestPlanningView(
+                manifestId, "CM-001", true, List.of(
+                new ManifestItemPlanningView(itemFragile, "Fragile Item", BigDecimal.ONE, "Box", "GEN", false, null, true, false),
+                new ManifestItemPlanningView(itemStandard, "Standard Item", BigDecimal.ONE, "Box", "GEN", false, null, false, false),
+                new ManifestItemPlanningView(itemTemp, "Temp Item", BigDecimal.ONE, "Box", "GEN", false, null, false, true),
+                new ManifestItemPlanningView(itemUnknown, "Unknown Item", BigDecimal.ONE, "Box", "GEN", false, null, null, false)
+        )
+        );
+
+        when(repository.findById(planId)).thenReturn(Optional.of(plan));
+        when(manifestLookup.findManifest(manifestId)).thenReturn(Optional.of(manifest));
+
+        List<LoadPlanViolation> violations = service.validateLayout(planId);
+        assertThat(violations).anyMatch(v -> v.code() == LoadPlanViolationCode.LOAD_PLAN_FRAGILE_RULE_FAILED);
+        assertThat(violations).anyMatch(v -> v.code() == LoadPlanViolationCode.LOAD_PLAN_TEMPERATURE_RULE_FAILED);
+        assertThat(violations).anyMatch(v -> v.code() == LoadPlanViolationCode.LOAD_PLAN_SPECIAL_CARGO_CLASSIFICATION_MISSING);
     }
 
     @Test

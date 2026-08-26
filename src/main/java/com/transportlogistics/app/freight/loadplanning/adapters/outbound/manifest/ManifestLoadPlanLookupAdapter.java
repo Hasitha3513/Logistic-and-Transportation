@@ -47,7 +47,9 @@ public class ManifestLoadPlanLookupAdapter implements CargoManifestLookupPort {
                 item.packingInformation(),
                 item.commodityClassification(),
                 item.hazardous(),
-                item.hazardousClassification()
+                item.hazardousClassification(),
+                item.fragile(),
+                item.temperatureSensitive()
         );
     }
 }
