@@ -117,6 +117,37 @@ class CargoManifestPersistenceIntegrationTest {
     void migrationCreatesNullableColumnsWithoutHistoricalBackfill() {
         assertEquals("YES", nullable("FRAGILE"));
         assertEquals("YES", nullable("TEMPERATURE_SENSITIVE"));
+        assertEquals("YES", nullable("UNIT_WEIGHT"));
+        assertEquals("YES", nullable("WEIGHT_UNIT"));
+        assertEquals("YES", nullable("LENGTH"));
+        assertEquals("YES", nullable("WIDTH"));
+        assertEquals("YES", nullable("HEIGHT"));
+        assertEquals("YES", nullable("DIMENSION_UNIT"));
+    }
+
+    @Test
+    void preservesAndRoundtripsMeasurementsWithPrecision() {
+        var order = createOrder(new BigDecimal("5"));
+        var manifest = manifests.create(new CargoManifestUseCase.CreateCommand(order.id()), "creator");
+        UUID lineId = order.lines().getFirst().id();
+
+        var itemWithMeasurements = new CargoManifestUseCase.ItemCommand(
+                manifest.version(), lineId, "Machinery", new BigDecimal("2"), "Crate", "MACH.01",
+                false, null, false, null, null, false, false,
+                new BigDecimal("750.5000"), "KG",
+                new BigDecimal("2.5000"), new BigDecimal("1.8000"), new BigDecimal("1.2000"), "M"
+        );
+
+        var saved = manifests.addItem(manifest.id(), itemWithMeasurements, "editor");
+        var reloaded = manifests.get(saved.id());
+
+        var item = reloaded.items().getFirst();
+        assertEquals(0, new BigDecimal("750.5000").compareTo(item.unitWeight()));
+        assertEquals("KG", item.weightUnit());
+        assertEquals(0, new BigDecimal("2.5000").compareTo(item.length()));
+        assertEquals(0, new BigDecimal("1.8000").compareTo(item.width()));
+        assertEquals(0, new BigDecimal("1.2000").compareTo(item.height()));
+        assertEquals("M", item.dimensionUnit());
     }
 
     private FreightOrder createOrder(BigDecimal quantity) {

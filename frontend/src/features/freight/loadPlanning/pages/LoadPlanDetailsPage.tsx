@@ -229,19 +229,51 @@ export default function LoadPlanDetailsPage() {
                   />
                 </Descriptions.Item>
                 <Descriptions.Item label="Payload Check">
-                  <Tag color={wvResult.payloadResult === 'PASS' ? 'green' : 'orange'}>
+                  <Tag color={wvResult.payloadResult === 'PASS' ? 'green' : wvResult.payloadResult === 'FAIL' ? 'red' : 'orange'}>
                     {wvResult.payloadResult || 'INCOMPLETE'}
                   </Tag>
                 </Descriptions.Item>
                 <Descriptions.Item label="Volume Check">
-                  <Tag color={wvResult.volumeResult === 'PASS' ? 'green' : 'orange'}>
+                  <Tag color={wvResult.volumeResult === 'PASS' ? 'green' : wvResult.volumeResult === 'FAIL' ? 'red' : 'orange'}>
                     {wvResult.volumeResult || 'INCOMPLETE'}
                   </Tag>
                 </Descriptions.Item>
+                <Descriptions.Item label="GVW Check">
+                  <Tag color={wvResult.gvwResult === 'PASS' ? 'green' : wvResult.gvwResult === 'FAIL' ? 'red' : 'orange'}>
+                    {wvResult.gvwResult || 'INCOMPLETE'}
+                  </Tag>
+                </Descriptions.Item>
                 <Descriptions.Item label="Axle Check">
-                  <Tag color={wvResult.axleResult === 'PASS' ? 'green' : 'orange'}>
+                  <Tag color={wvResult.axleResult === 'PASS' ? 'green' : wvResult.axleResult === 'FAIL' ? 'red' : 'orange'}>
                     {wvResult.axleResult || 'INCOMPLETE'}
                   </Tag>
+                </Descriptions.Item>
+                <Descriptions.Item label="Cargo Weight">
+                  {wvResult.cargoWeightKg != null ? `${wvResult.cargoWeightKg} kg` : (wvResult.netWeightKg != null ? `${wvResult.netWeightKg} kg` : '—')}
+                </Descriptions.Item>
+                <Descriptions.Item label="Payload Capacity">
+                  {wvResult.payloadCapacityKg != null ? `${wvResult.payloadCapacityKg} kg` : '—'}
+                </Descriptions.Item>
+                <Descriptions.Item label="Payload Utilization">
+                  {wvResult.payloadUtilizationPercent != null ? `${wvResult.payloadUtilizationPercent} %` : '—'}
+                </Descriptions.Item>
+                <Descriptions.Item label="Cargo Volume">
+                  {wvResult.cargoVolumeM3 != null ? `${wvResult.cargoVolumeM3} m³` : (wvResult.cubicVolumeM3 != null ? `${wvResult.cubicVolumeM3} m³` : '—')}
+                </Descriptions.Item>
+                <Descriptions.Item label="Volume Capacity">
+                  {wvResult.volumeCapacityM3 != null ? `${wvResult.volumeCapacityM3} m³` : '—'}
+                </Descriptions.Item>
+                <Descriptions.Item label="Volume Utilization">
+                  {wvResult.volumeUtilizationPercent != null ? `${wvResult.volumeUtilizationPercent} %` : '—'}
+                </Descriptions.Item>
+                <Descriptions.Item label="Projected Gross Weight">
+                  {wvResult.projectedGrossWeightKg != null ? `${wvResult.projectedGrossWeightKg} kg` : (wvResult.grossWeightKg != null ? `${wvResult.grossWeightKg} kg` : '—')}
+                </Descriptions.Item>
+                <Descriptions.Item label="GVW Limit">
+                  {wvResult.grossWeightLimitKg != null ? `${wvResult.grossWeightLimitKg} kg` : '—'}
+                </Descriptions.Item>
+                <Descriptions.Item label="Tare Weight">
+                  {wvResult.tareWeightKg != null ? `${wvResult.tareWeightKg} kg` : '—'}
                 </Descriptions.Item>
               </Descriptions>
 

@@ -55,7 +55,15 @@ git -C central-knowledge-base push origin main
 - The external `central-knowledge-base/` repository is the sole standing exception: task-scoped documentation updates there must be committed and pushed to `origin main` automatically upon completion.
 - This exception does not authorize committing application code, modifying unrelated knowledge-base files, force-pushing, bypassing branch protection, or including pre-existing unrelated changes.
 
-Code and required knowledge-base synchronization form one atomic deliverable. Missing synchronization makes the task incomplete.
+### Step 4: Mandatory Traceability & Roadmap Sync (MVP_ROADMAP.md)
+
+Whenever a User Story or Task is implemented, verified, or deferred, the agent MUST update `MVP_ROADMAP.md` in the project root:
+- Update the relevant checkbox (`[x]`) and status indicators (`✅` COMPLETE, `🟡` IN PROGRESS / ACCEPTANCE PENDING, `🔴` BLOCKED, `⏸` DEFERRED).
+- Update the `Immediate Next Queue (What to build next)` section in the same execution cycle.
+- Reconcile progress metrics across the executive dashboard and detailed phase breakdown.
+- Ensure `MVP_ROADMAP.md` accurately reflects the authoritative state of repository deliverables.
+
+Code, knowledge-base synchronization, and `MVP_ROADMAP.md` updates form one atomic deliverable. Missing synchronization makes the task incomplete.
 
 ## Architecture
 
@@ -322,6 +330,12 @@ Every non‑trivial agent task must report: files changed, created, deleted; tes
 
 ### 15. Human Authority
 Agents propose and implement scoped changes. Humans approve architecture and merge decisions. No agent‑generated change is considered approved merely because tests pass.
+
+### 16. Traceability & Roadmap Synchronization
+Whenever a User Story or Task is implemented, verified, or deferred, agents MUST update `MVP_ROADMAP.md` in the project root within the same execution cycle:
+- Synchronize story checkboxes (`[x]`), status indicators (`✅`, `🟡`, `🔴`, `⏸`), and the `Immediate Next Queue` section.
+- Reconcile progress metrics across executive dashboard and phase breakdowns.
+- Never declare a feature or release-band task complete without updating `MVP_ROADMAP.md`.
 
 ## Mandatory Stop Conditions
 

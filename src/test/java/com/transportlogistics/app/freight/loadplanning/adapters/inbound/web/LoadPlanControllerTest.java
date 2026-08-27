@@ -19,6 +19,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
+import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -170,6 +171,93 @@ class LoadPlanControllerTest {
                 .andExpect(jsonPath("$.payloadResult").value("INCOMPLETE"))
                 .andExpect(jsonPath("$.violations[0].code").value("LOAD_WEIGHT_DATA_MISSING"))
                 .andExpect(jsonPath("$.missingData[0]").value("CARGO_ITEM_WEIGHT_DATA_MISSING"));
+    }
+
+    @Test
+    void validatesWeightAndVolumePassOutcome() throws Exception {
+        OffsetDateTime now = OffsetDateTime.parse("2026-08-25T10:00:00Z");
+        LoadValidationResult result = new LoadValidationResult(
+                id,
+                now,
+                "manager",
+                ValidationOutcome.PASS,
+                new BigDecimal("4500.00"),
+                new BigDecimal("5000.00"),
+                new BigDecimal("90.00"),
+                new BigDecimal("20.000"),
+                new BigDecimal("25.000"),
+                new BigDecimal("80.00"),
+                new BigDecimal("7500.00"),
+                new BigDecimal("8000.00"),
+                new BigDecimal("3000.00"),
+                ValidationOutcome.PASS,
+                ValidationOutcome.PASS,
+                ValidationOutcome.PASS,
+                ValidationOutcome.INCOMPLETE,
+                List.of(),
+                List.of()
+        );
+
+        when(loadPlanUseCase.validateWeightAndVolume(eq(id), eq("manager"))).thenReturn(result);
+
+        mvc.perform(post("/v1/freight/load-plans/{id}/validate-weight-volume", id)
+                        .principal(() -> "manager"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.overallOutcome").value("PASS"))
+                .andExpect(jsonPath("$.cargoWeightKg").value(4500.00))
+                .andExpect(jsonPath("$.payloadCapacityKg").value(5000.00))
+                .andExpect(jsonPath("$.payloadUtilizationPercent").value(90.00))
+                .andExpect(jsonPath("$.cargoVolumeM3").value(20.000))
+                .andExpect(jsonPath("$.volumeCapacityM3").value(25.000))
+                .andExpect(jsonPath("$.volumeUtilizationPercent").value(80.00))
+                .andExpect(jsonPath("$.projectedGrossWeightKg").value(7500.00))
+                .andExpect(jsonPath("$.grossWeightLimitKg").value(8000.00))
+                .andExpect(jsonPath("$.payloadResult").value("PASS"))
+                .andExpect(jsonPath("$.volumeResult").value("PASS"))
+                .andExpect(jsonPath("$.gvwResult").value("PASS"));
+    }
+
+    @Test
+    void validatesWeightAndVolumeFailOutcome() throws Exception {
+        OffsetDateTime now = OffsetDateTime.parse("2026-08-25T10:00:00Z");
+        LoadValidationResult result = new LoadValidationResult(
+                id,
+                now,
+                "manager",
+                ValidationOutcome.FAIL,
+                new BigDecimal("6000.00"),
+                new BigDecimal("5000.00"),
+                new BigDecimal("120.00"),
+                new BigDecimal("28.000"),
+                new BigDecimal("25.000"),
+                new BigDecimal("112.00"),
+                new BigDecimal("9500.00"),
+                new BigDecimal("8000.00"),
+                new BigDecimal("3500.00"),
+                ValidationOutcome.FAIL,
+                ValidationOutcome.FAIL,
+                ValidationOutcome.FAIL,
+                ValidationOutcome.INCOMPLETE,
+                List.of(
+                        new LoadValidationViolation("VEHICLE_PAYLOAD_EXCEEDED", "Payload exceeded"),
+                        new LoadValidationViolation("VEHICLE_VOLUME_CAPACITY_EXCEEDED", "Volume exceeded"),
+                        new LoadValidationViolation("VEHICLE_GVW_EXCEEDED", "GVW exceeded")
+                ),
+                List.of()
+        );
+
+        when(loadPlanUseCase.validateWeightAndVolume(eq(id), eq("manager"))).thenReturn(result);
+
+        mvc.perform(post("/v1/freight/load-plans/{id}/validate-weight-volume", id)
+                        .principal(() -> "manager"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.overallOutcome").value("FAIL"))
+                .andExpect(jsonPath("$.payloadResult").value("FAIL"))
+                .andExpect(jsonPath("$.volumeResult").value("FAIL"))
+                .andExpect(jsonPath("$.gvwResult").value("FAIL"))
+                .andExpect(jsonPath("$.violations[0].code").value("VEHICLE_PAYLOAD_EXCEEDED"))
+                .andExpect(jsonPath("$.violations[1].code").value("VEHICLE_VOLUME_CAPACITY_EXCEEDED"))
+                .andExpect(jsonPath("$.violations[2].code").value("VEHICLE_GVW_EXCEEDED"));
     }
 
     @Test

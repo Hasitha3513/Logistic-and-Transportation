@@ -10,7 +10,17 @@ import java.util.UUID;
 public record Vehicle(UUID id, String registrationNumber, String chassisNumber, String engineNumber, UUID categoryId,
                       UUID typeId, String manufacturer, String model, Integer manufactureYear, String ownershipType,
                       String operationalStatus, Double currentOdometerKm, Double engineHours, Double capacityKg,
-                      boolean active) {
+                      Double tareWeightKg, Double grossVehicleWeightKg, Double cargoVolumeCapacityM3,
+                      Integer axleCount, Double maxAxleLoadKg, boolean active) {
+
+    public Vehicle(UUID id, String registrationNumber, String chassisNumber, String engineNumber, UUID categoryId,
+                   UUID typeId, String manufacturer, String model, Integer manufactureYear, String ownershipType,
+                   String operationalStatus, Double currentOdometerKm, Double engineHours, Double capacityKg,
+                   boolean active) {
+        this(id, registrationNumber, chassisNumber, engineNumber, categoryId, typeId, manufacturer, model,
+                manufactureYear, ownershipType, operationalStatus, currentOdometerKm, engineHours, capacityKg,
+                null, null, null, null, null, active);
+    }
 
     public Vehicle {
         id = id != null ? id : UUID.randomUUID();
@@ -26,6 +36,24 @@ public record Vehicle(UUID id, String registrationNumber, String chassisNumber, 
 
         if (capacityKg != null && capacityKg < 0) {
             throw new IllegalArgumentException("Capacity cannot be negative");
+        }
+        if (tareWeightKg != null && tareWeightKg < 0) {
+            throw new IllegalArgumentException("Tare weight cannot be negative");
+        }
+        if (grossVehicleWeightKg != null && grossVehicleWeightKg < 0) {
+            throw new IllegalArgumentException("Gross vehicle weight cannot be negative");
+        }
+        if (cargoVolumeCapacityM3 != null && cargoVolumeCapacityM3 < 0) {
+            throw new IllegalArgumentException("Cargo volume capacity cannot be negative");
+        }
+        if (axleCount != null && axleCount <= 0) {
+            throw new IllegalArgumentException("Axle count must be at least 1");
+        }
+        if (maxAxleLoadKg != null && maxAxleLoadKg < 0) {
+            throw new IllegalArgumentException("Max axle load cannot be negative");
+        }
+        if (grossVehicleWeightKg != null && tareWeightKg != null && grossVehicleWeightKg < tareWeightKg) {
+            throw new IllegalArgumentException("Gross vehicle weight must be greater than or equal to tare weight");
         }
         if (currentOdometerKm != null && currentOdometerKm < 0) {
             throw new IllegalArgumentException("Current odometer cannot be negative");

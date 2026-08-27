@@ -110,6 +110,58 @@ class CargoManifestTest {
         ));
     }
 
+    @Test
+    void acceptsValidMeasurementsAndDefaultsUnits() {
+        CargoManifestItem item = new CargoManifestItem(
+                UUID.randomUUID(), lineId, "Valid Measurements", BigDecimal.ONE, "Wrapped", "CODE.1",
+                false, null, false, null, null, false, false,
+                new BigDecimal("125.50"), null, new BigDecimal("1.2"), new BigDecimal("0.8"), new BigDecimal("1.5"), null
+        );
+
+        assertEquals("KG", item.weightUnit());
+        assertEquals("M", item.dimensionUnit());
+        assertEquals(new BigDecimal("125.50"), item.unitWeight());
+        assertEquals(new BigDecimal("1.2"), item.length());
+        assertEquals(new BigDecimal("0.8"), item.width());
+        assertEquals(new BigDecimal("1.5"), item.height());
+    }
+
+    @Test
+    void rejectsNegativeOrZeroMeasurements() {
+        assertThrows(BusinessRuleException.class, () -> new CargoManifestItem(
+                UUID.randomUUID(), lineId, "Cargo", BigDecimal.ONE, "Wrapped", "CODE.1",
+                false, null, false, null, null, false, false,
+                new BigDecimal("-5.00"), "KG", BigDecimal.ONE, BigDecimal.ONE, BigDecimal.ONE, "M"
+        ));
+
+        assertThrows(BusinessRuleException.class, () -> new CargoManifestItem(
+                UUID.randomUUID(), lineId, "Cargo", BigDecimal.ONE, "Wrapped", "CODE.1",
+                false, null, false, null, null, false, false,
+                BigDecimal.ZERO, "KG", BigDecimal.ONE, BigDecimal.ONE, BigDecimal.ONE, "M"
+        ));
+
+        assertThrows(BusinessRuleException.class, () -> new CargoManifestItem(
+                UUID.randomUUID(), lineId, "Cargo", BigDecimal.ONE, "Wrapped", "CODE.1",
+                false, null, false, null, null, false, false,
+                BigDecimal.TEN, "KG", new BigDecimal("-1.0"), BigDecimal.ONE, BigDecimal.ONE, "M"
+        ));
+    }
+
+    @Test
+    void rejectsInvalidUnits() {
+        assertThrows(BusinessRuleException.class, () -> new CargoManifestItem(
+                UUID.randomUUID(), lineId, "Cargo", BigDecimal.ONE, "Wrapped", "CODE.1",
+                false, null, false, null, null, false, false,
+                BigDecimal.TEN, "LBS", BigDecimal.ONE, BigDecimal.ONE, BigDecimal.ONE, "M"
+        ));
+
+        assertThrows(BusinessRuleException.class, () -> new CargoManifestItem(
+                UUID.randomUUID(), lineId, "Cargo", BigDecimal.ONE, "Wrapped", "CODE.1",
+                false, null, false, null, null, false, false,
+                BigDecimal.TEN, "KG", BigDecimal.ONE, BigDecimal.ONE, BigDecimal.ONE, "FEET"
+        ));
+    }
+
     private void assertClassificationComplete(CargoManifestItem item) {
         CargoManifest manifest = manifest(List.of(item));
         assertTrue(manifest.validate(expected()).isEmpty());

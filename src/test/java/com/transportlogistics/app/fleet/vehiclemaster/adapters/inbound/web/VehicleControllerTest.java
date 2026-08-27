@@ -168,4 +168,50 @@ class VehicleControllerTest {
 
         verify(vehicleUseCase).deactivate(id);
     }
+
+    @Test
+    @DisplayName("POST /vehicles creates vehicle with full capacity master data and returns 201")
+    void createVehicleWithCapacityMasterData() throws Exception {
+        var categoryId = UUID.randomUUID();
+        var typeId = UUID.randomUUID();
+        var vehicleId = UUID.randomUUID();
+
+        var request = new VehicleRequest("WP-CAB-1201", "CH-12345", "ENG-67890", categoryId, typeId,
+                "ISUZU", "Forward", 2023, "COMPANY_OWNED", "AVAILABLE",
+                1000.0, 50.0, 5000.0, 3500.0, 8500.0, 28.5, 2, 4500.0, true);
+
+        var savedVehicle = new Vehicle(vehicleId, "WP-CAB-1201", "CH-12345", "ENG-67890", categoryId, typeId,
+                "ISUZU", "Forward", 2023, "COMPANY_OWNED", "AVAILABLE",
+                1000.0, 50.0, 5000.0, 3500.0, 8500.0, 28.5, 2, 4500.0, true);
+
+        when(vehicleUseCase.create(any(Vehicle.class))).thenReturn(savedVehicle);
+
+        mvc.perform(post("/vehicles")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").value(vehicleId.toString()))
+                .andExpect(jsonPath("$.capacityKg").value(5000.0))
+                .andExpect(jsonPath("$.tareWeightKg").value(3500.0))
+                .andExpect(jsonPath("$.grossVehicleWeightKg").value(8500.0))
+                .andExpect(jsonPath("$.cargoVolumeCapacityM3").value(28.5))
+                .andExpect(jsonPath("$.axleCount").value(2))
+                .andExpect(jsonPath("$.maxAxleLoadKg").value(4500.0));
+    }
+
+    @Test
+    @DisplayName("POST /vehicles rejects negative capacity fields")
+    void createVehicleCapacityValidationFailure() throws Exception {
+        var categoryId = UUID.randomUUID();
+        var typeId = UUID.randomUUID();
+
+        var invalidRequest = new VehicleRequest("WP-CAB-1201", "CH-12345", "ENG-67890", categoryId, typeId,
+                "ISUZU", "Forward", 2023, "COMPANY_OWNED", "AVAILABLE",
+                1000.0, 50.0, -100.0, -50.0, -500.0, -10.0, 0, -200.0, true);
+
+        mvc.perform(post("/vehicles")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(invalidRequest)))
+                .andExpect(status().isBadRequest());
+    }
 }

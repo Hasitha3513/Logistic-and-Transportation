@@ -19,6 +19,16 @@ class LocalSampleDataBootstrapIntegrationTest {
 
     @org.junit.jupiter.api.BeforeEach
     void setUp() {
+        cleanTables();
+
+        var script = new org.springframework.core.io.ClassPathResource("db/sample-data/h2-phase1.sql");
+        var populator = new org.springframework.jdbc.datasource.init.ResourceDatabasePopulator(script);
+        populator.setSeparator(";");
+        populator.setContinueOnError(false);
+        org.springframework.jdbc.datasource.init.DatabasePopulatorUtils.execute(populator, dataSource);
+    }
+
+    private void cleanTables() {
         jdbc.update("DELETE FROM freight_insurance_settlement");
         jdbc.update("DELETE FROM freight_insurance_claim");
         jdbc.update("DELETE FROM freight_insurance_policy");
@@ -66,12 +76,6 @@ class LocalSampleDataBootstrapIntegrationTest {
         jdbc.update("DELETE FROM location");
         jdbc.update("DELETE FROM customer");
         jdbc.update("DELETE FROM app_user WHERE id IN ('00000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000003')");
-
-        var script = new org.springframework.core.io.ClassPathResource("db/sample-data/h2-phase1.sql");
-        var populator = new org.springframework.jdbc.datasource.init.ResourceDatabasePopulator(script);
-        populator.setSeparator(";");
-        populator.setContinueOnError(false);
-        org.springframework.jdbc.datasource.init.DatabasePopulatorUtils.execute(populator, dataSource);
     }
 
     @Test
@@ -91,6 +95,11 @@ class LocalSampleDataBootstrapIntegrationTest {
         assertEquals(1, route.stopLocationIds().size());
         assertEquals(java.util.UUID.fromString("20000000-0000-0000-0000-000000000004"),
                 route.stopLocationIds().getFirst());
+    }
+
+    @org.junit.jupiter.api.AfterEach
+    void tearDown() {
+        cleanTables();
     }
 
     private int count(String table) {

@@ -27,14 +27,16 @@ class FleetReportingAdapter implements FleetReportingQuery {
     public Optional<FleetVehicleSummary> findVehicle(UUID vehicleId) {
         return vehicleRepo.findById(vehicleId)
                 .map(v -> new FleetVehicleSummary(v.id(), v.registrationNumber(), v.operationalStatus(),
-                        v.currentOdometerKm(), v.active()));
+                        v.currentOdometerKm(), v.capacityKg(), v.tareWeightKg(), v.grossVehicleWeightKg(),
+                        v.cargoVolumeCapacityM3(), v.axleCount(), v.maxAxleLoadKg(), v.active()));
     }
 
     @Override
     public List<FleetVehicleSummary> findAllVehicles() {
         return vehicleRepo.findAll().stream()
                 .map(v -> new FleetVehicleSummary(v.id(), v.registrationNumber(), v.operationalStatus(),
-                        v.currentOdometerKm(), v.active()))
+                        v.currentOdometerKm(), v.capacityKg(), v.tareWeightKg(), v.grossVehicleWeightKg(),
+                        v.cargoVolumeCapacityM3(), v.axleCount(), v.maxAxleLoadKg(), v.active()))
                 .toList();
     }
 

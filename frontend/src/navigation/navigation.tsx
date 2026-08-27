@@ -97,6 +97,7 @@ export const navigation: NavigationItem[] = [
       { key: 'load-plans', label: 'Load Plans', route: '/freight/load-plans', requiredPermission: 'LOAD_PLAN_VIEW' },
       { key: 'freight-policies', label: 'Insurance Policies', route: '/freight/insurance/policies', requiredPermission: 'CARGO_INSURANCE_VIEW' },
       { key: 'freight-claims', label: 'Insurance Claims', route: '/freight/insurance/claims', requiredPermission: 'CARGO_INSURANCE_VIEW' },
+      { key: 'cargo-exceptions', label: 'Cargo Exceptions', route: '/freight/exceptions', requiredPermission: 'CARGO_EXCEPTION_VIEW' },
     ],
   },
   {

@@ -283,10 +283,21 @@ class SecurityConfig {
 
                         .requestMatchers("/e2e/**").hasAuthority("NOTIFICATION_RULE_MANAGE")
 
+                        .requestMatchers(HttpMethod.GET, "/v1/freight/exceptions", "/v1/freight/exceptions/*")
+                        .hasAuthority("CARGO_EXCEPTION_VIEW")
+                        .requestMatchers(HttpMethod.POST, "/v1/freight/exceptions")
+                        .hasAuthority("CARGO_EXCEPTION_MANAGE")
+                        .requestMatchers(HttpMethod.POST, "/v1/freight/exceptions/*/hold",
+                                "/v1/freight/exceptions/*/escalate",
+                                "/v1/freight/exceptions/*/release",
+                                "/v1/freight/exceptions/*/reject",
+                                "/v1/freight/exceptions/*/resolve")
+                        .hasAuthority("CARGO_EXCEPTION_MANAGE")
+
                         .requestMatchers("/vehicles/**", "/drivers/**", "/vehicle-categories/**", "/vehicle-types/**",
                                 "/routes/**", "/customers/**", "/departments/**", "/locations/**", "/projects/**",
                                 "/trips/**", "/fuel-issues/**", "/fuel-stations/**", "/v1/freight/orders/**", "/v1/freight/manifests/**",
-                                "/v1/freight/load-plans/**",
+                                "/v1/freight/load-plans/**", "/v1/freight/exceptions/**",
                                 "/fuel-purchases/**", "/fuel-prices/**", "/vendors/**",
                                 "/bunker-tanks/**", "/bunker-transfers/**",
                                 "/dashboard/**", "/reports/**",

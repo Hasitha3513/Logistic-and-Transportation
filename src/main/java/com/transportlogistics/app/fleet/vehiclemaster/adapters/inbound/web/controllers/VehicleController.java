@@ -62,6 +62,8 @@ public class VehicleController {
                 request.manufactureYear(), request.ownershipType() == null ? "COMPANY_OWNED" : request.ownershipType(),
                 request.operationalStatus() == null ? "AVAILABLE" : request.operationalStatus(),
                 request.currentOdometerKm(), request.engineHours(), request.capacityKg(),
+                request.tareWeightKg(), request.grossVehicleWeightKg(), request.cargoVolumeCapacityM3(),
+                request.axleCount(), request.maxAxleLoadKg(),
                 request.active() == null || request.active());
     }
 }

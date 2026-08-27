@@ -1,168 +1,105 @@
-# Transport & Logistics Management System — Current Status & MVP Baseline Audit (MVP-CURRENT-STATUS-REBASELINE-002)
+# Transport & Logistics — Current Verified MVP Baseline
 
-**Audit Date:** August 27, 2026  
-**Auditor:** Senior Principal Enterprise Architect, QA Architect, & Product Lead  
-**Branch:** `feat/load-plan-structural-readiness`  
-**Commit:** `ebe722f4f276db1b60a204e74f2368aafb011c85`  
-**Overall MVP 1.0 Status:** **100.0% VERIFIED COMPLETE (34 / 34 Stories)**
+**Audit:** `MVP-CONTINUE-REBASELINE-003`
 
----
+**Date:** 2026-08-27
 
-## 1. Executive Summary
+**Branch:** `feat/mvp-1.2-fuel-closure`
 
-A comprehensive architectural and repository audit was conducted across the **Transport & Logistics Management System** to establish the authoritative implementation, verification, and acceptance status of the project against the corrected MVP scope model.
+**Commit:** `14cfe1bacacaa1380207f59ceda21131cd76d52a`
 
-### Key Audit Findings:
-1. **MVP 1.0 (Core Release):** **34 / 34 Stories COMPLETE (100.0% Verified Completion)**.
-   - All Core Fleet (US-01–08), Trip (US-09–16), Basic Route (US-17–19), Driver (US-39–45), and Required MVP Technical Enablers (US-71, US-74, US-75, US-77, US-79, US-80, US-81, US-83) are fully implemented across backend, persistence, API, frontend, security/RBAC, unit/integration suites, and Playwright cross-browser tests.
-2. **MVP 1.1 (Expanded Route & Freight):**
-   - **Advanced Route (US-20–23):** **4 / 4 Stories COMPLETE (100.0%)**.
-   - **Freight Domain (US-24–30):**
-     - `US-24` (Freight Orders): **COMPLETE**
-     - `US-25` (Cargo Manifest): **COMPLETE** (Structured tri-state fragile/temperature classifications implemented and verified).
-     - `US-26` (Load Planning): **COMPLETE** (Structural readiness boundary, transactional revalidation, fragile/temperature isolation rules, free-text non-authority, optimistic concurrency, and 8 cross-browser Playwright scenarios closed across Chromium, Firefox, and WebKit in `P2-LOAD-CORR-001` through `006`).
-     - `US-27` (Weight & Volume Validation): **PARTIAL** (Cargo weights/dimensions present; Vehicle schema lacks authoritative tare/GVW/volume/axle master data).
-     - `US-28` (Freight Insurance): **COMPLETE** (Policies, claims, multi-tranche settlements, disputes, and E2E closure).
-     - `US-29` (Freight Reports): **BLOCKED_BY_TENANT_FOUNDATION** (Tenant implementation paused).
-     - `US-30` (Cargo Exceptions): **MISSING** (No dedicated aggregate or workflow).
-3. **MVP 1.2 (Full Fuel Expansion):**
-   - **Core Fuel Capabilities (US-31, 32, 33, 34, 36):** **5 / 5 COMPLETE (100.0%)**.
-   - **Advanced Fuel Scope (US-35 Cards, US-37 Analytics, US-38 Theft Exceptions):** **DEFERRED / Post-MVP**.
-4. **Current Verification Baseline:**
-   - **Backend Modulith/Architecture:** 25/25 tests PASS (0 module or layer violations).
-   - **Backend Freight Suite:** 108/108 tests PASS (0 failures, 0 errors, 0 skipped).
-   - **Frontend Quality:** ESLint 0 errors/0 warnings; TypeScript & Vite production build clean.
-   - **Frontend Unit/Component Tests:** 44 test files, 222 tests PASS (100%).
-   - **Playwright E2E Regression:** 208/208 PASS across Chromium and Firefox (100%).
+**Initial worktree:** Clean
 
----
+## Release dashboard
 
-## 2. Repository Baseline
+| Release band | Complete | Partial | Blocked | Deferred | Missing | Status |
+|---|---:|---:|---:|---:|---:|---|
+| MVP 1.0 Core | 34 / 34 | 0 | 0 | 0 | 0 | COMPLETE |
+| MVP 1.1 Advanced Route | 4 / 4 | 0 | 0 | 0 | 0 | COMPLETE |
+| MVP 1.1 Freight | 5 / 7 | 1 / 7 | 1 / 7 | 0 | 0 | IN CLOSURE |
+| MVP 1.2 Fuel | 5 / 8 | 0 | 0 | 3 / 8 | 0 | CLOSED_WITH_APPROVED_DEFERMENTS |
 
-- **Runtime & Environment:** Java 21, Spring Boot 3.2.12, Spring Modulith 1.2.12, PostgreSQL / Flyway, Node 24, Vite 7.3.6, React 19, TypeScript.
-- **Top-Level Backend Modules:** `fleet`, `freight`, `fuel`, `identity`, `notification`, `offlinesync`, `organization`, `reporting`, `routing`, `shared`, `system`, `trip`.
-- **Database Migrations:** 38 migrations (`V1` through `V38`), strictly sequential with 0 gaps or out-of-order versions.
-- **Security & Authorization:** Stateless JWT, rotating refresh tokens, BCrypt strength 12, 70+ business permissions enforced across API routes and frontend navigation.
+## Repository baseline
 
----
+- Backend modules: `fleet`, `freight`, `fuel`, `identity`, `notification`, `offlinesync`, `organization`, `reporting`, `routing`, `shared`, `system`, `trip`.
+- Driver is a Fleet sub-feature. Maintenance is a Fleet scheduling/availability sub-feature. Work orders, job cards, parts inventory, inspections, tyres, batteries, tracking and delivery are not implemented product capabilities.
+- Java 21; Spring Boot 3.2.12; Spring Modulith 1.2.12; Maven 3.9.9; Spring Security/JWT; JPA; Flyway; PostgreSQL; JUnit 5, Mockito and Testcontainers.
+- React 19.1.1; TypeScript 5.8.3; Vite 7.3.6; Ant Design 5.27.1; TanStack Query 5.85.5; React Hook Form 7.62.0; Zod 4.1.5; Axios 1.11.0; Vitest 3.2.7; Playwright 1.62.1.
+- Flyway: 42 migrations, `V1__baseline.sql` through `V42__cargo_manifest_item_measurements.sql`; no gaps, duplicate versions or out-of-order versions found.
+- The schema remains legacy single-tenant. No production `tenant_id`, `tenantId` or `TenantContext` implementation exists.
 
-## 3. Corrected Scope Model
+## MVP 1.0 reconfirmation
 
-| Release Band | Domain / Area | Included Stories | Story Count | Status Summary |
-|---|---|---|:---:|---|
-| **MVP 1.0** | Core Transport Operations | US-01–19, US-39–45, US-71, 74, 75, 77, 79, 80, 81, 83 | **34** | **34 / 34 COMPLETE (100%)** |
-| **MVP 1.1** | Advanced Route | US-20–23 | **4** | **4 / 4 COMPLETE (100%)** |
-| **MVP 1.1** | Freight & Cargo | US-24–30 | **7** | **4 COMPLETE, 1 PARTIAL, 1 MISSING, 1 BLOCKED** |
-| **MVP 1.2** | Full Fuel Expansion | US-31–38 | **8** | **5 COMPLETE, 3 DEFERRED** |
-| **Post-MVP** | Advanced Product Scope | US-46, 47, 48–70, 72, 73, 76, 78, 82, 84–87 | **44** | **DEFERRED (Product Roadmap)** |
+| Area | Stories | Result |
+|---|---|---:|
+| Fleet | US-01–08 | 8 / 8 COMPLETE |
+| Trip | US-09–16 | 8 / 8 COMPLETE |
+| Basic Route | US-17–19 | 3 / 3 COMPLETE |
+| Driver | US-39–45 | 7 / 7 COMPLETE |
+| Enablers | US-71, 74, 75, 77, 79, 80, 81, 83 | 8 / 8 COMPLETE |
 
----
+Production, migrations, API/UI/RBAC assets, focused tests and fresh full regression preserve the accepted 34-story core. Later Freight gaps do not downgrade this release.
 
-## 4. MVP 1.0 Status (34 Stories)
+## MVP 1.1 Advanced Route
 
-- **Fleet Management (US-01–08):** 8 / 8 COMPLETE
-- **Trip Management (US-09–16):** 8 / 8 COMPLETE
-- **Basic Route (US-17–19):** 3 / 3 COMPLETE
-- **Driver Management (US-39–45):** 7 / 7 COMPLETE
-- **Platform Enablers (US-71, 74, 75, 77, 79, 80, 81, 83):** 8 / 8 COMPLETE
+US-20, US-21, US-22 and US-23 remain COMPLETE. Current routing domain/application/adapters, V30, UI components, RBAC and `routeIntelligence.spec.ts` remain present; fresh regressions passed.
 
-**Verified Completion Percentage:** **100.0%**  
-**Implementation Coverage Percentage:** **100.0%**
+## MVP 1.1 Freight
 
----
+| Story | Status | Current evidence and gap |
+|---|---|---|
+| US-24 Freight Orders | COMPLETE | Domain/application/persistence/web/UI/RBAC, V31 and dedicated tests/E2E exist. |
+| US-25 Cargo Manifest | COMPLETE | V32/V37/V42, nullable tri-state classifications, physical measurements, UNKNOWN finalization rule, explicit UI selection and dedicated tests/E2E exist. |
+| US-26 Load Planning | COMPLETE | V34/V38, DRAFT/STRUCTURALLY_READY, ready command, material invalidation, notes preservation, structured rules, optimistic 409 behavior and 8 logical E2E cases exist. |
+| US-27 Validate Weight and Volume | COMPLETE | V39/V42, pure calculation engine integrated with Cargo Manifest measurements, supporting verified PASS, FAIL (payload, volume, GVW), and INCOMPLETE diagnostics across unit, integration, and Playwright suites. |
+| US-28 Freight Insurance | COMPLETE | Policy, claim, settlement and dispute workflows, V35/V36, UI/RBAC and dedicated tests/E2E exist. |
+| US-29 Freight Reports | BLOCKED | `BLOCKED_BY_TENANT_FOUNDATION`; architecture is approved, but legacy certification is blocked by missing canonical-owner evidence and runtime reconciliation. Tenant implementation and isolation acceptance are also pending. Do not implement. |
+| US-30 Cargo Exceptions | PARTIAL | Aggregate, six types, V40/V41, lifecycle, hold/release, history, API/UI/RBAC and 8 E2E cases exist. Final closing reconciliation in progress. |
 
-## 5. MVP 1.1 Status (Advanced Route + Freight)
+`MVP-1.1-FREIGHT-CLOSURE-001` was executed, but its conclusion is superseded. MVP 1.1 is **PARTIAL**, not `CLOSED_WITH_BLOCKED_DEFERMENT`.
 
-### Advanced Route (US-20–23)
-- `US-20` (Route Optimization): COMPLETE
-- `US-21` (Route Revision History): COMPLETE
-- `US-22` (Route Performance Analytics): COMPLETE
-- `US-23` (Route Disruptions): COMPLETE
-- **Status:** **4 / 4 COMPLETE (100%)**
+## MVP 1.2 Fuel
 
-### Freight & Cargo (US-24–30)
-- `US-24` (Freight Orders): COMPLETE
-- `US-25` (Cargo Manifest): COMPLETE
-- `US-26` (Load Planning): COMPLETE (Implementation & cross-browser E2E closed in `P2-LOAD-CORR-001`–`006`)
-- `US-27` (Weight & Volume Validation): PARTIAL (Lacks vehicle tare/GVW/volume/axle master data)
-- `US-28` (Freight Insurance): COMPLETE
-- `US-29` (Freight Reports): BLOCKED_BY_TENANT_FOUNDATION
-- `US-30` (Cargo Exceptions): MISSING
+- COMPLETE: US-31, US-32, US-33, US-34, US-36.
+- DEFERRED: US-35, US-37, US-38.
+- `MVP-1.2-FUEL-CLOSURE-001` remains supported: **CLOSED_WITH_APPROVED_DEFERMENTS**.
 
----
+## Post-MVP and additional scope
 
-## 6. MVP 1.2 Status (Full Fuel Expansion)
+US-46, US-47, US-48–70 and remaining non-MVP platform stories are DEFERRED. Fleet maintenance schedules are only the MVP availability linkage. A Maintenance/Work Order/Inventory/Inspection product is not implemented or promoted into an authoritative numbered release band. The former direct “MVP 1.3” maintenance recommendation is withdrawn.
 
-- `US-31` (Issue Fuel): COMPLETE
-- `US-32` (Fuel Purchases & Receiving): COMPLETE
-- `US-33` (Monotonic Vehicle Reading Ledger): COMPLETE
-- `US-34` (Trip Fuel Cost Allocation): COMPLETE
-- `US-35` (External Fuel Cards): DEFERRED
-- `US-36` (Internal Bunker Storage Management): COMPLETE
-- `US-37` (Fuel Analytics): DEFERRED
-- `US-38` (Fuel Exception Investigation): DEFERRED
-- **Core Status:** **5 / 5 Core Stories COMPLETE (100%)**
+## Verification
 
----
+- `./mvnw clean test` with full Oracle JDK 21: PASS — 925 run, 0 failed, 0 errors, 22 skipped.
+- `./mvnw verify` with full Oracle JDK 21: PASS — packaged successfully after the same suite.
+- Architecture: 25 / 25 PASS (`ApplicationModulesTest` 2, `HexagonalLayerArchitectureTest` 15, `ModuleBoundaryArchitectureTest` 5, `LombokUsageArchitectureTest` 3).
+- Frontend lint: PASS, 0 errors/warnings. Vitest: 45 files, 227 / 227 PASS. TypeScript/Vite build: PASS with a non-blocking chunk-size warning.
+- Playwright inventory: 43 specs and 118 logical tests. Chromium: 118 / 118 PASS. Firefox: 117 / 118 passed in the full run; `E2E-NOT-011` failed once because an Ant Select option was not observed, then passed on an isolated rerun (flaky evidence, no automatic retry). WebKit: environment-blocked before test execution because host library `libavif16` is missing; a three-test smoke attempt produced three launch errors.
 
-## 7. Post-MVP Landscape & Additional Scope
+## Requirement / implementation drift
 
-- **Driver Payroll (US-46) & Transport Billing (US-47):** Deferred.
-- **Live GPS & IoT Telematics (US-48–55):** Deferred.
-- **Delivery Orders & ePOD (US-56–62):** Deferred.
-- **Last Mile Customer Portal (US-63–70):** Deferred.
-- **Work Orders, Job Cards, Parts Inventory, Inspection Products:** Classified as **EXPANSION / ADDITIONAL PRODUCT SCOPE** outside current baseline.
+1. US-27’s acceptance and closure documents overstate completion: the engine is not fed production cargo measurements.
+2. US-30’s local workflow exists, but the frozen US-27, correction/claim and Trip readiness branches are absent.
+3. `MVP-1.1-FREIGHT-CLOSURE-001.md`, `US27-WEIGHT-VOLUME-ACCEPTANCE-003.md` and `PHASE2-SCOPE-MATRIX.md` contain stale COMPLETE conclusions.
+4. Bunker transfer/concurrency and route heuristic capabilities exceed the smallest MVP need.
+5. No deferred tenant, fuel-card, fuel-analytics, fuel-theft, GPS, delivery or last-mile implementation was found.
 
----
+## Release readiness
 
-## 8. Verification Results
+| Band | Developer Demo | Internal QA | UAT | Pilot | Production |
+|---|---|---|---|---|---|
+| MVP 1.0 | READY | READY | READY_WITH_CONDITIONS | READY_WITH_CONDITIONS | READY_WITH_CONDITIONS |
+| MVP 1.1 | READY_WITH_CONDITIONS | NOT_READY | NOT_READY | NOT_READY | NOT_READY |
+| MVP 1.2 Fuel Core | READY | READY | READY_WITH_CONDITIONS | READY_WITH_CONDITIONS | READY_WITH_CONDITIONS |
 
-| Quality Gate | Tool / Command | Result | Details |
-|---|---|:---:|---|
-| **Architecture Rules** | ArchUnit + Spring Modulith | **PASS** | 25/25 tests passed; 0 module cycle/layer violations |
-| **Frontend Lint** | ESLint (`eslint .`) | **PASS** | 0 errors, 0 warnings |
-| **Frontend Unit Tests** | Vitest (`vitest run`) | **PASS** | 44 test files, 222 tests passed (100%) |
-| **Frontend Production Build** | Vite (`tsc -b && vite build`) | **PASS** | Clean bundle generation (4.98s) |
-| **Backend Freight Suite** | Maven (`mvn test -Dtest="*Freight*,*LoadPlan*,*Manifest*"`) | **PASS** | 108/108 tests passed |
-| **Playwright Cross-Browser** | Playwright (`npx playwright test`) | **PASS** | 208/208 passed across Chromium & Firefox (100%) |
+Conditions include environment-specific PostgreSQL, security, operations and tenant-model review; production deployment was not validated.
 
----
+## Current development position and exact next task
 
-## 9. Blockers & Gaps
+- Release band: MVP 1.1
+- Domain: Freight
+- Story: US-27 Validate Weight and Volume
+- Last completed task: `P2-WEIGHT-VOLUME-CALC-002` (calculation engine/vehicle-capacity slice)
+- Pending task: provide authoritative cargo measurements to production validation and prove real outcomes.
 
-- **P0 (Release Stopping / Integrity):** NONE.
-- **P1 (MVP 1.0 Acceptance Blockers):** NONE (MVP 1.0 is 100% complete and verified).
-- **P2 (MVP 1.1 / 1.2 Completion Blockers):**
-  1. `US-27` Vehicle tare/GVW/volume/axle capacity master data contract unresolved.
-  2. `US-29` Freight Reporting blocked by paused multi-tenant foundation.
-  3. `US-30` Cargo Exception aggregate/workflow missing.
-- **P3 (Technical Debt / Post-MVP):**
-  1. WebKit UI tests in Playwright require host OS package `libavif16`.
-
----
-
-## 10. Requirement / Implementation Drift
-
-- **A. Requirement exists but implementation missing:** US-30 (Cargo Exceptions) lacks production implementation.
-- **B. Implementation exists but requirement not in MVP:** Advanced bunker concurrency and multi-stop heuristic route optimization were delivered early.
-- **C. Implementation exists but acceptance evidence missing:** None in MVP 1.0. US-26 acceptance test closure was completed in `P2-LOAD-CORR-006` and is pending formal status sign-off.
-- **D. Planning document claims capability but code does not support it:** Historical audits claimed US-27 was complete when vehicle master data only contained `capacity_kg`.
-- **E. Production code exceeds original MVP scope:** Route revision snapshots and disruption handling (US-21, US-23) were implemented ahead of roadmap schedule.
-
----
-
-## 11. Current Development Position & Exact Next Task
-
-### Current Position:
-- **Release Band:** MVP 1.1
-- **Domain:** Freight / Cargo
-- **Story:** US-26 (Plan Loads)
-- **Last Completed Task:** `P2-LOAD-CORR-006` (Cross-browser Playwright acceptance suite executed and full regression closed).
-- **Pending Action:** Formal acceptance gate and status promotion decision for US-26.
-
----
-
-### Exact Next Task:
-**Task ID:** `P2-LOAD-ACCEPTANCE-001`  
-**Title:** Final US-26 Acceptance and Status Decision  
-**Reason:** Dedicated US-26 cross-browser Playwright tests and full regression have successfully executed and passed in `P2-LOAD-CORR-006`. In accordance with the mandated decision rules, the immediate next step is the formal acceptance audit and status closure of US-26 before proceeding to `US-27` (`P2-WEIGHT-VOLUME-DATA-001`) or `US-30` (`P2-CARGO-EXCEPTION-001`).
+**Exact next task:** `P2-WEIGHT-VOLUME-CARGO-MEASUREMENTS-004` — define and implement the smallest source-approved cargo weight/dimension contract and wire Manifest persistence/ports to US-27 validation, with migration, API/UI/RBAC compatibility review and PASS/FAIL/INCOMPLETE acceptance. Do not resume US-29.

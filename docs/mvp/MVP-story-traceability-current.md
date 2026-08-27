@@ -2,7 +2,8 @@
 
 **Audit Date:** August 27, 2026  
 **Auditor:** Senior Principal Enterprise Architect & QA Lead  
-**Baseline Commit:** `ebe722f4f276db1b60a204e74f2368aafb011c85` (`feat/load-plan-structural-readiness`)  
+**Baseline Commit:** `14cfe1bacacaa1380207f59ceda21131cd76d52a` (`feat/mvp-1.2-fuel-closure`)
+
 **Scope:** Authoritative US-01 through US-87 Requirements Traceability
 
 ---
@@ -59,10 +60,10 @@
 | **US-24** | Freight Orders | Freight order lifecycle, customer, origin/destination | YES | YES | YES | YES | YES | YES | YES | **COMPLETE** | `FreightOrder`, `V31`, `FreightOrderListPage`, `freightOrders.spec.ts` | None |
 | **US-25** | Cargo Manifest | Manifest items, structured tri-state fragile/temperature | YES | YES | YES | YES | YES | YES | YES | **COMPLETE** | `CargoManifest`, `V32`/`V37`, `CargoManifestEditorPage`, `cargoManifests.spec.ts` | None |
 | **US-26** | Load Planning | Structural readiness, fragile/temp rules, free-text non-authority, optimistic concurrency | YES | YES | YES | YES | YES | YES | YES | **COMPLETE** | `LoadPlan`, `V34`/`V38`, `LoadPlanDetailsPage`, `loadPlans.spec.ts` (8 cross-browser scenarios) | Formal acceptance decision in P2-LOAD-ACCEPTANCE-001 |
-| **US-27** | Weight & Volume | Total cargo weight/volume vs vehicle GVW/axle limits | PARTIAL | NO | YES | YES | YES | YES | NO | **PARTIAL** | Manifest items carry weights/dimensions, but Vehicle schema lacks tare/GVW/volume/axle master data | `P2-WEIGHT-VOLUME-DATA-001` |
+| **US-27** | Weight & Volume | Total cargo weight/volume vs vehicle payload/volume/GVW limits | YES | YES | YES | YES | YES | YES | YES | **COMPLETE** | Pure calculation engine integrated with V42 Manifest measurements, supporting verified PASS, FAIL (payload, volume, GVW), and INCOMPLETE diagnostics across unit, integration, and Playwright suites. | None |
 | **US-28** | Freight Insurance | Policies, claims, multi-tranche settlements, disputes | YES | YES | YES | YES | YES | YES | YES | **COMPLETE** | `InsurancePolicy`, `InsuranceClaim`, `V36`, `PolicyListPage`, `freightInsurance.spec.ts` | None |
-| **US-29** | Freight Reports | Tenant-scoped freight and load analytics | NO | NO | NO | NO | NO | NO | NO | **BLOCKED** | Blocked by paused tenant foundation | Do not implement while tenant work is paused |
-| **US-30** | Cargo Exceptions | Cargo damage/shortage/unmanifested exception workflow | NO | NO | NO | NO | NO | NO | NO | **MISSING** | No dedicated aggregate, persistence, API, or frontend | `P2-CARGO-EXCEPTION-001` |
+| **US-29** | Freight Reports | Tenant-scoped freight and load analytics | NO | NO | NO | NO | NO | NO | NO | **BLOCKED** | Architecture approved; legacy certification blocked by missing owner evidence/runtime reconciliation; implementation and acceptance pending | Obtain authoritative owner/Tenant values and read-only database inventory; do not implement US-29 |
+| **US-30** | Cargo Exceptions | Cargo damage/shortage/hazardous/seal/unmanifested exception workflow | PARTIAL | YES | YES | YES | YES | YES | PARTIAL | **PARTIAL** | Local aggregate, six types, workflow/history and 8 E2E cases exist; US-27 outcome input, correction/insurance branch and Trip readiness hold/release boundary are absent. | Complete only after US-27, then audit the three frozen integrations |
 
 ---
 

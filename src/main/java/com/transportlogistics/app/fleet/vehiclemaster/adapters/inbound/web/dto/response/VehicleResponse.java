@@ -16,5 +16,10 @@ public record VehicleResponse(UUID id,
                               Double currentOdometerKm,
                               Double engineHours,
                               Double capacityKg,
+                              Double tareWeightKg,
+                              Double grossVehicleWeightKg,
+                              Double cargoVolumeCapacityM3,
+                              Integer axleCount,
+                              Double maxAxleLoadKg,
                               boolean active) {
 }

@@ -32,6 +32,11 @@ function formValues(vehicle?: Vehicle): VehicleFormValues {
     currentOdometerKm: vehicle?.currentOdometerKm ?? null,
     engineHours: vehicle?.engineHours ?? null,
     capacityKg: vehicle?.capacityKg ?? null,
+    tareWeightKg: vehicle?.tareWeightKg ?? null,
+    grossVehicleWeightKg: vehicle?.grossVehicleWeightKg ?? null,
+    cargoVolumeCapacityM3: vehicle?.cargoVolumeCapacityM3 ?? null,
+    axleCount: vehicle?.axleCount ?? null,
+    maxAxleLoadKg: vehicle?.maxAxleLoadKg ?? null,
     active: vehicle?.active ?? true,
   };
 }
@@ -140,7 +145,12 @@ export function VehicleEditorModal({ open, vehicle, onClose }: VehicleEditorModa
         )} />, true)}
         {field('currentOdometerKm', 'Current odometer (km)', numberInput('currentOdometerKm'))}
         {field('engineHours', 'Engine hours', numberInput('engineHours'))}
-        {field('capacityKg', 'Capacity (kg)', numberInput('capacityKg'))}
+        {field('capacityKg', 'Payload capacity (kg)', numberInput('capacityKg'))}
+        {field('tareWeightKg', 'Tare weight (kg)', numberInput('tareWeightKg'))}
+        {field('grossVehicleWeightKg', 'Gross vehicle weight (kg)', numberInput('grossVehicleWeightKg'))}
+        {field('cargoVolumeCapacityM3', 'Cargo volume capacity (m³)', numberInput('cargoVolumeCapacityM3'))}
+        {field('axleCount', 'Axle count', numberInput('axleCount', 1))}
+        {field('maxAxleLoadKg', 'Max axle load (kg)', numberInput('maxAxleLoadKg'))}
         {field('active', 'Active', <Controller name="active" control={form.control} render={({ field: input }) => (
           <Switch id="resource-active" checked={input.value} onChange={input.onChange} />
         )} />)}
