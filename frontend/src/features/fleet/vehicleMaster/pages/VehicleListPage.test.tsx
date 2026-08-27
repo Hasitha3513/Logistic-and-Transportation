@@ -20,6 +20,13 @@ vi.mock('../../../../auth/AuthContext', () => ({
 
 vi.mock('../../../offlineSync/OfflineSyncProvider', () => ({
   useOptionalOfflineSync: () => undefined,
+  useOfflineSync: () => ({
+    getOperationsForAggregate: () => [],
+    operationsRevision: 0,
+    enqueueOperation: vi.fn(),
+    syncNow: vi.fn(),
+    registerPostApply: () => () => {},
+  }),
 }));
 
 const vehicles: Vehicle[] = [
@@ -125,5 +132,53 @@ describe('VehicleListPage', () => {
     renderPage();
     expect(document.querySelector('.ant-spin')).toBeInTheDocument();
     expect(await screen.findByText('Vehicle registry could not be loaded')).toBeInTheDocument();
+  });
+
+  it('displays authoritative capacity facts in vehicle details drawer', async () => {
+    const user = userEvent.setup();
+    const vehicleWithCapacity: Vehicle = {
+      id: 'vehicle-cap',
+      registrationNumber: 'WP-CAP-8888',
+      categoryId: 'category-1',
+      typeId: 'type-1',
+      manufacturer: 'Isuzu',
+      model: 'Forward',
+      ownershipType: 'COMPANY_OWNED',
+      operationalStatus: 'AVAILABLE',
+      capacityKg: 5000,
+      tareWeightKg: 3500,
+      grossVehicleWeightKg: 8500,
+      cargoVolumeCapacityM3: 28.5,
+      axleCount: 2,
+      maxAxleLoadKg: 4500,
+      active: true,
+    };
+
+    server.use(
+      http.get('*/vehicles', () => HttpResponse.json([vehicleWithCapacity])),
+      http.get('*/vehicles/vehicle-cap', () => HttpResponse.json(vehicleWithCapacity)),
+      http.get('*/vehicles/vehicle-cap/documents', () => HttpResponse.json([])),
+      http.get('*/vehicles/vehicle-cap/readings', () => HttpResponse.json([])),
+      http.get('*/vehicles/vehicle-cap/meter-resets', () => HttpResponse.json([])),
+      http.get('*/vehicles/vehicle-cap/lubricant-logs', () => HttpResponse.json([])),
+      http.get('*/vehicles/vehicle-cap/maintenance-schedules', () => HttpResponse.json([])),
+    );
+
+    renderPage();
+    expect(await screen.findByText('WP-CAP-8888')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /view details/i }));
+
+    expect(await screen.findByText('Payload capacity')).toBeInTheDocument();
+    expect(screen.getByText('5000 kg')).toBeInTheDocument();
+    expect(screen.getByText('Tare weight')).toBeInTheDocument();
+    expect(screen.getByText('3500 kg')).toBeInTheDocument();
+    expect(screen.getByText('Gross vehicle weight')).toBeInTheDocument();
+    expect(screen.getByText('8500 kg')).toBeInTheDocument();
+    expect(screen.getByText('Cargo volume capacity')).toBeInTheDocument();
+    expect(screen.getByText('28.5 m³')).toBeInTheDocument();
+    expect(screen.getByText('Axle count')).toBeInTheDocument();
+    expect(screen.getByText('Max axle load')).toBeInTheDocument();
+    expect(screen.getByText('4500 kg')).toBeInTheDocument();
   });
 });

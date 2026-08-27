@@ -261,4 +261,50 @@ describe('Load planning pages', () => {
     expect(screen.getByText('lead-auditor')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Mark Structurally Ready/i })).toBeDisabled();
   });
+
+  it('renders detailed weight, volume, and capacity metrics when validation passes', async () => {
+    handlers(['LOAD_PLAN_VIEW', 'LOAD_PLAN_MANAGE']);
+    server.use(
+      http.post('*/v1/freight/load-plans/:id/validate-weight-volume', () =>
+        HttpResponse.json({
+          loadPlanId: planId,
+          validatedAt: '2026-08-27T10:00:00Z',
+          validatedBy: 'manager',
+          overallOutcome: 'PASS',
+          cargoWeightKg: 4500,
+          payloadCapacityKg: 5000,
+          payloadUtilizationPercent: 90,
+          cargoVolumeM3: 20,
+          volumeCapacityM3: 25,
+          volumeUtilizationPercent: 80,
+          projectedGrossWeightKg: 7500,
+          grossWeightLimitKg: 8000,
+          tareWeightKg: 3000,
+          payloadResult: 'PASS',
+          volumeResult: 'PASS',
+          gvwResult: 'PASS',
+          axleResult: 'INCOMPLETE',
+          violations: [],
+          missingData: [],
+        })
+      )
+    );
+
+    const user = userEvent.setup();
+    renderAt(`/freight/load-plans/${planId}`);
+
+    expect((await screen.findAllByText('LP-2026-000001')).length).toBeGreaterThan(0);
+    await user.click(screen.getByRole('button', { name: /Validate Weight & Volume/i }));
+
+    expect(await screen.findByText('Weight, Volume & Capacity Validation (US-27)')).toBeInTheDocument();
+    expect(await screen.findByText(/4500\s*kg/)).toBeInTheDocument();
+    expect(screen.getByText(/5000\s*kg/)).toBeInTheDocument();
+    expect(screen.getByText(/90\s*%/)).toBeInTheDocument();
+    expect(screen.getByText(/20\s*m³/)).toBeInTheDocument();
+    expect(screen.getByText(/25\s*m³/)).toBeInTheDocument();
+    expect(screen.getByText(/80\s*%/)).toBeInTheDocument();
+    expect(screen.getByText(/7500\s*kg/)).toBeInTheDocument();
+    expect(screen.getByText(/8000\s*kg/)).toBeInTheDocument();
+    expect(screen.getByText(/3000\s*kg/)).toBeInTheDocument();
+  });
 });

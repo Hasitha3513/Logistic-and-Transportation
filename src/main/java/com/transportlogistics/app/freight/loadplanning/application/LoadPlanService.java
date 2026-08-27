@@ -8,6 +8,7 @@ import com.transportlogistics.app.freight.loadplanning.domain.ManifestItemFact;
 import com.transportlogistics.app.freight.loadplanning.domain.LoadValidationResult;
 import com.transportlogistics.app.freight.loadplanning.domain.LoadValidationViolation;
 import com.transportlogistics.app.freight.loadplanning.domain.ValidationOutcome;
+import com.transportlogistics.app.freight.loadplanning.domain.WeightVolumeCalculationEngine;
 import com.transportlogistics.app.freight.loadplanning.domain.event.LoadPlanCreated;
 import com.transportlogistics.app.freight.loadplanning.domain.event.LoadPlanUpdated;
 import com.transportlogistics.app.freight.loadplanning.ports.inbound.CargoManifestLookupPort;
@@ -203,49 +204,54 @@ public final class LoadPlanService implements LoadPlanUseCase {
     public LoadValidationResult validateWeightAndVolume(UUID id, String actor) {
         requireActor(actor);
         LoadPlan loadPlan = get(id);
-        getAndValidateManifest(loadPlan.getCargoManifestId());
+        ManifestPlanningView manifest = getAndValidateManifest(loadPlan.getCargoManifestId());
         VehiclePlanningView vehicle = getAndValidateVehicle(loadPlan.getVehicleId());
 
         OffsetDateTime now = OffsetDateTime.now(clock);
-        List<LoadValidationViolation> violations = new ArrayList<>();
-        List<String> missingData = new ArrayList<>();
 
-        missingData.add("CARGO_ITEM_WEIGHT_DATA_MISSING");
-        missingData.add("CARGO_ITEM_DIMENSIONS_DATA_MISSING");
-        missingData.add("VEHICLE_VOLUME_CAPACITY_UNAVAILABLE");
-        missingData.add("VEHICLE_AXLE_LIMITS_UNAVAILABLE");
+        WeightVolumeCalculationEngine.VehicleCapacityInput vehicleInput = new WeightVolumeCalculationEngine.VehicleCapacityInput(
+                vehicle.capacityKg(),
+                vehicle.tareWeightKg(),
+                vehicle.grossVehicleWeightKg(),
+                vehicle.cargoVolumeCapacityM3(),
+                vehicle.axleCount(),
+                vehicle.maxAxleLoadKg()
+        );
 
-        violations.add(new LoadValidationViolation(
-                "LOAD_WEIGHT_DATA_MISSING",
-                "Cargo item weight measurements are unavailable to compute gross weight"
-        ));
-        violations.add(new LoadValidationViolation(
-                "LOAD_VOLUME_DATA_MISSING",
-                "Cargo item dimensions and vehicle volume capacity are unavailable to compute cubic volume"
-        ));
-        violations.add(new LoadValidationViolation(
-                "LOAD_AXLE_DATA_UNAVAILABLE",
-                "Vehicle axle configuration and legal axle limits are unavailable"
-        ));
+        List<WeightVolumeCalculationEngine.CargoLineMeasurement> cargoMeasurements = new ArrayList<>();
+        if (manifest.items() != null) {
+            for (CargoManifestLookupPort.ManifestItemPlanningView item : manifest.items()) {
+                // In MVP manifest item schema, item weights and dimensions are not present
+                // Passing item quantity with null unit weight and null dimensions
+                cargoMeasurements.add(new WeightVolumeCalculationEngine.CargoLineMeasurement(
+                        item.quantity(), null, WeightVolumeCalculationEngine.WeightUnit.KG,
+                        null, null, null, WeightVolumeCalculationEngine.DimensionUnit.M
+                ));
+            }
+        }
 
-        ValidationOutcome payloadResult = ValidationOutcome.INCOMPLETE;
-        ValidationOutcome volumeResult = ValidationOutcome.INCOMPLETE;
-        ValidationOutcome axleResult = ValidationOutcome.INCOMPLETE;
-        ValidationOutcome overallOutcome = ValidationOutcome.INCOMPLETE;
+        WeightVolumeCalculationEngine.EvaluationResult evaluation = WeightVolumeCalculationEngine.evaluate(vehicleInput, cargoMeasurements);
 
         return new LoadValidationResult(
                 loadPlan.getLoadPlanId(),
                 now,
                 actor,
-                overallOutcome,
-                null,
-                null,
-                null,
-                payloadResult,
-                volumeResult,
-                axleResult,
-                violations,
-                missingData
+                evaluation.overallOutcome(),
+                evaluation.cargoWeightKg(),
+                evaluation.payloadCapacityKg(),
+                evaluation.payloadUtilizationPercent(),
+                evaluation.cargoVolumeM3(),
+                evaluation.volumeCapacityM3(),
+                evaluation.volumeUtilizationPercent(),
+                evaluation.projectedGrossWeightKg(),
+                evaluation.grossWeightLimitKg(),
+                evaluation.tareWeightKg(),
+                evaluation.payloadResult(),
+                evaluation.volumeResult(),
+                evaluation.gvwResult(),
+                evaluation.axleResult(),
+                evaluation.violations(),
+                evaluation.missingData()
         );
     }
 

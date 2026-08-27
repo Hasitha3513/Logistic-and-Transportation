@@ -65,7 +65,7 @@ export default defineConfig({
       },
     },
     {
-      command: 'npm run dev -- --host localhost',
+      command: 'node ./node_modules/vite/bin/vite.js --host localhost',
       url: 'http://localhost:5173/login',
       timeout: 120_000,
       reuseExistingServer: false,

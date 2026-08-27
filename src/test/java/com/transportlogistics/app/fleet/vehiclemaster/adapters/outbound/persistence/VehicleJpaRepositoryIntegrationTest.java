@@ -56,4 +56,28 @@ class VehicleJpaRepositoryIntegrationTest {
         assertThat(repository.existsByEngineNumberAndIdNot(engine, UUID.randomUUID())).isTrue();
         assertThat(repository.existsByEngineNumberAndIdNot(engine, vehicleId)).isFalse();
     }
+
+    @Test
+    @DisplayName("Persist vehicle with full authoritative capacity master data")
+    void persistAndRetrieveCapacityData() {
+        var vehicleId = UUID.randomUUID();
+        var categoryId = UUID.randomUUID();
+        var typeId = UUID.randomUUID();
+        var reg = "REG-" + vehicleId.toString().substring(0, 8).toUpperCase();
+
+        var vehicle = new Vehicle(vehicleId, reg, "CH-CAP", "ENG-CAP", categoryId, typeId,
+                "Isuzu", "Forward", 2023, "COMPANY_OWNED", "AVAILABLE",
+                2500.0, 100.0, 5000.0, 3500.0, 8500.0, 30.0, 2, 4500.0, true);
+
+        vehicleHierarchy(jdbc, vehicle);
+        var saved = repository.save(vehicle);
+
+        var retrieved = repository.findById(vehicleId).orElseThrow();
+        assertThat(retrieved.capacityKg()).isEqualTo(5000.0);
+        assertThat(retrieved.tareWeightKg()).isEqualTo(3500.0);
+        assertThat(retrieved.grossVehicleWeightKg()).isEqualTo(8500.0);
+        assertThat(retrieved.cargoVolumeCapacityM3()).isEqualTo(30.0);
+        assertThat(retrieved.axleCount()).isEqualTo(2);
+        assertThat(retrieved.maxAxleLoadKg()).isEqualTo(4500.0);
+    }
 }

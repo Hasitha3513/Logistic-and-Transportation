@@ -39,6 +39,16 @@ public class VehicleEntity {
     private Double engineHours;
     @Column(name = "capacity_kg")
     private Double capacityKg;
+    @Column(name = "tare_weight_kg")
+    private Double tareWeightKg;
+    @Column(name = "gross_vehicle_weight_kg")
+    private Double grossVehicleWeightKg;
+    @Column(name = "cargo_volume_capacity_m3")
+    private Double cargoVolumeCapacityM3;
+    @Column(name = "axle_count")
+    private Integer axleCount;
+    @Column(name = "max_axle_load_kg")
+    private Double maxAxleLoadKg;
     @Column(name = "active")
     private boolean active;
 
@@ -48,6 +58,17 @@ public class VehicleEntity {
                          UUID categoryId, UUID typeId, String manufacturer, String model,
                          Integer manufactureYear, String ownershipType, String operationalStatus,
                          Double currentOdometerKm, Double engineHours, Double capacityKg, boolean active) {
+        this(id, registrationNumber, chassisNumber, engineNumber, categoryId, typeId, manufacturer, model,
+                manufactureYear, ownershipType, operationalStatus, currentOdometerKm, engineHours, capacityKg,
+                null, null, null, null, null, active);
+    }
+
+    public VehicleEntity(UUID id, String registrationNumber, String chassisNumber, String engineNumber,
+                         UUID categoryId, UUID typeId, String manufacturer, String model,
+                         Integer manufactureYear, String ownershipType, String operationalStatus,
+                         Double currentOdometerKm, Double engineHours, Double capacityKg,
+                         Double tareWeightKg, Double grossVehicleWeightKg, Double cargoVolumeCapacityM3,
+                         Integer axleCount, Double maxAxleLoadKg, boolean active) {
         this.id = id;
         this.registrationNumber = registrationNumber;
         this.chassisNumber = chassisNumber;
@@ -62,6 +83,11 @@ public class VehicleEntity {
         this.currentOdometerKm = currentOdometerKm;
         this.engineHours = engineHours;
         this.capacityKg = capacityKg;
+        this.tareWeightKg = tareWeightKg;
+        this.grossVehicleWeightKg = grossVehicleWeightKg;
+        this.cargoVolumeCapacityM3 = cargoVolumeCapacityM3;
+        this.axleCount = axleCount;
+        this.maxAxleLoadKg = maxAxleLoadKg;
         this.active = active;
     }
 
@@ -106,6 +132,21 @@ public class VehicleEntity {
 
     public Double getCapacityKg() { return capacityKg; }
     public void setCapacityKg(Double capacityKg) { this.capacityKg = capacityKg; }
+
+    public Double getTareWeightKg() { return tareWeightKg; }
+    public void setTareWeightKg(Double tareWeightKg) { this.tareWeightKg = tareWeightKg; }
+
+    public Double getGrossVehicleWeightKg() { return grossVehicleWeightKg; }
+    public void setGrossVehicleWeightKg(Double grossVehicleWeightKg) { this.grossVehicleWeightKg = grossVehicleWeightKg; }
+
+    public Double getCargoVolumeCapacityM3() { return cargoVolumeCapacityM3; }
+    public void setCargoVolumeCapacityM3(Double cargoVolumeCapacityM3) { this.cargoVolumeCapacityM3 = cargoVolumeCapacityM3; }
+
+    public Integer getAxleCount() { return axleCount; }
+    public void setAxleCount(Integer axleCount) { this.axleCount = axleCount; }
+
+    public Double getMaxAxleLoadKg() { return maxAxleLoadKg; }
+    public void setMaxAxleLoadKg(Double maxAxleLoadKg) { this.maxAxleLoadKg = maxAxleLoadKg; }
 
     public boolean isActive() { return active; }
     public void setActive(boolean active) { this.active = active; }

@@ -69,7 +69,12 @@ export function VehicleDetailsDrawer({
               { key: 'engine', label: 'Engine number', children: value(vehicle.data.engineNumber) },
               { key: 'category', label: 'Category', children: value(categoryName) },
               { key: 'type', label: 'Vehicle type', children: value(typeName) },
-              { key: 'capacity', label: 'Capacity', children: value(vehicle.data.capacityKg, ' kg') },
+              { key: 'capacity', label: 'Payload capacity', children: value(vehicle.data.capacityKg, ' kg') },
+              { key: 'tare', label: 'Tare weight', children: value(vehicle.data.tareWeightKg, ' kg') },
+              { key: 'gvw', label: 'Gross vehicle weight', children: value(vehicle.data.grossVehicleWeightKg, ' kg') },
+              { key: 'volume', label: 'Cargo volume capacity', children: value(vehicle.data.cargoVolumeCapacityM3, ' m³') },
+              { key: 'axles', label: 'Axle count', children: value(vehicle.data.axleCount) },
+              { key: 'axleLoad', label: 'Max axle load', children: value(vehicle.data.maxAxleLoadKg, ' kg') },
               { key: 'odometer', label: 'Current odometer', children: value(vehicle.data.currentOdometerKm, ' km') },
               { key: 'hours', label: 'Engine hours', children: value(vehicle.data.engineHours, ' h') },
             ]}

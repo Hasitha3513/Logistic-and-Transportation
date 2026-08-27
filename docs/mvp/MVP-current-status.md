@@ -21,7 +21,7 @@ A comprehensive architectural and repository audit was conducted across the **Tr
      - `US-24` (Freight Orders): **COMPLETE**
      - `US-25` (Cargo Manifest): **COMPLETE** (Structured tri-state fragile/temperature classifications implemented and verified).
      - `US-26` (Load Planning): **COMPLETE** (Structural readiness boundary, transactional revalidation, fragile/temperature isolation rules, free-text non-authority, optimistic concurrency, and 8 cross-browser Playwright scenarios closed across Chromium, Firefox, and WebKit in `P2-LOAD-CORR-001` through `006`).
-     - `US-27` (Weight & Volume Validation): **PARTIAL** (Cargo weights/dimensions present; Vehicle schema lacks authoritative tare/GVW/volume/axle master data).
+     - `US-27` (Weight & Volume Validation): **COMPLETE** (Authoritative vehicle capacity master data foundation V39, pure domain calculation engine, GVW limits, structured diagnostics, and dedicated Playwright E2E suite closed in `P2-WEIGHT-VOLUME-ACCEPTANCE-003`).
      - `US-28` (Freight Insurance): **COMPLETE** (Policies, claims, multi-tranche settlements, disputes, and E2E closure).
      - `US-29` (Freight Reports): **BLOCKED_BY_TENANT_FOUNDATION** (Tenant implementation paused).
      - `US-30` (Cargo Exceptions): **MISSING** (No dedicated aggregate or workflow).
@@ -30,10 +30,10 @@ A comprehensive architectural and repository audit was conducted across the **Tr
    - **Advanced Fuel Scope (US-35 Cards, US-37 Analytics, US-38 Theft Exceptions):** **DEFERRED / Post-MVP**.
 4. **Current Verification Baseline:**
    - **Backend Modulith/Architecture:** 25/25 tests PASS (0 module or layer violations).
-   - **Backend Freight Suite:** 108/108 tests PASS (0 failures, 0 errors, 0 skipped).
+   - **Backend Freight Suite:** 110/110 tests PASS (0 failures, 0 errors, 0 skipped).
    - **Frontend Quality:** ESLint 0 errors/0 warnings; TypeScript & Vite production build clean.
-   - **Frontend Unit/Component Tests:** 44 test files, 222 tests PASS (100%).
-   - **Playwright E2E Regression:** 208/208 PASS across Chromium and Firefox (100%).
+   - **Frontend Unit/Component Tests:** 44 test files, 224 tests PASS (100%).
+   - **Playwright E2E Regression:** 220/220 PASS across Chromium and Firefox (100%).
 
 ---
 
@@ -41,7 +41,7 @@ A comprehensive architectural and repository audit was conducted across the **Tr
 
 - **Runtime & Environment:** Java 21, Spring Boot 3.2.12, Spring Modulith 1.2.12, PostgreSQL / Flyway, Node 24, Vite 7.3.6, React 19, TypeScript.
 - **Top-Level Backend Modules:** `fleet`, `freight`, `fuel`, `identity`, `notification`, `offlinesync`, `organization`, `reporting`, `routing`, `shared`, `system`, `trip`.
-- **Database Migrations:** 38 migrations (`V1` through `V38`), strictly sequential with 0 gaps or out-of-order versions.
+- **Database Migrations:** 39 migrations (`V1` through `V39`), strictly sequential with 0 gaps or out-of-order versions.
 - **Security & Authorization:** Stateless JWT, rotating refresh tokens, BCrypt strength 12, 70+ business permissions enforced across API routes and frontend navigation.
 
 ---
@@ -52,7 +52,7 @@ A comprehensive architectural and repository audit was conducted across the **Tr
 |---|---|---|:---:|---|
 | **MVP 1.0** | Core Transport Operations | US-01–19, US-39–45, US-71, 74, 75, 77, 79, 80, 81, 83 | **34** | **34 / 34 COMPLETE (100%)** |
 | **MVP 1.1** | Advanced Route | US-20–23 | **4** | **4 / 4 COMPLETE (100%)** |
-| **MVP 1.1** | Freight & Cargo | US-24–30 | **7** | **4 COMPLETE, 1 PARTIAL, 1 MISSING, 1 BLOCKED** |
+| **MVP 1.1** | Freight & Cargo | US-24–30 | **7** | **5 COMPLETE, 1 MISSING, 1 BLOCKED** |
 | **MVP 1.2** | Full Fuel Expansion | US-31–38 | **8** | **5 COMPLETE, 3 DEFERRED** |
 | **Post-MVP** | Advanced Product Scope | US-46, 47, 48–70, 72, 73, 76, 78, 82, 84–87 | **44** | **DEFERRED (Product Roadmap)** |
 

@@ -83,6 +83,36 @@ class VehicleDomainTest {
                 .hasMessageContaining("Capacity cannot be negative");
 
         assertThatThrownBy(() -> new Vehicle(UUID.randomUUID(), "WP-CAB-1234", null, null, categoryId, typeId,
+                null, null, null, null, null, null, null, null, -10.0, null, null, null, null, true))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Tare weight cannot be negative");
+
+        assertThatThrownBy(() -> new Vehicle(UUID.randomUUID(), "WP-CAB-1234", null, null, categoryId, typeId,
+                null, null, null, null, null, null, null, null, null, -500.0, null, null, null, true))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Gross vehicle weight cannot be negative");
+
+        assertThatThrownBy(() -> new Vehicle(UUID.randomUUID(), "WP-CAB-1234", null, null, categoryId, typeId,
+                null, null, null, null, null, null, null, null, null, null, -12.5, null, null, true))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Cargo volume capacity cannot be negative");
+
+        assertThatThrownBy(() -> new Vehicle(UUID.randomUUID(), "WP-CAB-1234", null, null, categoryId, typeId,
+                null, null, null, null, null, null, null, null, null, null, null, 0, null, true))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Axle count must be at least 1");
+
+        assertThatThrownBy(() -> new Vehicle(UUID.randomUUID(), "WP-CAB-1234", null, null, categoryId, typeId,
+                null, null, null, null, null, null, null, null, null, null, null, null, -100.0, true))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Max axle load cannot be negative");
+
+        assertThatThrownBy(() -> new Vehicle(UUID.randomUUID(), "WP-CAB-1234", null, null, categoryId, typeId,
+                null, null, null, null, null, null, null, 3000.0, 5000.0, 4000.0, 25.0, 2, 6000.0, true))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Gross vehicle weight must be greater than or equal to tare weight");
+
+        assertThatThrownBy(() -> new Vehicle(UUID.randomUUID(), "WP-CAB-1234", null, null, categoryId, typeId,
                 null, null, null, null, null, -1.0, null, null, true))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Current odometer cannot be negative");
@@ -91,6 +121,24 @@ class VehicleDomainTest {
                 null, null, null, null, null, null, -5.0, null, true))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Engine hours cannot be negative");
+    }
+
+    @Test
+    @DisplayName("Successfully instantiate Vehicle with full capacity facts")
+    void vehicleWithCapacityFacts() {
+        var id = UUID.randomUUID();
+        var categoryId = UUID.randomUUID();
+        var typeId = UUID.randomUUID();
+        var vehicle = new Vehicle(id, "WP-CAB-1234", "CH-987654", "ENG-123456",
+                categoryId, typeId, "ISUZU", "Forward", 2023, "COMPANY_OWNED",
+                "AVAILABLE", 5000.0, 120.0, 5000.0, 3500.0, 8500.0, 28.5, 2, 4500.0, true);
+
+        assertThat(vehicle.capacityKg()).isEqualTo(5000.0);
+        assertThat(vehicle.tareWeightKg()).isEqualTo(3500.0);
+        assertThat(vehicle.grossVehicleWeightKg()).isEqualTo(8500.0);
+        assertThat(vehicle.cargoVolumeCapacityM3()).isEqualTo(28.5);
+        assertThat(vehicle.axleCount()).isEqualTo(2);
+        assertThat(vehicle.maxAxleLoadKg()).isEqualTo(4500.0);
     }
 
     @Test

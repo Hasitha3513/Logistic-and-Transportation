@@ -26,6 +26,11 @@ export interface Vehicle {
   currentOdometerKm?: number | null;
   engineHours?: number | null;
   capacityKg?: number | null;
+  tareWeightKg?: number | null;
+  grossVehicleWeightKg?: number | null;
+  cargoVolumeCapacityM3?: number | null;
+  axleCount?: number | null;
+  maxAxleLoadKg?: number | null;
   active: boolean;
 }
 

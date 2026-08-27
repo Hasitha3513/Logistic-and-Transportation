@@ -27,7 +27,12 @@ public class FleetLoadPlanLookupAdapter implements VehicleLoadSpaceLookupPort {
         return new VehiclePlanningView(
                 summary.id(),
                 summary.registrationNumber(),
-                null,
+                summary.capacityKg(),
+                summary.tareWeightKg(),
+                summary.grossVehicleWeightKg(),
+                summary.cargoVolumeCapacityM3(),
+                summary.axleCount(),
+                summary.maxAxleLoadKg(),
                 summary.operationalStatus(),
                 summary.active()
         );

@@ -39,6 +39,12 @@ class MaintenanceSchedulePersistenceIntegrationTest {
 
     @BeforeEach
     void setUp() {
+        jdbc.update("DELETE FROM load_plan_item_placement");
+        jdbc.update("DELETE FROM load_plan");
+        jdbc.update("DELETE FROM trip");
+        jdbc.update("DELETE FROM vehicle_document");
+        jdbc.update("DELETE FROM vehicle_reading");
+        jdbc.update("DELETE FROM vehicle_meter_reset");
         jdbc.update("DELETE FROM maintenance_schedule");
         jdbc.update("DELETE FROM vehicle");
 

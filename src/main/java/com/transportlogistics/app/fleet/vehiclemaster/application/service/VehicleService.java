@@ -75,7 +75,8 @@ public final class VehicleService implements VehicleUseCase {
         var vehicleToSave = new Vehicle(id, value.registrationNumber(), value.chassisNumber(), value.engineNumber(),
                 value.categoryId(), value.typeId(), value.manufacturer(), value.model(), value.manufactureYear(),
                 value.ownershipType(), value.operationalStatus(), value.currentOdometerKm(), value.engineHours(),
-                value.capacityKg(), value.active());
+                value.capacityKg(), value.tareWeightKg(), value.grossVehicleWeightKg(),
+                value.cargoVolumeCapacityM3(), value.axleCount(), value.maxAxleLoadKg(), value.active());
         return repo.save(vehicleToSave);
     }
 
@@ -87,7 +88,8 @@ public final class VehicleService implements VehicleUseCase {
         }
         repo.save(new Vehicle(v.id(), v.registrationNumber(), v.chassisNumber(), v.engineNumber(), v.categoryId(),
                 v.typeId(), v.manufacturer(), v.model(), v.manufactureYear(), v.ownershipType(), v.operationalStatus(),
-                v.currentOdometerKm(), v.engineHours(), v.capacityKg(), false));
+                v.currentOdometerKm(), v.engineHours(), v.capacityKg(), v.tareWeightKg(), v.grossVehicleWeightKg(),
+                v.cargoVolumeCapacityM3(), v.axleCount(), v.maxAxleLoadKg(), false));
     }
 
     private void validateMasterDataReferences(UUID categoryId, UUID typeId) {

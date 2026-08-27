@@ -18,7 +18,20 @@ export const vehicleSchema = z.object({
   currentOdometerKm: optionalNonNegative,
   engineHours: optionalNonNegative,
   capacityKg: optionalNonNegative,
+  tareWeightKg: optionalNonNegative,
+  grossVehicleWeightKg: optionalNonNegative,
+  cargoVolumeCapacityM3: optionalNonNegative,
+  axleCount: z.number().int().min(1, 'Axle count must be at least 1').optional().nullable(),
+  maxAxleLoadKg: optionalNonNegative,
   active: z.boolean(),
+}).refine((data) => {
+  if (data.grossVehicleWeightKg != null && data.tareWeightKg != null) {
+    return data.grossVehicleWeightKg >= data.tareWeightKg;
+  }
+  return true;
+}, {
+  message: 'Gross vehicle weight must be greater than or equal to tare weight',
+  path: ['grossVehicleWeightKg'],
 });
 
 export type VehicleFormValues = z.infer<typeof vehicleSchema>;
