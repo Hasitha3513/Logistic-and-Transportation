@@ -1,6 +1,6 @@
 import { expect, test, type APIRequestContext } from '@playwright/test';
 import { randomUUID } from 'node:crypto';
-import { adminLogin, authenticatePage, headers, provisionUser, type AuthTokens } from '../../helpers/notificationTestApi';
+import { adminLogin, authenticatePage, headers, type AuthTokens } from '../../helpers/notificationTestApi';
 
 const customerId = '10000000-0000-0000-0000-000000000001';
 const originLocationId = '20000000-0000-0000-0000-000000000001';

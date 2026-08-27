@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Button, Card, Col, Form, Input, Row, Select, Space, Table, Tag, Typography, message } from 'antd';
-import { PlusOutlined, EyeOutlined, WarningOutlined, FilterOutlined, ReloadOutlined } from '@ant-design/icons';
+import { PlusOutlined, EyeOutlined, WarningOutlined, ReloadOutlined } from '@ant-design/icons';
 import { useAuth } from '../../../../auth/AuthContext';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { useCargoExceptions } from '../hooks/useCargoExceptions';

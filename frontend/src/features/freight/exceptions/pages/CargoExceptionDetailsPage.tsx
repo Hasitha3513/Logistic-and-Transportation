@@ -17,7 +17,6 @@ import {
   ArrowLeftOutlined,
   CheckCircleOutlined,
   CloseCircleOutlined,
-  ExclamationCircleOutlined,
   PauseCircleOutlined,
   PlayCircleOutlined,
   WarningOutlined,
@@ -34,10 +33,8 @@ import {
   useResolveException,
 } from '../hooks/useCargoExceptions';
 import type {
-  CargoExceptionHistoryEntry,
   ExceptionSeverity,
   ExceptionStatus,
-  ExceptionType,
 } from '../types';
 
 const { Title, Text, Paragraph } = Typography;

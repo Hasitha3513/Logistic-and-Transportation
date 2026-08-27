@@ -24,16 +24,17 @@ A comprehensive architectural and repository audit was conducted across the **Tr
      - `US-27` (Weight & Volume Validation): **COMPLETE** (Authoritative vehicle capacity master data foundation V39, pure domain calculation engine, GVW limits, structured diagnostics, and dedicated Playwright E2E suite closed in `P2-WEIGHT-VOLUME-ACCEPTANCE-003`).
      - `US-28` (Freight Insurance): **COMPLETE** (Policies, claims, multi-tranche settlements, disputes, and E2E closure).
      - `US-29` (Freight Reports): **BLOCKED_BY_TENANT_FOUNDATION** (Tenant implementation paused).
-     - `US-30` (Cargo Exceptions): **MISSING** (No dedicated aggregate or workflow).
+     - `US-30` (Cargo Exceptions): **COMPLETE** (Aggregate, 6 exception types, workflow state machine, hold/release, resolution history, RBAC, API, UI, and 8 Playwright E2E scenarios closed in `P2-CARGO-EXCEPTION-001`).
 3. **MVP 1.2 (Full Fuel Expansion):**
    - **Core Fuel Capabilities (US-31, 32, 33, 34, 36):** **5 / 5 COMPLETE (100.0%)**.
    - **Advanced Fuel Scope (US-35 Cards, US-37 Analytics, US-38 Theft Exceptions):** **DEFERRED / Post-MVP**.
 4. **Current Verification Baseline:**
    - **Backend Modulith/Architecture:** 25/25 tests PASS (0 module or layer violations).
-   - **Backend Freight Suite:** 110/110 tests PASS (0 failures, 0 errors, 0 skipped).
+   - **Backend Total Suite:** 925/925 tests PASS (0 failures, 0 errors, 22 skipped).
+   - **Backend Fuel Suite:** 103/103 tests PASS (0 failures, 0 errors, 0 skipped).
    - **Frontend Quality:** ESLint 0 errors/0 warnings; TypeScript & Vite production build clean.
-   - **Frontend Unit/Component Tests:** 44 test files, 224 tests PASS (100%).
-   - **Playwright E2E Regression:** 220/220 PASS across Chromium and Firefox (100%).
+   - **Frontend Unit/Component Tests:** 45 test files, 227 tests PASS (100%).
+   - **Playwright E2E Regression:** 225/225 PASS across Chromium and Firefox (100%).
 
 ---
 
@@ -154,15 +155,16 @@ A comprehensive architectural and repository audit was conducted across the **Tr
 ## 11. Current Development Position & Exact Next Task
 
 ### Current Position:
-- **Release Band:** MVP 1.1
-- **Domain:** Freight / Cargo
-- **Story:** US-26 (Plan Loads)
-- **Last Completed Task:** `P2-LOAD-CORR-006` (Cross-browser Playwright acceptance suite executed and full regression closed).
-- **Pending Action:** Formal acceptance gate and status promotion decision for US-26.
+- **Release Band:** MVP 1.2 (Full Fuel Expansion)
+- **Status:** **`CLOSED_WITH_APPROVED_DEFERMENTS`**
+- **Last Completed Task:** `MVP-1.2-FUEL-CLOSURE-001`
+- **Pending Action:** Transition to MVP 1.3 / Phase 3 (Driver Lifecycle, Fleet Inspection & Maintenance Work Orders).
 
 ---
 
 ### Exact Next Task:
-**Task ID:** `P2-LOAD-ACCEPTANCE-001`  
-**Title:** Final US-26 Acceptance and Status Decision  
-**Reason:** Dedicated US-26 cross-browser Playwright tests and full regression have successfully executed and passed in `P2-LOAD-CORR-006`. In accordance with the mandated decision rules, the immediate next step is the formal acceptance audit and status closure of US-26 before proceeding to `US-27` (`P2-WEIGHT-VOLUME-DATA-001`) or `US-30` (`P2-CARGO-EXCEPTION-001`).
+**Task ID:** `MVP-1.3-INSPECTION-MAINTENANCE-001`  
+**Title:** Audit and Reconcile Vehicle Inspection, Preventive Maintenance Triggers, and Maintenance Work Orders  
+**Reason:** MVP 1.0 (Core), MVP 1.1 (Route & Freight), and MVP 1.2 (Fuel) are formally closed. The next scheduled release band in the product roadmap is MVP 1.3 / Phase 3.
+
+
