@@ -15,6 +15,9 @@ import com.transportlogistics.app.freight.order.domain.model.FreightOrderLine;
 import com.transportlogistics.app.freight.order.ports.inbound.FreightOrderUseCase;
 import com.transportlogistics.app.freight.manifest.domain.model.CargoManifest;
 import com.transportlogistics.app.freight.manifest.ports.inbound.CargoManifestUseCase;
+import com.transportlogistics.app.freight.loadplanning.domain.LoadPlan;
+import com.transportlogistics.app.freight.loadplanning.domain.LoadPlanReadinessStatus;
+import com.transportlogistics.app.freight.loadplanning.ports.inbound.LoadPlanUseCase;
 import com.transportlogistics.app.organization.application.ports.in.CustomerUseCase;
 import com.transportlogistics.app.organization.application.ports.in.DepartmentUseCase;
 import com.transportlogistics.app.organization.application.ports.in.LocationUseCase;
@@ -68,6 +71,7 @@ class BusinessAuthorizationIntegrationTest {
             "FUEL_PRICE_VIEW",
             "FREIGHT_ORDER_VIEW", "FREIGHT_ORDER_MANAGE",
             "CARGO_MANIFEST_VIEW", "CARGO_MANIFEST_MANAGE", "CARGO_MANIFEST_FINALIZE",
+            "LOAD_PLAN_VIEW", "LOAD_PLAN_MANAGE",
             "IDENTITY_MANAGE");
 
     @Autowired MockMvc mvc;
@@ -84,6 +88,7 @@ class BusinessAuthorizationIntegrationTest {
     @MockBean FuelPurchaseUseCase fuelPurchases;
     @MockBean FreightOrderUseCase freightOrders;
     @MockBean CargoManifestUseCase cargoManifests;
+    @MockBean LoadPlanUseCase loadPlans;
     @MockBean CustomerUseCase customers;
     @MockBean DepartmentUseCase departments;
     @MockBean LocationUseCase locations;
@@ -132,6 +137,16 @@ class BusinessAuthorizationIntegrationTest {
         when(cargoManifests.create(any(), eq("permitted"))).thenReturn(cargoManifest);
         when(cargoManifests.addItem(eq(cargoManifest.id()), any(), eq("permitted"))).thenReturn(cargoManifest);
         when(cargoManifests.finalizeManifest(eq(cargoManifest.id()), eq(0L), eq("permitted"))).thenReturn(cargoManifest);
+
+        var planId = UUID.fromString("b3000000-0000-0000-0000-000000000001");
+        var samplePlan = new LoadPlan(
+                planId, "LP-2026-000001", cargoManifest.id(), UUID.randomUUID(), List.of(), "notes",
+                LoadPlanReadinessStatus.DRAFT, null, null, now, now, "permitted", "permitted", 0L
+        );
+        when(loadPlans.list()).thenReturn(List.of(samplePlan));
+        when(loadPlans.get(planId)).thenReturn(samplePlan);
+        when(loadPlans.create(any(), eq("permitted"))).thenReturn(samplePlan);
+        when(loadPlans.markReady(eq(planId), eq(0L), eq("permitted"))).thenReturn(samplePlan);
     }
 
     @Test
@@ -149,7 +164,7 @@ class BusinessAuthorizationIntegrationTest {
         }
 
         verifyNoInteractions(trips, vehicles, drivers, routes, fuelIssues, fuelStations, fuelPurchases,
-                customers, departments, locations, projects, vendors, freightOrders, cargoManifests);
+                customers, departments, locations, projects, vendors, freightOrders, cargoManifests, loadPlans);
     }
 
     @Test
@@ -190,6 +205,8 @@ class BusinessAuthorizationIntegrationTest {
         verify(cargoManifests).create(any(), eq("permitted"));
         verify(cargoManifests).addItem(any(), any(), eq("permitted"));
         verify(cargoManifests).finalizeManifest(any(), eq(0L), eq("permitted"));
+        verify(loadPlans).list();
+        verify(loadPlans).markReady(any(), eq(0L), eq("permitted"));
     }
 
     @Test
@@ -207,6 +224,7 @@ class BusinessAuthorizationIntegrationTest {
         var typeId = UUID.randomUUID();
         var originId = UUID.randomUUID();
         var destinationId = UUID.randomUUID();
+        var planId = UUID.fromString("b3000000-0000-0000-0000-000000000001");
         return List.of(
                 post("/trips/{id}/approve", tripId),
                 post("/trips/{id}/reject", tripId).contentType(MediaType.APPLICATION_JSON)
@@ -227,8 +245,8 @@ class BusinessAuthorizationIntegrationTest {
                         """),
                 post("/routes").contentType(MediaType.APPLICATION_JSON).content("""
                         {"code":"AUTH-ROUTE","name":"Authorization Route","originLocationId":"%s",
-                         "destinationLocationId":"%s","plannedDistanceKm":10,"estimatedDurationMinutes":30,
-                         "stops":[]}
+                          "destinationLocationId":"%s","plannedDistanceKm":10,"estimatedDurationMinutes":30,
+                          "stops":[]}
                         """.formatted(originId, destinationId)),
                 post("/routes/{id}/optimize", UUID.randomUUID()),
                 post("/routes/{id}/apply-optimization", UUID.randomUUID()).contentType(MediaType.APPLICATION_JSON)
@@ -278,6 +296,9 @@ class BusinessAuthorizationIntegrationTest {
                 post("/v1/freight/manifests/{id}/items", cargoManifest().id()).contentType(MediaType.APPLICATION_JSON)
                         .content(manifestItemJson()),
                 post("/v1/freight/manifests/{id}/finalize", cargoManifest().id()).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"version\":0}"),
+                get("/v1/freight/load-plans"),
+                post("/v1/freight/load-plans/{id}/ready", planId).contentType(MediaType.APPLICATION_JSON)
                         .content("{\"version\":0}"),
                 get("/reports/trips").param("fromDate", "2026-01-01").param("toDate", "2026-01-31"),
                 get("/dashboard/operations"));

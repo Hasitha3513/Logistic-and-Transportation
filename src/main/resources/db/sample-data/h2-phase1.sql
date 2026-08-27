@@ -463,3 +463,49 @@ VALUES ('77000000-0000-0000-0000-000000000003', '76000000-0000-0000-0000-0000000
 -- -------------------------------------------------------------------------------------------------
 INSERT INTO offline_sync_operation (operation_id, operation_type, operation_version, actor_id, client_instance_id, aggregate_type, aggregate_id, request_hash, result_status, result_code, result_version, processed_at, created_at)
 VALUES ('90000000-0000-0000-0000-000000000001', 'RECORD_CHECKPOINT', 1, '00000000-0000-0000-0000-000000000001', '91000000-0000-0000-0000-000000000001', 'Trip', '60000000-0000-0000-0000-000000000006', 'HASH-SYNC-001', 'APPLIED', 'SUCCESS', 1, CURRENT_TIMESTAMP - INTERVAL '20' MINUTE, CURRENT_TIMESTAMP - INTERVAL '25' MINUTE);
+
+-- -------------------------------------------------------------------------------------------------
+-- 9. FREIGHT ORDERS, CARGO MANIFESTS, LOAD PLANS & INSURANCE
+-- -------------------------------------------------------------------------------------------------
+INSERT INTO freight_order (id, order_number, customer_id, origin_location_id, destination_location_id, requested_pickup_at, requested_delivery_at, service_level, priority, special_handling_instructions, version, created_at, updated_at, created_by, updated_by)
+VALUES 
+  ('85000000-0000-0000-0000-000000000001', 'FO-2026-0001', '10000000-0000-0000-0000-000000000003', '20000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000002', CURRENT_TIMESTAMP - INTERVAL '3' DAY, CURRENT_TIMESTAMP + INTERVAL '2' DAY, 'EXPRESS', 'HIGH', 'Temperature sensitive medical vaccines and diagnostics', 0, CURRENT_TIMESTAMP - INTERVAL '3' DAY, CURRENT_TIMESTAMP - INTERVAL '3' DAY, 'freight.planner', 'freight.planner'),
+  ('85000000-0000-0000-0000-000000000002', 'FO-2026-0002', '10000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000003', CURRENT_TIMESTAMP - INTERVAL '2' DAY, CURRENT_TIMESTAMP + INTERVAL '3' DAY, 'STANDARD', 'NORMAL', 'General retail consumer hardware and appliances', 0, CURRENT_TIMESTAMP - INTERVAL '2' DAY, CURRENT_TIMESTAMP - INTERVAL '2' DAY, 'freight.planner', 'freight.planner');
+
+INSERT INTO freight_order_line (id, freight_order_id, description, quantity, line_order)
+VALUES 
+  ('86000000-0000-0000-0000-000000000001', '85000000-0000-0000-0000-000000000001', 'Insulin Vials Cold Packs (2C to 8C)', 50.0000, 0),
+  ('86000000-0000-0000-0000-000000000002', '85000000-0000-0000-0000-000000000001', 'Laboratory Glass Test Tubes & Pipettes', 20.0000, 1),
+  ('86000000-0000-0000-0000-000000000003', '85000000-0000-0000-0000-000000000002', 'Electric Water Heaters & Geysers', 30.0000, 0);
+
+
+INSERT INTO cargo_manifest (id, manifest_number, freight_order_id, freight_order_number, version, created_at, updated_at, created_by, updated_by, finalized_at, finalized_by)
+VALUES 
+  ('87000000-0000-0000-0000-000000000001', 'MNF-2026-0001', '85000000-0000-0000-0000-000000000001', 'FO-2026-0001', 0, CURRENT_TIMESTAMP - INTERVAL '2' DAY, CURRENT_TIMESTAMP - INTERVAL '2' DAY, 'freight.planner', 'freight.planner', CURRENT_TIMESTAMP - INTERVAL '2' DAY, 'freight.planner');
+
+INSERT INTO cargo_manifest_item (id, cargo_manifest_id, freight_order_line_id, description, quantity, packing_information, commodity_classification, customs_applicable, customs_information, hazardous, hazardous_classification, hazardous_details, item_order, fragile, temperature_sensitive)
+VALUES 
+  ('88000000-0000-0000-0000-000000000001', '87000000-0000-0000-0000-000000000001', '86000000-0000-0000-0000-000000000001', 'Insulin Vials Cold Packs (2C to 8C)', 50.0000, 'Insulated Thermocol Boxes with Gel Packs', 'PHARMACEUTICAL', FALSE, NULL, FALSE, NULL, NULL, 0, FALSE, TRUE),
+  ('88000000-0000-0000-0000-000000000002', '87000000-0000-0000-0000-000000000001', '86000000-0000-0000-0000-000000000002', 'Laboratory Glass Test Tubes & Pipettes', 20.0000, 'Corrugated Cardboard with Bubble Wrap', 'GLASSWARE', FALSE, NULL, FALSE, NULL, NULL, 1, TRUE, FALSE);
+
+INSERT INTO load_plan (id, load_plan_number, cargo_manifest_id, vehicle_id, notes, version, created_at, updated_at, created_by, updated_by, readiness_status, ready_at, ready_by)
+VALUES 
+  ('89000000-0000-0000-0000-000000000001', 'LP-2026-0001', '87000000-0000-0000-0000-000000000001', '32000000-0000-0000-0000-000000000004', 'Validated Reefer loading layout for cold chain vaccines', 1, CURRENT_TIMESTAMP - INTERVAL '1' DAY, CURRENT_TIMESTAMP - INTERVAL '1' DAY, 'freight.planner', 'freight.planner', 'STRUCTURALLY_READY', CURRENT_TIMESTAMP - INTERVAL '1' DAY, 'freight.planner');
+
+INSERT INTO load_plan_item_placement (id, load_plan_id, manifest_item_id, placement_order, zone_reference, stack_group, container_reference, loading_sequence, special_handling_notes)
+VALUES 
+  ('89500000-0000-0000-0000-000000000001', '89000000-0000-0000-0000-000000000001', '88000000-0000-0000-0000-000000000001', 0, 'REEFER_ZONE_A', 'TEMP_STACK_01', 'CONT-COLD-01', 0, 'Keep cold at 4C'),
+  ('89500000-0000-0000-0000-000000000002', '89000000-0000-0000-0000-000000000001', '88000000-0000-0000-0000-000000000002', 1, 'AMBIENT_ZONE_B', 'FRAGILE_STACK_01', 'CONT-BOX-02', 1, 'Handle with care - fragile glassware');
+
+INSERT INTO freight_insurance_policy (id, policy_number, freight_order_id, cargo_manifest_id, insurance_provider, policy_type, coverage_amount, premium_amount, currency, valid_from, valid_until, status, version, created_at, updated_at, created_by, updated_by)
+VALUES 
+  ('89800000-0000-0000-0000-000000000001', 'POL-2026-0001', '85000000-0000-0000-0000-000000000001', '87000000-0000-0000-0000-000000000001', 'Sri Lanka Insurance Corporation (SLIC)', 'ALL_RISK_CARGO', 3500000.0000, 17500.0000, 'LKR', CURRENT_TIMESTAMP - INTERVAL '3' DAY, CURRENT_TIMESTAMP + INTERVAL '30' DAY, 'ACTIVE', 0, CURRENT_TIMESTAMP - INTERVAL '3' DAY, CURRENT_TIMESTAMP - INTERVAL '3' DAY, 'freight.planner', 'freight.planner');
+
+INSERT INTO freight_insurance_claim (id, claim_number, policy_id, freight_order_id, incident_reference, damage_description, claimed_amount, assessed_amount, assessment_notes, assessed_by, assessed_at, status, resolution_reason, version, created_at, updated_at, created_by, updated_by)
+VALUES 
+  ('89900000-0000-0000-0000-000000000001', 'CLM-2026-0001', '89800000-0000-0000-0000-000000000001', '85000000-0000-0000-0000-000000000001', 'INC-2026-001', 'Minor temperature excursion in Reefer Zone A due to sensor fluctuation', 45000.0000, 40000.0000, 'Assessed 2 affected boxes, approved claim compensation', 'claims.officer', CURRENT_TIMESTAMP - INTERVAL '1' DAY, 'APPROVED', 'Approved by Senior Underwriter', 1, CURRENT_TIMESTAMP - INTERVAL '2' DAY, CURRENT_TIMESTAMP - INTERVAL '1' DAY, 'freight.planner', 'claims.officer');
+
+INSERT INTO freight_insurance_settlement (id, claim_id, settlement_reference, amount, currency, notes, settled_by, settled_at)
+VALUES 
+  ('89950000-0000-0000-0000-000000000001', '89900000-0000-0000-0000-000000000001', 'SETTLE-2026-001', 40000.0000, 'LKR', 'Bank wire transfer settlement processed to client account', 'finance.manager', CURRENT_TIMESTAMP - INTERVAL '12' HOUR);
+

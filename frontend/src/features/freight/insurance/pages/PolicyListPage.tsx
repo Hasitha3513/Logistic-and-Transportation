@@ -54,16 +54,16 @@ export const PolicyListPage: React.FC = () => {
       key: 'coverage',
       render: (_: unknown, record: PolicyResponse) => (
         <Text strong>
-          {record.coverageAmount.toLocaleString()} {record.currencyCode}
+          {record.coverageAmount != null ? record.coverageAmount.toLocaleString() : '-'} {record.currency || record.currencyCode || ''}
         </Text>
       ),
     },
     {
-      title: 'Deductible',
-      key: 'deductible',
+      title: 'Premium',
+      key: 'premium',
       render: (_: unknown, record: PolicyResponse) => (
         <span>
-          {record.deductibleAmount.toLocaleString()} {record.currencyCode}
+          {record.premiumAmount != null ? record.premiumAmount.toLocaleString() : '-'} {record.currency || record.currencyCode || ''}
         </span>
       ),
     },
@@ -137,7 +137,7 @@ export const PolicyListPage: React.FC = () => {
           columns={columns}
           rowKey="id"
           loading={isLoading}
-          pagination={{ pageSize: 10 }}
+          pagination={{ pageSize: 50 }}
         />
       </Card>
     </div>

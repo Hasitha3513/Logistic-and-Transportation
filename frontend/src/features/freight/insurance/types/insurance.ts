@@ -10,8 +10,9 @@ export interface PolicyResponse {
   policyType: string;
   coverageAmount: number;
   premiumAmount: number;
-  deductibleAmount: number;
-  currencyCode: string;
+  deductibleAmount?: number;
+  currencyCode?: string;
+  currency?: string;
   validFrom: string;
   validUntil: string;
   status: PolicyStatus;

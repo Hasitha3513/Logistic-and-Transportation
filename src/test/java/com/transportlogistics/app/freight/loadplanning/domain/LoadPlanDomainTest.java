@@ -739,6 +739,35 @@ class LoadPlanDomainTest {
         );
         LoadPlan seqUpdated = readyPlan.update(vehicle, changedSeq, "Notes", "planner2", updateTime);
         assertThat(seqUpdated.getReadinessStatus()).isEqualTo(LoadPlanReadinessStatus.DRAFT);
+
+        // Change container/pallet reference
+        List<LoadPlanItemPlacement> changedContainer = List.of(
+                new LoadPlanItemPlacement(UUID.randomUUID(), item1, 0, "FRONT", "STACK-1", "P-2", 1, null)
+        );
+        LoadPlan containerUpdated = readyPlan.update(vehicle, changedContainer, "Notes", "planner2", updateTime);
+        assertThat(containerUpdated.getReadinessStatus()).isEqualTo(LoadPlanReadinessStatus.DRAFT);
+        assertThat(containerUpdated.getReadyAt()).isNull();
+
+        // Change placement order
+        List<LoadPlanItemPlacement> changedOrder = List.of(
+                new LoadPlanItemPlacement(UUID.randomUUID(), item1, 5, "FRONT", "STACK-1", "P-1", 1, null)
+        );
+        LoadPlan orderUpdated = readyPlan.update(vehicle, changedOrder, "Notes", "planner2", updateTime);
+        assertThat(orderUpdated.getReadinessStatus()).isEqualTo(LoadPlanReadinessStatus.DRAFT);
+
+        // Add placement
+        UUID item2 = UUID.randomUUID();
+        List<LoadPlanItemPlacement> addedPlacements = List.of(
+                new LoadPlanItemPlacement(UUID.randomUUID(), item1, 0, "FRONT", "STACK-1", "P-1", 1, null),
+                new LoadPlanItemPlacement(UUID.randomUUID(), item2, 1, "REAR", "STACK-2", "P-2", 2, null)
+        );
+        LoadPlan addUpdated = readyPlan.update(vehicle, addedPlacements, "Notes", "planner2", updateTime);
+        assertThat(addUpdated.getReadinessStatus()).isEqualTo(LoadPlanReadinessStatus.DRAFT);
+
+        // Remove placement
+        List<LoadPlanItemPlacement> removedPlacements = List.of();
+        LoadPlan removeUpdated = readyPlan.update(vehicle, removedPlacements, "Notes", "planner2", updateTime);
+        assertThat(removeUpdated.getReadinessStatus()).isEqualTo(LoadPlanReadinessStatus.DRAFT);
     }
 
     @Test

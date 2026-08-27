@@ -147,7 +147,7 @@ export const ClaimListPage: React.FC = () => {
           columns={columns}
           rowKey="id"
           loading={isLoading}
-          pagination={{ pageSize: 10 }}
+          pagination={{ pageSize: 50 }}
         />
       </Card>
     </div>
