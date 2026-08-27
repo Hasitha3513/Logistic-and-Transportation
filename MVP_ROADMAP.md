@@ -1,8 +1,8 @@
 # Transportation & Logistics — Master Traceability & MVP Roadmap
 
 > **Last Updated:** 2026-08-27  
-> **Current Status:** **MVP 1.0 (Core)** is complete; **MVP 1.1 (Route & Freight)** is **5 COMPLETE / 1 PARTIAL / 1 BLOCKED**; **MVP 1.2 (Fuel Management Core)** is closed with approved deferments.  
-> **Next Active Scope:** US-27 is COMPLETE; next reconcile US-30; US-29 remains blocked pending certified legacy ownership, tenant implementation, and isolation acceptance.
+> **Current Status:** **MVP 1.0 (Core)** is complete; **MVP 1.1 (Route & Freight)** is **CLOSED_WITH_BLOCKED_DEFERMENT** — 6 complete, US-29 blocked; **MVP 1.2 (Fuel Management Core)** is closed with approved deferments.  
+> **Next Active Scope:** Phase 2B freight closure audit (`P2-FREIGHT-PHASE-CLOSURE-001`); US-29 remains blocked pending certified legacy ownership, tenant implementation, and isolation acceptance.
 
 ---
 
@@ -13,7 +13,7 @@
 | **Phase 0** | Foundation / Platform Baseline | Core Enabler | ✅ VERIFIED | 100% |
 | **Phase 1** | Core MVP 1.0 (Fleet, Trip, Route, Driver, Enablers) | Core MVP | ✅ COMPLETE | 34 / 34 (100%) |
 | **Phase 2A**| Advanced Route (US-20 to US-23) | Expanded MVP 1.1 | ✅ COMPLETE | 4 / 4 (100%) |
-| **Phase 2B**| Freight & Cargo (US-24 to US-30) | Expanded MVP 1.1 | 🟡 IN CLOSURE | 5 Complete / 1 Partial (US-30) / 1 Blocked (US-29) |
+| **Phase 2B**| Freight & Cargo (US-24 to US-30) | Expanded MVP 1.1 | ✅ CLOSED_WITH_BLOCKED_DEFERMENT | 6 Complete / 1 Blocked (US-29) |
 | **Phase 3** | Fuel Management (US-31 to US-38) | Expanded MVP 1.2 | ✅ CLOSED_WITH_APPROVED_DEFERMENTS | 5 Complete / 3 Deferred (US-35, 37, 38) |
 | **Phase 4** | Driver Lifecycle & Fleet Maintenance (US-46, Maintenance Linkage) | MVP 1.3 | ⏳ QUEUED | 0 / 3 |
 | **Phase 5** | GPS & Live Tracking (US-48 to US-55) | Post-MVP | ⏸ DEFERRED | 0 / 8 |
@@ -26,7 +26,7 @@
 ## 🎯 Immediate Next Queue (What to build next)
 
 - [x] ✅ **US-27 Weight & Volume:** Completed in `P2-WEIGHT-VOLUME-CARGO-MEASUREMENTS-004`; forward Flyway migration `V42`, domain model, persistence, API contracts, lookup port, UI inputs/displays, and verified PASS/FAIL/INCOMPLETE outcomes.
-- [ ] 🟡 **US-30 Cargo Exceptions:** Reconcile US-30 with US-27 measurements and finalize MVP 1.1 closure.
+- [x] ✅ **US-30 Cargo Exceptions:** Completed in `P2-CARGO-EXCEPTION-001`; 6 exception types, 5-state lifecycle (OPEN/HELD/ESCALATED/RESOLVED/REJECTED), immutable history, 8 REST endpoints, RBAC, React frontend, 40 backend tests and 8 Playwright E2E all PASS.
 - [x] **Tenant Business Authority:** `TENANT-BUSINESS-AUTHORITY-001` froze the MVP architecture contract; no implementation was performed.
 - [ ] 🔴 **Tenant Legacy Evidence:** `TENANT-LEGACY-EVIDENCE-002` is `BLOCKED_RUNTIME_DATABASE_UNAVAILABLE`; Docker/TCP database access was unavailable, canonical owner approval is unsigned, and no runtime reconciliation or backfill is authorized.
 - [ ] 🔴 **US-29 Freight Reporting:** Remains `BLOCKED_BY_TENANT_FOUNDATION`; do not implement until the tenant plan and isolation acceptance gates complete.
@@ -86,14 +86,14 @@
   - [x] **US-21:** Route History & Snapshots (Immutable revision audit trail)
   - [x] **US-22:** Route Performance (Planned vs actual distance/duration variance analysis)
   - [x] **US-23:** Route Disruptions (Real-time obstruction alerts, severity levels, detours)
-- [ ] 🟡 **Phase 2B (Freight & Cargo Management):**
+- [x] ✅ **Phase 2B (Freight & Cargo Management — CLOSED_WITH_BLOCKED_DEFERMENT):**
   - [x] **US-24:** Freight Orders (Commercial orders, cargo requirements, lifecycle)
   - [x] **US-25:** Cargo Manifest (Tri-state fragile/temperature classification, physical measurements, hazardous/customs)
   - [x] **US-26:** Load Planning (Structural readiness boundary, transactional revalidation, optimistic lock)
   - [x] **US-27:** Weight & Volume Validation (Engine + Cargo Manifest measurement integration with PASS/FAIL/INCOMPLETE evaluation)
   - [x] **US-28:** Freight Insurance (Policy underwriting, claims, multi-tranche settlements)
   - [ ] 🔴 **US-29:** Freight Reporting — **BLOCKED_BY_TENANT_FOUNDATION** *(architecture approved; legacy mapping, implementation, and isolation acceptance remain open)*
-  - [ ] 🟡 **US-30:** Cargo Exceptions — aggregate, lifecycle, resolution, restrictions, and history implemented; closing verification in progress
+  - [x] ✅ **US-30:** Cargo Exceptions — 6 types, command-driven lifecycle, immutable history, RBAC, frontend, 40 backend + 8 E2E PASS. Closed by `P2-CARGO-EXCEPTION-001`
 
 *Closure Record:* [`docs/mvp/MVP-1.1-FREIGHT-CLOSURE-001.md`](file:///home/hasitha-wijerathna/Documents/transport-logistics-modulith/transport-logistics-modulith/docs/mvp/MVP-1.1-FREIGHT-CLOSURE-001.md)
 

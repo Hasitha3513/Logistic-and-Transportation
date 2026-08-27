@@ -16,7 +16,7 @@
 |---|---:|---:|---:|---:|---:|---|
 | MVP 1.0 Core | 34 / 34 | 0 | 0 | 0 | 0 | COMPLETE |
 | MVP 1.1 Advanced Route | 4 / 4 | 0 | 0 | 0 | 0 | COMPLETE |
-| MVP 1.1 Freight | 5 / 7 | 1 / 7 | 1 / 7 | 0 | 0 | IN CLOSURE |
+| MVP 1.1 Freight | 6 / 7 | 0 / 7 | 1 / 7 | 0 | 0 | CLOSED_WITH_BLOCKED_DEFERMENT |
 | MVP 1.2 Fuel | 5 / 8 | 0 | 0 | 3 / 8 | 0 | CLOSED_WITH_APPROVED_DEFERMENTS |
 
 ## Repository baseline
@@ -54,7 +54,7 @@ US-20, US-21, US-22 and US-23 remain COMPLETE. Current routing domain/applicatio
 | US-27 Validate Weight and Volume | COMPLETE | V39/V42, pure calculation engine integrated with Cargo Manifest measurements, supporting verified PASS, FAIL (payload, volume, GVW), and INCOMPLETE diagnostics across unit, integration, and Playwright suites. |
 | US-28 Freight Insurance | COMPLETE | Policy, claim, settlement and dispute workflows, V35/V36, UI/RBAC and dedicated tests/E2E exist. |
 | US-29 Freight Reports | BLOCKED | `BLOCKED_BY_TENANT_FOUNDATION`; architecture is approved, but legacy certification is blocked by missing canonical-owner evidence and runtime reconciliation. Tenant implementation and isolation acceptance are also pending. Do not implement. |
-| US-30 Cargo Exceptions | PARTIAL | Aggregate, six types, V40/V41, lifecycle, hold/release, history, API/UI/RBAC and 8 E2E cases exist. Final closing reconciliation in progress. |
+| US-30 Cargo Exceptions | COMPLETE | Aggregate, six types (DAMAGE, PARTIAL_SHIPMENT, WEIGHT_DISCREPANCY, HAZARDOUS_MATERIAL, UNMANIFESTED_CARGO, SEAL_TAMPERING), V40/V41, command-driven lifecycle (OPEN/HELD/ESCALATED/RESOLVED/REJECTED), immutable history, optimistic concurrency, API (8 endpoints), RBAC, React frontend, 40 backend tests and 8 Playwright E2E all PASS. Closed by P2-CARGO-EXCEPTION-001. |
 
 `MVP-1.1-FREIGHT-CLOSURE-001` was executed, but its conclusion is superseded. MVP 1.1 is **PARTIAL**, not `CLOSED_WITH_BLOCKED_DEFERMENT`.
 
@@ -94,12 +94,10 @@ US-46, US-47, US-48–70 and remaining non-MVP platform stories are DEFERRED. Fl
 
 Conditions include environment-specific PostgreSQL, security, operations and tenant-model review; production deployment was not validated.
 
-## Current development position and exact next task
-
 - Release band: MVP 1.1
 - Domain: Freight
-- Story: US-27 Validate Weight and Volume
-- Last completed task: `P2-WEIGHT-VOLUME-CALC-002` (calculation engine/vehicle-capacity slice)
-- Pending task: provide authoritative cargo measurements to production validation and prove real outcomes.
+- Story: US-30 Cargo Exceptions
+- Last completed task: `P2-CARGO-EXCEPTION-001` (cargo exception management end-to-end)
+- Status: US-30 = COMPLETE; US-29 = BLOCKED_BY_TENANT_FOUNDATION
 
-**Exact next task:** `P2-WEIGHT-VOLUME-CARGO-MEASUREMENTS-004` — define and implement the smallest source-approved cargo weight/dimension contract and wire Manifest persistence/ports to US-27 validation, with migration, API/UI/RBAC compatibility review and PASS/FAIL/INCOMPLETE acceptance. Do not resume US-29.
+**Exact next task:** `P2-FREIGHT-PHASE-CLOSURE-001` — formal closure audit of MVP 1.1 Freight band (US-24 through US-30), producing a verified phase closure record, confirming CLOSED_WITH_BLOCKED_DEFERMENT status, and updating all governance artifacts.

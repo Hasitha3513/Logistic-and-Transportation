@@ -63,7 +63,7 @@
 | **US-27** | Weight & Volume | Total cargo weight/volume vs vehicle payload/volume/GVW limits | YES | YES | YES | YES | YES | YES | YES | **COMPLETE** | Pure calculation engine integrated with V42 Manifest measurements, supporting verified PASS, FAIL (payload, volume, GVW), and INCOMPLETE diagnostics across unit, integration, and Playwright suites. | None |
 | **US-28** | Freight Insurance | Policies, claims, multi-tranche settlements, disputes | YES | YES | YES | YES | YES | YES | YES | **COMPLETE** | `InsurancePolicy`, `InsuranceClaim`, `V36`, `PolicyListPage`, `freightInsurance.spec.ts` | None |
 | **US-29** | Freight Reports | Tenant-scoped freight and load analytics | NO | NO | NO | NO | NO | NO | NO | **BLOCKED** | Architecture approved; legacy certification blocked by missing owner evidence/runtime reconciliation; implementation and acceptance pending | Obtain authoritative owner/Tenant values and read-only database inventory; do not implement US-29 |
-| **US-30** | Cargo Exceptions | Cargo damage/shortage/hazardous/seal/unmanifested exception workflow | PARTIAL | YES | YES | YES | YES | YES | PARTIAL | **PARTIAL** | Local aggregate, six types, workflow/history and 8 E2E cases exist; US-27 outcome input, correction/insurance branch and Trip readiness hold/release boundary are absent. | Complete only after US-27, then audit the three frozen integrations |
+| **US-30** | Cargo Exceptions | Cargo damage/shortage/hazardous/seal/unmanifested exception workflow | YES | YES | YES | YES | YES | YES | YES | **COMPLETE** | `CargoException`, `V40/V41`, 6 types, 5-state lifecycle, immutable history, 8 REST endpoints, `CargoExceptionListPage`, `cargoExceptions.spec.ts` (8 E2E). Closed by `P2-CARGO-EXCEPTION-001`. | None |
 
 ---
 
