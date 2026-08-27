@@ -37,6 +37,9 @@ import { PolicyDetailsPage } from './features/freight/insurance/pages/PolicyDeta
 import { ClaimListPage } from './features/freight/insurance/pages/ClaimListPage';
 import { ClaimCreatePage } from './features/freight/insurance/pages/ClaimCreatePage';
 import { ClaimDetailsPage } from './features/freight/insurance/pages/ClaimDetailsPage';
+import { CargoExceptionListPage } from './features/freight/exceptions/pages/CargoExceptionListPage';
+import { CargoExceptionCreatePage } from './features/freight/exceptions/pages/CargoExceptionCreatePage';
+import { CargoExceptionDetailsPage } from './features/freight/exceptions/pages/CargoExceptionDetailsPage';
 
 function ProtectedRoute() {
   const { user, isLoading } = useAuth();
@@ -59,6 +62,7 @@ function HomePage() {
   if (hasPermission('CARGO_MANIFEST_VIEW')) return <Navigate to="/freight/manifests" replace />;
   if (hasPermission('LOAD_PLAN_VIEW')) return <Navigate to="/freight/load-plans" replace />;
   if (hasPermission('CARGO_INSURANCE_VIEW')) return <Navigate to="/freight/insurance/policies" replace />;
+  if (hasPermission('CARGO_EXCEPTION_VIEW')) return <Navigate to="/freight/exceptions" replace />;
   if (hasPermission('IDENTITY_MANAGE')) return <Navigate to="/administration/users" replace />;
   return <Navigate to="/workspace" replace />;
 }
@@ -106,6 +110,9 @@ export default function App() {
         <Route path="freight/insurance/claims" element={<ClaimListPage />} />
         <Route path="freight/insurance/claims/new" element={<ClaimCreatePage />} />
         <Route path="freight/insurance/claims/:id" element={<ClaimDetailsPage />} />
+        <Route path="freight/exceptions" element={<CargoExceptionListPage />} />
+        <Route path="freight/exceptions/new" element={<CargoExceptionCreatePage />} />
+        <Route path="freight/exceptions/:id" element={<CargoExceptionDetailsPage />} />
         <Route path="administration/users" element={<ResourceListPage {...resourcePages.users} />} />
         <Route path="administration/roles" element={<ResourceListPage {...resourcePages.roles} />} />
         <Route path="notification-rules" element={<NotificationRulesPage />} />

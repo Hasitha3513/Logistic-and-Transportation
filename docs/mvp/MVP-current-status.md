@@ -41,8 +41,8 @@ A comprehensive architectural and repository audit was conducted across the **Tr
 
 - **Runtime & Environment:** Java 21, Spring Boot 3.2.12, Spring Modulith 1.2.12, PostgreSQL / Flyway, Node 24, Vite 7.3.6, React 19, TypeScript.
 - **Top-Level Backend Modules:** `fleet`, `freight`, `fuel`, `identity`, `notification`, `offlinesync`, `organization`, `reporting`, `routing`, `shared`, `system`, `trip`.
-- **Database Migrations:** 39 migrations (`V1` through `V39`), strictly sequential with 0 gaps or out-of-order versions.
-- **Security & Authorization:** Stateless JWT, rotating refresh tokens, BCrypt strength 12, 70+ business permissions enforced across API routes and frontend navigation.
+- **Database Migrations:** 41 migrations (`V1` through `V41`), strictly sequential with 0 gaps or out-of-order versions.
+- **Security & Authorization:** Stateless JWT, rotating refresh tokens, BCrypt strength 12, 99 business permissions enforced across API routes and frontend navigation.
 
 ---
 
@@ -52,7 +52,7 @@ A comprehensive architectural and repository audit was conducted across the **Tr
 |---|---|---|:---:|---|
 | **MVP 1.0** | Core Transport Operations | US-01–19, US-39–45, US-71, 74, 75, 77, 79, 80, 81, 83 | **34** | **34 / 34 COMPLETE (100%)** |
 | **MVP 1.1** | Advanced Route | US-20–23 | **4** | **4 / 4 COMPLETE (100%)** |
-| **MVP 1.1** | Freight & Cargo | US-24–30 | **7** | **5 COMPLETE, 1 MISSING, 1 BLOCKED** |
+| **MVP 1.1** | Freight & Cargo | US-24–30 | **7** | **6 COMPLETE, 0 MISSING, 1 BLOCKED** |
 | **MVP 1.2** | Full Fuel Expansion | US-31–38 | **8** | **5 COMPLETE, 3 DEFERRED** |
 | **Post-MVP** | Advanced Product Scope | US-46, 47, 48–70, 72, 73, 76, 78, 82, 84–87 | **44** | **DEFERRED (Product Roadmap)** |
 
@@ -84,10 +84,10 @@ A comprehensive architectural and repository audit was conducted across the **Tr
 - `US-24` (Freight Orders): COMPLETE
 - `US-25` (Cargo Manifest): COMPLETE
 - `US-26` (Load Planning): COMPLETE (Implementation & cross-browser E2E closed in `P2-LOAD-CORR-001`–`006`)
-- `US-27` (Weight & Volume Validation): PARTIAL (Lacks vehicle tare/GVW/volume/axle master data)
+- `US-27` (Weight & Volume Validation): COMPLETE (Vehicle capacity foundation V39, calculation engine, diagnostics, and E2E closed in `P2-WEIGHT-VOLUME-ACCEPTANCE-003`)
 - `US-28` (Freight Insurance): COMPLETE
 - `US-29` (Freight Reports): BLOCKED_BY_TENANT_FOUNDATION
-- `US-30` (Cargo Exceptions): MISSING
+- `US-30` (Cargo Exceptions): COMPLETE (Aggregate, 6 exception types, workflow state machine, restrictions, resolution history, RBAC, API, UI, and 8 E2E scenarios closed in `P2-CARGO-EXCEPTION-001`)
 
 ---
 

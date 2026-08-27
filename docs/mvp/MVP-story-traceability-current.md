@@ -62,7 +62,7 @@
 | **US-27** | Weight & Volume | Total cargo weight/volume vs vehicle payload/volume/GVW limits | YES | YES | YES | YES | YES | YES | YES | **COMPLETE** | `WeightVolumeCalculationEngine`, `V39`, `LoadPlanDetailsPage`, `weightVolumeValidation.spec.ts` | None |
 | **US-28** | Freight Insurance | Policies, claims, multi-tranche settlements, disputes | YES | YES | YES | YES | YES | YES | YES | **COMPLETE** | `InsurancePolicy`, `InsuranceClaim`, `V36`, `PolicyListPage`, `freightInsurance.spec.ts` | None |
 | **US-29** | Freight Reports | Tenant-scoped freight and load analytics | NO | NO | NO | NO | NO | NO | NO | **BLOCKED** | Blocked by paused tenant foundation | Do not implement while tenant work is paused |
-| **US-30** | Cargo Exceptions | Cargo damage/shortage/unmanifested exception workflow | NO | NO | NO | NO | NO | NO | NO | **MISSING** | No dedicated aggregate, persistence, API, or frontend | `P2-CARGO-EXCEPTION-001` |
+| **US-30** | Cargo Exceptions | Cargo damage/shortage/hazardous/seal/unmanifested exception workflow | YES | YES | YES | YES | YES | YES | YES | **COMPLETE** | `CargoException`, `V40`/`V41`, `CargoExceptionListPage`, `CargoExceptionDetailsPage`, `cargoExceptions.spec.ts` (8 scenarios) | None |
 
 ---
 
