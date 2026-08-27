@@ -1,5 +1,62 @@
 # Transport & Logistics Backend - Agent Instructions
 
+## 0. Absolute Mandatory Rule: Read-First and Continuous Sync with Central Knowledge Base
+
+Before generating, modifying, refactoring, deleting, or planning any backend, frontend, database, integration, or architecture change, complete this protocol.
+
+### Step 1: Mandatory Read-First Pre-Flight Check
+
+1. **Never assume or guess:** Inspect the external `central-knowledge-base/` before touching code. Resolve its location from the parent workspace level; for this repository it is maintained outside the project repository.
+2. **Scan integration and enterprise rules:** Verify existing contracts, models, ownership, lifecycle status, and rules in:
+   - `central-knowledge-base/00_CORE_ARCHITECTURE/` for hexagonal architecture, multi-tenancy, shared entities, RBAC, audit compliance, and sequence generation.
+   - `central-knowledge-base/01_INTEGRATION_REGISTRY/` for event contracts, API/port interfaces, cross-module dependencies, state machines, and distributed sagas.
+   - `central-knowledge-base/02_MODULES_KNOWLEDGE/<current_and_related_modules>.md` for schemas, Phase 1 active use cases, deferred scope, and published/consumed events.
+3. **Complete the pre-flight gate:**
+   - [ ] The change respects Domain-First Hexagonal Architecture and current module ownership.
+   - [ ] `tenant_id` is propagated and isolated across every new or modified tenant-owned domain model, command/query, DTO, event, table, repository operation, cache key, and background process.
+   - [ ] The proposed entity, table, field, enum, event, topic, port, API, or use case does not already exist or conflict with another module.
+   - [ ] Existing producers, consumers, upstream/downstream modules, public clients, state machines, and sagas affected by a contract change have been identified.
+   - [ ] The requested work belongs to `Phase 1: Current MVP Scope` or has been explicitly approved for promotion from deferred scope.
+
+If a required contract is absent, contradictory, or still only `PROPOSED`, stop the affected implementation and report the decision needed. Do not invent missing governance.
+
+### Step 2: Continuous Knowledge Base Auto-Update Protocol
+
+Whenever code is introduced, modified, refactored, renamed, or deleted, update every affected knowledge-base file in the same execution cycle:
+
+- **Database schemas:** Record complete post-migration table definitions, columns, types, nullability, defaults, constraints, indexes, `tenant_id`, internal foreign keys, and external logical references in `02_MODULES_KNOWLEDGE/<module_name>.md`.
+- **Domain/integration events:** Register the topic, owner, version, exact JSON payload, tenant envelope, delivery semantics, ordering, and idempotency in `01_INTEGRATION_REGISTRY/event_contracts.md`; update producer and consumer module documents.
+- **State machines and sagas:** Update `01_INTEGRATION_REGISTRY/state_machines.md` and `01_INTEGRATION_REGISTRY/sagas_and_workflows.md` whenever lifecycle or distributed-workflow behavior changes.
+- **RBAC and permissions:** Update `00_CORE_ARCHITECTURE/rbac_and_permissions.md` and the owning module document for every new or changed security action.
+- **Inbound/outbound ports and REST contracts:** Update exact signatures in `01_INTEGRATION_REGISTRY/api_interfaces.md`, update `01_INTEGRATION_REGISTRY/cross_module_dependency_map.md`, and synchronize provider/consumer module documents.
+- **Use cases and business rules:** Update the owning module's Phase 1 inbound-port/use-case catalogue, invariants, authorization, lifecycle effects, and event behavior.
+- **Verification summary:** Every final report must contain the exact heading `### Synchronized Knowledge Base Files:` and list each updated Markdown file relative to `central-knowledge-base/`. If none changed, state `None` and explain why.
+
+### Step 3: Automated Knowledge Base Git Sync
+
+The external `central-knowledge-base/` is a dedicated Git repository whose canonical remote is `https://github.com/Hasitha3513/central-knowledge-base.git`.
+
+Whenever any schema, event, port, integration registry, architecture standard, or module document is updated inside `central-knowledge-base/`, the agent must complete an atomic commit and push from that repository in the same task:
+
+```bash
+git -C central-knowledge-base add .
+git -C central-knowledge-base commit -m "docs(<module_name>): update schemas, events, and integration contracts"
+git -C central-knowledge-base push origin main
+```
+
+- Resolve `central-knowledge-base/` from the parent workspace when it is external to the main project; do not assume it is nested inside the application repository.
+- Inspect the knowledge-base repository status and diff before staging. Commit only synchronized knowledge-base changes belonging to the current task; never absorb unrelated user changes into the commit.
+- Use an accurate Conventional Commit scope and message when the update is narrower than the example.
+- If the repository is missing, is not a Git checkout, has an unexpected remote or branch, contains overlapping uncommitted work, rejects the commit, fails to push, or encounters a merge conflict, stop the Git-sync step and report the condition under `Unresolved Risks` in the final report. Do not overwrite, reset, force-push, or silently resolve unrelated changes.
+
+### Knowledge Base Repository Push Policy
+
+- The main project codebase preserves the rule: do not commit or push unless explicitly requested.
+- The external `central-knowledge-base/` repository is the sole standing exception: task-scoped documentation updates there must be committed and pushed to `origin main` automatically upon completion.
+- This exception does not authorize committing application code, modifying unrelated knowledge-base files, force-pushing, bypassing branch protection, or including pre-existing unrelated changes.
+
+Code and required knowledge-base synchronization form one atomic deliverable. Missing synchronization makes the task incomplete.
+
 ## Architecture
 
 This application uses:
@@ -22,7 +79,7 @@ This application uses:
 Architecture style:
 
 - Modular Monolith
-- Hexagonal Architecture
+- Domain-First Hexagonal Architecture (Ports and Adapters)
 - Domain Driven Design principles
 
 ## Module Rules
@@ -46,6 +103,9 @@ Do not introduce direct dependencies between modules unless allowed by the appli
 **Cross-Module Communication:**
 - Use Spring Application Events for inter-module communication to maintain decoupling.
 - Do not inject application services or repositories from one business module into another.
+- Module B must never execute SQL queries, JPA joins, entity relationships, or repository calls against tables owned by Module A.
+- Direct database joins and physical foreign keys across module boundaries are prohibited. Store cross-module references as UUID primitives documented as logical foreign keys.
+- Register every domain or integration event crossing a module boundary in `central-knowledge-base/01_INTEGRATION_REGISTRY/event_contracts.md` and the producer/consumer module documents.
 
 **The `shared` Module:**
 - The `shared` module is strictly for cross-cutting technical concerns (e.g., Base Entities, Global Exception Handler, generic utilities).
@@ -403,7 +463,7 @@ Before changing a feature:
 - preserve pre-existing changes;
 - prefer `git mv` for moves;
 - never use destructive reset to perform a refactor;
-- do not commit or push unless explicitly requested.
+- do not commit or push the main project unless explicitly requested; the only standing exception is the task-scoped `central-knowledge-base/` documentation sync required by Section 0.
 
 ## Agent Stop Conditions
 
@@ -490,3 +550,39 @@ Do not introduce Refine, Ant Design Pro Components, Tailwind CSS, Radix UI, anot
 ## Test Safety
 
 Do not weaken Playwright selectors or assertions to hide refactor regressions. Prefer accessible locators such as `getByRole`, `getByLabel`, and `getByText`. Preserve current E2E intent, RBAC coverage, offline Vehicle reading behavior, and backend contract verification.
+
+# Enterprise Suite Architecture & Integration Rules
+
+## Multi-Tenancy Rules
+
+- Every new or modified tenant-owned domain entity, database table, DTO, command/query, event, repository operation, cache key, and background process must carry or enforce `tenant_id`.
+- Resolve tenant context at the inbound adapter and pass it explicitly into use cases.
+- Never execute an unscoped query against tenant-owned data.
+
+## Database Schema Documentation
+
+For every module-owned table, maintain an exact data dictionary in `central-knowledge-base/02_MODULES_KNOWLEDGE/<module_name>.md` using this standard format:
+
+#### Table: `<table_name>`
+
+- **Purpose:** Brief description
+- **Primary Key:** `id` (UUID)
+- **Multi-Tenant Key:** `tenant_id` (UUID, Indexed)
+
+| Column Name | Data Type | Nullable | Default | Constraints / Logical FK | Description |
+| :----------- | :---------- | :------- | :------------------ | :-------------------------- | :---------------------- |
+| `id` | UUID | NO | gen_random_uuid() | PRIMARY KEY | Unique ID |
+| `tenant_id` | UUID | NO | - | Logical FK -> `tenants(id)` | Tenant Scope Identifier |
+| `status` | VARCHAR(50) | NO | 'PENDING' | CHECK (status IN (...)) | Lifecycle State |
+| `created_at` | TIMESTAMPTZ | NO | NOW() | - | Creation timestamp |
+| `updated_at` | TIMESTAMPTZ | NO | NOW() | - | Update timestamp |
+| `deleted_at` | TIMESTAMPTZ | YES | NULL | INDEXED with `tenant_id` | Soft-delete timestamp |
+
+Cross-module IDs such as `trip_id`, `vehicle_id`, and `driver_id` must be UUID primitives without physical cross-module database constraints. Direct cross-module SQL, JPA joins, entity relationships, and repositories remain forbidden.
+
+## MVP Scope & Phased Governance
+
+- Module documents must distinguish `Phase 1: Current MVP Scope` from `Phase 2: Post-MVP / Future Roadmap`.
+- Implement only Phase 1 scope unless deferred work is explicitly promoted.
+- Mark deferred schema fields and advanced capabilities clearly; do not create migrations or production code for them prematurely.
+- Record cross-module dependencies as `Active (MVP)` or `Planned (Post-MVP)` in the dependency map.

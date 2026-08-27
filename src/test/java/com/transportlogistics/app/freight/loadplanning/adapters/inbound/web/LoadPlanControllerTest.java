@@ -128,13 +128,19 @@ class LoadPlanControllerTest {
     @Test
     void validatesLayoutEndpoint() throws Exception {
         when(loadPlanUseCase.validateLayout(id)).thenReturn(List.of(
-                new LoadPlanViolation(LoadPlanViolationCode.ITEM_NOT_PLACED, "Item 1 unplaced")
+                new LoadPlanViolation(LoadPlanViolationCode.ITEM_NOT_PLACED, "Item 1 unplaced"),
+                new LoadPlanViolation(LoadPlanViolationCode.LOAD_PLAN_SPECIAL_CARGO_CLASSIFICATION_MISSING, "Special cargo classification missing"),
+                new LoadPlanViolation(LoadPlanViolationCode.LOAD_PLAN_FRAGILE_RULE_FAILED, "Fragile rule failed"),
+                new LoadPlanViolation(LoadPlanViolationCode.LOAD_PLAN_TEMPERATURE_RULE_FAILED, "Temperature rule failed")
         ));
 
         mvc.perform(post("/v1/freight/load-plans/{id}/validate-layout", id))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.valid").value(false))
-                .andExpect(jsonPath("$.violations[0].code").value("ITEM_NOT_PLACED"));
+                .andExpect(jsonPath("$.violations[0].code").value("ITEM_NOT_PLACED"))
+                .andExpect(jsonPath("$.violations[1].code").value("LOAD_PLAN_SPECIAL_CARGO_CLASSIFICATION_MISSING"))
+                .andExpect(jsonPath("$.violations[2].code").value("LOAD_PLAN_FRAGILE_RULE_FAILED"))
+                .andExpect(jsonPath("$.violations[3].code").value("LOAD_PLAN_TEMPERATURE_RULE_FAILED"));
     }
 
     @Test
@@ -164,6 +170,79 @@ class LoadPlanControllerTest {
                 .andExpect(jsonPath("$.payloadResult").value("INCOMPLETE"))
                 .andExpect(jsonPath("$.violations[0].code").value("LOAD_WEIGHT_DATA_MISSING"))
                 .andExpect(jsonPath("$.missingData[0]").value("CARGO_ITEM_WEIGHT_DATA_MISSING"));
+    }
+
+    @Test
+    void marksLoadPlanStructurallyReady() throws Exception {
+        OffsetDateTime now = OffsetDateTime.parse("2026-08-25T10:00:00Z");
+        LoadPlanItemPlacement placement = new LoadPlanItemPlacement(
+                UUID.randomUUID(), UUID.randomUUID(), 0, "FRONT", "S1", "PALLET-1", 1, null
+        );
+        LoadPlan readyPlan = new LoadPlan(
+                id,
+                "LP-2026-000001",
+                manifestId,
+                vehicleId,
+                List.of(placement),
+                "Notes",
+                com.transportlogistics.app.freight.loadplanning.domain.LoadPlanReadinessStatus.STRUCTURALLY_READY,
+                now,
+                "manager",
+                now,
+                now,
+                "manager",
+                "manager",
+                1L
+        );
+
+        when(loadPlanUseCase.markReady(eq(id), eq(0L), eq("manager"))).thenReturn(readyPlan);
+
+        mvc.perform(post("/v1/freight/load-plans/{id}/ready", id)
+                        .principal(() -> "manager")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"version\": 0}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.readinessStatus").value("STRUCTURALLY_READY"))
+                .andExpect(jsonPath("$.readyBy").value("manager"))
+                .andExpect(jsonPath("$.version").value(1));
+    }
+
+    @Test
+    void rejectsMarkReadyWithoutVersion() throws Exception {
+        mvc.perform(post("/v1/freight/load-plans/{id}/ready", id)
+                        .principal(() -> "manager")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
+    }
+
+    @Test
+    void rejectsMarkReadyOnStaleVersion() throws Exception {
+        when(loadPlanUseCase.markReady(eq(id), eq(0L), eq("manager")))
+                .thenThrow(new ConflictException("LOAD_PLAN_STALE_VERSION", "Stale ready attempt"));
+
+        mvc.perform(post("/v1/freight/load-plans/{id}/ready", id)
+                        .principal(() -> "manager")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"version\": 0}"))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("LOAD_PLAN_STALE_VERSION"));
+    }
+
+    @Test
+    void rejectsMarkReadyOnStructuralViolations() throws Exception {
+        when(loadPlanUseCase.markReady(eq(id), eq(0L), eq("manager")))
+                .thenThrow(new com.transportlogistics.app.shared.domain.BusinessRuleException(
+                        "LOAD_PLAN_STRUCTURAL_VIOLATIONS", "ITEM_NOT_PLACED: Item unplaced"
+                ));
+
+        mvc.perform(post("/v1/freight/load-plans/{id}/ready", id)
+                        .principal(() -> "manager")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"version\": 0}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("LOAD_PLAN_STRUCTURAL_VIOLATIONS"));
     }
 
     private LoadPlan samplePlan() {

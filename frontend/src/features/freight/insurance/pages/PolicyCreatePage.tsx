@@ -1,6 +1,8 @@
 import React from 'react';
 import { Button, Card, Col, DatePicker, Form, Input, InputNumber, Row, Select, Typography, message } from 'antd';
 import { ArrowLeftOutlined, SaveOutlined } from '@ant-design/icons';
+import { isAxiosError } from 'axios';
+import type { Dayjs } from 'dayjs';
 import { useAuth } from '../../../../auth/AuthContext';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { useCreatePolicy } from '../hooks/useInsurance';
@@ -9,17 +11,29 @@ import { CreatePolicyPayload } from '../types/insurance';
 const { Title, Text } = Typography;
 const { TextArea } = Input;
 
+interface PolicyCreateFormValues {
+  freightOrderId: string;
+  insuranceProvider: string;
+  policyType: string;
+  coverageAmount: number;
+  premiumAmount: number;
+  deductibleAmount: number;
+  currencyCode: string;
+  validity: [Dayjs, Dayjs];
+  termsAndConditions?: string;
+}
+
 export const PolicyCreatePage: React.FC = () => {
   const { hasPermission } = useAuth();
   const navigate = useNavigate();
-  const [form] = Form.useForm();
+  const [form] = Form.useForm<PolicyCreateFormValues>();
   const createPolicyMutation = useCreatePolicy();
 
   if (!hasPermission('CARGO_INSURANCE_MANAGE')) {
     return <Navigate to="/freight/insurance/policies" replace />;
   }
 
-  const handleSubmit = async (values: any) => {
+  const handleSubmit = async (values: PolicyCreateFormValues) => {
     try {
       const payload: CreatePolicyPayload = {
         freightOrderId: values.freightOrderId,
@@ -37,8 +51,10 @@ export const PolicyCreatePage: React.FC = () => {
       const result = await createPolicyMutation.mutateAsync(payload);
       message.success('Insurance policy created successfully');
       navigate(`/freight/insurance/policies/${result.id}`);
-    } catch (err: any) {
-      const msg = err.response?.data?.message || 'Failed to create policy';
+    } catch (err: unknown) {
+      const msg = isAxiosError<{ message?: string }>(err)
+        ? err.response?.data?.message ?? 'Failed to create policy'
+        : 'Failed to create policy';
       message.error(msg);
     }
   };

@@ -1,4 +1,107 @@
 # Transport & Logistics Management System
+
+## MVP-CONTINUE-001 — Current-State Verification and Next-Slice Decision (2026-08-26)
+
+This section is authoritative for branch `feat/next-development` at commit `f648910f6dcd4b1e5bd5aa387704df6218b85961`. Older audits below remain historical evidence but are superseded where branch, commit, test counts, or readiness conclusions differ.
+
+### Repository and Baseline
+
+| Item | Verified result |
+| :--- | :--- |
+| Worktree | Clean: 0 modified, 0 untracked |
+| Backend toolchain | BLOCKED: `./mvnw` is committed as mode `100644`; `sh ./mvnw --version` reports that Maven or standard wrapper files are missing |
+| Frontend runtime | System `node`/`npm` absent; bundled Node 24.19.0 can invoke installed tools directly |
+| Frontend lint | FAIL: 13 errors in Freight Insurance and Load Planning pages |
+| Frontend TypeScript | FAIL: `loadPlanApi.ts` imports missing `../../fleet/vehicleMaster/types/vehicle` |
+| Frontend unit tests | BLOCKED: missing optional native package `@rollup/rollup-linux-x64-gnu` |
+| Playwright | BLOCKED: managed backend cannot start without a functional Maven wrapper; no current pass claim |
+| `BASELINE_READY` | **NO** |
+
+### Actual Module and Architecture Structure
+
+Top-level backend packages are `fleet`, `freight`, `fuel`, `identity`, `notification`, `offlinesync`, `organization`, `reporting`, `routing`, `shared`, `system`, and `trip`. Driver and Maintenance are Fleet-owned features; Work Order, Inventory/Inspection, GPS/Tracking, and Delivery are not dedicated production modules.
+
+Static structure is a Spring Modulith modular monolith with domain/application/ports/adapters conventions and dedicated Modulith/ArchUnit tests. Architecture status is **PARTIAL** because the tests cannot currently execute; static evidence is strong, but runtime verification is unavailable.
+
+### Current Phase Status
+
+| Phase | Overall | Evidence / principal gap |
+| :--- | :---: | :--- |
+| Foundation | PARTIAL | Identity, JWT, RBAC, organization, migrations, errors, and architecture tests exist; tenant foundation is paused and verification is blocked |
+| Phase 1 — Fleet / Trip / Route | PARTIAL | Broad end-to-end production implementation exists; current backend/frontend/E2E gates cannot verify COMPLETE |
+| Phase 2 — Freight / Cargo | PARTIAL | US-20–28 have substantial implementation; US-26 lacks dedicated E2E, US-27 lacks authoritative data, US-29 is tenant-blocked, US-30 is missing |
+| Phase 3 — Fuel / Running | PARTIAL | Fuel issue, purchase, price, bunker, lubricant, readings, and trip fuel cost exist; analytics/exception closure and current verification remain incomplete |
+| Phase 4 — Driver | PARTIAL | Fleet-owned driver master, licensing, eligibility, performance, violations, medical, drug tests, and exceptions exist; current verification unavailable |
+| Phase 5 — Maintenance | PARTIAL | Fleet maintenance schedules and allocation blocking exist; full maintenance history/cost/breakdown scope is incomplete |
+| Phase 6 — Work Orders | MISSING | No Work Order/Job Card aggregate or dedicated module |
+| Phase 7 — Inventory / Inspection | MISSING | No production parts inventory or inspection bounded context |
+| Phase 8 — GPS / Tracking | MISSING | No live tracking/geofence/replay bounded context |
+| Phase 9 — Delivery | PARTIAL | Offline sync and trip operational events exist, but Delivery Order/POD/redelivery capability is missing |
+| Phase 10 — Platform / Ops | PARTIAL | Notifications, reporting, offline sync, security, and audit support exist; platform breadth and verification remain incomplete |
+
+### Phase 2 Deep Comparison
+
+| Story | Backend | DB | API | Security | Frontend | Tests | E2E | Acceptance | Overall | Blocker | Confidence |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :--- | :---: |
+| US-20 Route Optimization | COMPLETE | COMPLETE | COMPLETE | COMPLETE | COMPLETE | PARTIAL | MISSING | PARTIAL | PARTIAL | Current tests unavailable; no dedicated E2E evidence | HIGH |
+| US-21 Route History | COMPLETE | COMPLETE | COMPLETE | COMPLETE | COMPLETE | PARTIAL | MISSING | PARTIAL | PARTIAL | Current tests unavailable | HIGH |
+| US-22 Route Performance | COMPLETE | COMPLETE | COMPLETE | COMPLETE | COMPLETE | PARTIAL | MISSING | PARTIAL | PARTIAL | Current tests unavailable | HIGH |
+| US-23 Route Disruptions | COMPLETE | COMPLETE | COMPLETE | COMPLETE | COMPLETE | PARTIAL | MISSING | PARTIAL | PARTIAL | Current tests unavailable | HIGH |
+| US-24 Freight Orders | COMPLETE | COMPLETE | COMPLETE | COMPLETE | COMPLETE | PARTIAL | PARTIAL | PARTIAL | PARTIAL | Existing E2E cannot execute | HIGH |
+| US-25 Cargo Manifest | COMPLETE | COMPLETE | COMPLETE | COMPLETE | COMPLETE | PARTIAL | PARTIAL | PARTIAL | PARTIAL | Existing E2E cannot execute | HIGH |
+| US-26 Load Planning | COMPLETE | COMPLETE | COMPLETE | COMPLETE | PARTIAL | PARTIAL | MISSING | PARTIAL | PARTIAL | 13 lint errors include Load Planning; broken TypeScript import; no dedicated Playwright spec | HIGH |
+| US-27 Weight / Volume Validation | PARTIAL | MISSING | COMPLETE | COMPLETE | PARTIAL | PARTIAL | MISSING | PARTIAL | PARTIAL | Cargo item weight/dimensions, vehicle volume capacity, GVW, and axle limits absent; service returns `INCOMPLETE` | HIGH |
+| US-28 Freight Insurance | COMPLETE | COMPLETE | COMPLETE | COMPLETE | PARTIAL | PARTIAL | PARTIAL | PARTIAL | PARTIAL | Eight lint errors in Insurance pages; E2E unavailable | HIGH |
+| US-29 Freight Reporting | MISSING | MISSING | MISSING | UNKNOWN | MISSING | MISSING | MISSING | BLOCKED | BLOCKED | `BLOCKED_BY_TENANT_FOUNDATION`; tenant work explicitly paused | HIGH |
+| US-30 Cargo Exceptions | MISSING | MISSING | MISSING | MISSING | MISSING | MISSING | MISSING | MISSING | MISSING | Validation codes such as `UNMANIFESTED_CARGO` are not a Cargo Exception aggregate/workflow | HIGH |
+
+### US-27 Authoritative Data Gap
+
+`LoadPlanService.validateWeightAndVolume` explicitly reports `CARGO_ITEM_WEIGHT_DATA_MISSING`, `CARGO_ITEM_DIMENSIONS_DATA_MISSING`, `VEHICLE_VOLUME_CAPACITY_UNAVAILABLE`, and `VEHICLE_AXLE_LIMITS_UNAVAILABLE`. The current vehicle schema exposes only `capacity_kg`; it does not provide authoritative tare/GVW/volume/axle data, and manifest items lack measured weight and dimensions. No values may be fabricated.
+
+### Verified Blockers
+
+- **Git/worktree:** None; clean and attributable.
+- **Build/toolchain:** Functional Maven wrapper distribution is absent and wrapper script lacks executable Git mode.
+- **Frontend:** 13 lint errors; TypeScript import failure in Load Planning.
+- **Tests/E2E:** Vitest blocked by missing Rollup native package; Playwright blocked by backend startup prerequisite.
+- **Tenant:** Tenant implementation paused; current schema is legacy single-tenant.
+- **US-27:** Authoritative cargo/vehicle weight, volume, GVW, and axle data absent.
+- **US-29:** `BLOCKED_BY_TENANT_FOUNDATION`.
+- **US-30:** No production Cargo Exception aggregate, persistence, API, RBAC, frontend, history, resolution, or E2E.
+
+### Release Readiness
+
+| Stage | Status | Evidence |
+| :--- | :---: | :--- |
+| Developer Demo | PARTIAL | Broad features exist, but current startup/test gates are not trustworthy |
+| Internal QA | NOT_READY | Backend, frontend unit, and E2E suites cannot complete |
+| UAT | NOT_READY | No current verified build and acceptance baseline |
+| Pilot | BLOCKED | UAT and tenant-safe reporting are unresolved |
+| Production | BLOCKED | Baseline, tenancy, release engineering, and incomplete MVP gaps remain |
+
+### Exact Next Task
+
+**Task ID:** `MVP-BASELINE-RECOVERY-001`
+
+**Title:** Restore Reproducible Backend and Frontend Verification Toolchains
+
+**Why:** The mandated decision algorithm selects baseline recovery whenever the environment is not trustworthy. Feature closure cannot be accepted while Maven, Vitest, TypeScript, and Playwright gates are blocked or failing.
+
+**Scope:** Restore the standard Maven wrapper files and executable mode; restore a reproducible Node/npm dependency installation; reproduce and classify backend tests, lint, TypeScript/build, Vitest, and Playwright without fixing unrelated product behavior.
+
+**Must Not Change:** Tenant architecture; Flyway history; public APIs; domain behavior; Phase 2 feature semantics; unrelated UI; existing user work.
+
+### Next Five Tasks
+
+1. `MVP-BASELINE-RECOVERY-001` — restore trustworthy backend/frontend/E2E execution.
+2. `FRONTEND-GATE-RECOVERY-001` — close the 13 lint errors, Load Planning import failure, and dependency gate if still separate after baseline recovery.
+3. `P2-LOAD-ACCEPTANCE-001` — add dedicated Load Planning acceptance/E2E coverage without rebuilding the feature.
+4. `P2-WEIGHT-VOLUME-DATA-001` — approve and implement authoritative weight/volume/GVW/axle data contracts.
+5. `P2-CARGO-EXCEPTION-001` — implement Cargo Exceptions only after earlier Phase 2 executable gaps are closed; keep US-29 blocked.
+
+---
+
 # MVP Implementation Status Reconciliation (MVP-STATUS-001)
 
 **Audit Date:** August 18, 2026  

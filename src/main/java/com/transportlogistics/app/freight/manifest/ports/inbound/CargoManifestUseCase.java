@@ -19,7 +19,17 @@ public interface CargoManifestUseCase {
     record UpdateCommand(Long version) { }
     record ItemCommand(Long version, UUID freightOrderLineId, String description, BigDecimal quantity,
                        String packingInformation, String commodityClassification, boolean customsApplicable,
-                       String customsInformation, boolean hazardous, String hazardousClassification, String hazardousDetails) { }
+                       String customsInformation, boolean hazardous, String hazardousClassification, String hazardousDetails,
+                       Boolean fragile, Boolean temperatureSensitive) {
+        public ItemCommand(Long version, UUID freightOrderLineId, String description, BigDecimal quantity,
+                           String packingInformation, String commodityClassification, boolean customsApplicable,
+                           String customsInformation, boolean hazardous, String hazardousClassification,
+                           String hazardousDetails) {
+            this(version, freightOrderLineId, description, quantity, packingInformation, commodityClassification,
+                    customsApplicable, customsInformation, hazardous, hazardousClassification, hazardousDetails,
+                    null, null);
+        }
+    }
     record SearchQuery(String search, UUID freightOrderId, Boolean finalized, int page, int limit, String sort, String direction) { }
     record PageResult<T>(List<T> content,int page,int limit,long totalElements,int totalPages) { }
     record Readiness(boolean ready, List<ManifestValidationFailure> failures) { public Readiness { failures=List.copyOf(failures); } }

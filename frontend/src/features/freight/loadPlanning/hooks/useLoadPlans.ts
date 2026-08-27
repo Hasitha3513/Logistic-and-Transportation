@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { loadPlanApi } from '../api/loadPlanApi';
-import type { CreateLoadPlanPayload, UpdateLoadPlanPayload } from '../types/loadPlan';
+import type { CreateLoadPlanPayload, MarkLoadPlanReadyPayload, UpdateLoadPlanPayload } from '../types/loadPlan';
 
 export const loadPlanKeys = {
   all: ['load-plans'] as const,
@@ -65,6 +65,12 @@ export function useSaveLoadPlan(id?: string) {
     }),
     update: useMutation({
       mutationFn: (payload: UpdateLoadPlanPayload) => loadPlanApi.update(id!, payload),
+      onSuccess: async (saved) => {
+        await sync(saved.id);
+      },
+    }),
+    markReady: useMutation({
+      mutationFn: (payload: MarkLoadPlanReadyPayload) => loadPlanApi.markReady(id!, payload),
       onSuccess: async (saved) => {
         await sync(saved.id);
       },

@@ -2,6 +2,7 @@ package com.transportlogistics.app.freight.loadplanning.adapters.outbound.persis
 
 import com.transportlogistics.app.freight.loadplanning.domain.LoadPlan;
 import com.transportlogistics.app.freight.loadplanning.domain.LoadPlanItemPlacement;
+import com.transportlogistics.app.freight.loadplanning.domain.LoadPlanReadinessStatus;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -17,6 +18,9 @@ public class LoadPlanPersistenceMapper {
         entity.setCargoManifestId(domain.getCargoManifestId());
         entity.setVehicleId(domain.getVehicleId());
         entity.setNotes(domain.getNotes());
+        entity.setReadinessStatus(domain.getReadinessStatus());
+        entity.setReadyAt(domain.getReadyAt());
+        entity.setReadyBy(domain.getReadyBy());
         entity.setVersion(domain.getVersion());
         entity.setCreatedAt(domain.getCreatedAt());
         entity.setUpdatedAt(domain.getUpdatedAt());
@@ -66,6 +70,9 @@ public class LoadPlanPersistenceMapper {
                 entity.getVehicleId(),
                 placements,
                 entity.getNotes(),
+                entity.getReadinessStatus() != null ? entity.getReadinessStatus() : LoadPlanReadinessStatus.DRAFT,
+                entity.getReadyAt(),
+                entity.getReadyBy(),
                 entity.getCreatedAt(),
                 entity.getUpdatedAt(),
                 entity.getCreatedBy(),

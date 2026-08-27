@@ -8,7 +8,17 @@ import java.util.UUID;
 public record CargoManifestItem(UUID id, UUID freightOrderLineId, String description, BigDecimal quantity,
                                 String packingInformation, String commodityClassification,
                                 boolean customsApplicable, String customsInformation,
-                                boolean hazardous, String hazardousClassification, String hazardousDetails) {
+                                boolean hazardous, String hazardousClassification, String hazardousDetails,
+                                Boolean fragile, Boolean temperatureSensitive) {
+    public CargoManifestItem(UUID id, UUID freightOrderLineId, String description, BigDecimal quantity,
+                             String packingInformation, String commodityClassification,
+                             boolean customsApplicable, String customsInformation,
+                             boolean hazardous, String hazardousClassification, String hazardousDetails) {
+        this(id, freightOrderLineId, description, quantity, packingInformation, commodityClassification,
+                customsApplicable, customsInformation, hazardous, hazardousClassification, hazardousDetails,
+                null, null);
+    }
+
     public CargoManifestItem {
         if (id == null) throw invalid("Manifest item id is required");
         if (freightOrderLineId == null) throw invalid("Freight order line reference is required");
@@ -29,6 +39,12 @@ public record CargoManifestItem(UUID id, UUID freightOrderLineId, String descrip
             failures.add(new ManifestValidationFailure("HAZARDOUS_CLASSIFICATION_REQUIRED", "items." + id + ".hazardousClassification", "Hazardous classification is required for hazardous cargo"));
         if (hazardous && hazardousDetails == null)
             failures.add(new ManifestValidationFailure("HAZARDOUS_DETAILS_REQUIRED", "items." + id + ".hazardousDetails", "Hazardous details are required for hazardous cargo"));
+        if (fragile == null || temperatureSensitive == null)
+            failures.add(new ManifestValidationFailure(
+                    "SPECIAL_CARGO_CLASSIFICATION_MISSING",
+                    "items." + id + ".specialCargoClassification",
+                    "Fragile and temperature-sensitive classifications must both be explicitly provided"
+            ));
         return java.util.List.copyOf(failures);
     }
 

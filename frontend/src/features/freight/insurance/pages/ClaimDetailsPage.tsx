@@ -21,8 +21,8 @@ import {
   DollarOutlined,
   ExclamationCircleOutlined,
   FileProtectOutlined,
-  SafetyCertificateOutlined
 } from '@ant-design/icons';
+import { isAxiosError } from 'axios';
 import { useAuth } from '../../../../auth/AuthContext';
 import { Navigate, useNavigate, useParams } from 'react-router-dom';
 import {
@@ -33,10 +33,18 @@ import {
   useRecordSettlement,
   useRejectClaim
 } from '../hooks/useInsurance';
-import { ClaimResponse, ClaimSettlementResponse, ClaimStatus } from '../types/insurance';
+import { ClaimSettlementResponse, ClaimStatus } from '../types/insurance';
 
 const { Title, Text, Paragraph } = Typography;
 const { TextArea } = Input;
+
+interface ClaimActionFormValues {
+  assessedAmount: number;
+  assessmentNotes: string;
+  notes?: string;
+  reason: string;
+  amount: number;
+}
 
 export const ClaimDetailsPage: React.FC = () => {
   const { hasPermission } = useAuth();
@@ -48,7 +56,7 @@ export const ClaimDetailsPage: React.FC = () => {
     'ASSESS' | 'APPROVE' | 'REJECT' | 'DISPUTE' | 'SETTLE' | null
   >(null);
 
-  const [form] = Form.useForm();
+  const [form] = Form.useForm<ClaimActionFormValues>();
 
   const { data: claim, isLoading, isError } = useClaim(id || '');
 
@@ -97,7 +105,7 @@ export const ClaimDetailsPage: React.FC = () => {
     setActiveModal(modalType);
   };
 
-  const handleModalSubmit = async (values: any) => {
+  const handleModalSubmit = async (values: ClaimActionFormValues) => {
     if (!claim) return;
     try {
       if (activeModal === 'ASSESS') {
@@ -134,8 +142,10 @@ export const ClaimDetailsPage: React.FC = () => {
         message.success('Settlement recorded successfully');
       }
       setActiveModal(null);
-    } catch (err: any) {
-      const msg = err.response?.data?.message || 'Operation failed';
+    } catch (err: unknown) {
+      const msg = isAxiosError<{ message?: string }>(err)
+        ? err.response?.data?.message ?? 'Operation failed'
+        : 'Operation failed';
       message.error(msg);
     }
   };

@@ -23,6 +23,8 @@ import {
   SafetyCertificateOutlined,
   EyeOutlined
 } from '@ant-design/icons';
+import { isAxiosError } from 'axios';
+import type { Dayjs } from 'dayjs';
 import { useAuth } from '../../../../auth/AuthContext';
 import { Navigate, useNavigate, useParams } from 'react-router-dom';
 import {
@@ -35,12 +37,21 @@ import { ClaimResponse, ClaimStatus, PolicyStatus, UpdatePolicyPayload } from '.
 const { Title, Text } = Typography;
 const { TextArea } = Input;
 
+interface PolicyUpdateFormValues {
+  coverageAmount: number;
+  premiumAmount: number;
+  deductibleAmount: number;
+  validity?: [Dayjs, Dayjs];
+  status: PolicyStatus;
+  termsAndConditions?: string;
+}
+
 export const PolicyDetailsPage: React.FC = () => {
   const { hasPermission } = useAuth();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [form] = Form.useForm();
+  const [form] = Form.useForm<PolicyUpdateFormValues>();
 
   const { data: policy, isLoading, isError } = usePolicy(id || '');
   const { data: claims, isLoading: isClaimsLoading } = useClaimsByPolicy(id || '');
@@ -94,7 +105,7 @@ export const PolicyDetailsPage: React.FC = () => {
     setIsEditModalOpen(true);
   };
 
-  const handleUpdate = async (values: any) => {
+  const handleUpdate = async (values: PolicyUpdateFormValues) => {
     if (!policy) return;
     try {
       const payload: UpdatePolicyPayload = {
@@ -110,8 +121,10 @@ export const PolicyDetailsPage: React.FC = () => {
       await updatePolicyMutation.mutateAsync(payload);
       message.success('Policy updated successfully');
       setIsEditModalOpen(false);
-    } catch (err: any) {
-      const msg = err.response?.data?.message || 'Failed to update policy';
+    } catch (err: unknown) {
+      const msg = isAxiosError<{ message?: string }>(err)
+        ? err.response?.data?.message ?? 'Failed to update policy'
+        : 'Failed to update policy';
       message.error(msg);
     }
   };

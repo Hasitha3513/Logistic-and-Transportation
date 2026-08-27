@@ -1,5 +1,5 @@
 import { EyeOutlined, PlusOutlined, ReloadOutlined } from '@ant-design/icons';
-import { Alert, Button, Card, Flex, Space, Table, Typography, type TableColumnsType } from 'antd';
+import { Alert, Button, Card, Flex, Space, Table, Tag, Typography, type TableColumnsType } from 'antd';
 import { Link, Navigate } from 'react-router-dom';
 import { useAuth } from '../../../../auth/AuthContext';
 import { useLoadPlans } from '../hooks/useLoadPlans';
@@ -22,6 +22,16 @@ export default function LoadPlanListPage() {
           <Typography.Text strong>{v}</Typography.Text>
         </Link>
       ),
+    },
+    {
+      title: 'Status',
+      dataIndex: 'readinessStatus',
+      render: (v) =>
+        v === 'STRUCTURALLY_READY' ? (
+          <Tag color="green">STRUCTURALLY READY</Tag>
+        ) : (
+          <Tag color="default">DRAFT</Tag>
+        ),
     },
     {
       title: 'Manifest ID',

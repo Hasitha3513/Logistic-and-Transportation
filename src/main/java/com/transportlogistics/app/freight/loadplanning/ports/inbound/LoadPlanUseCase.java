@@ -44,6 +44,8 @@ public interface LoadPlanUseCase {
 
     LoadPlan update(UUID id, UpdateCommand command, String actor);
 
+    LoadPlan markReady(UUID id, Long expectedVersion, String actor);
+
     List<LoadPlanViolation> validateLayout(UUID id);
 
     LoadValidationResult validateWeightAndVolume(UUID id, String actor);

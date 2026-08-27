@@ -9,6 +9,8 @@ export interface LoadPlanItemPlacement {
   specialHandlingNotes?: string | null;
 }
 
+export type LoadPlanReadinessStatus = 'DRAFT' | 'STRUCTURALLY_READY';
+
 export interface LoadPlan {
   id: string;
   loadPlanNumber: string;
@@ -16,6 +18,9 @@ export interface LoadPlan {
   vehicleId: string;
   placements: LoadPlanItemPlacement[];
   notes?: string | null;
+  readinessStatus: LoadPlanReadinessStatus;
+  readyAt?: string | null;
+  readyBy?: string | null;
   version: number;
   createdAt: string;
   updatedAt: string;
@@ -44,6 +49,10 @@ export interface UpdateLoadPlanPayload {
   vehicleId: string;
   placements?: LoadPlanItemPlacementPayload[];
   notes?: string | null;
+  version: number;
+}
+
+export interface MarkLoadPlanReadyPayload {
   version: number;
 }
 

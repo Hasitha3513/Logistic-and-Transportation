@@ -1,6 +1,6 @@
 import { ArrowLeftOutlined, SaveOutlined } from '@ant-design/icons';
-import { Alert, Button, Card, Divider, Flex, Form, Input, InputNumber, Select, Space, Table, Typography, message } from 'antd';
-import { useEffect, useState } from 'react';
+import { Button, Card, Divider, Flex, Form, Input, InputNumber, Select, Space, Table, Typography, message } from 'antd';
+import { useMemo, useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../../auth/AuthContext';
 import { useAvailableVehicles, useFinalizedManifests, useManifestForPlanning, useSaveLoadPlan } from '../hooks/useLoadPlans';
@@ -11,16 +11,16 @@ export default function LoadPlanCreatePage() {
   const navigate = useNavigate();
   const [form] = Form.useForm();
   const [selectedManifestId, setSelectedManifestId] = useState<string>();
-  const [placements, setPlacements] = useState<LoadPlanItemPlacementPayload[]>([]);
+  const [editedPlacements, setEditedPlacements] = useState<LoadPlanItemPlacementPayload[]>();
 
   const manifestsQuery = useFinalizedManifests();
   const vehiclesQuery = useAvailableVehicles();
   const manifestDetailQuery = useManifestForPlanning(selectedManifestId);
   const saveActions = useSaveLoadPlan();
 
-  useEffect(() => {
-    if (manifestDetailQuery.data?.items) {
-      const initialPlacements: LoadPlanItemPlacementPayload[] = manifestDetailQuery.data.items.map((item, index) => ({
+  const defaultPlacements = useMemo<LoadPlanItemPlacementPayload[]>(
+    () =>
+      (manifestDetailQuery.data?.items ?? []).map((item, index) => ({
         manifestItemId: item.id,
         placementOrder: index,
         zoneReference: 'FRONT',
@@ -28,18 +28,18 @@ export default function LoadPlanCreatePage() {
         containerReference: 'PALLET-' + (index + 1),
         loadingSequence: index + 1,
         specialHandlingNotes: item.hazardous ? 'Hazardous: ' + (item.hazardousClassification || 'Class 1') : null,
-      }));
-      setPlacements(initialPlacements);
-    }
-  }, [manifestDetailQuery.data]);
+      })),
+    [manifestDetailQuery.data?.items],
+  );
+  const placements = editedPlacements ?? defaultPlacements;
 
   if (!hasPermission('LOAD_PLAN_MANAGE')) {
     return <Navigate to="/freight/load-plans" replace />;
   }
 
   const handlePlacementChange = (index: number, field: keyof LoadPlanItemPlacementPayload, value: unknown) => {
-    setPlacements((prev) => {
-      const next = [...prev];
+    setEditedPlacements((current) => {
+      const next = [...(current ?? defaultPlacements)];
       next[index] = { ...next[index], [field]: value };
       return next;
     });
@@ -89,7 +89,10 @@ export default function LoadPlanCreatePage() {
                 label: `${m.manifestNumber} (${m.freightOrderNumber})`,
                 value: m.id,
               }))}
-              onChange={(val) => setSelectedManifestId(val)}
+              onChange={(val) => {
+                setSelectedManifestId(val);
+                setEditedPlacements(undefined);
+              }}
             />
           </Form.Item>
 
