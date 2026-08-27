@@ -15,22 +15,35 @@ public interface CargoManifestUseCase {
     CargoManifest updateItem(UUID id, UUID itemId, ItemCommand command, String actor);
     Readiness validate(UUID id);
     CargoManifest finalizeManifest(UUID id, long version, String actor);
+
     record CreateCommand(UUID freightOrderId) { }
     record UpdateCommand(Long version) { }
     record ItemCommand(Long version, UUID freightOrderLineId, String description, BigDecimal quantity,
                        String packingInformation, String commodityClassification, boolean customsApplicable,
                        String customsInformation, boolean hazardous, String hazardousClassification, String hazardousDetails,
-                       Boolean fragile, Boolean temperatureSensitive) {
+                       Boolean fragile, Boolean temperatureSensitive,
+                       BigDecimal unitWeight, String weightUnit,
+                       BigDecimal length, BigDecimal width, BigDecimal height,
+                       String dimensionUnit) {
+        public ItemCommand(Long version, UUID freightOrderLineId, String description, BigDecimal quantity,
+                           String packingInformation, String commodityClassification, boolean customsApplicable,
+                           String customsInformation, boolean hazardous, String hazardousClassification,
+                           String hazardousDetails, Boolean fragile, Boolean temperatureSensitive) {
+            this(version, freightOrderLineId, description, quantity, packingInformation, commodityClassification,
+                    customsApplicable, customsInformation, hazardous, hazardousClassification, hazardousDetails,
+                    fragile, temperatureSensitive, null, null, null, null, null, null);
+        }
+
         public ItemCommand(Long version, UUID freightOrderLineId, String description, BigDecimal quantity,
                            String packingInformation, String commodityClassification, boolean customsApplicable,
                            String customsInformation, boolean hazardous, String hazardousClassification,
                            String hazardousDetails) {
             this(version, freightOrderLineId, description, quantity, packingInformation, commodityClassification,
                     customsApplicable, customsInformation, hazardous, hazardousClassification, hazardousDetails,
-                    null, null);
+                    null, null, null, null, null, null, null, null);
         }
     }
     record SearchQuery(String search, UUID freightOrderId, Boolean finalized, int page, int limit, String sort, String direction) { }
-    record PageResult<T>(List<T> content,int page,int limit,long totalElements,int totalPages) { }
-    record Readiness(boolean ready, List<ManifestValidationFailure> failures) { public Readiness { failures=List.copyOf(failures); } }
+    record PageResult<T>(List<T> content, int page, int limit, long totalElements, int totalPages) { }
+    record Readiness(boolean ready, List<ManifestValidationFailure> failures) { public Readiness { failures = List.copyOf(failures); } }
 }

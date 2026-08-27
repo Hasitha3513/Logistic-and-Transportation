@@ -221,11 +221,16 @@ public final class LoadPlanService implements LoadPlanUseCase {
         List<WeightVolumeCalculationEngine.CargoLineMeasurement> cargoMeasurements = new ArrayList<>();
         if (manifest.items() != null) {
             for (CargoManifestLookupPort.ManifestItemPlanningView item : manifest.items()) {
-                // In MVP manifest item schema, item weights and dimensions are not present
-                // Passing item quantity with null unit weight and null dimensions
+                WeightVolumeCalculationEngine.WeightUnit weightUnit = item.weightUnit() != null ? parseWeightUnit(item.weightUnit()) : (item.unitWeight() != null ? WeightVolumeCalculationEngine.WeightUnit.KG : null);
+                WeightVolumeCalculationEngine.DimensionUnit dimensionUnit = item.dimensionUnit() != null ? parseDimensionUnit(item.dimensionUnit()) : ((item.length() != null || item.width() != null || item.height() != null) ? WeightVolumeCalculationEngine.DimensionUnit.M : null);
                 cargoMeasurements.add(new WeightVolumeCalculationEngine.CargoLineMeasurement(
-                        item.quantity(), null, WeightVolumeCalculationEngine.WeightUnit.KG,
-                        null, null, null, WeightVolumeCalculationEngine.DimensionUnit.M
+                        item.quantity(),
+                        item.unitWeight(),
+                        weightUnit,
+                        item.length(),
+                        item.width(),
+                        item.height(),
+                        dimensionUnit
                 ));
             }
         }
@@ -320,6 +325,24 @@ public final class LoadPlanService implements LoadPlanUseCase {
     private void requireActor(String actor) {
         if (actor == null || actor.isBlank()) {
             throw new BusinessRuleException("LOAD_PLAN_ACTOR_REQUIRED", "An authenticated actor is required");
+        }
+    }
+
+    private WeightVolumeCalculationEngine.WeightUnit parseWeightUnit(String unit) {
+        if (unit == null || unit.isBlank()) return WeightVolumeCalculationEngine.WeightUnit.KG;
+        try {
+            return WeightVolumeCalculationEngine.WeightUnit.valueOf(unit.toUpperCase(java.util.Locale.ROOT));
+        } catch (IllegalArgumentException e) {
+            return WeightVolumeCalculationEngine.WeightUnit.KG;
+        }
+    }
+
+    private WeightVolumeCalculationEngine.DimensionUnit parseDimensionUnit(String unit) {
+        if (unit == null || unit.isBlank()) return WeightVolumeCalculationEngine.DimensionUnit.M;
+        try {
+            return WeightVolumeCalculationEngine.DimensionUnit.valueOf(unit.toUpperCase(java.util.Locale.ROOT));
+        } catch (IllegalArgumentException e) {
+            return WeightVolumeCalculationEngine.DimensionUnit.M;
         }
     }
 }

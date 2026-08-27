@@ -17,6 +17,7 @@ const classificationGuidance = 'Complete Fragile and Temperature-sensitive class
 const empty: DefaultValues<ManifestItemForm> = {
   freightOrderLineId: '', description: '', quantity: 1, packingInformation: '', commodityClassification: '',
   customsApplicable: false, customsInformation: '', hazardous: false, hazardousClassification: '', hazardousDetails: '',
+  unitWeight: undefined, weightUnit: 'KG', length: undefined, width: undefined, height: undefined, dimensionUnit: 'M',
 };
 const readinessMessage = (failure: ManifestFailure) => failure.code === 'SPECIAL_CARGO_CLASSIFICATION_MISSING' ? classificationGuidance : failure.message;
 
@@ -43,6 +44,12 @@ export default function CargoManifestDetailsPage() {
       hazardousDetails: editing.hazardousDetails ?? '',
       fragile: editing.fragile ?? undefined,
       temperatureSensitive: editing.temperatureSensitive ?? undefined,
+      unitWeight: editing.unitWeight ?? undefined,
+      weightUnit: (editing.weightUnit as 'KG' | 'G' | 'TONNE') ?? 'KG',
+      length: editing.length ?? undefined,
+      width: editing.width ?? undefined,
+      height: editing.height ?? undefined,
+      dimensionUnit: (editing.dimensionUnit as 'M' | 'CM' | 'MM') ?? 'M',
     } : empty);
   }, [editing, form, open]);
 
@@ -56,6 +63,12 @@ export default function CargoManifestDetailsPage() {
       customsInformation: values.customsInformation || null,
       hazardousClassification: values.hazardousClassification || null,
       hazardousDetails: values.hazardousDetails || null,
+      unitWeight: values.unitWeight ?? null,
+      weightUnit: values.unitWeight ? (values.weightUnit || 'KG') : null,
+      length: values.length ?? null,
+      width: values.width ?? null,
+      height: values.height ?? null,
+      dimensionUnit: (values.length || values.width || values.height) ? (values.dimensionUnit || 'M') : null,
     };
     try {
       if (editing) await actions.updateItem.mutateAsync({ itemId: editing.id, payload });
@@ -104,7 +117,7 @@ export default function CargoManifestDetailsPage() {
       <Card title="Cargo items"><List dataSource={manifest.items} locale={{ emptyText: 'No cargo items have been manifested' }} renderItem={item => {
         const classificationRequired = item.fragile == null || item.temperatureSensitive == null;
         return <List.Item actions={!manifest.finalized && hasPermission('CARGO_MANIFEST_MANAGE') ? [<Button key="edit" type="link" icon={<EditOutlined />} onClick={() => { setEditing(item); setOpen(true); }}>Edit</Button>] : []}>
-          <List.Item.Meta title={<Space wrap><Typography.Text strong>{item.description}</Typography.Text><Tag>{item.commodityClassification}</Tag>{item.hazardous && <Tag color="red">HAZARDOUS</Tag>}{item.customsApplicable && <Tag color="blue">CUSTOMS</Tag>}{item.fragile === true && <Tag color="orange">FRAGILE</Tag>}{item.temperatureSensitive === true && <Tag color="cyan">TEMPERATURE SENSITIVE</Tag>}{classificationRequired && <Tag color="warning">CLASSIFICATION REQUIRED</Tag>}</Space>} description={<div>Quantity: {item.quantity} · Packing: {item.packingInformation}<br />Freight Order line: {order.data?.lines.find(line => line.id === item.freightOrderLineId)?.description ?? item.freightOrderLineId}{item.customsApplicable && <><br />Customs: {item.customsInformation}</>}{item.hazardous && <><br />Hazardous: {item.hazardousClassification} — {item.hazardousDetails}</>}</div>} />
+          <List.Item.Meta title={<Space wrap><Typography.Text strong>{item.description}</Typography.Text><Tag>{item.commodityClassification}</Tag>{item.hazardous && <Tag color="red">HAZARDOUS</Tag>}{item.customsApplicable && <Tag color="blue">CUSTOMS</Tag>}{item.fragile === true && <Tag color="orange">FRAGILE</Tag>}{item.temperatureSensitive === true && <Tag color="cyan">TEMPERATURE SENSITIVE</Tag>}{classificationRequired && <Tag color="warning">CLASSIFICATION REQUIRED</Tag>}</Space>} description={<div>Quantity: {item.quantity} · Packing: {item.packingInformation}<br />Weight: {item.unitWeight ? `${item.unitWeight} ${item.weightUnit ?? 'KG'} per unit` : <Tag color="warning">WEIGHT REQUIRED</Tag>} · Dimensions: {item.length && item.width && item.height ? `${item.length} × ${item.width} × ${item.height} ${item.dimensionUnit ?? 'M'}` : <Tag color="warning">DIMENSIONS REQUIRED</Tag>}<br />Freight Order line: {order.data?.lines.find(line => line.id === item.freightOrderLineId)?.description ?? item.freightOrderLineId}{item.customsApplicable && <><br />Customs: {item.customsInformation}</>}{item.hazardous && <><br />Hazardous: {item.hazardousClassification} — {item.hazardousDetails}</>}</div>} />
         </List.Item>;
       }} /></Card>
       <Card title="Audit"><Descriptions column={{ xs: 1, md: 2 }} items={[{ key: 'created', label: 'Created', children: `${new Date(manifest.createdAt).toLocaleString()} by ${manifest.createdBy}` }, { key: 'updated', label: 'Updated', children: `${new Date(manifest.updatedAt).toLocaleString()} by ${manifest.updatedBy}` }, { key: 'finalized', label: 'Finalized', children: manifest.finalizedAt ? `${new Date(manifest.finalizedAt).toLocaleString()} by ${manifest.finalizedBy}` : '—' }]} /></Card>
@@ -115,6 +128,17 @@ export default function CargoManifestDetailsPage() {
           {field('description', 'Traceable description', <Controller name="description" control={form.control} render={({ field: input }) => <Input {...input} aria-label="Traceable description" />} />)}
           {field('packingInformation', 'Packing information', <Controller name="packingInformation" control={form.control} render={({ field: input }) => <Input {...input} aria-label="Packing information" placeholder="Supplier/operator supplied description" />} />)}
           {field('commodityClassification', 'Commodity classification', <Controller name="commodityClassification" control={form.control} render={({ field: input }) => <Input {...input} aria-label="Commodity classification" placeholder="Provider-neutral supplied code" />} />)}
+          <Divider orientation="left">Cargo measurements & physical dimensions (US-27)</Divider>
+          <Flex gap={12} wrap align="start">
+            {field('unitWeight', 'Unit weight', <Controller name="unitWeight" control={form.control} render={({ field: input }) => <InputNumber {...input} aria-label="Unit weight" min={0.0001} placeholder="e.g. 500.0" style={{ width: 180 }} />} />)}
+            {field('weightUnit', 'Weight unit', <Controller name="weightUnit" control={form.control} render={({ field: input }) => <Select {...input} aria-label="Weight unit" options={[{ value: 'KG', label: 'kg (Kilograms)' }, { value: 'G', label: 'g (Grams)' }, { value: 'TONNE', label: 't (Tonnes)' }]} style={{ width: 140 }} />} />)}
+          </Flex>
+          <Flex gap={12} wrap align="start">
+            {field('length', 'Length', <Controller name="length" control={form.control} render={({ field: input }) => <InputNumber {...input} aria-label="Length" min={0.0001} placeholder="e.g. 1.2" style={{ width: 120 }} />} />)}
+            {field('width', 'Width', <Controller name="width" control={form.control} render={({ field: input }) => <InputNumber {...input} aria-label="Width" min={0.0001} placeholder="e.g. 0.8" style={{ width: 120 }} />} />)}
+            {field('height', 'Height', <Controller name="height" control={form.control} render={({ field: input }) => <InputNumber {...input} aria-label="Height" min={0.0001} placeholder="e.g. 1.0" style={{ width: 120 }} />} />)}
+            {field('dimensionUnit', 'Dimension unit', <Controller name="dimensionUnit" control={form.control} render={({ field: input }) => <Select {...input} aria-label="Dimension unit" options={[{ value: 'M', label: 'm (Meters)' }, { value: 'CM', label: 'cm (Centimeters)' }, { value: 'MM', label: 'mm (Millimeters)' }]} style={{ width: 140 }} />} />)}
+          </Flex>
           <Divider orientation="left">Special cargo classification</Divider>
           <Flex gap={32} wrap>{field('fragile', 'Fragile', <Controller name="fragile" control={form.control} render={({ field: input }) => <div role="radiogroup" aria-label="Fragile"><Radio.Group aria-label="Fragile" value={input.value} onChange={input.onChange} options={[{ label: 'Yes', value: true }, { label: 'No', value: false }]} /></div>} />)}{field('temperatureSensitive', 'Temperature sensitive', <Controller name="temperatureSensitive" control={form.control} render={({ field: input }) => <div role="radiogroup" aria-label="Temperature sensitive"><Radio.Group aria-label="Temperature sensitive" value={input.value} onChange={input.onChange} options={[{ label: 'Yes', value: true }, { label: 'No', value: false }]} /></div>} />)}</Flex>
           <Divider orientation="left">Customs</Divider>

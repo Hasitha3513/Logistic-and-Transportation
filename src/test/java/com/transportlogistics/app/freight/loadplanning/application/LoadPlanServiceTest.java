@@ -463,4 +463,146 @@ class LoadPlanServiceTest {
                 .isInstanceOf(com.transportlogistics.app.shared.domain.BusinessRuleException.class)
                 .hasMessageContaining("Version is required");
     }
+
+    @Test
+    @DisplayName("validateWeightAndVolume returns PASS when measurements are within all vehicle capacities")
+    void shouldReturnPassWhenCargoIsWithinCapacities() {
+        UUID planId = UUID.randomUUID();
+        UUID manifestId = UUID.randomUUID();
+        UUID vehicleId = UUID.randomUUID();
+        UUID item1 = UUID.randomUUID();
+        UUID item2 = UUID.randomUUID();
+        OffsetDateTime now = OffsetDateTime.now(clock);
+
+        LoadPlan plan = new LoadPlan(
+                planId, "LP-001", manifestId, vehicleId, List.of(), "notes", now, now, "user", "user", 0L
+        );
+        ManifestPlanningView manifest = new ManifestPlanningView(
+                manifestId, "CM-001", true, List.of(
+                new ManifestItemPlanningView(item1, "Generators", new BigDecimal("2"), "Box", "GEN", false, null, false, false,
+                        new BigDecimal("500.00"), "KG", new BigDecimal("1.0"), new BigDecimal("1.0"), new BigDecimal("1.0"), "M"),
+                new ManifestItemPlanningView(item2, "Pumps", new BigDecimal("2"), "Box", "GEN", false, null, false, false,
+                        new BigDecimal("500.00"), "KG", new BigDecimal("1.0"), new BigDecimal("1.0"), new BigDecimal("1.0"), "M")
+        )
+        );
+        VehiclePlanningView vehicle = new VehiclePlanningView(
+                vehicleId, "TRK-100", 5000.0, 3500.0, 8500.0, 25.5, 2, 4500.0, "AVAILABLE", true
+        );
+
+        when(repository.findById(planId)).thenReturn(Optional.of(plan));
+        when(manifestLookup.findManifest(manifestId)).thenReturn(Optional.of(manifest));
+        when(vehicleLookup.findVehicle(vehicleId)).thenReturn(Optional.of(vehicle));
+
+        LoadValidationResult result = service.validateWeightAndVolume(planId, "lead-planner");
+
+        assertThat(result.overallOutcome()).isEqualTo(ValidationOutcome.PASS);
+        assertThat(result.payloadResult()).isEqualTo(ValidationOutcome.PASS);
+        assertThat(result.volumeResult()).isEqualTo(ValidationOutcome.PASS);
+        assertThat(result.gvwResult()).isEqualTo(ValidationOutcome.PASS);
+        assertThat(result.cargoWeightKg()).isEqualByComparingTo("2000.00");
+        assertThat(result.cargoVolumeM3()).isEqualByComparingTo("4.000");
+        assertThat(result.projectedGrossWeightKg()).isEqualByComparingTo("5500.00");
+    }
+
+    @Test
+    @DisplayName("validateWeightAndVolume returns FAIL when cargo weight exceeds payload capacity")
+    void shouldReturnFailWhenPayloadExceeded() {
+        UUID planId = UUID.randomUUID();
+        UUID manifestId = UUID.randomUUID();
+        UUID vehicleId = UUID.randomUUID();
+        UUID item1 = UUID.randomUUID();
+        OffsetDateTime now = OffsetDateTime.now(clock);
+
+        LoadPlan plan = new LoadPlan(
+                planId, "LP-001", manifestId, vehicleId, List.of(), "notes", now, now, "user", "user", 0L
+        );
+        ManifestPlanningView manifest = new ManifestPlanningView(
+                manifestId, "CM-001", true, List.of(
+                new ManifestItemPlanningView(item1, "Heavy Machinery", new BigDecimal("2"), "Box", "MACH", false, null, false, false,
+                        new BigDecimal("3000.00"), "KG", new BigDecimal("1.0"), new BigDecimal("1.0"), new BigDecimal("1.0"), "M")
+        )
+        );
+        VehiclePlanningView vehicle = new VehiclePlanningView(
+                vehicleId, "TRK-100", 5000.0, 3500.0, 8500.0, 25.5, 2, 4500.0, "AVAILABLE", true
+        );
+
+        when(repository.findById(planId)).thenReturn(Optional.of(plan));
+        when(manifestLookup.findManifest(manifestId)).thenReturn(Optional.of(manifest));
+        when(vehicleLookup.findVehicle(vehicleId)).thenReturn(Optional.of(vehicle));
+
+        LoadValidationResult result = service.validateWeightAndVolume(planId, "lead-planner");
+
+        assertThat(result.overallOutcome()).isEqualTo(ValidationOutcome.FAIL);
+        assertThat(result.payloadResult()).isEqualTo(ValidationOutcome.FAIL);
+        assertThat(result.cargoWeightKg()).isEqualByComparingTo("6000.00");
+        assertThat(result.violations()).anyMatch(v -> "VEHICLE_PAYLOAD_EXCEEDED".equals(v.code()));
+    }
+
+    @Test
+    @DisplayName("validateWeightAndVolume returns FAIL when cargo volume exceeds volume capacity")
+    void shouldReturnFailWhenVolumeExceeded() {
+        UUID planId = UUID.randomUUID();
+        UUID manifestId = UUID.randomUUID();
+        UUID vehicleId = UUID.randomUUID();
+        UUID item1 = UUID.randomUUID();
+        OffsetDateTime now = OffsetDateTime.now(clock);
+
+        LoadPlan plan = new LoadPlan(
+                planId, "LP-001", manifestId, vehicleId, List.of(), "notes", now, now, "user", "user", 0L
+        );
+        ManifestPlanningView manifest = new ManifestPlanningView(
+                manifestId, "CM-001", true, List.of(
+                new ManifestItemPlanningView(item1, "Bulky Foam", new BigDecimal("2"), "Box", "FOAM", false, null, false, false,
+                        new BigDecimal("100.00"), "KG", new BigDecimal("4.0"), new BigDecimal("2.0"), new BigDecimal("2.0"), "M")
+        )
+        );
+        VehiclePlanningView vehicle = new VehiclePlanningView(
+                vehicleId, "TRK-100", 5000.0, 3500.0, 8500.0, 25.5, 2, 4500.0, "AVAILABLE", true
+        );
+
+        when(repository.findById(planId)).thenReturn(Optional.of(plan));
+        when(manifestLookup.findManifest(manifestId)).thenReturn(Optional.of(manifest));
+        when(vehicleLookup.findVehicle(vehicleId)).thenReturn(Optional.of(vehicle));
+
+        LoadValidationResult result = service.validateWeightAndVolume(planId, "lead-planner");
+
+        assertThat(result.overallOutcome()).isEqualTo(ValidationOutcome.FAIL);
+        assertThat(result.volumeResult()).isEqualTo(ValidationOutcome.FAIL);
+        assertThat(result.cargoVolumeM3()).isEqualByComparingTo("32.000");
+        assertThat(result.violations()).anyMatch(v -> "VEHICLE_VOLUME_CAPACITY_EXCEEDED".equals(v.code()));
+    }
+
+    @Test
+    @DisplayName("validateWeightAndVolume returns INCOMPLETE when measurements are missing")
+    void shouldReturnIncompleteWhenMeasurementsMissing() {
+        UUID planId = UUID.randomUUID();
+        UUID manifestId = UUID.randomUUID();
+        UUID vehicleId = UUID.randomUUID();
+        UUID item1 = UUID.randomUUID();
+        OffsetDateTime now = OffsetDateTime.now(clock);
+
+        LoadPlan plan = new LoadPlan(
+                planId, "LP-001", manifestId, vehicleId, List.of(), "notes", now, now, "user", "user", 0L
+        );
+        ManifestPlanningView manifest = new ManifestPlanningView(
+                manifestId, "CM-001", true, List.of(
+                new ManifestItemPlanningView(item1, "Unmeasured Cargo", new BigDecimal("2"), "Box", "GEN", false, null, false, false,
+                        null, null, null, null, null, null)
+        )
+        );
+        VehiclePlanningView vehicle = new VehiclePlanningView(
+                vehicleId, "TRK-100", 5000.0, 3500.0, 8500.0, 25.5, 2, 4500.0, "AVAILABLE", true
+        );
+
+        when(repository.findById(planId)).thenReturn(Optional.of(plan));
+        when(manifestLookup.findManifest(manifestId)).thenReturn(Optional.of(manifest));
+        when(vehicleLookup.findVehicle(vehicleId)).thenReturn(Optional.of(vehicle));
+
+        LoadValidationResult result = service.validateWeightAndVolume(planId, "lead-planner");
+
+        assertThat(result.overallOutcome()).isEqualTo(ValidationOutcome.INCOMPLETE);
+        assertThat(result.payloadResult()).isEqualTo(ValidationOutcome.INCOMPLETE);
+        assertThat(result.volumeResult()).isEqualTo(ValidationOutcome.INCOMPLETE);
+        assertThat(result.missingData()).contains("CARGO_ITEM_WEIGHT_DATA_MISSING", "CARGO_ITEM_DIMENSIONS_DATA_MISSING");
+    }
 }

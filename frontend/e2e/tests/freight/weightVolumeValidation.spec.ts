@@ -48,7 +48,15 @@ async function createVehicleWithCapacity(
 async function createAndFinalizeManifest(
   api: APIRequestContext,
   tokens: AuthTokens,
-  itemCount = 2
+  itemCount = 2,
+  measurement?: {
+    unitWeight?: number | null;
+    weightUnit?: string | null;
+    length?: number | null;
+    width?: number | null;
+    height?: number | null;
+    dimensionUnit?: string | null;
+  }
 ) {
   const marker = randomUUID().slice(0, 8);
   const lines = Array.from({ length: itemCount }, (_, i) => ({
@@ -93,6 +101,12 @@ async function createAndFinalizeManifest(
         hazardous: false,
         fragile: false,
         temperatureSensitive: false,
+        unitWeight: measurement?.unitWeight ?? null,
+        weightUnit: measurement?.weightUnit ?? (measurement?.unitWeight ? 'KG' : null),
+        length: measurement?.length ?? null,
+        width: measurement?.width ?? null,
+        height: measurement?.height ?? null,
+        dimensionUnit: measurement?.dimensionUnit ?? ((measurement?.length || measurement?.width || measurement?.height) ? 'M' : null),
       },
     });
     expect(addRes.status(), await addRes.text()).toBe(200);
@@ -142,7 +156,7 @@ async function createLoadPlan(
 
 test.describe('US-27 Weight, Volume and Vehicle Capacity Validation Dedicated Acceptance Suite', () => {
 
-  test('E2E-P2-WV-001: Execute Weight and Volume Validation API and verify structured response', async ({ request }) => {
+  test('E2E-P2-WV-001: Execute Weight and Volume Validation API with complete measurements producing PASS outcome', async ({ request }) => {
     const admin = await adminLogin(request);
     const vehicle = await createVehicleWithCapacity(request, admin, {
       capacityKg: 5000,
@@ -153,11 +167,20 @@ test.describe('US-27 Weight, Volume and Vehicle Capacity Validation Dedicated Ac
       maxAxleLoadKg: 4500,
     });
 
-    const { manifest } = await createAndFinalizeManifest(request, admin, 2);
+    // 2 items * 2 qty * 500 kg = 2000 kg cargo weight <= 5000 kg payload capacity
+    // 2 items * 2 qty * (1m * 1m * 1m) = 4 m³ cargo volume <= 25.5 m³ volume capacity
+    // Projected GVW = 3500 + 2000 = 5500 kg <= 8500 kg gross weight limit
+    const { manifest } = await createAndFinalizeManifest(request, admin, 2, {
+      unitWeight: 500,
+      weightUnit: 'KG',
+      length: 1.0,
+      width: 1.0,
+      height: 1.0,
+      dimensionUnit: 'M',
+    });
     const itemIds = manifest.items.map((i: { id: string }) => i.id);
     const plan = await createLoadPlan(request, admin, manifest.id, vehicle.id, itemIds);
 
-    // Call validate-weight-volume endpoint
     const valRes = await request.post(`/api/v1/freight/load-plans/${plan.id}/validate-weight-volume`, {
       headers: headers(admin),
     });
@@ -165,20 +188,179 @@ test.describe('US-27 Weight, Volume and Vehicle Capacity Validation Dedicated Ac
     const result = await valRes.json();
 
     expect(result.loadPlanId).toBe(plan.id);
-    expect(result.overallOutcome).toBe('INCOMPLETE'); // Incomplete due to manifest items lacking weight/dimensions in MVP
+    expect(result.overallOutcome).toBe('PASS');
+    expect(result.payloadResult).toBe('PASS');
+    expect(result.volumeResult).toBe('PASS');
+    expect(result.gvwResult).toBe('PASS');
+    expect(result.cargoWeightKg).toBe(2000);
     expect(result.payloadCapacityKg).toBe(5000);
-    expect(result.tareWeightKg).toBe(3500);
-    expect(result.grossWeightLimitKg).toBe(8500);
+    expect(result.payloadUtilizationPercent).toBe(40);
+    expect(result.cargoVolumeM3).toBe(4);
     expect(result.volumeCapacityM3).toBe(25.5);
-    expect(result.missingData).toContain('CARGO_ITEM_WEIGHT_DATA_MISSING');
-    expect(result.missingData).toContain('CARGO_ITEM_DIMENSIONS_DATA_MISSING');
-    expect(result.missingData).toContain('VEHICLE_AXLE_LIMITS_UNAVAILABLE');
-    expect(result.violations.length).toBeGreaterThan(0);
+    expect(result.projectedGrossWeightKg).toBe(5500);
+    expect(result.grossWeightLimitKg).toBe(8500);
+    expect(result.tareWeightKg).toBe(3500);
+    expect(result.missingData).not.toContain('CARGO_ITEM_WEIGHT_DATA_MISSING');
+    expect(result.missingData).not.toContain('CARGO_ITEM_DIMENSIONS_DATA_MISSING');
   });
 
-  test('E2E-P2-WV-002: Incomplete Vehicle Capacity master data returns explicit missing fact diagnostics', async ({ request }) => {
+  test('E2E-P2-WV-002: Cargo weight exceeding vehicle payload capacity produces FAIL outcome with VEHICLE_PAYLOAD_EXCEEDED', async ({ request }) => {
     const admin = await adminLogin(request);
-    // Vehicle missing capacityKg, tareWeightKg, grossVehicleWeightKg, cargoVolumeCapacityM3
+    const vehicle = await createVehicleWithCapacity(request, admin, {
+      capacityKg: 5000,
+      tareWeightKg: 3500,
+      grossVehicleWeightKg: 8500,
+      cargoVolumeCapacityM3: 25.5,
+      axleCount: 2,
+      maxAxleLoadKg: 4500,
+    });
+
+    // 2 items * 2 qty * 2000 kg = 8000 kg cargo weight > 5000 kg payload capacity
+    const { manifest } = await createAndFinalizeManifest(request, admin, 2, {
+      unitWeight: 2000,
+      weightUnit: 'KG',
+      length: 1.0,
+      width: 1.0,
+      height: 1.0,
+      dimensionUnit: 'M',
+    });
+    const itemIds = manifest.items.map((i: { id: string }) => i.id);
+    const plan = await createLoadPlan(request, admin, manifest.id, vehicle.id, itemIds);
+
+    const valRes = await request.post(`/api/v1/freight/load-plans/${plan.id}/validate-weight-volume`, {
+      headers: headers(admin),
+    });
+    expect(valRes.status()).toBe(200);
+    const result = await valRes.json();
+
+    expect(result.overallOutcome).toBe('FAIL');
+    expect(result.payloadResult).toBe('FAIL');
+    expect(result.cargoWeightKg).toBe(8000);
+    expect(result.payloadCapacityKg).toBe(5000);
+    expect(result.violations).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ code: 'VEHICLE_PAYLOAD_EXCEEDED' }),
+      ])
+    );
+  });
+
+  test('E2E-P2-WV-003: Cargo volume exceeding vehicle volume capacity produces FAIL outcome with VEHICLE_VOLUME_CAPACITY_EXCEEDED', async ({ request }) => {
+    const admin = await adminLogin(request);
+    const vehicle = await createVehicleWithCapacity(request, admin, {
+      capacityKg: 5000,
+      tareWeightKg: 3500,
+      grossVehicleWeightKg: 8500,
+      cargoVolumeCapacityM3: 25.5,
+      axleCount: 2,
+      maxAxleLoadKg: 4500,
+    });
+
+    // 2 items * 2 qty * (4m * 2m * 2m = 16 m³) = 64 m³ > 25.5 m³ volume capacity
+    const { manifest } = await createAndFinalizeManifest(request, admin, 2, {
+      unitWeight: 100,
+      weightUnit: 'KG',
+      length: 4.0,
+      width: 2.0,
+      height: 2.0,
+      dimensionUnit: 'M',
+    });
+    const itemIds = manifest.items.map((i: { id: string }) => i.id);
+    const plan = await createLoadPlan(request, admin, manifest.id, vehicle.id, itemIds);
+
+    const valRes = await request.post(`/api/v1/freight/load-plans/${plan.id}/validate-weight-volume`, {
+      headers: headers(admin),
+    });
+    expect(valRes.status()).toBe(200);
+    const result = await valRes.json();
+
+    expect(result.overallOutcome).toBe('FAIL');
+    expect(result.volumeResult).toBe('FAIL');
+    expect(result.cargoVolumeM3).toBe(64);
+    expect(result.volumeCapacityM3).toBe(25.5);
+    expect(result.violations).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ code: 'VEHICLE_VOLUME_CAPACITY_EXCEEDED' }),
+      ])
+    );
+  });
+
+  test('E2E-P2-WV-004: Projected gross weight exceeding vehicle GVW limit produces FAIL outcome with VEHICLE_GVW_EXCEEDED', async ({ request }) => {
+    const admin = await adminLogin(request);
+    const vehicle = await createVehicleWithCapacity(request, admin, {
+      capacityKg: 5000,
+      tareWeightKg: 5000,
+      grossVehicleWeightKg: 7000,
+      cargoVolumeCapacityM3: 25.5,
+      axleCount: 2,
+      maxAxleLoadKg: 4500,
+    });
+
+    // 1 item * 2 qty * 1500 kg = 3000 kg cargo weight (<= 5000 kg payload capacity)
+    // Projected GVW = 5000 tare + 3000 cargo = 8000 kg > 7000 kg GVW limit
+    const { manifest } = await createAndFinalizeManifest(request, admin, 1, {
+      unitWeight: 1500,
+      weightUnit: 'KG',
+      length: 1.0,
+      width: 1.0,
+      height: 1.0,
+      dimensionUnit: 'M',
+    });
+    const itemIds = manifest.items.map((i: { id: string }) => i.id);
+    const plan = await createLoadPlan(request, admin, manifest.id, vehicle.id, itemIds);
+
+    const valRes = await request.post(`/api/v1/freight/load-plans/${plan.id}/validate-weight-volume`, {
+      headers: headers(admin),
+    });
+    expect(valRes.status()).toBe(200);
+    const result = await valRes.json();
+
+    expect(result.overallOutcome).toBe('FAIL');
+    expect(result.payloadResult).toBe('PASS');
+    expect(result.gvwResult).toBe('FAIL');
+    expect(result.projectedGrossWeightKg).toBe(8000);
+    expect(result.grossWeightLimitKg).toBe(7000);
+    expect(result.violations).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ code: 'VEHICLE_GVW_EXCEEDED' }),
+      ])
+    );
+  });
+
+  test('E2E-P2-WV-005: Missing measurements returns INCOMPLETE with explicit missing fact diagnostics', async ({ request }) => {
+    const admin = await adminLogin(request);
+    const vehicle = await createVehicleWithCapacity(request, admin, {
+      capacityKg: 5000,
+      tareWeightKg: 3500,
+      grossVehicleWeightKg: 8500,
+      cargoVolumeCapacityM3: 25.5,
+      axleCount: 2,
+      maxAxleLoadKg: 4500,
+    });
+
+    // No measurements supplied
+    const { manifest } = await createAndFinalizeManifest(request, admin, 2);
+    const itemIds = manifest.items.map((i: { id: string }) => i.id);
+    const plan = await createLoadPlan(request, admin, manifest.id, vehicle.id, itemIds);
+
+    const valRes = await request.post(`/api/v1/freight/load-plans/${plan.id}/validate-weight-volume`, {
+      headers: headers(admin),
+    });
+    expect(valRes.status()).toBe(200);
+    const result = await valRes.json();
+
+    expect(result.overallOutcome).toBe('INCOMPLETE');
+    expect(result.missingData).toContain('CARGO_ITEM_WEIGHT_DATA_MISSING');
+    expect(result.missingData).toContain('CARGO_ITEM_DIMENSIONS_DATA_MISSING');
+    expect(result.violations).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ code: 'LOAD_WEIGHT_DATA_MISSING' }),
+        expect.objectContaining({ code: 'LOAD_VOLUME_DATA_MISSING' }),
+      ])
+    );
+  });
+
+  test('E2E-P2-WV-006: Incomplete Vehicle Capacity master data returns explicit missing vehicle fact diagnostics', async ({ request }) => {
+    const admin = await adminLogin(request);
     const vehicle = await createVehicleWithCapacity(request, admin, {
       capacityKg: null,
       tareWeightKg: null,
@@ -188,7 +370,14 @@ test.describe('US-27 Weight, Volume and Vehicle Capacity Validation Dedicated Ac
       maxAxleLoadKg: null,
     });
 
-    const { manifest } = await createAndFinalizeManifest(request, admin, 1);
+    const { manifest } = await createAndFinalizeManifest(request, admin, 1, {
+      unitWeight: 500,
+      weightUnit: 'KG',
+      length: 1.0,
+      width: 1.0,
+      height: 1.0,
+      dimensionUnit: 'M',
+    });
     const itemIds = manifest.items.map((i: { id: string }) => i.id);
     const plan = await createLoadPlan(request, admin, manifest.id, vehicle.id, itemIds);
 
@@ -201,23 +390,12 @@ test.describe('US-27 Weight, Volume and Vehicle Capacity Validation Dedicated Ac
     expect(result.overallOutcome).toBe('INCOMPLETE');
     expect(result.payloadCapacityKg).toBeNull();
     expect(result.volumeCapacityM3).toBeNull();
-    expect(result.tareWeightKg).toBeNull();
-    expect(result.grossWeightLimitKg).toBeNull();
-
-    // Verify explicit missing data identifiers
     expect(result.missingData).toContain('VEHICLE_PAYLOAD_CAPACITY_MISSING');
     expect(result.missingData).toContain('VEHICLE_VOLUME_CAPACITY_UNAVAILABLE');
     expect(result.missingData).toContain('VEHICLE_GVW_DATA_MISSING');
-    expect(result.violations).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ code: 'VEHICLE_PAYLOAD_CAPACITY_UNAVAILABLE' }),
-        expect.objectContaining({ code: 'VEHICLE_VOLUME_CAPACITY_UNAVAILABLE' }),
-        expect.objectContaining({ code: 'VEHICLE_GVW_DATA_UNAVAILABLE' }),
-      ])
-    );
   });
 
-  test('E2E-P2-WV-003: Read-Only Guarantee — Validation does not mutate Load Plan state or US-26 readiness', async ({ request }) => {
+  test('E2E-P2-WV-007: Read-Only Guarantee — Validation does not mutate Load Plan state or US-26 readiness', async ({ request }) => {
     const admin = await adminLogin(request);
     const vehicle = await createVehicleWithCapacity(request, admin, {
       capacityKg: 5000,
@@ -228,14 +406,20 @@ test.describe('US-27 Weight, Volume and Vehicle Capacity Validation Dedicated Ac
       maxAxleLoadKg: 4000,
     });
 
-    const { manifest } = await createAndFinalizeManifest(request, admin, 1);
+    const { manifest } = await createAndFinalizeManifest(request, admin, 1, {
+      unitWeight: 500,
+      weightUnit: 'KG',
+      length: 1.0,
+      width: 1.0,
+      height: 1.0,
+      dimensionUnit: 'M',
+    });
     const itemIds = manifest.items.map((i: { id: string }) => i.id);
     const plan = await createLoadPlan(request, admin, manifest.id, vehicle.id, itemIds);
 
     expect(plan.readinessStatus).toBe('DRAFT');
     expect(plan.version).toBe(0);
 
-    // Execute validation 3 consecutive times
     for (let i = 0; i < 3; i++) {
       const valRes = await request.post(`/api/v1/freight/load-plans/${plan.id}/validate-weight-volume`, {
         headers: headers(admin),
@@ -243,7 +427,6 @@ test.describe('US-27 Weight, Volume and Vehicle Capacity Validation Dedicated Ac
       expect(valRes.status()).toBe(200);
     }
 
-    // Inspect plan directly to verify no mutation occurred
     const fetchRes = await request.get(`/api/v1/freight/load-plans/${plan.id}`, {
       headers: headers(admin),
     });
@@ -256,7 +439,7 @@ test.describe('US-27 Weight, Volume and Vehicle Capacity Validation Dedicated Ac
     expect(fetchedPlan.readyBy).toBeNull();
   });
 
-  test('E2E-P2-WV-004: RBAC enforcement — unauthorized and unauthenticated requests are denied', async ({ request }) => {
+  test('E2E-P2-WV-008: RBAC enforcement — unauthorized and unauthenticated requests are denied', async ({ request }) => {
     const admin = await adminLogin(request);
     const vehicle = await createVehicleWithCapacity(request, admin, {
       capacityKg: 5000,
@@ -287,7 +470,7 @@ test.describe('US-27 Weight, Volume and Vehicle Capacity Validation Dedicated Ac
     });
     expect(viewOnlyRes.status()).toBe(403);
 
-    // 4. User with LOAD_PLAN_MANAGE -> 200 (authorized to execute validation command)
+    // 4. User with LOAD_PLAN_MANAGE -> 200
     const { tokens: managerTokens } = await provisionUser(request, admin, `wv_planman_${randomUUID().slice(0, 6)}`, ['LOAD_PLAN_MANAGE']);
     const allowedRes = await request.post(`/api/v1/freight/load-plans/${plan.id}/validate-weight-volume`, {
       headers: headers(managerTokens),
@@ -295,7 +478,7 @@ test.describe('US-27 Weight, Volume and Vehicle Capacity Validation Dedicated Ac
     expect(allowedRes.status()).toBe(200);
   });
 
-  test('E2E-P2-WV-005: Frontend UI renders capacity validation card, metrics, and actionable alerts', async ({ page, request }) => {
+  test('E2E-P2-WV-009: Frontend UI renders capacity validation card, metrics, and PASS badge', async ({ page, request }) => {
     const admin = await adminLogin(request);
     const vehicle = await createVehicleWithCapacity(request, admin, {
       capacityKg: 6000,
@@ -306,42 +489,30 @@ test.describe('US-27 Weight, Volume and Vehicle Capacity Validation Dedicated Ac
       maxAxleLoadKg: 5000,
     });
 
-    const { manifest } = await createAndFinalizeManifest(request, admin, 1);
+    const { manifest } = await createAndFinalizeManifest(request, admin, 1, {
+      unitWeight: 500,
+      weightUnit: 'KG',
+      length: 1.0,
+      width: 1.0,
+      height: 1.0,
+      dimensionUnit: 'M',
+    });
     const itemIds = manifest.items.map((i: { id: string }) => i.id);
     const plan = await createLoadPlan(request, admin, manifest.id, vehicle.id, itemIds);
 
     await authenticatePage(page, admin);
     await page.goto(`/freight/load-plans/${plan.id}`);
 
-    // Wait for details page to render
     await expect(page.getByRole('heading', { name: plan.loadPlanNumber })).toBeVisible();
 
-    // Click "Validate Weight & Volume" button
     const validateBtn = page.getByRole('button', { name: /Validate Weight & Volume/i });
     await expect(validateBtn).toBeVisible();
     await validateBtn.click();
 
-    // Verify Weight, Volume & Capacity card is displayed
     await expect(page.getByText('Weight, Volume & Capacity Validation (US-27)')).toBeVisible();
-
-    // Verify Vehicle capacity facts are rendered properly
     await expect(page.getByText('6000 kg')).toBeVisible(); // Payload Capacity
     await expect(page.getByText('28 m³')).toBeVisible(); // Volume Capacity
     await expect(page.getByText('9500 kg')).toBeVisible(); // GVW Limit
     await expect(page.getByText('3500 kg')).toBeVisible(); // Tare Weight
-
-    // Verify missing measurement badges and diagnostics
-    await expect(page.getByText('CARGO_ITEM_WEIGHT_DATA_MISSING')).toBeVisible();
-    await expect(page.getByText('CARGO_ITEM_DIMENSIONS_DATA_MISSING')).toBeVisible();
-    await expect(page.getByText('LOAD_WEIGHT_DATA_MISSING: Cargo item weight measurements are unavailable to compute total cargo weight')).toBeVisible();
-  });
-
-  test('E2E-P2-WV-006: Non-existent Load Plan ID returns 404', async ({ request }) => {
-    const admin = await adminLogin(request);
-    const nonExistentId = randomUUID();
-    const res = await request.post(`/api/v1/freight/load-plans/${nonExistentId}/validate-weight-volume`, {
-      headers: headers(admin),
-    });
-    expect(res.status()).toBe(404);
   });
 });

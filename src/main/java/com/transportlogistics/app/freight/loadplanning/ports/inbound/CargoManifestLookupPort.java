@@ -6,7 +6,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 /**
- * Port for looking up Cargo Manifest data required for Load Planning.
+ * Port for looking up Cargo Manifest data required for Load Planning and Weight/Volume validation.
  */
 public interface CargoManifestLookupPort {
 
@@ -19,8 +19,30 @@ public interface CargoManifestLookupPort {
             boolean hazardous,
             String hazardousClassification,
             Boolean fragile,
-            Boolean temperatureSensitive
+            Boolean temperatureSensitive,
+            BigDecimal unitWeight,
+            String weightUnit,
+            BigDecimal length,
+            BigDecimal width,
+            BigDecimal height,
+            String dimensionUnit
     ) {
+        public ManifestItemPlanningView(
+                UUID itemId,
+                String description,
+                BigDecimal quantity,
+                String packingInformation,
+                String commodityClassification,
+                boolean hazardous,
+                String hazardousClassification,
+                Boolean fragile,
+                Boolean temperatureSensitive
+        ) {
+            this(itemId, description, quantity, packingInformation, commodityClassification,
+                    hazardous, hazardousClassification, fragile, temperatureSensitive,
+                    null, null, null, null, null, null);
+        }
+
         public ManifestItemPlanningView(
                 UUID itemId,
                 String description,
@@ -31,7 +53,8 @@ public interface CargoManifestLookupPort {
                 String hazardousClassification
         ) {
             this(itemId, description, quantity, packingInformation, commodityClassification,
-                    hazardous, hazardousClassification, null, null);
+                    hazardous, hazardousClassification, null, null,
+                    null, null, null, null, null, null);
         }
     }
 

@@ -1,3 +1,34 @@
 import { z } from 'zod';
-export const manifestItemSchema=z.object({freightOrderLineId:z.string().uuid('Freight Order line is required'),description:z.string().trim().min(1,'Description is required').max(500),quantity:z.number().positive('Quantity must be greater than zero'),packingInformation:z.string().trim().min(1,'Packing information is required').max(500),commodityClassification:z.string().trim().min(1,'Commodity classification is required').max(120).regex(/^[A-Za-z0-9][A-Za-z0-9_.-]*$/,'Use a provider-neutral code'),customsApplicable:z.boolean(),customsInformation:z.string().max(1000).optional(),hazardous:z.boolean(),hazardousClassification:z.string().max(120).optional(),hazardousDetails:z.string().max(1000).optional(),fragile:z.boolean({error:'Select Yes or No for Fragile'}),temperatureSensitive:z.boolean({error:'Select Yes or No for Temperature sensitive'})}).superRefine((v,c)=>{if(v.customsApplicable&&!v.customsInformation?.trim())c.addIssue({code:'custom',path:['customsInformation'],message:'Customs information is required'});if(v.hazardous&&!v.hazardousClassification?.trim())c.addIssue({code:'custom',path:['hazardousClassification'],message:'Hazardous classification is required'});if(v.hazardous&&!v.hazardousDetails?.trim())c.addIssue({code:'custom',path:['hazardousDetails'],message:'Hazardous details are required'});});
-export type ManifestItemForm=z.infer<typeof manifestItemSchema>;
+
+export const manifestItemSchema = z.object({
+  freightOrderLineId: z.string().uuid('Freight Order line is required'),
+  description: z.string().trim().min(1, 'Description is required').max(500),
+  quantity: z.number().positive('Quantity must be greater than zero'),
+  packingInformation: z.string().trim().min(1, 'Packing information is required').max(500),
+  commodityClassification: z.string().trim().min(1, 'Commodity classification is required').max(120).regex(/^[A-Za-z0-9][A-Za-z0-9_.-]*$/, 'Use a provider-neutral code'),
+  customsApplicable: z.boolean(),
+  customsInformation: z.string().max(1000).optional(),
+  hazardous: z.boolean(),
+  hazardousClassification: z.string().max(120).optional(),
+  hazardousDetails: z.string().max(1000).optional(),
+  fragile: z.boolean({ error: 'Select Yes or No for Fragile' }),
+  temperatureSensitive: z.boolean({ error: 'Select Yes or No for Temperature sensitive' }),
+  unitWeight: z.number().positive('Unit weight must be greater than zero').optional().nullable(),
+  weightUnit: z.enum(['KG', 'G', 'TONNE']).optional().nullable(),
+  length: z.number().positive('Length must be greater than zero').optional().nullable(),
+  width: z.number().positive('Width must be greater than zero').optional().nullable(),
+  height: z.number().positive('Height must be greater than zero').optional().nullable(),
+  dimensionUnit: z.enum(['M', 'CM', 'MM']).optional().nullable(),
+}).superRefine((v, c) => {
+  if (v.customsApplicable && !v.customsInformation?.trim()) {
+    c.addIssue({ code: 'custom', path: ['customsInformation'], message: 'Customs information is required' });
+  }
+  if (v.hazardous && !v.hazardousClassification?.trim()) {
+    c.addIssue({ code: 'custom', path: ['hazardousClassification'], message: 'Hazardous classification is required' });
+  }
+  if (v.hazardous && !v.hazardousDetails?.trim()) {
+    c.addIssue({ code: 'custom', path: ['hazardousDetails'], message: 'Hazardous details are required' });
+  }
+});
+
+export type ManifestItemForm = z.infer<typeof manifestItemSchema>;

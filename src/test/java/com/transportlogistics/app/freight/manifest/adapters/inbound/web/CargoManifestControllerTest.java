@@ -107,6 +107,53 @@ class CargoManifestControllerTest {
     }
 
     @Test
+    void mapsMeasurementsFromCreateRequestAndResponse() throws Exception {
+        CargoManifestItem itemWithMeasurements = new CargoManifestItem(
+                itemId, lineId, "Cargo", BigDecimal.ONE, "Wrapped", "CODE",
+                false, null, false, null, null, false, false,
+                new BigDecimal("500.50"), "KG", new BigDecimal("1.5"), new BigDecimal("1.0"), new BigDecimal("0.8"), "M"
+        );
+        when(manifests.addItem(eq(id), any(), eq("manager")))
+                .thenReturn(manifest(List.of(itemWithMeasurements)));
+
+        String content = "{\"version\":0,\"freightOrderLineId\":\"" + lineId + "\",\"description\":\"Cargo\",\"quantity\":1,"
+                + "\"packingInformation\":\"Wrapped\",\"commodityClassification\":\"CODE\",\"customsApplicable\":false,\"hazardous\":false,"
+                + "\"fragile\":false,\"temperatureSensitive\":false,\"unitWeight\":500.50,\"weightUnit\":\"KG\","
+                + "\"length\":1.5,\"width\":1.0,\"height\":0.8,\"dimensionUnit\":\"M\"}";
+
+        mvc.perform(post("/v1/freight/manifests/{id}/items", id).principal(() -> "manager")
+                        .contentType(MediaType.APPLICATION_JSON).content(content))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items[0].unitWeight").value(500.50))
+                .andExpect(jsonPath("$.items[0].weightUnit").value("KG"))
+                .andExpect(jsonPath("$.items[0].length").value(1.5))
+                .andExpect(jsonPath("$.items[0].width").value(1.0))
+                .andExpect(jsonPath("$.items[0].height").value(0.8))
+                .andExpect(jsonPath("$.items[0].dimensionUnit").value("M"));
+
+        var command = ArgumentCaptor.forClass(CargoManifestUseCase.ItemCommand.class);
+        verify(manifests).addItem(eq(id), command.capture(), eq("manager"));
+        assertEquals(new BigDecimal("500.50"), command.getValue().unitWeight());
+        assertEquals("KG", command.getValue().weightUnit());
+        assertEquals(new BigDecimal("1.5"), command.getValue().length());
+        assertEquals(new BigDecimal("1.0"), command.getValue().width());
+        assertEquals(new BigDecimal("0.8"), command.getValue().height());
+        assertEquals("M", command.getValue().dimensionUnit());
+    }
+
+    @Test
+    void rejectsNegativeMeasurementsInRequest() throws Exception {
+        String content = "{\"version\":0,\"freightOrderLineId\":\"" + lineId + "\",\"description\":\"Cargo\",\"quantity\":1,"
+                + "\"packingInformation\":\"Wrapped\",\"commodityClassification\":\"CODE\",\"customsApplicable\":false,\"hazardous\":false,"
+                + "\"fragile\":false,\"temperatureSensitive\":false,\"unitWeight\":-10.0}";
+
+        mvc.perform(post("/v1/freight/manifests/{id}/items", id).principal(() -> "manager")
+                        .contentType(MediaType.APPLICATION_JSON).content(content))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
+    }
+
+    @Test
     void mapsClassificationFinalizationFailureThroughStandardEnvelope() throws Exception {
         when(manifests.finalizeManifest(eq(id), eq(0L), eq("manager"))).thenThrow(new BusinessRuleException(
                 "SPECIAL_CARGO_CLASSIFICATION_MISSING", "Fragile and temperature-sensitive classifications must both be explicitly provided"));
