@@ -262,7 +262,7 @@ export const PolicyDetailsPage: React.FC = () => {
             {policy.premiumAmount.toLocaleString()} {policy.currencyCode}
           </Descriptions.Item>
           <Descriptions.Item label="Deductible">
-            {policy.deductibleAmount.toLocaleString()} {policy.currencyCode}
+            {policy.deductibleAmount != null ? policy.deductibleAmount.toLocaleString() : '-'} {policy.currency || policy.currencyCode || ''}
           </Descriptions.Item>
 
           <Descriptions.Item label="Valid From">

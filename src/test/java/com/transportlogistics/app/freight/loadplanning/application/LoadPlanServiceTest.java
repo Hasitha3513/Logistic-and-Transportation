@@ -369,4 +369,98 @@ class LoadPlanServiceTest {
                 .isInstanceOf(com.transportlogistics.app.shared.domain.BusinessRuleException.class)
                 .hasMessageContaining("ITEM_NOT_PLACED");
     }
+
+    @Test
+    @DisplayName("markReady fails when load plan is not found")
+    void shouldFailWhenLoadPlanNotFound() {
+        UUID planId = UUID.randomUUID();
+        when(repository.findById(planId)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.markReady(planId, 0L, "lead-planner"))
+                .isInstanceOf(NotFoundException.class)
+                .hasMessageContaining("Load plan not found");
+    }
+
+    @Test
+    @DisplayName("markReady fails when cargo manifest is not found or not finalized")
+    void shouldFailWhenManifestMissingOrUnfinalized() {
+        UUID planId = UUID.randomUUID();
+        UUID manifestId = UUID.randomUUID();
+        UUID vehicleId = UUID.randomUUID();
+        OffsetDateTime now = OffsetDateTime.now(clock);
+
+        LoadPlan plan = new LoadPlan(
+                planId, "LP-001", manifestId, vehicleId, List.of(), "notes", now, now, "user", "user", 0L
+        );
+        when(repository.findById(planId)).thenReturn(Optional.of(plan));
+
+        // Manifest missing
+        when(manifestLookup.findManifest(manifestId)).thenReturn(Optional.empty());
+        assertThatThrownBy(() -> service.markReady(planId, 0L, "lead-planner"))
+                .isInstanceOf(NotFoundException.class)
+                .hasMessageContaining("Cargo manifest not found");
+
+        // Manifest unfinalized
+        ManifestPlanningView unfinalizedManifest = new ManifestPlanningView(manifestId, "CM-001", false, List.of());
+        when(manifestLookup.findManifest(manifestId)).thenReturn(Optional.of(unfinalizedManifest));
+        assertThatThrownBy(() -> service.markReady(planId, 0L, "lead-planner"))
+                .isInstanceOf(ConflictException.class)
+                .hasMessageContaining("Cannot plan loads for unfinalized cargo manifest");
+    }
+
+    @Test
+    @DisplayName("markReady fails when vehicle is not found or inactive")
+    void shouldFailWhenVehicleMissingOrInactive() {
+        UUID planId = UUID.randomUUID();
+        UUID manifestId = UUID.randomUUID();
+        UUID vehicleId = UUID.randomUUID();
+        OffsetDateTime now = OffsetDateTime.now(clock);
+
+        LoadPlan plan = new LoadPlan(
+                planId, "LP-001", manifestId, vehicleId, List.of(), "notes", now, now, "user", "user", 0L
+        );
+        ManifestPlanningView manifest = new ManifestPlanningView(manifestId, "CM-001", true, List.of());
+
+        when(repository.findById(planId)).thenReturn(Optional.of(plan));
+        when(manifestLookup.findManifest(manifestId)).thenReturn(Optional.of(manifest));
+
+        // Vehicle missing
+        when(vehicleLookup.findVehicle(vehicleId)).thenReturn(Optional.empty());
+        assertThatThrownBy(() -> service.markReady(planId, 0L, "lead-planner"))
+                .isInstanceOf(NotFoundException.class)
+                .hasMessageContaining("Vehicle not found");
+
+        // Vehicle inactive
+        VehiclePlanningView inactiveVehicle = new VehiclePlanningView(vehicleId, "TRK-100", 10000.0, "AVAILABLE", false);
+        when(vehicleLookup.findVehicle(vehicleId)).thenReturn(Optional.of(inactiveVehicle));
+        assertThatThrownBy(() -> service.markReady(planId, 0L, "lead-planner"))
+                .isInstanceOf(ConflictException.class)
+                .hasMessageContaining("Vehicle is not active");
+    }
+
+    @Test
+    @DisplayName("markReady requires authenticated actor and non-null version")
+    void shouldRequireActorAndVersion() {
+        UUID planId = UUID.randomUUID();
+        OffsetDateTime now = OffsetDateTime.now(clock);
+
+        LoadPlan plan = new LoadPlan(
+                planId, "LP-001", UUID.randomUUID(), UUID.randomUUID(), List.of(), "notes", now, now, "user", "user", 0L
+        );
+
+        // Missing actor
+        assertThatThrownBy(() -> service.markReady(planId, 0L, null))
+                .isInstanceOf(com.transportlogistics.app.shared.domain.BusinessRuleException.class)
+                .hasMessageContaining("actor is required");
+
+        assertThatThrownBy(() -> service.markReady(planId, 0L, "   "))
+                .isInstanceOf(com.transportlogistics.app.shared.domain.BusinessRuleException.class)
+                .hasMessageContaining("actor is required");
+
+        // Missing version
+        when(repository.findById(planId)).thenReturn(Optional.of(plan));
+        assertThatThrownBy(() -> service.markReady(planId, null, "lead-planner"))
+                .isInstanceOf(com.transportlogistics.app.shared.domain.BusinessRuleException.class)
+                .hasMessageContaining("Version is required");
+    }
 }

@@ -19,6 +19,15 @@ class LocalSampleDataBootstrapIntegrationTest {
 
     @org.junit.jupiter.api.BeforeEach
     void setUp() {
+        jdbc.update("DELETE FROM freight_insurance_settlement");
+        jdbc.update("DELETE FROM freight_insurance_claim");
+        jdbc.update("DELETE FROM freight_insurance_policy");
+        jdbc.update("DELETE FROM load_plan_item_placement");
+        jdbc.update("DELETE FROM load_plan");
+        jdbc.update("DELETE FROM cargo_manifest_item");
+        jdbc.update("DELETE FROM cargo_manifest");
+        jdbc.update("DELETE FROM freight_order_line");
+        jdbc.update("DELETE FROM freight_order");
         jdbc.update("DELETE FROM offline_sync_operation");
         jdbc.update("DELETE FROM trip_operational_event");
         jdbc.update("DELETE FROM trip_status_history");

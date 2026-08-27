@@ -197,4 +197,68 @@ describe('Load planning pages', () => {
     renderAt('/freight/load-plans');
     expect(await screen.findByText('Select an available module from the navigation.')).toBeInTheDocument();
   });
+
+  it('displays error alert when mark ready fails with structural violations', async () => {
+    handlers(['LOAD_PLAN_VIEW', 'LOAD_PLAN_MANAGE']);
+    server.use(
+      http.post('*/v1/freight/load-plans/:id/ready', () =>
+        HttpResponse.json(
+          {
+            code: 'LOAD_PLAN_STRUCTURAL_VIOLATIONS',
+            message: 'LOAD_PLAN_FRAGILE_RULE_FAILED: Fragile item in shared stack group',
+          },
+          { status: 400 }
+        )
+      )
+    );
+    const user = userEvent.setup();
+    renderAt(`/freight/load-plans/${planId}`);
+
+    expect((await screen.findAllByText('LP-2026-000001')).length).toBeGreaterThan(0);
+    const readyBtn = screen.getByRole('button', { name: /Mark Structurally Ready/i });
+    await user.click(readyBtn);
+
+    expect(await screen.findByText(/Structural Readiness Failed/i)).toBeInTheDocument();
+    expect(screen.getByText(/Fragile item in shared stack group/i)).toBeInTheDocument();
+  });
+
+  it('displays error message when mark ready encounters 409 stale version conflict', async () => {
+    handlers(['LOAD_PLAN_VIEW', 'LOAD_PLAN_MANAGE']);
+    server.use(
+      http.post('*/v1/freight/load-plans/:id/ready', () =>
+        HttpResponse.json(
+          {
+            code: 'LOAD_PLAN_STALE_VERSION',
+            message: 'The record was updated by another transaction. Please reload and retry.',
+          },
+          { status: 409 }
+        )
+      )
+    );
+    const user = userEvent.setup();
+    renderAt(`/freight/load-plans/${planId}`);
+
+    expect((await screen.findAllByText('LP-2026-000001')).length).toBeGreaterThan(0);
+    const readyBtn = screen.getByRole('button', { name: /Mark Structurally Ready/i });
+    await user.click(readyBtn);
+
+    expect(await screen.findByText(/The record was updated by another transaction/i)).toBeInTheDocument();
+  });
+
+  it('renders already structurally ready plan with audit details and disabled ready action', async () => {
+    const structurallyReadyPlan: LoadPlan = {
+      ...loadPlan,
+      readinessStatus: 'STRUCTURALLY_READY',
+      readyAt: '2026-08-27T08:30:00Z',
+      readyBy: 'lead-auditor',
+      version: 2,
+    };
+    handlers(['LOAD_PLAN_VIEW', 'LOAD_PLAN_MANAGE'], structurallyReadyPlan);
+    renderAt(`/freight/load-plans/${planId}`);
+
+    expect((await screen.findAllByText('LP-2026-000001')).length).toBeGreaterThan(0);
+    expect(screen.getByText('STRUCTURALLY READY')).toBeInTheDocument();
+    expect(screen.getByText('lead-auditor')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Mark Structurally Ready/i })).toBeDisabled();
+  });
 });

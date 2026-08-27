@@ -228,6 +228,60 @@ class LoadPlanPersistenceIntegrationTest {
         assertThat(dbMaterialRow.get("ready_by")).isNull();
     }
 
+    @Test
+    @DisplayName("Database check constraints enforce status enum and audit nullability invariants")
+    void testDatabaseCheckConstraints() {
+        UUID validId = UUID.randomUUID();
+        OffsetDateTime now = OffsetDateTime.now();
+
+        // 1. Invalid status value
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> {
+            jdbc.update(
+                    "INSERT INTO load_plan (id, load_plan_number, cargo_manifest_id, vehicle_id, readiness_status, version, created_at, updated_at, created_by, updated_by) " +
+                            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                    validId, "LP-CHK-1", manifestId, vehicleId, "UNKNOWN_STATUS", 0L, now, now, "admin", "admin"
+            );
+        }).isInstanceOf(org.springframework.dao.DataIntegrityViolationException.class);
+
+        // 2. DRAFT with non-null ready_at
+        UUID draftWithAuditId = UUID.randomUUID();
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> {
+            jdbc.update(
+                    "INSERT INTO load_plan (id, load_plan_number, cargo_manifest_id, vehicle_id, readiness_status, ready_at, ready_by, version, created_at, updated_at, created_by, updated_by) " +
+                            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                    draftWithAuditId, "LP-CHK-2", manifestId, vehicleId, "DRAFT", now, "admin", 0L, now, now, "admin", "admin"
+            );
+        }).isInstanceOf(org.springframework.dao.DataIntegrityViolationException.class);
+
+        // 3. STRUCTURALLY_READY with null ready_at/ready_by
+        UUID readyWithoutAuditId = UUID.randomUUID();
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> {
+            jdbc.update(
+                    "INSERT INTO load_plan (id, load_plan_number, cargo_manifest_id, vehicle_id, readiness_status, ready_at, ready_by, version, created_at, updated_at, created_by, updated_by) " +
+                            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                    readyWithoutAuditId, "LP-CHK-3", manifestId, vehicleId, "STRUCTURALLY_READY", null, null, 0L, now, now, "admin", "admin"
+            );
+        }).isInstanceOf(org.springframework.dao.DataIntegrityViolationException.class);
+    }
+
+    @Test
+    @DisplayName("Migration defaults: rows inserted without explicit readiness default to DRAFT and null audit")
+    void testMigrationDefaults() {
+        UUID id = UUID.randomUUID();
+        OffsetDateTime now = OffsetDateTime.now();
+
+        jdbc.update(
+                "INSERT INTO load_plan (id, load_plan_number, cargo_manifest_id, vehicle_id, version, created_at, updated_at, created_by, updated_by) " +
+                        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                id, "LP-MIG-1", manifestId, vehicleId, 0L, now, now, "admin", "admin"
+        );
+
+        var row = jdbc.queryForMap("SELECT readiness_status, ready_at, ready_by FROM load_plan WHERE id = ?", id);
+        assertThat(row.get("readiness_status")).isEqualTo("DRAFT");
+        assertThat(row.get("ready_at")).isNull();
+        assertThat(row.get("ready_by")).isNull();
+    }
+
     private String shortId(UUID id) {
         return id.toString().substring(0, 8);
     }

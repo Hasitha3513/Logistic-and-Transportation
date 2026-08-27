@@ -245,6 +245,21 @@ class LoadPlanControllerTest {
                 .andExpect(jsonPath("$.code").value("LOAD_PLAN_STRUCTURAL_VIOLATIONS"));
     }
 
+    @Test
+    void rejectsMarkReadyWhenNotFound() throws Exception {
+        when(loadPlanUseCase.markReady(eq(id), eq(0L), eq("manager")))
+                .thenThrow(new com.transportlogistics.app.shared.domain.NotFoundException(
+                        "LOAD_PLAN_NOT_FOUND", "Load plan not found: " + id
+                ));
+
+        mvc.perform(post("/v1/freight/load-plans/{id}/ready", id)
+                        .principal(() -> "manager")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"version\": 0}"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("LOAD_PLAN_NOT_FOUND"));
+    }
+
     private LoadPlan samplePlan() {
         OffsetDateTime now = OffsetDateTime.parse("2026-08-25T10:00:00Z");
         LoadPlanItemPlacement placement = new LoadPlanItemPlacement(

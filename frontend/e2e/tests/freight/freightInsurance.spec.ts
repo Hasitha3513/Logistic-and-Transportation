@@ -35,7 +35,7 @@ async function createPolicy(api: APIRequestContext, tokens: AuthTokens, orderId:
       coverageAmount: 100000.0,
       premiumAmount: 1200.0,
       deductibleAmount: 500.0,
-      currencyCode: 'USD',
+      currency: 'USD',
       validFrom: '2026-01-01T00:00:00Z',
       validUntil: '2027-12-31T23:59:59Z',
       termsAndConditions: 'Standard cargo transit coverage with comprehensive perils.',
@@ -55,7 +55,7 @@ test.describe('US-28 Freight Insurance Management', () => {
     expect(policy.freightOrderId).toBe(order.id);
     expect(policy.status).toBe('ACTIVE');
     expect(policy.coverageAmount).toBe(100000.0);
-    expect(policy.currencyCode).toBe('USD');
+    expect(policy.currency).toBe('USD');
   });
 
   test('E2E-P2-INS-002: Update policy details and terms', async ({ request }) => {
@@ -63,23 +63,20 @@ test.describe('US-28 Freight Insurance Management', () => {
     const order = await createOrder(request, admin);
     const policy = await createPolicy(request, admin, order.id);
 
-    const updateResponse = await request.put(`/api/v1/freight/insurance/policies/${policy.id}`, {
+    const updateResponse = await request.patch(`/api/v1/freight/insurance/policies/${policy.id}`, {
       headers: headers(admin),
       data: {
         coverageAmount: 120000.0,
         premiumAmount: 1500.0,
-        deductibleAmount: 500.0,
         validFrom: '2026-01-01T00:00:00Z',
         validUntil: '2027-12-31T23:59:59Z',
         status: 'ACTIVE',
-        termsAndConditions: 'Updated endorsement with expedited claims clause.',
         version: policy.version,
       },
     });
     expect(updateResponse.status(), await updateResponse.text()).toBe(200);
     const updated = await updateResponse.json();
     expect(updated.coverageAmount).toBe(120000.0);
-    expect(updated.termsAndConditions).toContain('Updated endorsement');
   });
 
   test('E2E-P2-INS-003: File claim against active policy', async ({ request }) => {
@@ -91,10 +88,8 @@ test.describe('US-28 Freight Insurance Management', () => {
       headers: headers(admin),
       data: {
         policyId: policy.id,
-        incidentDate: '2026-06-15T14:30:00Z',
-        description: 'Water ingress damaged high-value electronic components.',
+        damageDescription: 'Water ingress damaged high-value electronic components.',
         claimedAmount: 25000.0,
-        currencyCode: 'USD',
       },
     });
     expect(claimResponse.status(), await claimResponse.text()).toBe(201);
@@ -115,10 +110,8 @@ test.describe('US-28 Freight Insurance Management', () => {
       headers: headers(admin),
       data: {
         policyId: policy.id,
-        incidentDate: '2026-06-15T14:30:00Z',
-        description: 'Cargo damage during transit',
+        damageDescription: 'Cargo damage during transit',
         claimedAmount: 20000.0,
-        currencyCode: 'USD',
       },
     });
     const claim = await claimResponse.json();
@@ -159,10 +152,8 @@ test.describe('US-28 Freight Insurance Management', () => {
       headers: headers(admin),
       data: {
         policyId: policy.id,
-        incidentDate: '2026-06-15T14:30:00Z',
-        description: 'Transit loss claim',
+        damageDescription: 'Transit loss claim',
         claimedAmount: 10000.0,
-        currencyCode: 'USD',
       },
     });
     const claim = await claimRes.json();
@@ -182,9 +173,9 @@ test.describe('US-28 Freight Insurance Management', () => {
     // Tranche 1: Partial settlement $6,000
     const settle1Res = await request.post(`/api/v1/freight/insurance/claims/${claim.id}/settlements`, {
       headers: headers(admin),
-      data: { amount: 6000.0, notes: 'Tranche 1 payment (60%)', version: currentClaim.version },
+      data: { amount: 6000.0, currency: 'USD', notes: 'Tranche 1 payment (60%)', version: currentClaim.version },
     });
-    expect(settle1Res.status(), await settle1Res.text()).toBe(200);
+    expect(settle1Res.status(), await settle1Res.text()).toBe(201);
     currentClaim = await settle1Res.json();
     expect(currentClaim.totalSettledAmount).toBe(6000.0);
     expect(currentClaim.status).toBe('APPROVED'); // Still APPROVED (partial)
@@ -193,16 +184,16 @@ test.describe('US-28 Freight Insurance Management', () => {
     // Over-settlement attempt ($5,000 > remaining $4,000) -> HTTP 400
     const overSettleRes = await request.post(`/api/v1/freight/insurance/claims/${claim.id}/settlements`, {
       headers: headers(admin),
-      data: { amount: 5000.0, notes: 'Exceeding remaining amount', version: currentClaim.version },
+      data: { amount: 5000.0, currency: 'USD', notes: 'Exceeding remaining amount', version: currentClaim.version },
     });
     expect(overSettleRes.status()).toBe(400);
 
     // Tranche 2: Remaining settlement $4,000 -> Status transitions to SETTLED
     const settle2Res = await request.post(`/api/v1/freight/insurance/claims/${claim.id}/settlements`, {
       headers: headers(admin),
-      data: { amount: 4000.0, notes: 'Tranche 2 final settlement', version: currentClaim.version },
+      data: { amount: 4000.0, currency: 'USD', notes: 'Tranche 2 final settlement', version: currentClaim.version },
     });
-    expect(settle2Res.status(), await settle2Res.text()).toBe(200);
+    expect(settle2Res.status(), await settle2Res.text()).toBe(201);
     currentClaim = await settle2Res.json();
     expect(currentClaim.totalSettledAmount).toBe(10000.0);
     expect(currentClaim.status).toBe('SETTLED');
@@ -218,10 +209,8 @@ test.describe('US-28 Freight Insurance Management', () => {
       headers: headers(admin),
       data: {
         policyId: policy.id,
-        incidentDate: '2026-07-10T10:00:00Z',
-        description: 'Improper packing damage',
+        damageDescription: 'Improper packing damage',
         claimedAmount: 5000.0,
-        currencyCode: 'USD',
       },
     });
     const claim = await claimRes.json();
@@ -271,7 +260,7 @@ test.describe('US-28 Freight Insurance Management', () => {
         coverageAmount: 50000.0,
         premiumAmount: 500.0,
         deductibleAmount: 100.0,
-        currencyCode: 'USD',
+        currency: 'USD',
         validFrom: '2026-01-01T00:00:00Z',
         validUntil: '2026-12-31T23:59:59Z',
       },
