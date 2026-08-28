@@ -14,7 +14,7 @@ import java.util.UUID;
 @Table(name = "trip_operational_event")
 @Getter
 @Setter
-public class TripOperationalEventEntity {
+public class TripOperationalEventEntity extends com.transportlogistics.app.shared.infrastructure.persistence.TenantScopedEntity {
 
     @Id
     @Column(name = "id", nullable = false)

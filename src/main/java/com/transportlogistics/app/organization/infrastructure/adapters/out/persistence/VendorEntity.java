@@ -9,7 +9,7 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "vendor")
-public class VendorEntity {
+public class VendorEntity extends com.transportlogistics.app.shared.infrastructure.persistence.TenantScopedEntity {
     @Id
     private UUID id;
     @Column(nullable = false, unique = true, length = 40)

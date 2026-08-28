@@ -11,7 +11,7 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "vehicle_meter_reset")
-class VehicleMeterResetEntity {
+class VehicleMeterResetEntity extends com.transportlogistics.app.shared.infrastructure.persistence.TenantScopedEntity {
     @Id
     @Column(name = "reset_id", nullable = false)
     private UUID id;

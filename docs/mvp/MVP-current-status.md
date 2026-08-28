@@ -16,17 +16,17 @@
 |---|---:|---:|---:|---:|---:|---|
 | MVP 1.0 Core | 34 / 34 | 0 | 0 | 0 | 0 | COMPLETE |
 | MVP 1.1 Advanced Route | 4 / 4 | 0 | 0 | 0 | 0 | COMPLETE |
-| MVP 1.1 Freight | 6 / 7 | 0 / 7 | 1 / 7 | 0 | 0 | CLOSED_WITH_BLOCKED_DEFERMENT |
+| MVP 1.1 Freight | 7 / 7 | 0 | 0 | 0 | 0 | COMPLETE |
 | MVP 1.2 Fuel | 5 / 8 | 0 | 0 | 3 / 8 | 0 | CLOSED_WITH_APPROVED_DEFERMENTS |
 
 ## Repository baseline
 
-- Backend modules: `fleet`, `freight`, `fuel`, `identity`, `notification`, `offlinesync`, `organization`, `reporting`, `routing`, `shared`, `system`, `trip`.
+- Backend modules: `fleet`, `freight`, `fuel`, `identity`, `notification`, `offlinesync`, `organization`, `reporting`, `routing`, `shared`, `system`, `tenancy`, `trip`.
 - Driver is a Fleet sub-feature. Maintenance is a Fleet scheduling/availability sub-feature. Work orders, job cards, parts inventory, inspections, tyres, batteries, tracking and delivery are not implemented product capabilities.
 - Java 21; Spring Boot 3.2.12; Spring Modulith 1.2.12; Maven 3.9.9; Spring Security/JWT; JPA; Flyway; PostgreSQL; JUnit 5, Mockito and Testcontainers.
 - React 19.1.1; TypeScript 5.8.3; Vite 7.3.6; Ant Design 5.27.1; TanStack Query 5.85.5; React Hook Form 7.62.0; Zod 4.1.5; Axios 1.11.0; Vitest 3.2.7; Playwright 1.62.1.
-- Flyway: 42 migrations, `V1__baseline.sql` through `V42__cargo_manifest_item_measurements.sql`; no gaps, duplicate versions or out-of-order versions found.
-- The schema remains legacy single-tenant. No production `tenant_id`, `tenantId` or `TenantContext` implementation exists.
+- Flyway: 45 migrations, `V1__baseline.sql` through `V45__freight_reporting_permissions.sql`; no gaps, duplicate versions or out-of-order versions found.
+- First-class tenant foundation and current-scope operational isolation are implemented: canonical CLTS-LK, tenant-membership-scoped roles, server-side resolution, request-bounded context, operational tenant discriminators, and tenant-scoped reporting sources.
 
 ## MVP 1.0 reconfirmation
 
@@ -53,7 +53,7 @@ US-20, US-21, US-22 and US-23 remain COMPLETE. Current routing domain/applicatio
 | US-26 Load Planning | COMPLETE | V34/V38, DRAFT/STRUCTURALLY_READY, ready command, material invalidation, notes preservation, structured rules, optimistic 409 behavior and 8 logical E2E cases exist. |
 | US-27 Validate Weight and Volume | COMPLETE | V39/V42, pure calculation engine integrated with Cargo Manifest measurements, supporting verified PASS, FAIL (payload, volume, GVW), and INCOMPLETE diagnostics across unit, integration, and Playwright suites. |
 | US-28 Freight Insurance | COMPLETE | Policy, claim, settlement and dispute workflows, V35/V36, UI/RBAC and dedicated tests/E2E exist. |
-| US-29 Freight Reports | BLOCKED | `BLOCKED_BY_TENANT_FOUNDATION`; architecture is approved, but legacy certification is blocked by missing canonical-owner evidence and runtime reconciliation. Tenant implementation and isolation acceptance are also pending. Do not implement. |
+| US-29 Freight Reports | COMPLETE | Tenant-scoped summary, shipment/capacity utilization, insurance/claim/settlement/exception aggregation, honest INCOMPLETE semantics, bounded CSV, dedicated RBAC, React page, and tenant-isolation regression coverage. |
 | US-30 Cargo Exceptions | COMPLETE | Aggregate, six types (DAMAGE, PARTIAL_SHIPMENT, WEIGHT_DISCREPANCY, HAZARDOUS_MATERIAL, UNMANIFESTED_CARGO, SEAL_TAMPERING), V40/V41, command-driven lifecycle (OPEN/HELD/ESCALATED/RESOLVED/REJECTED), immutable history, optimistic concurrency, API (8 endpoints), RBAC, React frontend, 40 backend tests and 8 Playwright E2E all PASS. Closed by P2-CARGO-EXCEPTION-001. |
 
 `MVP-1.1-FREIGHT-CLOSURE-001` was executed, but its conclusion is superseded. MVP 1.1 is **PARTIAL**, not `CLOSED_WITH_BLOCKED_DEFERMENT`.
@@ -70,10 +70,11 @@ US-46, US-47, US-48–70 and remaining non-MVP platform stories are DEFERRED. Fl
 
 ## Verification
 
-- `./mvnw clean test` with full Oracle JDK 21: PASS — 925 run, 0 failed, 0 errors, 22 skipped.
+- `mvn test` with Oracle JDK 21: PASS — 951 run, 0 failed, 0 errors, 22 skipped.
 - `./mvnw verify` with full Oracle JDK 21: PASS — packaged successfully after the same suite.
 - Architecture: 25 / 25 PASS (`ApplicationModulesTest` 2, `HexagonalLayerArchitectureTest` 15, `ModuleBoundaryArchitectureTest` 5, `LombokUsageArchitectureTest` 3).
-- Frontend lint: PASS, 0 errors/warnings. Vitest: 45 files, 227 / 227 PASS. TypeScript/Vite build: PASS with a non-blocking chunk-size warning.
+- Frontend lint: PASS, 0 errors/warnings. Vitest: 46 files, 229 / 229 PASS (full suite plus US-29 focused suite). TypeScript/Vite build: PASS with a non-blocking chunk-size warning.
+- US-29 Chromium E2E: 1 / 1 PASS; source metrics, shipment row, INCOMPLETE state, and permission-gated export are covered.
 - Playwright inventory: 43 specs and 118 logical tests. Chromium: 118 / 118 PASS. Firefox: 117 / 118 passed in the full run; `E2E-NOT-011` failed once because an Ant Select option was not observed, then passed on an isolated rerun (flaky evidence, no automatic retry). WebKit: environment-blocked before test execution because host library `libavif16` is missing; a three-test smoke attempt produced three launch errors.
 
 ## Requirement / implementation drift
@@ -94,10 +95,12 @@ US-46, US-47, US-48–70 and remaining non-MVP platform stories are DEFERRED. Fl
 
 Conditions include environment-specific PostgreSQL, security, operations and tenant-model review; production deployment was not validated.
 
-- Release band: MVP 1.1
-- Domain: Freight
-- Story: US-30 Cargo Exceptions
-- Last completed task: `P2-CARGO-EXCEPTION-001` (cargo exception management end-to-end)
-- Status: US-30 = COMPLETE; US-29 = BLOCKED_BY_TENANT_FOUNDATION
+## Current development position and exact next task
 
-**Exact next task:** `P2-FREIGHT-PHASE-CLOSURE-001` — formal closure audit of MVP 1.1 Freight band (US-24 through US-30), producing a verified phase closure record, confirming CLOSED_WITH_BLOCKED_DEFERMENT status, and updating all governance artifacts.
+- Release band: MVP 1.1 (Route & Freight)
+- Domain: Freight
+- Scope: Phase 2B (US-24 to US-30)
+- Last completed task: `TENANT-FOUNDATION-IMPLEMENTATION-001` (first-class tenant, membership, trusted resolution/context, and clean CLTS-LK initialization)
+- Status: 7 / 7 Freight Stories COMPLETE; Overall Phase 2B = COMPLETE
+
+**Exact next task:** MVP 1.3 expansion planning.

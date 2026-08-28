@@ -85,9 +85,9 @@ class VehicleReadingApiIntegrationTest {
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                     """, adminId, "admin", "admin@transportlogistics.test", passwords.encode("AdminPass!2026"),
                     "Admin", "User", true, now, now);
+            com.transportlogistics.app.support.TenantTestFixtures.canonicalMembership(jdbc, adminId);
 
-            jdbc.update("INSERT INTO app_user_role (user_id, role_id) VALUES (?, ?)",
-                    adminId, adminRoleId);
+            com.transportlogistics.app.support.TenantTestFixtures.assignCanonicalRole(jdbc, adminId, adminRoleId);
         }
     }
 

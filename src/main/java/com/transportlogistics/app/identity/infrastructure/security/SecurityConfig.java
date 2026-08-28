@@ -229,6 +229,8 @@ class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/bunker-tanks/*/dip-readings").hasAuthority("BUNKER_DIP_RECORD")
                         .requestMatchers(HttpMethod.POST, "/bunker-transfers").hasAuthority("BUNKER_TRANSFER")
 
+                        .requestMatchers(HttpMethod.GET, "/reports/freight/export").hasAuthority("FREIGHT_REPORT_EXPORT")
+                        .requestMatchers(HttpMethod.GET, "/reports/freight/**").hasAuthority("FREIGHT_REPORT_VIEW")
                         .requestMatchers(HttpMethod.GET, "/dashboard/**").hasAuthority("DASHBOARD_VIEW")
                         .requestMatchers(HttpMethod.GET, "/reports/**").hasAuthority("REPORT_VIEW")
 

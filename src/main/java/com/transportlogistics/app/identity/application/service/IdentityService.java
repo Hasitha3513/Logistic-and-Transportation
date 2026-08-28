@@ -1,6 +1,8 @@
 package com.transportlogistics.app.identity.application.service;
 
 import com.transportlogistics.app.identity.application.ports.in.IdentityUseCase;
+import com.transportlogistics.app.identity.TenantAccessResolver;
+import com.transportlogistics.app.identity.TenantMembershipManager;
 import com.transportlogistics.app.identity.application.ports.out.AccessTokenService;
 import com.transportlogistics.app.identity.application.ports.out.IdentityRepository;
 import com.transportlogistics.app.identity.application.ports.out.PasswordHasher;
@@ -10,6 +12,7 @@ import com.transportlogistics.app.identity.domain.model.AuthTokens;
 import com.transportlogistics.app.identity.domain.model.Role;
 import com.transportlogistics.app.identity.domain.model.User;
 import com.transportlogistics.app.shared.domain.NotFoundException;
+import com.transportlogistics.app.tenancy.CanonicalTenant;
 
 import java.time.Clock;
 import java.time.Duration;
@@ -25,15 +28,21 @@ public final class IdentityService implements IdentityUseCase {
     private final PasswordHasher passwords;
     private final AccessTokenService accessTokens;
     private final RefreshTokenStore refreshTokens;
+    private final TenantAccessResolver tenantAccess;
+    private final TenantMembershipManager tenantMemberships;
     private final Duration refreshTokenTtl;
     private final Clock clock;
 
     public IdentityService(IdentityRepository repo, PasswordHasher passwords, AccessTokenService accessTokens,
-                           RefreshTokenStore refreshTokens, Duration refreshTokenTtl, Clock clock) {
+                           RefreshTokenStore refreshTokens, TenantAccessResolver tenantAccess,
+                           TenantMembershipManager tenantMemberships,
+                           Duration refreshTokenTtl, Clock clock) {
         this.repo = repo;
         this.passwords = passwords;
         this.accessTokens = accessTokens;
         this.refreshTokens = refreshTokens;
+        this.tenantAccess = tenantAccess;
+        this.tenantMemberships = tenantMemberships;
         this.refreshTokenTtl = refreshTokenTtl;
         this.clock = clock;
     }
@@ -43,8 +52,10 @@ public final class IdentityService implements IdentityUseCase {
         var roles = resolveRoles(roleIds);
         var secured = new User(u.id(), u.username(), u.email(), passwords.hash(rawPassword), u.firstName(),
                 u.lastName(), u.phone(), u.active(), u.createdAt(), u.updatedAt(), roles);
-        return repo.saveUserWithRoles(secured,
-                roles.stream().map(Role::id).collect(java.util.stream.Collectors.toSet()));
+        var created = repo.saveUser(secured);
+        tenantMemberships.ensureActiveMembership(created.id(), CanonicalTenant.ID, created.username());
+        repo.replaceUserRoles(created.id(), roles.stream().map(Role::id).collect(java.util.stream.Collectors.toSet()));
+        return repo.findUser(created.id()).orElse(created);
     }
 
     public User getUser(UUID id) {
@@ -101,6 +112,7 @@ public final class IdentityService implements IdentityUseCase {
         if (!user.active() || !passwords.matches(password, user.passwordHash())) {
             throw new AuthenticationFailedException("Invalid username or password");
         }
+        tenantAccess.resolve(user.id());
         return tokensFor(user, refreshTokens.issue(user.id(), now().plus(refreshTokenTtl)));
     }
 
@@ -112,6 +124,7 @@ public final class IdentityService implements IdentityUseCase {
             refreshTokens.revoke(rotation.token().value(), now());
             throw new AuthenticationFailedException("User is disabled or unavailable");
         }
+        tenantAccess.resolve(user.id());
         return tokensFor(user, rotation.token());
     }
 

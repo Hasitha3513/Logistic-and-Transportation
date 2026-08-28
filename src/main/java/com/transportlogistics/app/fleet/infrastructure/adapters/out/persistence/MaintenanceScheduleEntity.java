@@ -11,7 +11,7 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "maintenance_schedule")
-public class MaintenanceScheduleEntity {
+public class MaintenanceScheduleEntity extends com.transportlogistics.app.shared.infrastructure.persistence.TenantScopedEntity {
 
     @Id
     @Column(name = "id")

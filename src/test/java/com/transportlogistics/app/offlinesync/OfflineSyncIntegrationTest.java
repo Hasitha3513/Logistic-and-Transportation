@@ -285,7 +285,7 @@ class OfflineSyncIntegrationTest {
         assertEquals(AGGREGATE_ID, row.get("AGGREGATE_ID"));
         assertEquals(64, row.get("REQUEST_HASH").toString().length());
         assertEquals("APPLIED", row.get("RESULT_STATUS"));
-        assertEquals(2, jdbc.queryForObject("SELECT COUNT(*) FROM INFORMATION_SCHEMA.INDEXES WHERE UPPER(TABLE_NAME) = 'OFFLINE_SYNC_OPERATION' AND UPPER(INDEX_NAME) LIKE 'IDX_OFFLINE_SYNC_%'", Integer.class));
+        assertEquals(3, jdbc.queryForObject("SELECT COUNT(*) FROM INFORMATION_SCHEMA.INDEXES WHERE UPPER(TABLE_NAME) = 'OFFLINE_SYNC_OPERATION' AND UPPER(INDEX_NAME) LIKE 'IDX_OFFLINE_SYNC_%'", Integer.class));
         org.junit.jupiter.api.Assertions.assertThrows(org.springframework.dao.DataIntegrityViolationException.class,
                 () -> jdbc.update("INSERT INTO offline_sync_operation (operation_id, operation_type, operation_version, actor_id, client_instance_id, aggregate_type, aggregate_id, request_hash, result_status, processed_at, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                         UUID.randomUUID(), "VEHICLE_READING_RECORD", 0, ACTOR_ID, CLIENT_ID, "VEHICLE", AGGREGATE_ID,

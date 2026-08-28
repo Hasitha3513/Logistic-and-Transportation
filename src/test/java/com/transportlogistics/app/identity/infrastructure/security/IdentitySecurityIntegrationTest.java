@@ -53,7 +53,8 @@ class IdentitySecurityIntegrationTest {
         jdbc.update("INSERT INTO app_user (id, username, email, password_hash, first_name, last_name, phone, active, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 adminId, "admin", "admin@example.com", passwords.encode("correct-password"), "Admin", "User", null,
                 true, now, now);
-        jdbc.update("INSERT INTO app_user_role (user_id, role_id) VALUES (?, ?)", adminId, adminRoleId);
+        com.transportlogistics.app.support.TenantTestFixtures.canonicalMembership(jdbc, adminId);
+        com.transportlogistics.app.support.TenantTestFixtures.assignCanonicalRole(jdbc, adminId, adminRoleId);
     }
 
     @Test

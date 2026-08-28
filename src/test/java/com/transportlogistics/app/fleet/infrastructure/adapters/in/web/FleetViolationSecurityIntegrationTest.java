@@ -165,8 +165,9 @@ class FleetViolationSecurityIntegrationTest {
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """, userId, username, username + "@example.test", passwords.encode(PASSWORD),
                 "Test", "User", null, true, now, now);
+        com.transportlogistics.app.support.TenantTestFixtures.canonicalMembership(jdbc, userId);
 
-        jdbc.update("INSERT INTO app_user_role (user_id, role_id) VALUES (?, ?)", userId, roleId);
+        com.transportlogistics.app.support.TenantTestFixtures.assignCanonicalRole(jdbc, userId, roleId);
     }
 
     private String login(String username) throws Exception {

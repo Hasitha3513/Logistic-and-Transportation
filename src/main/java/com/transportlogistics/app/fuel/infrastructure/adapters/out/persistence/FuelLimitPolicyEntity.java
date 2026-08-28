@@ -16,7 +16,7 @@ import java.util.UUID;
 @Getter
 @Setter
 @NoArgsConstructor
-class FuelLimitPolicyEntity {
+class FuelLimitPolicyEntity extends com.transportlogistics.app.shared.infrastructure.persistence.TenantScopedEntity {
     @Id UUID id;
     @Column(name = "vehicle_id") UUID vehicleId;
     @Column(name = "maximum_quantity_per_issue", nullable = false, precision = 19, scale = 3)

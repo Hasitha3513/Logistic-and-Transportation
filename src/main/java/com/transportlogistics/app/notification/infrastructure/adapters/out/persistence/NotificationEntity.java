@@ -16,7 +16,7 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "notification")
-public class NotificationEntity {
+public class NotificationEntity extends com.transportlogistics.app.shared.infrastructure.persistence.TenantScopedEntity {
 
     @Id
     private UUID id;

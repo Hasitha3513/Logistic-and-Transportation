@@ -10,7 +10,7 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "driver_exception")
-public class DriverExceptionEntity {
+public class DriverExceptionEntity extends com.transportlogistics.app.shared.infrastructure.persistence.TenantScopedEntity {
 
     @Id
     @Column(name = "id", nullable = false)

@@ -81,7 +81,8 @@ class TripFuelCostApiIntegrationTest {
             jdbc.update("INSERT INTO app_role_permission (role_id, permission_code) VALUES (?, 'FUEL_ISSUE_VIEW') ON CONFLICT DO NOTHING", roleId);
             jdbc.update("INSERT INTO app_user (id, username, email, password_hash, first_name, last_name, active, created_at, updated_at) VALUES (?, 'admin', 'admin@example.com', ?, 'Admin', 'User', true, ?, ?)",
                     userId, passwords.encode("AdminPass!2026"), now, now);
-            jdbc.update("INSERT INTO app_user_role (user_id, role_id) VALUES (?, ?)", userId, roleId);
+            com.transportlogistics.app.support.TenantTestFixtures.canonicalMembership(jdbc, userId);
+            com.transportlogistics.app.support.TenantTestFixtures.assignCanonicalRole(jdbc, userId, roleId);
         } else {
             var roleId = jdbc.queryForObject("SELECT id FROM app_role WHERE name = 'ADMIN'", UUID.class);
             jdbc.update("INSERT INTO app_permission (code, description, active) VALUES ('FUEL_COST_VIEW', 'View cost', true) ON CONFLICT DO NOTHING");

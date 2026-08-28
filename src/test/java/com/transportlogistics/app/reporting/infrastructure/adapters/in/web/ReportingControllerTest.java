@@ -6,6 +6,7 @@ import com.transportlogistics.app.reporting.application.model.VehicleUtilization
 import com.transportlogistics.app.reporting.application.ports.in.DriverAssignmentUseCase;
 import com.transportlogistics.app.reporting.application.ports.in.TripReportUseCase;
 import com.transportlogistics.app.reporting.application.ports.in.VehicleUtilizationUseCase;
+import com.transportlogistics.app.reporting.application.ports.in.FreightReportUseCase;
 import com.transportlogistics.app.reporting.infrastructure.adapters.in.web.controllers.ReportingController;
 import com.transportlogistics.app.reporting.infrastructure.adapters.in.web.mappers.ReportingWebMapper;
 import com.transportlogistics.app.shared.domain.BusinessRuleException;
@@ -44,6 +45,7 @@ class ReportingControllerTest {
     private TripReportUseCase tripReports;
     private DriverAssignmentUseCase driverAssignments;
     private VehicleUtilizationUseCase vehicleUtilization;
+    private FreightReportUseCase freightReports;
 
     @BeforeEach
     void setUp() {
@@ -51,9 +53,11 @@ class ReportingControllerTest {
         tripReports = mock(TripReportUseCase.class);
         driverAssignments = mock(DriverAssignmentUseCase.class);
         vehicleUtilization = mock(VehicleUtilizationUseCase.class);
+        freightReports = mock(FreightReportUseCase.class);
         var mapper = Mappers.getMapper(ReportingWebMapper.class);
 
-        mockMvc = MockMvcBuilders.standaloneSetup(new ReportingController(operationsDashboard, tripReports, driverAssignments, vehicleUtilization, mapper))
+        mockMvc = MockMvcBuilders.standaloneSetup(new ReportingController(operationsDashboard, tripReports, driverAssignments,
+                        vehicleUtilization, freightReports, mapper))
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .build();
     }

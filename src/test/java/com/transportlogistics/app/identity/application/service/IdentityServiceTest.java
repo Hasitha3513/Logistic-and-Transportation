@@ -1,6 +1,8 @@
 package com.transportlogistics.app.identity.application.service;
 
 import com.transportlogistics.app.identity.application.ports.out.AccessTokenService;
+import com.transportlogistics.app.identity.TenantAccessResolver;
+import com.transportlogistics.app.identity.TenantMembershipManager;
 import com.transportlogistics.app.identity.application.ports.out.IdentityRepository;
 import com.transportlogistics.app.identity.application.ports.out.PasswordHasher;
 import com.transportlogistics.app.identity.application.ports.out.RefreshTokenStore;
@@ -33,12 +35,15 @@ class IdentityServiceTest {
     @Mock PasswordHasher passwords;
     @Mock AccessTokenService accessTokens;
     @Mock RefreshTokenStore refreshTokens;
+    @Mock TenantAccessResolver tenantAccess;
+    @Mock TenantMembershipManager tenantMemberships;
     private IdentityService service;
     private final Clock clock = Clock.fixed(Instant.parse("2026-01-01T00:00:00Z"), ZoneOffset.UTC);
 
     @BeforeEach
     void setUp() {
-        service = new IdentityService(repository, passwords, accessTokens, refreshTokens, Duration.ofDays(30), clock);
+        service = new IdentityService(repository, passwords, accessTokens, refreshTokens, tenantAccess, tenantMemberships,
+                Duration.ofDays(30), clock);
     }
 
     @Test

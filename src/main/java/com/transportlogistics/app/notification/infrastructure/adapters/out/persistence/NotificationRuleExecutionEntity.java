@@ -15,7 +15,7 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "notification_rule_execution")
-public class NotificationRuleExecutionEntity {
+public class NotificationRuleExecutionEntity extends com.transportlogistics.app.shared.infrastructure.persistence.TenantScopedEntity {
     @Id private UUID id;
     @Column(name = "execution_key", nullable = false, unique = true, length = 64) private String executionKey;
     @Column(name = "event_id", nullable = false) private UUID eventId;

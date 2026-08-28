@@ -18,7 +18,7 @@ import java.util.UUID;
 @Getter
 @Setter
 @NoArgsConstructor
-class FuelStationEntity {
+class FuelStationEntity extends com.transportlogistics.app.shared.infrastructure.persistence.TenantScopedEntity {
     @Id UUID id;
     @Column(nullable = false, unique = true) String code;
     @Column(nullable = false) String name;

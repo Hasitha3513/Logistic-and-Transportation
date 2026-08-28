@@ -78,9 +78,15 @@ class IdentityPersistenceAdapter implements IdentityRepository {
 
     @Transactional
     public void replaceUserRoles(UUID userId, Set<UUID> roleIds) {
-        jdbc.update("DELETE FROM app_user_role WHERE user_id = :userId", Map.of("userId", userId));
+        jdbc.update("""
+                DELETE FROM tenant_membership_role
+                WHERE membership_id IN (SELECT membership_id FROM tenant_membership WHERE user_id = :userId)
+                """, Map.of("userId", userId));
         roleIds.forEach(roleId -> jdbc.update(
-                "INSERT INTO app_user_role (user_id, role_id) VALUES (:userId, :roleId)",
+                """
+                INSERT INTO tenant_membership_role (membership_id, role_id)
+                SELECT membership_id, :roleId FROM tenant_membership WHERE user_id = :userId
+                """,
                 Map.of("userId", userId, "roleId", roleId)));
     }
 
@@ -106,8 +112,10 @@ class IdentityPersistenceAdapter implements IdentityRepository {
     private Set<Role> rolesForUser(UUID userId) {
         return new HashSet<>(jdbc.query("""
                 SELECT r.id, r.name, r.description, r.active
-                FROM app_role r JOIN app_user_role ur ON ur.role_id = r.id
-                WHERE ur.user_id = :userId
+                FROM app_role r
+                JOIN tenant_membership_role mr ON mr.role_id = r.id
+                JOIN tenant_membership membership ON membership.membership_id = mr.membership_id
+                WHERE membership.user_id = :userId AND membership.status = 'ACTIVE'
                 """, Map.of("userId", userId), (rs, rowNum) -> {
             var roleId = rs.getObject("id", UUID.class);
             return new Role(roleId, rs.getString("name"), rs.getString("description"), rs.getBoolean("active"),

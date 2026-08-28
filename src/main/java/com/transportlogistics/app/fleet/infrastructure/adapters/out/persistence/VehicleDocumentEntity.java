@@ -15,7 +15,7 @@ import java.util.UUID;
 @Getter
 @Setter
 @NoArgsConstructor
-class VehicleDocumentEntity {
+class VehicleDocumentEntity extends com.transportlogistics.app.shared.infrastructure.persistence.TenantScopedEntity {
     @Id
     private UUID id;
     @Column(name = "vehicle_id", nullable = false)

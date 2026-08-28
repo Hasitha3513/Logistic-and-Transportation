@@ -1,5 +1,4 @@
 import { defineConfig, devices } from '@playwright/test';
-import { randomBytes } from 'node:crypto';
 
 const isWindows = process.platform === 'win32';
 const mavenWrapper = isWindows ? '..\\mvnw.cmd' : '../mvnw';

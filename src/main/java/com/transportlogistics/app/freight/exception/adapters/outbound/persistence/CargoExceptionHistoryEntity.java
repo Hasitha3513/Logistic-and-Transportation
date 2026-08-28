@@ -13,7 +13,7 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "cargo_exception_history")
-public class CargoExceptionHistoryEntity {
+public class CargoExceptionHistoryEntity extends com.transportlogistics.app.shared.infrastructure.persistence.TenantScopedEntity {
 
     @Id
     @Column(name = "id", nullable = false)

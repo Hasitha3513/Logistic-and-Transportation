@@ -15,7 +15,7 @@ import java.util.UUID;
 @Table(name = "bunker_stock_adjustment")
 @Getter
 @Setter
-class StockAdjustmentEntity {
+class StockAdjustmentEntity extends com.transportlogistics.app.shared.infrastructure.persistence.TenantScopedEntity {
     @Id
     private UUID id;
 

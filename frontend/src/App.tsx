@@ -40,6 +40,7 @@ import { ClaimDetailsPage } from './features/freight/insurance/pages/ClaimDetail
 import { CargoExceptionListPage } from './features/freight/exceptions/pages/CargoExceptionListPage';
 import { CargoExceptionCreatePage } from './features/freight/exceptions/pages/CargoExceptionCreatePage';
 import { CargoExceptionDetailsPage } from './features/freight/exceptions/pages/CargoExceptionDetailsPage';
+import FreightReportsPage from './features/freight/reports/pages/FreightReportsPage';
 
 function ProtectedRoute() {
   const { user, isLoading } = useAuth();
@@ -63,6 +64,7 @@ function HomePage() {
   if (hasPermission('LOAD_PLAN_VIEW')) return <Navigate to="/freight/load-plans" replace />;
   if (hasPermission('CARGO_INSURANCE_VIEW')) return <Navigate to="/freight/insurance/policies" replace />;
   if (hasPermission('CARGO_EXCEPTION_VIEW')) return <Navigate to="/freight/exceptions" replace />;
+  if (hasPermission('FREIGHT_REPORT_VIEW')) return <Navigate to="/freight/reports" replace />;
   if (hasPermission('IDENTITY_MANAGE')) return <Navigate to="/administration/users" replace />;
   return <Navigate to="/workspace" replace />;
 }
@@ -113,6 +115,7 @@ export default function App() {
         <Route path="freight/exceptions" element={<CargoExceptionListPage />} />
         <Route path="freight/exceptions/new" element={<CargoExceptionCreatePage />} />
         <Route path="freight/exceptions/:id" element={<CargoExceptionDetailsPage />} />
+        <Route path="freight/reports" element={<FreightReportsPage />} />
         <Route path="administration/users" element={<ResourceListPage {...resourcePages.users} />} />
         <Route path="administration/roles" element={<ResourceListPage {...resourcePages.roles} />} />
         <Route path="notification-rules" element={<NotificationRulesPage />} />

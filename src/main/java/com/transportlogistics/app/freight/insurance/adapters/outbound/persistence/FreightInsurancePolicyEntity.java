@@ -12,7 +12,7 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "freight_insurance_policy")
-public class FreightInsurancePolicyEntity {
+public class FreightInsurancePolicyEntity extends com.transportlogistics.app.shared.infrastructure.persistence.TenantScopedEntity {
 
     @Id
     @Column(name = "id", nullable = false)

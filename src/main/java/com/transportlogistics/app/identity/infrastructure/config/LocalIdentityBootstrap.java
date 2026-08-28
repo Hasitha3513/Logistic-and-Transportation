@@ -1,6 +1,7 @@
 package com.transportlogistics.app.identity.infrastructure.config;
 
 import com.transportlogistics.app.identity.application.ports.in.IdentityUseCase;
+import com.transportlogistics.app.identity.TenantMembershipManager;
 import com.transportlogistics.app.identity.domain.model.Role;
 import com.transportlogistics.app.identity.domain.model.User;
 import org.springframework.boot.ApplicationArguments;
@@ -10,6 +11,7 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
+import com.transportlogistics.app.tenancy.CanonicalTenant;
 
 import java.time.OffsetDateTime;
 import java.util.Set;
@@ -56,10 +58,12 @@ class LocalIdentityBootstrap implements ApplicationRunner {
 
     private final IdentityUseCase identities;
     private final Environment environment;
+    private final TenantMembershipManager memberships;
 
-    LocalIdentityBootstrap(IdentityUseCase identities, Environment environment) {
+    LocalIdentityBootstrap(IdentityUseCase identities, Environment environment, TenantMembershipManager memberships) {
         this.identities = identities;
         this.environment = environment;
+        this.memberships = memberships;
     }
 
     @Override
@@ -76,6 +80,7 @@ class LocalIdentityBootstrap implements ApplicationRunner {
                         MVP_PERMISSIONS)));
         if (existingUser.isPresent()) {
             identities.updateUser(existingUser.get().id(), existingUser.get(), password, Set.of(role.id()));
+            memberships.ensureActiveMembership(existingUser.get().id(), CanonicalTenant.ID, username);
             return;
         }
         var now = OffsetDateTime.now();

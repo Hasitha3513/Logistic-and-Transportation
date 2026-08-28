@@ -11,7 +11,7 @@ import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Entity @Table(name="fuel_purchase_history") @Getter @Setter @NoArgsConstructor
-class FuelPurchaseHistoryEntity {
+class FuelPurchaseHistoryEntity extends com.transportlogistics.app.shared.infrastructure.persistence.TenantScopedEntity {
     @Id UUID id;
     @Column(name="fuel_purchase_id", nullable=false) UUID fuelPurchaseId;
     @Enumerated(EnumType.STRING) @Column(name="from_status") FuelPurchaseStatus fromStatus;

@@ -17,7 +17,7 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "cargo_exception")
-public class CargoExceptionEntity {
+public class CargoExceptionEntity extends com.transportlogistics.app.shared.infrastructure.persistence.TenantScopedEntity {
 
     @Id
     @Column(name = "id", nullable = false)

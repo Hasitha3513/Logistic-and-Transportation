@@ -14,7 +14,7 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "offline_sync_operation")
-public class OfflineSyncOperationEntity {
+public class OfflineSyncOperationEntity extends com.transportlogistics.app.shared.infrastructure.persistence.TenantScopedEntity {
     @Id
     @Column(name = "operation_id")
     private UUID operationId;

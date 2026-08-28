@@ -329,7 +329,8 @@ class BusinessAuthorizationIntegrationTest {
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """, userId, username, username + "@example.com", passwords.encode(PASSWORD), "Test", "Actor", null,
                 true, now, now);
-        jdbc.update("INSERT INTO app_user_role (user_id, role_id) VALUES (?, ?)", userId, roleId);
+        com.transportlogistics.app.support.TenantTestFixtures.canonicalMembership(jdbc, userId);
+        com.transportlogistics.app.support.TenantTestFixtures.assignCanonicalRole(jdbc, userId, roleId);
     }
 
     private com.transportlogistics.app.fuel.domain.model.FuelPurchase purchase(UUID id, UUID vendorId) {
