@@ -2,24 +2,26 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '../api/client';
 import type { NotificationItem, UnreadCountResponse } from './types';
 
-export function useNotifications(limit = 50) {
+export function useNotifications(limit = 50, enabled = true) {
   return useQuery({
     queryKey: ['notifications', limit],
     queryFn: async () => {
       const response = await api.get<NotificationItem[]>(`/notifications?limit=${limit}`);
       return response.data;
     },
+    enabled,
     refetchInterval: 30000, // 30s background poll
   });
 }
 
-export function useUnreadNotificationCount() {
+export function useUnreadNotificationCount(enabled = true) {
   return useQuery({
     queryKey: ['notifications-unread-count'],
     queryFn: async () => {
       const response = await api.get<UnreadCountResponse>('/notifications/unread-count');
       return response.data.unreadCount;
     },
+    enabled,
     refetchInterval: 15000, // 15s background poll
   });
 }

@@ -2,7 +2,7 @@
 
 > **Last Updated:** 2026-08-28
 > **Current Status:** **MVP 1.0 (Core)** and **MVP 1.1 (Route & Freight)** are complete; **MVP 1.2 (Fuel Management Core)** is closed with approved deferments.
-> **Next Active Scope:** MVP 1.3 expansion planning; US-29 completed with tenant-scoped operational reporting.
+> **Next Active Scope:** MVP 1.3 Delivery Operations (US-56 through US-62), beginning with source-contract freeze; no production implementation is authorized by this roadmap task.
 
 ---
 
@@ -15,11 +15,12 @@
 | **Phase 2A**| Advanced Route (US-20 to US-23) | Expanded MVP 1.1 | ✅ COMPLETE | 4 / 4 (100%) |
 | **Phase 2B**| Freight & Cargo (US-24 to US-30) | Expanded MVP 1.1 | ✅ COMPLETE | 7 / 7 (100%) |
 | **Phase 3** | Fuel Management (US-31 to US-38) | Expanded MVP 1.2 | ✅ CLOSED_WITH_APPROVED_DEFERMENTS | 5 Complete / 3 Deferred (US-35, 37, 38) |
-| **Phase 4** | Driver Lifecycle & Fleet Maintenance (US-46, Maintenance Linkage) | MVP 1.3 | ⏳ QUEUED | 0 / 3 |
-| **Phase 5** | GPS & Live Tracking (US-48 to US-55) | Post-MVP | ⏸ DEFERRED | 0 / 8 |
-| **Phase 6** | Delivery Operations (US-56 to US-62) | Post-MVP | ⏸ DEFERRED | 0 / 7 |
-| **Phase 7** | Last-Mile Delivery (US-63 to US-70) | Post-MVP | ⏸ DEFERRED | 0 / 8 |
-| **Phase 8** | Advanced Platform / Ops (US-72+) | Post-MVP | ⏸ DEFERRED | 0 / 9 |
+| **Phase 4** | Delivery Operations (US-56 to US-62) | MVP 1.3 | 🟡 SELECTED / CONTRACT PENDING | 0 / 7 |
+| **Post-MVP A** | Deferred Fuel (US-35, US-37, US-38) | Post-MVP | ⏸ DEFERRED | 0 / 3 |
+| **Post-MVP B** | Driver Payroll Link & Transport Billing (US-46, US-47) | Post-MVP | ⏸ DEFERRED | 0 / 2 |
+| **Post-MVP C** | GPS & Live Tracking (US-48 to US-55) | Post-MVP | ⏸ DEFERRED | 0 / 8 |
+| **Post-MVP D** | Last-Mile Delivery (US-63 to US-70) | Post-MVP | ⏸ DEFERRED | 0 / 8 |
+| **Post-MVP E** | Advanced Platform / Ops (US-72, 73, 76, 78, 82, 84-87) | Post-MVP | ⏸ DEFERRED | 0 / 9 |
 
 ---
 
@@ -33,8 +34,64 @@
 - [x] ✅ **Tenant Operational Data Retrofit:** `TENANT-OPERATIONAL-DATA-RETROFIT-001` implemented V44 membership-scoped roles, operational discriminators, repository/direct-ID isolation, tenant-aware scheduled jobs, and Freight/Reporting-source acceptance.
 - [x] ✅ **US-29 Freight Reporting:** Completed in `P2-FREIGHT-REPORTING-001`; tenant-scoped summaries, shipment/capacity reporting, honest incomplete outcomes, bounded CSV export, dedicated RBAC, frontend, and regression coverage.
 - [x] **MVP 1.2 Fuel Closure:** Formally closed in `MVP-1.2-FUEL-CLOSURE-001` (`CLOSED_WITH_APPROVED_DEFERMENTS` with US-35, US-37, US-38 deferred to Post-MVP).
-- [x] ✅ **MVP 1.1 Phase 2B Freight Closure:** Formally closed in `P2-FREIGHT-PHASE-CLOSURE-001` (`CLOSED_WITH_BLOCKED_DEFERMENT` — 6/6 implementable stories complete, US-29 blocked pending tenant foundation).
-- [ ] **MVP 1.3 Expansion / Platform Roadmap:** `MVP-EXPANSION-ROADMAP-001` — plan and queue next expansion phase (Phase 4 Driver Lifecycle & Maintenance Linkage, or review platform tenant baseline).
+- [x] ✅ **MVP 1.1 Route & Freight Final Closure:** `MVP-1.1-FREIGHT-FINAL-CLOSURE-001` supersedes the earlier conditional closure; Advanced Route is 4/4 and Freight is 7/7 COMPLETE.
+- [x] ✅ **Workspace Entry:** `FIX-WORKSPACE-ENTRY-001` connects the authenticated `/workspace` landing action to the permission-aware `/` application entry route without client-side Tenant selection or authority.
+- [x] ✅ **MVP 1.3 Expansion Planning:** `MVP-EXPANSION-ROADMAP-001-R1` reconciled story mappings and selected Delivery Operations (US-56 through US-62); exact source contracts must be frozen before implementation.
+- [ ] 🟡 **MVP 1.3 Delivery Contract Freeze:** `MVP-1.3-DELIVERY-OPERATIONS-CONTRACT-001` — recover/verify the original US-56 through US-62 definitions, freeze ownership, APIs, events, tenancy, RBAC and acceptance tests, then authorize the first implementation slice.
+
+---
+
+## MVP 1.3 Selection Record
+
+### Source conflict and authoritative decision
+
+| Difference found | Conflicting roadmap state | Authoritative decision | Evidence |
+| :--- | :--- | :--- | :--- |
+| MVP 1.1 lifecycle | Phase 2 said `IN CLOSURE` | MVP 1.1 Route & Freight is `COMPLETE` (Advanced Route 4/4; Freight 7/7) | `docs/mvp/MVP-current-status.md`; `docs/mvp/MVP-1.1-FREIGHT-FINAL-CLOSURE-001.md` |
+| US-46 | Driver Performance & Scoring | **Process Driver Payroll Link**; remains deferred | US-41 already owns completed Driver Performance; authoritative current traceability assigns US-46 to Driver Payroll |
+| US-47 | Driver Payroll & Billing | **Manage Transport Billing**; remains deferred and separate from US-46 | `docs/phase2/PHASE2-SCOPE-RECONCILIATION-001.md`; current traceability |
+| Maintenance Linkage | Counted as an unnumbered third Phase 4 story | Not a new story; US-07 maintenance-to-availability linkage is complete. Additional workshop/work-order scope requires formal new stories | `docs/mvp/MVP-story-traceability-current.md`; current Fleet source |
+| Fuel US-31–38 | Roadmap titles drifted from delivered/closed scope | Use the reconciled mapping in Phase 3 below; preserve 5 complete and 3 deferred statuses | `docs/mvp/MVP-1.2-FUEL-CLOSURE-001.md`; source and E2E evidence |
+| Advanced Platform/Ops | Detailed list contained only five IDs while dashboard counted nine | Remaining IDs are **US-72, US-73, US-76, US-78, US-82, US-84, US-85, US-86, US-87** | `docs/mvp/MVP-story-traceability-current.md` |
+| Multi-tenancy | Presented as future isolation implementation | Current-scope Tenant foundation and operational isolation are implemented and accepted; only distinct future platform products remain deferred | Tenant ADR, V43/V44, and central architecture standards |
+| Original story register | Repository records acknowledge a consolidated US-01–87 source, but it is not stored or linked locally | Do not invent individual titles for US-48–70 or remaining Platform/Ops stories; freeze the applicable source contracts before implementation | `docs/phase-2-entry-criteria.md`; repository-wide source search |
+
+### Candidate comparison
+
+Scores are relative (`Low`, `Medium`, `High`) and describe delivery cost/risk, not product importance.
+
+| Candidate | Business value | Dependency readiness / reuse | External integration | DB / Tenant / RBAC impact | Frontend / QA cost | Complexity | Decision |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| A. Driver Payroll Link + Transport Billing | High | Medium; reuses Trip, Driver, Freight and Customer facts but combines two separate financial concerns | High (payroll/accounting) | High | High | High | Post-MVP; split contracts first |
+| B. Deferred Fuel completion | Medium | Medium; Fuel core is ready, but the three stories are not one cohesive slice | High for cards; analytics/anomaly data dependencies | Medium-High | High | High | Preserve approved deferments |
+| C. GPS / Live Tracking | High | Medium; Route/Trip/Vehicle reuse is strong | High (devices, maps, streaming) | High | High | Very High | Post-MVP until telematics contracts exist |
+| D. Delivery Operations | **High** | **High; directly extends completed Trip, Route, Freight, Customer and Location capabilities** | Medium (ePOD/signature/storage choices require contract) | High but bounded; all operational rows must be Tenant-scoped | High | Medium-High | **Selected MVP 1.3** |
+| E. Last-Mile Delivery | High | Medium; depends on Delivery Operations and often GPS/customer messaging | High | High | Very High | Very High | Post-MVP after Delivery Operations |
+| F. Advanced Platform/Ops | Strategic | Mixed; nine heterogeneous stories | High (SSO/ERP/SaaS services) | Very High | Very High | Very High | Post-MVP; decompose per story |
+
+### Selected MVP 1.3 — Delivery Operations
+
+- **Stories:** US-56 through US-62.
+- **Selection rationale:** It is the most coherent next value stream and maximizes reuse of the completed Freight, Trip, Route and Organization foundations. It establishes the delivery execution boundary required before Last-Mile capabilities without depending first on live telematics, payroll, accounting or fuel-card providers.
+- **Scope gate:** The range is selected, but production work remains blocked until the original story definitions and acceptance criteria are recovered and frozen. Range-level evidence supports delivery orders and electronic proof of delivery; individual story titles must not be guessed.
+- **Tenant posture:** Every new operational aggregate, command/query, API, event, repository operation, background job and table must be Tenant-scoped through server-side `CurrentTenant` / `TenantExecutionContext`. No client Tenant authority is introduced.
+
+### Planned implementation order
+
+1. `MVP-1.3-DELIVERY-OPERATIONS-CONTRACT-001` — freeze the exact US-56–62 source mapping, ownership boundaries, lifecycle and acceptance criteria.
+2. Freeze Delivery inbound/outbound ports and its logical references to Freight Orders, Trips, Customers and Locations; prohibit cross-module persistence joins.
+3. Define Tenant-scoped delivery-order lifecycle, permissions, audit requirements and forward-only schema plan.
+4. Implement the smallest delivery-order vertical slice with backend domain/application/adapters and focused tests.
+5. Add assignment/execution milestones and exception behavior in source-defined order.
+6. Add electronic proof-of-delivery only after signature/media retention, privacy and storage authority are approved.
+7. Complete React workflows, accessibility, API/security tests, PostgreSQL isolation tests and Chromium acceptance; then perform release closure.
+
+### Technical enablers
+
+- Existing server-side Tenant membership resolution and V44 operational isolation patterns.
+- Existing Trip, Route, Freight and Organization public boundaries; any missing Delivery-facing port requires an explicit contract update.
+- New Delivery permissions must be defined centrally and enforced by backend RBAC; frontend visibility remains non-authoritative.
+- Evidence storage, signatures, notifications, offline behavior and idempotency require explicit source-backed decisions before implementation.
 
 ---
 
@@ -83,7 +140,7 @@
 
 ---
 
-### Phase 2: Expanded MVP 1.1 — Route & Freight (🟡 IN CLOSURE)
+### Phase 2: Expanded MVP 1.1 — Route & Freight (✅ COMPLETE)
 - [x] **Phase 2A (Advanced Route Intelligence):**
   - [x] **US-20:** Optimize Routes (Heuristic solver, savings preview, transactional apply)
   - [x] **US-21:** Route History & Snapshots (Immutable revision audit trail)
@@ -104,29 +161,33 @@
 
 ### Phase 3: Expanded MVP 1.2 — Fuel Management (✅ CLOSED_WITH_APPROVED_DEFERMENTS)
 - [x] **Phase 3A (Fuel Core):**
-  - [x] **US-31:** Fuel Stations & Vendor Management (Station master, internal/external, vendor registry)
-  - [x] **US-32:** Fuel Limit Policy & Allocation (Per-vehicle fuel limits, positive constraints)
-  - [x] **US-33:** Fuel Issue Voucher Lifecycle (DRAFT -> PENDING_AUTHORIZATION -> AUTHORIZED -> ISSUED / CANCELLED)
-  - [x] **US-34:** Fuel Purchase & Invoice Reconciliation (PO -> SUBMITTED -> APPROVED -> RECEIVED -> RECONCILED)
-  - [x] **US-36:** Fuel Inventory & Bunker Management (Tank master, immutable stock movements, dip readings, adjustments)
+  - [x] **US-31:** Issue Fuel (voucher workflow, vehicle limit validation, bunker debit)
+  - [x] **US-32:** Manage Fuel Purchases (vendor catalogue, receiving, variance and bunker credit)
+  - [x] **US-33:** Track Mileage (authoritative monotonic Vehicle Reading ledger)
+  - [x] **US-34:** Allocate Fuel Cost (Trip fuel-cost snapshots and consumption metrics)
+  - [x] **US-36:** Manage Fuel Bunkers (tank master, immutable stock ledger, dip variance and transfers)
 - [ ] ⏸ **Phase 3B (Fuel Deferments — Approved Post-MVP):**
-  - [ ] ⏸ **US-35:** Fuel Consumption Analytics & Variance Engine *(Deferred to Post-MVP)*
-  - [ ] ⏸ **US-37:** Fuel Price Trends & Forecast Modeling *(Deferred to Post-MVP)*
-  - [ ] ⏸ **US-38:** Fuel Anomaly & Fraud Detection Engine *(Deferred to Post-MVP)*
+  - [ ] ⏸ **US-35:** Manage Fuel Cards (provider integration and statement reconciliation) *(Deferred to Post-MVP)*
+  - [ ] ⏸ **US-37:** Analyze Fuel Performance (predictive analytics and theft/anomaly intelligence) *(Deferred to Post-MVP)*
+  - [ ] ⏸ **US-38:** Handle Fuel Exceptions (unauthorized/off-network fill-up investigation) *(Deferred to Post-MVP)*
 
 *Closure Record:* [`docs/mvp/MVP-1.2-FUEL-CLOSURE-001.md`](file:///home/hasitha-wijerathna/Documents/transport-logistics-modulith/transport-logistics-modulith/docs/mvp/MVP-1.2-FUEL-CLOSURE-001.md)
 
 ---
 
-### Phase 4: Driver Lifecycle & Fleet Maintenance (⏳ QUEUED for MVP 1.3)
-- [ ] **US-46:** Driver Performance & Scoring
-- [ ] **US-47:** Driver Payroll & Billing *(Post-MVP)*
-- [ ] **Maintenance Linkage:** Preventative triggers & workshop sync
+### Phase 4: Delivery Operations (🟡 MVP 1.3 SELECTED — CONTRACT PENDING)
+
+- [ ] 🟡 **US-56 through US-62:** Delivery Operations. Range selected for MVP 1.3; individual titles and acceptance criteria require source-contract freeze before production implementation.
+- [x] ✅ **Maintenance-to-availability linkage:** Already delivered by US-07; it is not a new numbered MVP 1.3 story.
+- **New workshop/work-order/inspection scope:** `NEW PRODUCT SCOPE / REQUIRES FORMAL USER STORIES`.
 
 ---
 
-### Phase 5 to Phase 8: Post-MVP Scope (⏸ DEFERRED)
-- **Phase 5:** GPS & Telematics (US-48 to US-55) — *Deferred*
-- **Phase 6:** Delivery Management (US-56 to US-62) — *Deferred*
-- **Phase 7:** Last-Mile & Dynamic Dispatch (US-63 to US-70) — *Deferred*
-- **Phase 8:** Advanced Platform & Multi-Tenant Isolation (US-72, US-73, US-76, US-78, US-82) — *Deferred*
+### Post-MVP Scope (⏸ DEFERRED)
+
+- **Deferred Fuel:** US-35, US-37, US-38.
+- **Commercial / Driver:** US-46 — **Process Driver Payroll Link**; US-47 — **Manage Transport Billing**. These are separate concerns and require independent contracts.
+- **GPS & Live Tracking:** US-48 through US-55.
+- **Last-Mile Delivery:** US-63 through US-70; depends on the Delivery Operations foundation and likely on GPS/customer-notification capabilities.
+- **Advanced Platform / Ops:** US-72, US-73, US-76, US-78, US-82, US-84, US-85, US-86 and US-87.
+- **Tenant clarification:** Tenant foundation, membership-scoped role assignment, operational Tenant scoping and current-scope isolation are already implemented/accepted. No roadmap item may describe those completed capabilities as future work; only separately source-defined platform products remain deferred.

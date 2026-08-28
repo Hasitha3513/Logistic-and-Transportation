@@ -1,5 +1,7 @@
 # US-27 — Calculate Weight and Volume: Calculation and Capacity Validation Engine (US27-WEIGHT-VOLUME-CALCULATION-002)
 
+> **SUPERSEDED STATUS NOTE (2026-08-28):** `P2-WEIGHT-VOLUME-ACCEPTANCE-003` promoted US-27 to COMPLETE. Subsequent tasks completed US-30 and tenant-scoped US-29; Freight is now 7/7 COMPLETE. The implementation-stage statuses below remain point-in-time history.
+
 **Date:** August 27, 2026  
 **Status:** IMPLEMENTATION COMPLETE, ACCEPTANCE PENDING  
 **Story:** US-27 — Calculate Weight and Volume (Validate Weight and Volume)  

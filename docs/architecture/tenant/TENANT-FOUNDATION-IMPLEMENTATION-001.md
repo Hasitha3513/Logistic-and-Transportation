@@ -1,5 +1,7 @@
 # TENANT-FOUNDATION-IMPLEMENTATION-001
 
+> **SUPERSEDED STATUS NOTE (2026-08-28):** `TENANT-OPERATIONAL-DATA-RETROFIT-001` completed current-scope operational isolation, and `P2-FREIGHT-REPORTING-001` completed US-29. The foundation-stage limitations below remain point-in-time history.
+
 ## Status
 
 - Tenant architecture: `IMPLEMENTED_FOUNDATION`

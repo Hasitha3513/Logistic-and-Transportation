@@ -56,7 +56,7 @@ US-20, US-21, US-22 and US-23 remain COMPLETE. Current routing domain/applicatio
 | US-29 Freight Reports | COMPLETE | Tenant-scoped summary, shipment/capacity utilization, insurance/claim/settlement/exception aggregation, honest INCOMPLETE semantics, bounded CSV, dedicated RBAC, React page, and tenant-isolation regression coverage. |
 | US-30 Cargo Exceptions | COMPLETE | Aggregate, six types (DAMAGE, PARTIAL_SHIPMENT, WEIGHT_DISCREPANCY, HAZARDOUS_MATERIAL, UNMANIFESTED_CARGO, SEAL_TAMPERING), V40/V41, command-driven lifecycle (OPEN/HELD/ESCALATED/RESOLVED/REJECTED), immutable history, optimistic concurrency, API (8 endpoints), RBAC, React frontend, 40 backend tests and 8 Playwright E2E all PASS. Closed by P2-CARGO-EXCEPTION-001. |
 
-`MVP-1.1-FREIGHT-CLOSURE-001` was executed, but its conclusion is superseded. MVP 1.1 is **PARTIAL**, not `CLOSED_WITH_BLOCKED_DEFERMENT`.
+The conditional conclusion in `MVP-1.1-FREIGHT-CLOSURE-001` is a preserved historical record and is superseded by `MVP-1.1-FREIGHT-FINAL-CLOSURE-001`. MVP 1.1 Route & Freight is **COMPLETE**.
 
 ## MVP 1.2 Fuel
 
@@ -79,11 +79,9 @@ US-46, US-47, US-48–70 and remaining non-MVP platform stories are DEFERRED. Fl
 
 ## Requirement / implementation drift
 
-1. US-27’s acceptance and closure documents overstate completion: the engine is not fed production cargo measurements.
-2. US-30’s local workflow exists, but the frozen US-27, correction/claim and Trip readiness branches are absent.
-3. `MVP-1.1-FREIGHT-CLOSURE-001.md`, `US27-WEIGHT-VOLUME-ACCEPTANCE-003.md` and `PHASE2-SCOPE-MATRIX.md` contain stale COMPLETE conclusions.
-4. Bunker transfer/concurrency and route heuristic capabilities exceed the smallest MVP need.
-5. No deferred tenant, fuel-card, fuel-analytics, fuel-theft, GPS, delivery or last-mile implementation was found.
+1. Earlier Freight, tenant-foundation, and US-27 records retain their original point-in-time conclusions and now carry supersession notes where they otherwise conflict with the current release state.
+2. Bunker transfer/concurrency and route heuristic capabilities exceed the smallest MVP need.
+3. No deferred fuel-card, fuel-analytics, fuel-theft, GPS, delivery, or last-mile implementation was found.
 
 ## Release readiness
 
@@ -100,7 +98,7 @@ Conditions include environment-specific PostgreSQL, security, operations and ten
 - Release band: MVP 1.1 (Route & Freight)
 - Domain: Freight
 - Scope: Phase 2B (US-24 to US-30)
-- Last completed task: `TENANT-FOUNDATION-IMPLEMENTATION-001` (first-class tenant, membership, trusted resolution/context, and clean CLTS-LK initialization)
+- Last completed task: `MVP-1.1-FREIGHT-FINAL-CLOSURE-001`
 - Status: 7 / 7 Freight Stories COMPLETE; Overall Phase 2B = COMPLETE
 
-**Exact next task:** MVP 1.3 expansion planning.
+**Exact next task:** `MVP-EXPANSION-ROADMAP-001` — reconcile the remaining US-46 through US-87 scope and define MVP 1.3 before implementation.

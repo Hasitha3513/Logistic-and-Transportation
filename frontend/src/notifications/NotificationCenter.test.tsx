@@ -92,7 +92,7 @@ describe('NotificationCenter', () => {
 
     const bellBtn = await screen.findByRole('button', { name: /Open notifications/i });
     expect(bellBtn).toBeInTheDocument();
-    expect(screen.getByText('1')).toBeInTheDocument();
+    expect(await screen.findByText('1')).toBeInTheDocument();
   });
 
   it('opens drawer and displays notifications list', async () => {

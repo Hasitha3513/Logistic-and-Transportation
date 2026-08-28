@@ -1,10 +1,7 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
-import {
-  DashboardOutlined,
-} from '@ant-design/icons';
 import AppLayout from './layout/AppLayout';
 import DashboardPage from './pages/DashboardPage';
-import ModulePage from './pages/ModulePage';
+import WorkspacePage from './pages/WorkspacePage';
 import ResourceListPage, { resourcePages } from './pages/ResourceListPage';
 import VehicleListPage from './features/fleet/vehicleMaster/pages/VehicleListPage';
 import TripListPage from './trips/TripListPage';
@@ -119,7 +116,7 @@ export default function App() {
         <Route path="administration/users" element={<ResourceListPage {...resourcePages.users} />} />
         <Route path="administration/roles" element={<ResourceListPage {...resourcePages.roles} />} />
         <Route path="notification-rules" element={<NotificationRulesPage />} />
-        <Route path="workspace" element={<ModulePage eyebrow="Operations" title="Workspace" description="Select an available module from the navigation." icon={<DashboardOutlined />} />} />
+        <Route path="workspace" element={<WorkspacePage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
     </Routes>

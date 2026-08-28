@@ -16,12 +16,37 @@ if [ -d "/usr/lib/chatgpt/resources/cua_node/bin" ]; then
     export PATH="/usr/lib/chatgpt/resources/cua_node/bin:$PATH"
 fi
 
-# Detect PostgreSQL availability on port 5432
-if nc -z localhost 5432 2>/dev/null; then
-    echo "[*] Detected running PostgreSQL on port 5432. Using 'postgres' profile..."
+for port in 8080 5173; do
+    if nc -z localhost "$port" 2>/dev/null; then
+        echo "[!] Port ${port} is already in use. Stop the existing application before running this script again."
+        exit 1
+    fi
+done
+
+# Load the same database settings used by Docker Compose.
+if [ -f ".env" ]; then
+    set -a
+    # shellcheck disable=SC1091
+    . ./.env
+    set +a
+fi
+
+export DB_USERNAME="${DB_USERNAME:-${POSTGRES_USER:-transport_app}}"
+export DB_PASSWORD="${DB_PASSWORD:-${POSTGRES_PASSWORD:-transport_app}}"
+export DB_URL="${DB_URL:-jdbc:postgresql://localhost:${POSTGRES_PORT:-5432}/${POSTGRES_DB:-transport_logistics}}"
+
+# Select PostgreSQL only when the configured credentials can actually connect.
+if command -v psql >/dev/null 2>&1 \
+    && PGPASSWORD="$DB_PASSWORD" psql \
+        --host=localhost \
+        --port="${POSTGRES_PORT:-5432}" \
+        --username="$DB_USERNAME" \
+        --dbname="${POSTGRES_DB:-transport_logistics}" \
+        --command='SELECT 1' >/dev/null 2>&1; then
+    echo "[*] Verified PostgreSQL connection. Using 'postgres' profile..."
     PROFILE="postgres"
 else
-    echo "[*] PostgreSQL not detected on port 5432. Using embedded 'h2' profile with complete sample dataset..."
+    echo "[*] Configured PostgreSQL is unavailable or rejected authentication. Using embedded 'h2' profile with complete sample dataset..."
     PROFILE="h2"
 fi
 
