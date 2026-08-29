@@ -1,0 +1,555 @@
+mindmap
+  root((Fleet & Logistics Management System))
+    Main Modules
+      Trip Management
+        Trip Order Creation
+          Manual Creation
+          Bulk Creation
+          Templates
+          Recurring Trips
+        Driver & Vehicle Assignment
+          Availability Checks
+          Skill Matching
+          License Validation
+          Capacity Matching
+          Fatigue Rule Validation
+          Substitute Assignment
+          Approval Escalation
+        Route Assignment
+          Predefined Routes
+          Dynamic Routes
+          Route Constraints
+          Alternate Route Selection
+        Trip Start/End
+          Trip Start Confirmation
+          Trip End Confirmation
+          Offline Mode
+          Gps Failure Handling
+        Trip Log
+          Real-Time Updates
+          Checkpoint Updates
+          Status Transitions
+        Trip Completion Reports
+          Distance Summary
+          Time Summary
+          Actual Versus Planned
+          Customer Acknowledgment
+          Incident Summary
+          Fuel Summary
+        Trip Management Edge Cases
+          Duplicate Trip Orders
+          Trip Cancellation
+          Driver No-Show
+          Route Changes
+          Trip Started Without Network
+          Unauthorized Trip Start
+          Vehicle Breakdown Mid-Trip
+      Fleet Management
+        Vehicle Master
+          Vehicle Type
+          Capacity Class
+          Usage Category
+          Owned Versus Rented
+          Special Equipment Vehicles
+        Fleet Categories
+          Company Fleet
+          Rental Fleet
+          Qr Codes
+          Ownership Details
+          Registration Details
+          Asset Tagging
+        Vehicle Documents
+          Registration Certificate
+          Insurance
+          Permit
+          Fitness Certificate
+          Emission Certificate
+          Lease Documents
+          Expiry Tracking
+          Renewal Alerts
+          Missing Document Detection
+          Document Version History
+        Vehicle Allocation
+          Availability Matching
+          Reservation Calendar
+          Conflict Resolution
+          Vehicle Status
+            Available
+            Allocated
+            In Maintenance
+            Out Of Service
+            Retired
+          Trip Priority
+          Overbooking Prevention
+          Priority Allocation Rules
+          Replacement Vehicle Suggestion
+          Allocation Approval
+        Fuel & Lubricant Logs
+          Fuel Entries
+          Lubricant Consumption
+          Service Refill Records
+          Vendor Mapping
+          Usage Validation
+        Running Logs
+          Daily Kilometer Logs
+          Engine Hours
+          Trip Wise Usage
+          Idle Time Records
+          Usage Trends
+          Breakdown Records
+        Fleet Maintenance Linkage
+          Service Scheduling Dependencies
+          Preventive Maintenance Triggers
+        Fleet Management Edge Cases
+          Vehicle Breakdown During Allocation
+          Missing Documents
+          Expired Registrations
+          Double Allocation Request
+          Vehicle Under Maintenance Marked Available
+          Rental Vehicle Contract Expired
+      Route Management
+        Route Definition
+          Origin
+          Destination
+          Waypoints
+          Restrictions
+            Vehicle Specific Restrictions
+            Time Window Constraints
+          Multi-Stop Routes
+        Distance & Estimated Time
+          Static Distance Matrix
+          Traffic Consideration
+          Historical Travel Time
+          Seasonal Adjustments
+        Route Optimization
+          Stop Sequencing
+          Sequence Optimization
+          Pickup And Drop Pairing
+          Time Window Balancing
+          Ai-Based Optimization
+          Cost Versus Time Trade-Offs
+          Fuel Efficient Routing
+          Capacity Aware Routing
+        Exception Notes
+          Delay Reasons
+        Route Analytics
+          Average Delay By Segment
+          Route Cost Analysis
+          Utilization By Route
+          Frequent Corridor Analysis
+          Deviation Patterns
+          Executed Routes
+        Route Management Edge Cases
+          Road Closures
+          Weather Disruptions
+          Restricted Zones
+          Toll Changes
+          Bridge Weight Limits
+          Temporary Detours
+        Record Retention
+      Driver Management
+        Driver Profile
+          Identity Documents
+          Employment Status
+          Address
+          Contact Info
+          Emergency Contacts
+        License Details
+          License Tracking
+          Class Validation
+          Expiry Alerts
+          Suspension Handling
+          Region Specific Endorsements
+        Medical Fitness
+          Fitness Certificate Expiry
+          Periodic Checks
+          Medical Restrictions
+        Driver Performance
+          Scoring
+            Trip Ratings
+            Safety Score
+            Fuel Efficiency Score
+          Incentives
+            Trip Based Earnings
+            Allowance Mapping
+          Payment Tracking
+          Violation Records
+            Repeat Offender Flags
+            Disciplinary Workflow
+          On-Time Score
+        Driver Payroll Link
+          Overtime Linkage
+          Deduction Inputs
+        Violations & Fines
+          Fine Amounts
+          Penalty Charges
+        Driver Compliance
+          Random Testing
+          Scheduled Testing
+          Failed Test Protocols
+          Return To Duty Clearance
+          Drug Test Records
+          Vision Test Records
+        Driver Management Edge Cases
+          Behavioral Issues
+          Expired Endorsement
+          Identity Mismatch
+          License Suspension
+          Medical Emergencies
+          Driver Unavailability
+          Driver Hours Compliance
+      Freight & Cargo Management
+        Freight Order
+          Order Intake
+          Service Level Assignment
+          Priority Handling
+          Rush Orders
+          Special Handling Instructions
+          Shipment Line Items
+        Regulatory Compliance
+          Commodity Classification
+          Customs Information
+          Hazmat Labeling
+        Cargo Manifest
+        Load Planning
+          Weight Distribution
+          Stacking Rules
+          Pallet Planning
+          Container Utilization
+          Fragile Goods Separation
+          Temperature Controlled Placement
+        Weight & Volume Calculation
+          Gross Weight
+          Net Weight
+          Cubic Volume
+          Axle Load Validation
+          Overload Prevention
+        Freight Insurance
+          Coverage Verification
+          Premium Tracking
+        Claims Management
+          Damage Assessment
+          Claim Workflow
+          Settlement Tracking
+        Cargo Compliance
+          Hazardous Materials
+        Freight & Cargo Management Edge Cases
+          Unmanifested Cargo
+          Seal Tampering
+          Weight Discrepancies
+          Damaged Cargo
+          Partial Delivery
+        Freight Reports
+          Shipment Status Reports
+          Cargo Utilization Reports
+        Claims Reports
+        Compliance Reports
+      Delivery Management
+        Delivery Order
+          Order Creation
+          Service Type
+          Delivery Windows
+          Special Instructions
+          Priority Sequencing
+        Proof Of Delivery
+          Digital Signature
+          Photo Evidence
+          Barcode Scan Confirmation
+          Timestamp Capture
+          Geo-Tagged Evidence
+          Offline Capture
+        Quality Checks
+          Retake Workflow
+          Consent Handling
+        Failed Delivery Management
+          Reason Codes
+          Escalation
+          Customer Signature/Photo
+        Re-Delivery Scheduling
+          Customer Preference
+          Slot Availability
+          Automatic Reschedule Suggestions
+          Agent Assisted Rescheduling
+        Delivery Analytics
+          Success Rates
+          Delay Analysis
+          Attempt Count Trends
+          Region Wise Performance
+        Delivery Management Edge Cases
+          Damaged Goods
+          Refused Delivery
+          Partial Delivery
+          Otp Mismatch
+          Customer Unavailable
+          Wrong Address
+          Customer Contact Attempts
+          Return To Origin Process
+      Last-Mile Delivery
+        Delivery Slot Management
+          Cut-Off Times
+          Peak Hours
+          Slot Buffer Rules
+        Micro-Hub Coverage
+          Hyperlocal Delivery Zones
+          Zone Capacity
+          Dynamic Zone Mapping
+          Temporary Zone Overrides
+        Rider Management
+          Rider Onboarding
+          Identity Verification
+          Shift Scheduling
+          Gig Workers
+          Availability Tracking
+        Capacity Planning
+          Intelligent Clustering
+          Proximity Based Grouping
+          Capacity Aware Assignment
+          Batch Order Assignment
+          Priority Batch Handling
+        Real-Time Eta
+          Traffic-Adjusted
+          Customer Updates
+          Delay Recalculation
+          Stop Sequence Impact
+        Customer Delivery Notifications
+          Otp Notifications
+          Delay Notifications
+          Email
+          Sms
+          App
+        Last-Mile Delivery Edge Cases
+          Cash Handling Dispute
+          Access Restrictions
+          Contactless Delivery
+          Rider No-Show
+          Multiple Delivery Attempts
+          Address Not Found
+      Gps & Real-Time Tracking
+        Live Vehicle Tracking
+          Map View
+          Current Status
+          Last Known Location
+          Connectivity Loss Handling
+          Location Accuracy Indicators
+        Geofencing
+          Unauthorized Zones
+          Depot Geofences
+          Customer Site Geofences
+          Entry Alerts
+          Exit Alerts
+          Idle Duration
+        Speed Alerts
+          Configurable Thresholds
+          Road Specific Speed Rules
+          Over-Speed Notifications
+          Repeat Violation Tracking
+        Route Deviation Alerts
+          Planned Versus Actual Path
+          Fuel Waste Tracking
+          Deviation Severity
+          Deviation Approval
+        Replay/History
+          Journey Replay
+          Stop Analysis
+          Incident Reconstruction
+          Forensic Analysis
+          Engine On Versus Movement Analysis
+        Tracking Dashboard
+          Fleet Overview
+          Exception Widgets
+          Idle Time Monitoring
+          Heat Maps
+          Alert Summary
+        Gps & Real-Time Tracking Edge Cases
+          Device Tampering
+          Battery Drain
+          Location Spoofing
+          Tunnel/Remote Area Tracking
+          Gps Signal Loss
+          Delayed Data Packets
+      Fuel Management
+        Fuel Issue
+          Issue Voucher
+          Station Validation
+          Trip Linked Issuance
+          Vendor Management
+          Limits
+        Fuel Card Integration
+          Card Issuance
+          Transaction Import
+          Fraud Detection
+          Usage Restrictions
+          Card Misuse
+        Bunker Management
+          Storage Tank Tracking
+          Stock Inward
+          Stock Outward
+          Dip Readings
+          Reorder Levels
+          Variance Analysis
+        Mileage & Km Tracking
+          Odometer Capture
+          Mileage Calculation
+          Odometer Tampering Detection
+          Abnormal Distance Alerts
+        Fuel Cost Per Trip
+          Trip Cost Allocation
+          Fuel Purchase
+          Price Catalog
+          Shared Fuel Allocation
+        Fuel Analytics
+          Efficiency Trends
+          Anomaly Detection
+          Vehicle Comparison
+          Driver Behavior Impact
+        Fuel Management Edge Cases
+          Fuel Leakage Patterns
+          Fuel Theft
+          Incorrect Readings
+          Price Fluctuations
+          Emergency Refueling
+          Negative Fuel Balance
+      Data Sync & Offline Mode
+        Offline Data Capture
+          Queued Transactions
+        Data Sync
+          Conflict Resolution During Sync
+          Partial Sync Recovery
+          Store And Forward
+          Low Bandwidth Optimization
+          Background Sync
+        Trip Authorization
+    Cross-Cutting Concerns
+      Security & Access Control
+        Role Based Access Control
+        Attribute Based Access Control
+        Single Sign-On
+        Multi-Factor Authentication
+        Data Encryption
+        Device Authorization
+        Session Management
+        Segregation Of Duties
+        Privileged Access Monitoring
+      Audit Trail & Reporting
+        User Activity Logs
+        Transaction Audit Trail
+        Change History
+        Regulatory Reports
+        Operational Reports
+        Scheduled Reports
+        Ad Hoc Analytics
+        Exception Reports
+      Notification System
+        Email Notifications
+        Sms Notifications
+        Push Notifications
+        In-App Alerts
+        Alert Templates
+        Webhook Notifications
+        Escalation Notifications
+        Quiet Hours And Suppression Rules
+      Exception Handling & Escalation
+        Exception Classification
+        Auto-Assignment Of Incidents
+        Sla Timers
+        Corrective Action Tracking
+        Root Cause Analysis
+        Closure Validation
+        Severity Levels
+        Escalation Matrix
+      Mobile App Support
+        Driver App
+        Dispatcher App
+        Delivery Agent App
+        Offline First Workflows
+        Camera And Signature Capture
+        Device Health Monitoring
+        Push Notifications
+      Billing & Costing
+        Trip Costing
+        Freight Billing
+        Surcharges
+        Penalty Charges
+        Cost Center Allocation
+        Invoice Reconciliation
+        Tax Handling
+      Customer Experience
+        Self-Service Tracking
+        Delivery Preferences
+        Issue Reporting
+        Feedback Collection
+      Compliance & Regulatory Requirements
+        Vehicle Compliance
+        Driver Compliance
+        Cargo Compliance
+        Hazmat Regulations
+        Tax And Billing Compliance
+        Regional Transport Rules
+    Supporting Capabilities
+      Master Data Management
+        Customer Master
+        Depot Master
+        Product And Commodity Master
+        Vendor Master
+        Branch Master
+        Company Master
+      Workflow Engine
+        Approval Rules
+        Escalation Rules
+        State Transitions
+        Conditional Logic
+      Scheduling Engine
+        Holiday Calendars
+        Resource Calendars
+      Analytics & Intelligence
+        Dashboards
+        Kpi Monitoring
+        Shift Management
+        Predictive Maintenance
+        Demand Forecasting
+        Risk Scoring
+        Recommendation Engine
+      Document Management
+        Upload
+        Versioning
+        Retention
+        Access Permissions
+        Optical Character Recognition
+      Integration Points
+        Erp
+        Hrms
+        Crm
+        Accounting
+        Insurance Providers
+        Payment Gateways
+        Telematics Providers
+        Fuel Vendors
+        Document Management Systems
+        Api Gateway
+        Webhook Framework
+        File Based Imports And Exports
+    Global Edge Cases
+      Data Integrity Risks
+        Mismatched Odometer Values
+        Gps Time And Trip Time Misalignment
+        Incorrect Master Data
+        Orphaned Transactions
+        Duplicate Records
+        Clock Time Drift
+      System-Wide Failure Scenarios
+        Server Outage
+        Database Replication Lag
+        Third-Party Integration Downtime
+        Message Queue Backlog
+      Operational Exceptions
+        Natural Disasters
+        Civil Restrictions
+        Strikes And Labor Shortages
+        Border Delays
+        Unexpected Demand Spikes
+      User Behavior Risks
+        Unauthorized Manual Overrides
+        Incomplete Field Entry
+        Fraudulent Claims
+        Shared Login Credentials
+        Delayed Incident Reporting

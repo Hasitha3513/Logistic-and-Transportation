@@ -82,14 +82,22 @@
 
 ---
 
-## 4. Post-MVP & Product Roadmap (US-46 through US-70, US-72, US-73, US-76, US-78, US-82, US-84-87)
+## 4. MVP 1.3 — Delivery Operations (7 Stories)
+
+| Story | Feature Title | Requirement Summary | Backend | DB | API | Frontend | RBAC | Unit/Int Tests | E2E Tests | Status | Gap / Evidence | Next Action |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| **US-56** | Manage Delivery Orders | Tenant-scoped create/search/read/update and readiness validation | YES | YES | YES | YES | YES | YES | YES | **COMPLETE** | `DeliveryOrder`, `V46__delivery_order_us56.sql`, `/v1/deliveries`, Delivery React workflow, four Delivery permissions, 51 focused backend tests, 972-test full verification and `deliveryOrders.spec.ts` 2/2 Chromium PASS | None |
+| **US-57** | Capture Proof of Delivery | Online POD with configured signature/photo/barcode evidence, server timestamp and optional geo-tag | NO | NO | NO | NO | NO | NO | NO | **NOT STARTED / PRODUCT DECISIONS COMPLETE** | `MVP-1.3-US57-POD-PRODUCT-DECISIONS-001.md`; no production implementation | Start `MVP-1.3-US57-PROOF-OF-DELIVERY-001` |
+| **US-58 through US-62** | Remaining Delivery Operations | Offline POD and later Delivery workflows | NO | NO | NO | NO | NO | NO | NO | **NOT STARTED** | No production implementation | Begin only after US-57 implementation/acceptance |
+
+---
+
+## 5. Post-MVP & Product Roadmap (US-46 through US-55, US-63 through US-70, US-72, US-73, US-76, US-78, US-82, US-84-87)
 
 | Story Range | Feature Area | Description | Status |
 |---|---|---|:---:|
 | **US-46** | Driver Payroll | Driver compensation, trip allowance calculations, overtime | **DEFERRED** |
 | **US-47** | Transport Billing | Invoicing, rate cards, customer billing schedules | **DEFERRED** |
 | **US-48 through US-55** | GPS / Tracking | IoT telematics ingestion, live tracking map, geofencing, route replay | **DEFERRED** |
-| **US-56** | Delivery Operations | Manage tenant-scoped Delivery Orders and validate readiness | **IMPLEMENTATION COMPLETE / ACCEPTANCE HARDENING COMPLETE / FINAL ACCEPTANCE PENDING** |
-| **US-57 through US-62** | Delivery Operations | ePOD and later Delivery workflows | **NOT STARTED** |
 | **US-63 through US-70** | Last Mile Delivery | Dynamic dispatching, customer tracking portal, SMS alerts | **DEFERRED** |
 | **US-72, US-73, US-76, US-78, US-82, US-84-87** | Advanced Platform | Multi-tenant SaaS billing, SSO/SAML, custom reports builder, external ERP sync | **DEFERRED** |

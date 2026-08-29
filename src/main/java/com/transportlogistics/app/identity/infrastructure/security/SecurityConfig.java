@@ -227,6 +227,12 @@ class SecurityConfig {
                         .hasAuthority("DELIVERY_UPDATE")
                         .requestMatchers(HttpMethod.POST, "/v1/deliveries/*/validate-readiness")
                         .hasAuthority("DELIVERY_ASSIGN")
+                        .requestMatchers(HttpMethod.GET, "/v1/deliveries/*/proof")
+                        .hasAnyAuthority("DELIVERY_POD_VIEW", "DELIVERY_POD_CAPTURE")
+                        .requestMatchers(HttpMethod.GET, "/v1/deliveries/*/proof/evidence/*/content")
+                        .hasAuthority("DELIVERY_POD_VIEW")
+                        .requestMatchers(HttpMethod.POST, "/v1/deliveries/*/proof", "/v1/deliveries/*/proof/evidence", "/v1/deliveries/*/proof/finalize")
+                        .hasAuthority("DELIVERY_POD_CAPTURE")
 
                         .requestMatchers(HttpMethod.GET, "/bunker-tanks/*/movements").hasAuthority("BUNKER_LEDGER_VIEW")
                         .requestMatchers(HttpMethod.GET, "/bunker-tanks", "/bunker-tanks/*", "/bunker-tanks/*/balance", "/bunker-tanks/*/dip-readings")

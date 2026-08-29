@@ -65,6 +65,14 @@ public record DeliveryOrder(
                 createdBy, actor);
     }
 
+    public DeliveryOrder markDelivered(OffsetDateTime now, String actor) {
+        if (status != DeliveryStatus.READY_FOR_ASSIGNMENT) {
+            throw new BusinessRuleException("INVALID_DELIVERY_TRANSITION", "Only a READY_FOR_ASSIGNMENT Delivery Order can be completed");
+        }
+        return new DeliveryOrder(id, deliveryNumber, customerId, originLocationId, destinationLocationId, priority,
+                serviceType, window, instructions, DeliveryStatus.DELIVERED, version, createdAt, now, createdBy, actor);
+    }
+
     private static String normalize(String value) { return value == null || value.isBlank() ? null : value.trim(); }
     private static String actor(String value) {
         if (value == null || value.isBlank()) throw invalid("Authenticated actor is required");

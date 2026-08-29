@@ -2,6 +2,7 @@ import { CheckCircleOutlined, EditOutlined } from '@ant-design/icons';
 import { Alert, App as AntApp, Button, Card, Descriptions, Flex, Result, Space, Spin, Tag, Typography } from 'antd';
 import { isAxiosError } from 'axios'; import { Link, useParams } from 'react-router-dom'; import { useAuth } from '../../../../auth/AuthContext';
 import { useDeliveryOrder, useValidateDeliveryReadiness } from '../hooks/useDeliveryOrders';
+import { ProofOfDeliverySection } from '../components/ProofOfDeliverySection';
 
 interface ErrorBody { message?: string }
 export default function DeliveryOrderDetailsPage() {
@@ -18,6 +19,6 @@ export default function DeliveryOrderDetailsPage() {
       { key: 'destination', label: 'Destination location ID', children: data.destinationLocationId }, { key: 'priority', label: 'Priority', children: data.priority },
       { key: 'service', label: 'Service type', children: data.serviceType.replaceAll('_', ' ') }, { key: 'window', label: 'Delivery window', children: `${new Date(data.windowStart).toLocaleString()} — ${new Date(data.windowEnd).toLocaleString()}` },
       { key: 'instructions', label: 'Instructions', span: 2, children: data.instructions || 'None' }, { key: 'updated', label: 'Last updated', children: new Date(data.updatedAt).toLocaleString() },
-    ]} /></Card>
+    ]} /></Card><ProofOfDeliverySection delivery={data} />
   </Flex>;
 }

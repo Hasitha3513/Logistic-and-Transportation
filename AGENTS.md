@@ -30,13 +30,14 @@ Whenever code is introduced, modified, refactored, renamed, or deleted, update e
 - **RBAC and permissions:** Update `00_CORE_ARCHITECTURE/rbac_and_permissions.md` and the owning module document for every new or changed security action.
 - **Inbound/outbound ports and REST contracts:** Update exact signatures in `01_INTEGRATION_REGISTRY/api_interfaces.md`, update `01_INTEGRATION_REGISTRY/cross_module_dependency_map.md`, and synchronize provider/consumer module documents.
 - **Use cases and business rules:** Update the owning module's Phase 1 inbound-port/use-case catalogue, invariants, authorization, lifecycle effects, and event behavior.
+- **Continuous end-user documentation:** Whenever a feature, API, or UI workflow is implemented, modified, renamed, or removed, update the corresponding module guide at `03_USER_MANUALS/<module_name>_guide.md` in the same execution cycle. The guide must describe the current user-visible workflow, prerequisites, permissions, navigation, field behavior, validation, lifecycle actions, expected outcomes, and known limitations without documenting unimplemented scope as available.
 - **Verification summary:** Every final report must contain the exact heading `### Synchronized Knowledge Base Files:` and list each updated Markdown file relative to `central-knowledge-base/`. If none changed, state `None` and explain why.
 
 ### Step 3: Automated Knowledge Base Git Sync
 
 The external `central-knowledge-base/` is a dedicated Git repository whose canonical remote is `https://github.com/Hasitha3513/central-knowledge-base.git`.
 
-Whenever any schema, event, port, integration registry, architecture standard, or module document is updated inside `central-knowledge-base/`, the agent must complete an atomic commit and push from that repository in the same task:
+Whenever any task-scoped file is modified or created inside `central-knowledge-base/`, including architecture, integration, module, and `03_USER_MANUALS/` documentation, the agent MUST immediately complete an atomic stage, commit, and normal push from that repository before declaring the task complete. This synchronization is automatic and must not be deferred to a developer or replaced with manual instructions when authenticated Git access is available:
 
 ```bash
 git -C central-knowledge-base add .
@@ -44,10 +45,25 @@ git -C central-knowledge-base commit -m "docs(<module_name>): update schemas, ev
 git -C central-knowledge-base push origin main
 ```
 
+For a task that adds or updates end-user manuals together with other synchronized system documentation, use the commit message `docs(manuals): add user guide and sync system documentation`. For narrower changes, use an accurate Conventional Commit message that describes the task-scoped documentation.
+
 - Resolve `central-knowledge-base/` from the parent workspace when it is external to the main project; do not assume it is nested inside the application repository.
 - Inspect the knowledge-base repository status and diff before staging. Commit only synchronized knowledge-base changes belonging to the current task; never absorb unrelated user changes into the commit.
 - Use an accurate Conventional Commit scope and message when the update is narrower than the example.
 - If the repository is missing, is not a Git checkout, has an unexpected remote or branch, contains overlapping uncommitted work, rejects the commit, fails to push, or encounters a merge conflict, stop the Git-sync step and report the condition under `Unresolved Risks` in the final report. Do not overwrite, reset, force-push, or silently resolve unrelated changes.
+
+#### Persistent Auto-Sync Reconciliation Rules
+
+- Auto-sync is required when a successful implementation, acceptance, closure, architecture, governance, migration, product decision, or approved deferment materially changes authoritative project state. It is not required for exploratory analysis, failed attempts, local debugging, formatting-only work, or test refactoring with no product or architecture effect.
+- Before editing the knowledge base, inspect the actual application branch, HEAD, status, diff, migrations, tests, implementation, closure documents, and roadmap. Verified implementation and accepted decisions take precedence over stale documentation; never invent future schemas, APIs, lifecycle states, permissions, integrations, or completion status.
+- Before synchronization, run a safe fetch and inspect the KB branch, HEAD, `origin/main`, worktree, and divergence. If local `main` is behind with no divergence, update only with `git pull --ff-only origin main`. Never reset, clean, rebase, force-push, or silently resolve unrelated changes.
+- Classify a dirty KB worktree as current-task, pre-existing related, pre-existing unrelated, or unknown. Preserve all pre-existing work and stage only task-scoped files. Stop with `BLOCKED_KB_WORKTREE_AMBIGUOUS` when ownership cannot be determined safely.
+- Prevent duplicate synchronization: first verify whether `origin/main` already contains the required authoritative state or an existing valid local task-scoped commit. If remote state is current, create no commit and report `KB_SYNC_ALREADY_CURRENT`. If a valid local commit is ahead, push it instead of recreating it.
+- After committing, push normally to `origin main`. If HTTPS authentication fails, inspect the configured remote, credential helper, and `gh auth status` without exposing or storing credentials. Use an existing secure authenticated mechanism when available; never invent credentials or store plaintext tokens.
+- If no authenticated mechanism can push, report `BLOCKED_GOVERNANCE_SYNC_AUTHENTICATION` with the KB commit SHA, branch, remote, divergence, failed command, and minimum required user action. Do not rerun implementation or downgrade an already accepted story: report `PRODUCT_ACCEPTANCE = PASS` separately from `GOVERNANCE_REMOTE_SYNC = BLOCKED_AUTHENTICATION`.
+- After a successful push, fetch and require `HEAD == origin/main`, divergence `0 0`, and remote containment of `HEAD` on `origin/main` before reporting `KB_SYNC = COMPLETE`.
+- Continue the parent task after successful KB synchronization. Do not create a separate manual-push ceremony or ask the user to rerun acceptance.
+- Story accounting must remain arithmetically consistent with the authoritative register `US-01` through `US-87`; do not create `US-88`, `US-89`, or `US-90` without explicit product authority.
 
 ### Knowledge Base Repository Push Policy
 

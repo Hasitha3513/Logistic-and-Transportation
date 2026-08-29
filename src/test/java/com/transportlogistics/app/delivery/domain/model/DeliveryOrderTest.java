@@ -15,7 +15,7 @@ class DeliveryOrderTest {
     }
     @Test void exposesOnlyTheUs56LifecycleStates() {
         assertThat(List.of(DeliveryStatus.values()))
-                .containsExactly(DeliveryStatus.DRAFT, DeliveryStatus.READY_FOR_ASSIGNMENT);
+                .containsExactly(DeliveryStatus.DRAFT, DeliveryStatus.READY_FOR_ASSIGNMENT, DeliveryStatus.DELIVERED);
     }
     @Test void materialEditReturnsReadyOrderToDraftAndKeepsNumberImmutable() {
         var number = new DeliveryNumber("DEL-2026-000001"); var origin = UUID.randomUUID();
