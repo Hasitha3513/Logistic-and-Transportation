@@ -219,6 +219,15 @@ class SecurityConfig {
                         .requestMatchers(HttpMethod.PATCH, "/v1/freight/orders/*")
                         .hasAuthority("FREIGHT_ORDER_MANAGE")
 
+                        .requestMatchers(HttpMethod.GET, "/v1/deliveries", "/v1/deliveries/*")
+                        .hasAuthority("DELIVERY_VIEW")
+                        .requestMatchers(HttpMethod.POST, "/v1/deliveries")
+                        .hasAuthority("DELIVERY_CREATE")
+                        .requestMatchers(HttpMethod.PATCH, "/v1/deliveries/*")
+                        .hasAuthority("DELIVERY_UPDATE")
+                        .requestMatchers(HttpMethod.POST, "/v1/deliveries/*/validate-readiness")
+                        .hasAuthority("DELIVERY_ASSIGN")
+
                         .requestMatchers(HttpMethod.GET, "/bunker-tanks/*/movements").hasAuthority("BUNKER_LEDGER_VIEW")
                         .requestMatchers(HttpMethod.GET, "/bunker-tanks", "/bunker-tanks/*", "/bunker-tanks/*/balance", "/bunker-tanks/*/dip-readings")
                         .hasAuthority("BUNKER_VIEW")

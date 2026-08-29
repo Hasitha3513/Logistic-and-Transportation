@@ -1,14 +1,14 @@
 # Transport & Logistics — Current Verified MVP Baseline
 
-**Audit:** `MVP-CONTINUE-REBASELINE-003`
+**Audit:** `MVP-CURRENT-STATUS-COMPARE-AND-RESUME-001`
 
-**Date:** 2026-08-27
+**Date:** 2026-08-29
 
-**Branch:** `feat/mvp-1.2-fuel-closure`
+**Branch:** `feat/tenant-scoped-freight-reporting`
 
-**Commit:** `14cfe1bacacaa1380207f59ceda21131cd76d52a`
+**Commit:** `3c7ee09` (`Freight & cargo implementation P2-01-07`)
 
-**Initial worktree:** Clean
+**Worktree:** DIRTY — preserved Delivery foundation, Delivery governance documents, roadmap/status reconciliation and architecture-test updates; no reset or cleanup performed.
 
 ## Release dashboard
 
@@ -18,14 +18,17 @@
 | MVP 1.1 Advanced Route | 4 / 4 | 0 | 0 | 0 | 0 | COMPLETE |
 | MVP 1.1 Freight | 7 / 7 | 0 | 0 | 0 | 0 | COMPLETE |
 | MVP 1.2 Fuel | 5 / 8 | 0 | 0 | 3 / 8 | 0 | CLOSED_WITH_APPROVED_DEFERMENTS |
+| MVP 1.3 Delivery Operations | 0 / 7 | 1 | 0 | 0 | 6 / 7 | IN_PROGRESS; US-56 IMPLEMENTATION_COMPLETE / ACCEPTANCE_PENDING |
+
+US-56 implementation includes its tenant-scoped domain, persistence, V46 migration, API/RBAC, React workflow and focused verification. Acceptance remains pending because central-KB commit `1b579f6` could not be pushed from the non-interactive environment.
 
 ## Repository baseline
 
-- Backend modules: `fleet`, `freight`, `fuel`, `identity`, `notification`, `offlinesync`, `organization`, `reporting`, `routing`, `shared`, `system`, `tenancy`, `trip`.
-- Driver is a Fleet sub-feature. Maintenance is a Fleet scheduling/availability sub-feature. Work orders, job cards, parts inventory, inspections, tyres, batteries, tracking and delivery are not implemented product capabilities.
+- Backend modules: `delivery`, `fleet`, `freight`, `fuel`, `identity`, `notification`, `offlinesync`, `organization`, `reporting`, `routing`, `shared`, `system`, `tenancy`, `trip`.
+- Driver is a Fleet sub-feature. Maintenance is a Fleet scheduling/availability sub-feature. Work orders, job cards, parts inventory, inspections, tyres, batteries and tracking are not implemented product capabilities. Delivery implements US-56 only; US-57 through US-62 are not implemented.
 - Java 21; Spring Boot 3.2.12; Spring Modulith 1.2.12; Maven 3.9.9; Spring Security/JWT; JPA; Flyway; PostgreSQL; JUnit 5, Mockito and Testcontainers.
 - React 19.1.1; TypeScript 5.8.3; Vite 7.3.6; Ant Design 5.27.1; TanStack Query 5.85.5; React Hook Form 7.62.0; Zod 4.1.5; Axios 1.11.0; Vitest 3.2.7; Playwright 1.62.1.
-- Flyway: 45 migrations, `V1__baseline.sql` through `V45__freight_reporting_permissions.sql`; no gaps, duplicate versions or out-of-order versions found.
+- Flyway: 46 migrations, `V1__baseline.sql` through `V46__delivery_order_us56.sql`; no gaps, duplicate versions or out-of-order versions found.
 - First-class tenant foundation and current-scope operational isolation are implemented: canonical CLTS-LK, tenant-membership-scoped roles, server-side resolution, request-bounded context, operational tenant discriminators, and tenant-scoped reporting sources.
 
 ## MVP 1.0 reconfirmation
@@ -66,14 +69,14 @@ The conditional conclusion in `MVP-1.1-FREIGHT-CLOSURE-001` is a preserved histo
 
 ## Post-MVP and additional scope
 
-US-46, US-47, US-48–70 and remaining non-MVP platform stories are DEFERRED. Fleet maintenance schedules are only the MVP availability linkage. A Maintenance/Work Order/Inventory/Inspection product is not implemented or promoted into an authoritative numbered release band. The former direct “MVP 1.3” maintenance recommendation is withdrawn.
+US-46, US-47, US-48–55, US-63–70 and remaining non-MVP platform stories are DEFERRED. US-56 through US-62 are selected for MVP 1.3 Delivery Operations and contract-frozen in `MVP-1.3-DELIVERY-OPERATIONS-CONTRACT-001.md`; US-56 is implemented and US-57 through US-62 remain not started. Fleet maintenance schedules are only the MVP availability linkage. A Maintenance/Work Order/Inventory/Inspection product is not implemented or promoted into an authoritative numbered release band. The former direct “MVP 1.3” maintenance recommendation is withdrawn.
 
 ## Verification
 
-- `mvn test` with Oracle JDK 21: PASS — 951 run, 0 failed, 0 errors, 22 skipped.
-- `./mvnw verify` with full Oracle JDK 21: PASS — packaged successfully after the same suite.
-- Architecture: 25 / 25 PASS (`ApplicationModulesTest` 2, `HexagonalLayerArchitectureTest` 15, `ModuleBoundaryArchitectureTest` 5, `LombokUsageArchitectureTest` 3).
-- Frontend lint: PASS, 0 errors/warnings. Vitest: 46 files, 229 / 229 PASS (full suite plus US-29 focused suite). TypeScript/Vite build: PASS with a non-blocking chunk-size warning.
+- Historical accepted backend baseline: 958 tests discovered, 0 failures, 0 errors, 22 skipped when run in a working agent-attachment environment.
+- Fresh 2026-08-29 `./mvnw test`: `ENVIRONMENT_BLOCKED` — 958 discovered, 0 assertion failures, 654 Mockito/Byte Buddy agent-attachment setup errors, 22 skipped. Retrying with `-Djdk.attach.allowAttachSelf=true` produced the same environment failure; this is not classified as an application regression.
+- Fresh focused verification: 30 / 30 PASS — architecture 28 / 28 (`ApplicationModulesTest` 3, `HexagonalLayerArchitectureTest` 16, `ModuleBoundaryArchitectureTest` 6, `LombokUsageArchitectureTest` 3) plus `DeliveryValueObjectTest` 2 / 2.
+- Fresh frontend lint: PASS. Vitest: 47 files, 231 / 231 PASS. TypeScript and Vite production build: PASS with a non-blocking chunk-size warning.
 - US-29 Chromium E2E: 1 / 1 PASS; source metrics, shipment row, INCOMPLETE state, and permission-gated export are covered.
 - Playwright inventory: 43 specs and 118 logical tests. Chromium: 118 / 118 PASS. Firefox: 117 / 118 passed in the full run; `E2E-NOT-011` failed once because an Ant Select option was not observed, then passed on an isolated rerun (flaky evidence, no automatic retry). WebKit: environment-blocked before test execution because host library `libavif16` is missing; a three-test smoke attempt produced three launch errors.
 
@@ -95,10 +98,20 @@ Conditions include environment-specific PostgreSQL, security, operations and ten
 
 ## Current development position and exact next task
 
-- Release band: MVP 1.1 (Route & Freight)
-- Domain: Freight
-- Scope: Phase 2B (US-24 to US-30)
-- Last completed task: `MVP-1.1-FREIGHT-FINAL-CLOSURE-001`
-- Status: 7 / 7 Freight Stories COMPLETE; Overall Phase 2B = COMPLETE
+- Release band: MVP 1.3 Delivery Operations
+- Domain: Delivery
+- Scope: US-56 through US-62
+- Last completed decision task: `MVP-1.3-US56-DELIVERY-NUMBER-POLICY-001`
+- Status: IN_PROGRESS; US-56 `IMPLEMENTATION_COMPLETE / ACCEPTANCE_PENDING`; 0 / 7 accepted production stories
 
-**Exact next task:** `MVP-EXPANSION-ROADMAP-001` — reconcile the remaining US-46 through US-87 scope and define MVP 1.3 before implementation.
+US-56 implements the frozen priority/service catalogues, `NONE_IN_US56`, `NO_ASSIGNMENT_COLUMNS_IN_US56`, DRAFT-to-READY readiness validation and material-edit invalidation.
+
+Delivery numbering implements `MVP-1.3-US56-DELIVERY-NUMBER-POLICY-001`: immutable server-generated `DEL-YYYY-NNNNNN`, per-Tenant/per-tenant-local-year atomic allocation, gaps allowed, no explicit US-56 idempotency key, and tenant-scoped uniqueness.
+
+The R2 `NEW_IMPLEMENTATION_CRITICAL_PRODUCT_AMBIGUITY` blocker is `RESOLVED`. US-56 has no remaining product-semantics blocker.
+
+**Central KB synchronization:** `COMPLETE` — commit `921809a7f0d339f22c9b4eec9b778aac7a5a2019` is verified on `origin/main`, with zero branch divergence and a clean KB worktree.
+
+**Current blocker:** `NONE`.
+
+**Exact next task:** push and verify central-KB commit `1b579f6`, close US-56 acceptance, then begin the US-57 product-decision gate.

@@ -11,6 +11,7 @@ import {
   UserOutlined,
   ThunderboltOutlined,
   ContainerOutlined,
+  SendOutlined,
 } from '@ant-design/icons';
 
 export interface NavigationItem {
@@ -99,6 +100,14 @@ export const navigation: NavigationItem[] = [
       { key: 'freight-claims', label: 'Insurance Claims', route: '/freight/insurance/claims', requiredPermission: 'CARGO_INSURANCE_VIEW' },
       { key: 'cargo-exceptions', label: 'Cargo Exceptions', route: '/freight/exceptions', requiredPermission: 'CARGO_EXCEPTION_VIEW' },
       { key: 'freight-reports', label: 'Freight Reports', route: '/freight/reports', requiredPermission: 'FREIGHT_REPORT_VIEW' },
+    ],
+  },
+  {
+    key: 'delivery',
+    label: 'Delivery',
+    icon: <SendOutlined />,
+    children: [
+      { key: 'delivery-orders', label: 'Delivery Orders', route: '/deliveries', requiredPermission: 'DELIVERY_VIEW' },
     ],
   },
   {

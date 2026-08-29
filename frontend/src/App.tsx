@@ -38,6 +38,9 @@ import { CargoExceptionListPage } from './features/freight/exceptions/pages/Carg
 import { CargoExceptionCreatePage } from './features/freight/exceptions/pages/CargoExceptionCreatePage';
 import { CargoExceptionDetailsPage } from './features/freight/exceptions/pages/CargoExceptionDetailsPage';
 import FreightReportsPage from './features/freight/reports/pages/FreightReportsPage';
+import DeliveryOrderListPage from './features/delivery/orders/pages/DeliveryOrderListPage';
+import DeliveryOrderFormPage from './features/delivery/orders/pages/DeliveryOrderFormPage';
+import DeliveryOrderDetailsPage from './features/delivery/orders/pages/DeliveryOrderDetailsPage';
 
 function ProtectedRoute() {
   const { user, isLoading } = useAuth();
@@ -62,6 +65,7 @@ function HomePage() {
   if (hasPermission('CARGO_INSURANCE_VIEW')) return <Navigate to="/freight/insurance/policies" replace />;
   if (hasPermission('CARGO_EXCEPTION_VIEW')) return <Navigate to="/freight/exceptions" replace />;
   if (hasPermission('FREIGHT_REPORT_VIEW')) return <Navigate to="/freight/reports" replace />;
+  if (hasPermission('DELIVERY_VIEW')) return <Navigate to="/deliveries" replace />;
   if (hasPermission('IDENTITY_MANAGE')) return <Navigate to="/administration/users" replace />;
   return <Navigate to="/workspace" replace />;
 }
@@ -113,6 +117,10 @@ export default function App() {
         <Route path="freight/exceptions/new" element={<CargoExceptionCreatePage />} />
         <Route path="freight/exceptions/:id" element={<CargoExceptionDetailsPage />} />
         <Route path="freight/reports" element={<FreightReportsPage />} />
+        <Route path="deliveries" element={<DeliveryOrderListPage />} />
+        <Route path="deliveries/new" element={<DeliveryOrderFormPage />} />
+        <Route path="deliveries/:deliveryId/edit" element={<DeliveryOrderFormPage />} />
+        <Route path="deliveries/:deliveryId" element={<DeliveryOrderDetailsPage />} />
         <Route path="administration/users" element={<ResourceListPage {...resourcePages.users} />} />
         <Route path="administration/roles" element={<ResourceListPage {...resourcePages.roles} />} />
         <Route path="notification-rules" element={<NotificationRulesPage />} />

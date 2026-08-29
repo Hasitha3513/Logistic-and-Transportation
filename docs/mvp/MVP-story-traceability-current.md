@@ -89,6 +89,7 @@
 | **US-46** | Driver Payroll | Driver compensation, trip allowance calculations, overtime | **DEFERRED** |
 | **US-47** | Transport Billing | Invoicing, rate cards, customer billing schedules | **DEFERRED** |
 | **US-48 through US-55** | GPS / Tracking | IoT telematics ingestion, live tracking map, geofencing, route replay | **DEFERRED** |
-| **US-56 through US-62** | Delivery Operations | Delivery orders, electronic proof of delivery (ePOD), sign-on-glass | **DEFERRED** |
+| **US-56** | Delivery Operations | Manage tenant-scoped Delivery Orders and validate readiness | **IMPLEMENTATION COMPLETE / ACCEPTANCE PENDING** |
+| **US-57 through US-62** | Delivery Operations | ePOD and later Delivery workflows | **NOT STARTED** |
 | **US-63 through US-70** | Last Mile Delivery | Dynamic dispatching, customer tracking portal, SMS alerts | **DEFERRED** |
 | **US-72, US-73, US-76, US-78, US-82, US-84-87** | Advanced Platform | Multi-tenant SaaS billing, SSO/SAML, custom reports builder, external ERP sync | **DEFERRED** |

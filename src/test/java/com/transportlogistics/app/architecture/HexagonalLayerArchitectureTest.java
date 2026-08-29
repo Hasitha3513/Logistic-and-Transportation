@@ -189,4 +189,16 @@ public class HexagonalLayerArchitectureTest {
                 .because("Freight web adapters must invoke inbound ports")
                 .check(importedClasses);
     }
+
+    @Test
+    void deliveryDomainPortsAndApplicationMustRemainFrameworkFree() {
+        noClasses()
+                .that().resideInAnyPackage("..delivery..domain..", "..delivery..ports..", "..delivery..application..")
+                .should().dependOnClassesThat().resideInAnyPackage(
+                        "org.springframework..", "jakarta.persistence..", "org.hibernate..", "com.fasterxml.jackson..",
+                        "..delivery..adapters..")
+                .because("Delivery core code must remain provider-neutral and depend inward")
+                .check(importedClasses);
+    }
+
 }
