@@ -20,9 +20,11 @@ No assignment target/column, POD, evidence capture, redelivery, route/trip/vehic
 
 ## Verification
 
-- Focused backend and architecture tests: 35/35 PASS.
-- Frontend TypeScript/Vite build: PASS.
-- Existing frontend regression: 47 files, 231/231 PASS before the added US-56 schema test; focused US-56 frontend verification is recorded in the final task report.
-- Full backend regression remains subject to the recorded Mockito/Byte Buddy host attachment limitation.
+- Acceptance-hardening focused backend suite: 49/49 PASS, including architecture, two-state lifecycle, tenant context, PostgreSQL number concurrency and tenant/year isolation, persistence isolation, API/RBAC, and optimistic-conflict coverage.
+- Disposable PostgreSQL 16 runtime: Flyway V1–V46 PASS; Delivery tables, constraints, indexes and permissions verified.
+- Full backend `test` and `verify`: 975 tests, 0 failures, 0 errors, 15 skipped, using the existing Byte Buddy Java agent required by this host.
+- Frontend lint: PASS. Vitest: 48 files, 234/234 PASS. TypeScript/Vite production build: PASS with the existing non-blocking chunk-size warning.
+- Chromium US-56 E2E: 2 discovered, 2 executed, 2 passed. The flow covers create, generated number, detail/list visibility, readiness, material edit back to `DRAFT`, revalidation, and invalid-window rejection.
+- Central-KB commit `1b579f61481276d4bc47518163d18e9c7c1d7af1` is present on the clean `main` worktree and already describes the US-56 lifecycle correctly.
 
-Acceptance blocker: central-KB commit `1b579f6` is local and one commit ahead of `origin/main`; HTTPS push authentication was unavailable. After the push is verified, close US-56 and begin the US-57 product-decision gate.
+Acceptance hardening is complete. US-56 remains **IMPLEMENTATION COMPLETE / ACCEPTANCE PENDING** until `MVP-1.3-US56-DELIVERY-ORDERS-FINAL-ACCEPTANCE-002` consumes this evidence.

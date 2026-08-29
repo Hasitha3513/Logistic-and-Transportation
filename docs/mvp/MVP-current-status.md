@@ -20,7 +20,7 @@
 | MVP 1.2 Fuel | 5 / 8 | 0 | 0 | 3 / 8 | 0 | CLOSED_WITH_APPROVED_DEFERMENTS |
 | MVP 1.3 Delivery Operations | 0 / 7 | 1 | 0 | 0 | 6 / 7 | IN_PROGRESS; US-56 IMPLEMENTATION_COMPLETE / ACCEPTANCE_PENDING |
 
-US-56 implementation includes its tenant-scoped domain, persistence, V46 migration, API/RBAC, React workflow and focused verification. Acceptance remains pending because central-KB commit `1b579f6` could not be pushed from the non-interactive environment.
+US-56 implementation includes its tenant-scoped domain, persistence, V46 migration, API/RBAC and React workflow. Acceptance hardening is complete; final acceptance remains pending.
 
 ## Repository baseline
 
@@ -114,4 +114,6 @@ The R2 `NEW_IMPLEMENTATION_CRITICAL_PRODUCT_AMBIGUITY` blocker is `RESOLVED`. US
 
 **Current blocker:** `NONE`.
 
-**Exact next task:** push and verify central-KB commit `1b579f6`, close US-56 acceptance, then begin the US-57 product-decision gate.
+**Acceptance-hardening evidence:** focused backend 49/49 PASS; full backend `test`/`verify` 975 tests with 0 failures and 0 errors (15 skipped); frontend 48 files and 234/234 PASS; Chromium Delivery E2E 2/2 PASS; disposable PostgreSQL Flyway V1–V46 PASS.
+
+**Exact next task:** `MVP-1.3-US56-DELIVERY-ORDERS-FINAL-ACCEPTANCE-002`.

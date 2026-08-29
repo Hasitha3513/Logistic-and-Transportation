@@ -2,7 +2,7 @@
 
 > **Last reconciled:** 2026-08-29
 > **Authority:** Original requirements, frozen contracts/decisions, verified implementation evidence, derived UML, then prior roadmap.
-> **Current active expansion:** MVP 1.3 Delivery Operations. US-56 implementation is complete but acceptance is pending central-KB push verification; production story closure remains 0/7.
+> **Current active expansion:** MVP 1.3 Delivery Operations. US-56 implementation and acceptance hardening are complete; final acceptance remains pending and production story closure remains 0/7.
 
 ## 1. Purpose and Authority
 
@@ -24,7 +24,7 @@ The register covers Fleet Management, Trip Management, Route Management, Freight
 - MVP 1.1A Advanced Route: `COMPLETE` — 4/4.
 - MVP 1.1B Freight & Cargo: `COMPLETE` — 7/7.
 - MVP 1.2 Fuel: `CLOSED_WITH_APPROVED_DEFERMENTS` — 5 complete, 3 deferred.
-- MVP 1.3 Delivery Operations: current active expansion — US-56 implementation complete and acceptance pending; production story closure 0/7.
+- MVP 1.3 Delivery Operations: current active expansion — US-56 implementation and acceptance hardening complete, final acceptance pending; production story closure 0/7.
 
 ## 3. Authoritative Story Register — US-01 through US-87
 
@@ -163,7 +163,7 @@ The register covers Fleet Management, Trip Management, Route Management, Freight
 | MVP 1.1A | Advanced Route US-20–23 | 4 | `COMPLETE` — 4/4 |
 | MVP 1.1B | Freight & Cargo US-24–30 | 7 | `COMPLETE` — 7/7 |
 | MVP 1.2 | Fuel US-31–38 | 8 | `CLOSED_WITH_APPROVED_DEFERMENTS` — 5 complete, 3 deferred |
-| MVP 1.3 | Delivery Operations US-56–62 | 7 | `IN_PROGRESS`; production story closure `0/7`, US-56 acceptance pending KB push verification |
+| MVP 1.3 | Delivery Operations US-56–62 | 7 | `IN_PROGRESS`; production story closure `0/7`, US-56 final acceptance pending |
 
 Post-MVP bands contain Fuel US-35/37/38, Driver/Billing US-46/47, GPS US-48–55, Last-Mile US-63–70 and Advanced Platform/Ops US-72/73/76/78/82/84–87.
 
@@ -185,7 +185,7 @@ MVP 1.2 is `CLOSED_WITH_APPROVED_DEFERMENTS`: US-31/32/33/34/36 are `COMPLETE`; 
 
 ## 9. MVP 1.3 — Delivery Operations
 
-MVP 1.3 is the **current active expansion**. Its frozen scope is US-56 through US-62. US-56 production implementation is complete, but acceptance is pending central-KB push verification. Production story closure remains **0/7**.
+MVP 1.3 is the **current active expansion**. Its frozen scope is US-56 through US-62. US-56 production implementation and acceptance hardening are complete, but final acceptance is pending. Production story closure remains **0/7**.
 
 Delivery remains Tenant-owned. Cross-module references are UUID/logical references behind ports; direct cross-module persistence access is prohibited.
 
@@ -206,7 +206,8 @@ Delivery remains Tenant-owned. Cross-module references are UUID/logical referenc
 The former `NEW_IMPLEMENTATION_CRITICAL_PRODUCT_AMBIGUITY` blocker is resolved. The frozen number is immutable, server-generated `DEL-YYYY-NNNNNN`, allocated atomically per Tenant and Tenant-local calendar year. US-56 adds no explicit idempotency-key framework.
 
 - **Blocker:** `NONE`.
-- **Next task:** verify/push central-KB commit `1b579f6`, then close US-56 acceptance.
+- **Acceptance hardening:** `COMPLETE` — focused backend 49/49, full backend 975 tests with 0 failures/errors, frontend 234/234, and Chromium Delivery E2E 2/2 PASS.
+- **Next task:** `MVP-1.3-US56-DELIVERY-ORDERS-FINAL-ACCEPTANCE-002`.
 
 ## 11. Deferred / Post-MVP Product Scope
 
@@ -253,7 +254,7 @@ Potential future expansion includes Full Maintenance Management, Work Orders, Jo
 
 ## 15. Immediate Execution Queue
 
-1. Push and verify central-KB commit `1b579f6` on `origin/main`, then close US-56 acceptance.
+1. Run `MVP-1.3-US56-DELIVERY-ORDERS-FINAL-ACCEPTANCE-002` and consume the completed hardening evidence.
 2. Define/freeze the evidence, privacy, storage, lifecycle and API decisions for `MVP-1.3-US57-PROOF-OF-DELIVERY-001`.
 
 ## 16. Change / Reconciliation Notes

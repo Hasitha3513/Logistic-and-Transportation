@@ -4,6 +4,7 @@ import com.transportlogistics.app.shared.domain.BusinessRuleException;
 import org.junit.jupiter.api.Test;
 import java.time.OffsetDateTime;
 import java.util.UUID;
+import java.util.List;
 import static org.assertj.core.api.Assertions.*;
 
 class DeliveryOrderTest {
@@ -11,6 +12,10 @@ class DeliveryOrderTest {
     @Test void appliesFrozenDefaultsAndStartsDraft() {
         var order = DeliveryOrder.create(new DeliveryId(UUID.randomUUID()), new DeliveryNumber("DEL-2026-000001"), UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), null, null, new DeliveryWindow(now, now.plusHours(2)), " note ", now, "user");
         assertThat(order.priority()).isEqualTo(DeliveryPriority.NORMAL); assertThat(order.serviceType()).isEqualTo(DeliveryServiceType.STANDARD); assertThat(order.status()).isEqualTo(DeliveryStatus.DRAFT); assertThat(order.instructions()).isEqualTo("note");
+    }
+    @Test void exposesOnlyTheUs56LifecycleStates() {
+        assertThat(List.of(DeliveryStatus.values()))
+                .containsExactly(DeliveryStatus.DRAFT, DeliveryStatus.READY_FOR_ASSIGNMENT);
     }
     @Test void materialEditReturnsReadyOrderToDraftAndKeepsNumberImmutable() {
         var number = new DeliveryNumber("DEL-2026-000001"); var origin = UUID.randomUUID();
