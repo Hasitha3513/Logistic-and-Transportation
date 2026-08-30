@@ -40,7 +40,7 @@ public final class RoutePerformanceCalculator {
         Double distanceVarianceKm = avgActualDistance == null ? null : (avgActualDistance - plannedDistance);
         Double distanceVariancePercent = (distanceVarianceKm == null || plannedDistance <= 0)
                 ? null
-                : (distanceVarianceKm / plannedDistance) * 100.0;
+                : distanceVarianceKm / plannedDistance * 100.0;
 
         // 2. Duration metrics
         List<Long> actualDurations = completedTrips.stream()
@@ -55,7 +55,7 @@ public final class RoutePerformanceCalculator {
         Integer durationVarianceMinutes = avgActualDuration == null ? null : (avgActualDuration - plannedDuration);
         Double durationVariancePercent = (durationVarianceMinutes == null || plannedDuration <= 0)
                 ? null
-                : ((double) durationVarianceMinutes / plannedDuration) * 100.0;
+                : (double) durationVarianceMinutes / plannedDuration * 100.0;
 
         // 3. On-time vs Delayed counts
         long delayedCount = 0;
@@ -84,7 +84,7 @@ public final class RoutePerformanceCalculator {
             }
         }
 
-        Double avgDelayMinutes = delayedCount > 0 ? ((double) totalDelayMins / delayedCount) : null;
+        Double avgDelayMinutes = delayedCount > 0 ? (double) totalDelayMins / delayedCount : null;
 
         return new RoutePerformanceAnalytics(
                 route.id(),

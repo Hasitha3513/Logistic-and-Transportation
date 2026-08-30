@@ -53,19 +53,7 @@ class ReportingSecurityIntegrationTest {
 
     @BeforeEach
     void setUpSecurity() throws Exception {
-        jdbc.update("DELETE FROM offline_sync_operation");
-        jdbc.update("DELETE FROM fuel_issue_history");
-        jdbc.update("DELETE FROM fuel_issue");
-        jdbc.update("DELETE FROM fuel_purchase_history");
-        jdbc.update("DELETE FROM fuel_purchase");
-        jdbc.update("DELETE FROM bunker_stock_adjustment");
-        jdbc.update("DELETE FROM bunker_dip_reading");
-        jdbc.update("DELETE FROM bunker_stock_movement");
-        jdbc.update("DELETE FROM refresh_token");
-        jdbc.update("DELETE FROM app_user_role");
-        jdbc.update("DELETE FROM app_role_permission");
-        jdbc.update("DELETE FROM app_user");
-        jdbc.update("DELETE FROM app_role");
+        cleanupUsersAndRoles();
 
         seedRoleAndUser("report.viewer", "REPORT_VIEW");
         seedRoleAndUser("unprivileged");
@@ -76,6 +64,16 @@ class ReportingSecurityIntegrationTest {
         unprivilegedToken = login("unprivileged");
         freightViewerToken = login("freight.viewer");
         freightExporterToken = login("freight.exporter");
+    }
+
+    private void cleanupUsersAndRoles() {
+        jdbc.update("DELETE FROM refresh_token WHERE user_id IN (SELECT id FROM app_user WHERE username IN ('report.viewer', 'unprivileged', 'freight.viewer', 'freight.exporter'))");
+        jdbc.update("DELETE FROM tenant_membership_role WHERE membership_id IN (SELECT membership_id FROM tenant_membership WHERE user_id IN (SELECT id FROM app_user WHERE username IN ('report.viewer', 'unprivileged', 'freight.viewer', 'freight.exporter')))");
+        jdbc.update("DELETE FROM tenant_membership WHERE user_id IN (SELECT id FROM app_user WHERE username IN ('report.viewer', 'unprivileged', 'freight.viewer', 'freight.exporter'))");
+        jdbc.update("DELETE FROM app_user_role WHERE user_id IN (SELECT id FROM app_user WHERE username IN ('report.viewer', 'unprivileged', 'freight.viewer', 'freight.exporter'))");
+        jdbc.update("DELETE FROM app_user WHERE username IN ('report.viewer', 'unprivileged', 'freight.viewer', 'freight.exporter')");
+        jdbc.update("DELETE FROM app_role_permission WHERE role_id IN (SELECT id FROM app_role WHERE name IN ('ROLE_REPORT_VIEWER', 'ROLE_UNPRIVILEGED', 'ROLE_FREIGHT_VIEWER', 'ROLE_FREIGHT_EXPORTER'))");
+        jdbc.update("DELETE FROM app_role WHERE name IN ('ROLE_REPORT_VIEWER', 'ROLE_UNPRIVILEGED', 'ROLE_FREIGHT_VIEWER', 'ROLE_FREIGHT_EXPORTER')");
     }
 
     @Test

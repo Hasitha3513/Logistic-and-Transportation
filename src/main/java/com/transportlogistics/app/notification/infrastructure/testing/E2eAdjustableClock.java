@@ -32,7 +32,7 @@ public final class E2eAdjustableClock extends Clock {
 
     @Override
     public Clock withZone(ZoneId zone) {
-        return Clock.offset(base.withZone(zone), offset.get());
+        return offset(base.withZone(zone), offset.get());
     }
 
     @Override

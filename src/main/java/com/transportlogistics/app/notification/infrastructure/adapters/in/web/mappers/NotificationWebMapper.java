@@ -29,7 +29,7 @@ public class NotificationWebMapper {
             request.quietDays(), request.suppressionWindowMinutes(),
             request.escalationEnabled(), request.escalationDelayMinutes(), request.escalationRecipientType(),
             request.escalationRecipientValue(),
-            request.enabled() != null ? request.enabled() : true,
+            request.enabled() == null || request.enabled(),
             request.severityThreshold()
         );
     }
@@ -47,7 +47,7 @@ public class NotificationWebMapper {
             request.quietDays(), request.suppressionWindowMinutes(),
             request.escalationEnabled(), request.escalationDelayMinutes(), request.escalationRecipientType(),
             request.escalationRecipientValue(),
-            request.enabled() != null ? request.enabled() : true,
+            request.enabled() == null || request.enabled(),
             request.severityThreshold()
         );
     }

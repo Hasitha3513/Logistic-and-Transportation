@@ -5,7 +5,6 @@ import com.transportlogistics.app.delivery.domain.model.*;
 import com.transportlogistics.app.delivery.ports.inbound.DeliveryOrderUseCase;
 import com.transportlogistics.app.shared.domain.ConflictException;
 import com.transportlogistics.app.shared.domain.NotFoundException;
-import com.transportlogistics.app.support.PostgreSqlIntegrationTest;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -24,8 +23,9 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+@SpringBootTest
 @AutoConfigureMockMvc
-class DeliveryOrderApiSecurityAcceptanceTest extends PostgreSqlIntegrationTest {
+class DeliveryOrderApiSecurityAcceptanceTest {
 
     private static final UUID ID = UUID.fromString("03cd51bf-7ae3-44bd-8202-817fef87341d");
     private static final UUID CUSTOMER = UUID.fromString("f7df5124-4088-450d-8da8-cce83b9a0777");

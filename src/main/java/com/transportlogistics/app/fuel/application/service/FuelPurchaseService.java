@@ -109,7 +109,7 @@ public final class FuelPurchaseService implements FuelPurchaseUseCase {
             if (command.receivedQuantity() == null || command.receivedQuantity().signum() <= 0) throw new BusinessRuleException("INVALID_FUEL_PURCHASE_RECEIPT", "Received quantity must be greater than zero");
             OffsetDateTime receivedAt = command.receivedAt() == null ? now : command.receivedAt();
             if (receivedAt.isAfter(now.plusMinutes(5))) throw new BusinessRuleException("INVALID_FUEL_PURCHASE_RECEIPT", "Received time cannot be in the future");
-            UUID destination = command.destinationFuelStationId() != null ? command.destinationFuelStationId() : (current.destinationFuelStationId() != null ? current.destinationFuelStationId() : current.fuelStationId());
+            UUID destination = command.destinationFuelStationId() != null ? command.destinationFuelStationId() : current.destinationFuelStationId() != null ? current.destinationFuelStationId() : current.fuelStationId();
             FuelStation station = validateStation(destination);
             if (station != null && station.isInternal() && bunkerTanks != null) {
                 var bunkerTank = bunkerTanks.findActiveByStationAndFuelTypeForUpdate(destination, current.fuelType())

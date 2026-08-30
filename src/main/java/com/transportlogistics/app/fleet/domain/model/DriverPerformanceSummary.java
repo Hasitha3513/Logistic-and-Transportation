@@ -33,7 +33,7 @@ public record DriverPerformanceSummary(
             BigDecimal unpaidFines
     ) {
         double completionRate = totalTripsAssigned > 0
-                ? ((double) totalTripsCompleted / totalTripsAssigned) * 100.0
+                ? (double) totalTripsCompleted / totalTripsAssigned * 100.0
                 : 100.0;
 
         int safetyScore = Math.max(0, 100 - (totalPenaltyPoints * 4));

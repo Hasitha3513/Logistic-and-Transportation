@@ -1,8 +1,5 @@
 package com.transportlogistics.app.fleet.infrastructure.config;
 
-import com.transportlogistics.app.fleet.VehicleMileageQuery;
-import com.transportlogistics.app.fleet.VehicleReadingRecorder;
-import com.transportlogistics.app.fleet.application.ports.in.VehicleReadingUseCase;
 import com.transportlogistics.app.fleet.application.ports.out.VehicleMeterResetRepository;
 import com.transportlogistics.app.fleet.application.ports.out.VehicleReadingEventPublisher;
 import com.transportlogistics.app.fleet.application.ports.out.VehicleReadingRepository;

@@ -65,13 +65,7 @@ class VehicleReadingSecurityIntegrationTest {
 
     @BeforeEach
     void setUpSecurity() throws Exception {
-        jdbc.update("DELETE FROM vehicle_meter_reset");
-        jdbc.update("DELETE FROM vehicle_reading");
-        jdbc.update("DELETE FROM refresh_token");
-        jdbc.update("DELETE FROM app_user_role");
-        jdbc.update("DELETE FROM app_role_permission");
-        jdbc.update("DELETE FROM app_user");
-        jdbc.update("DELETE FROM app_role");
+        cleanupUsersAndRoles();
 
         seedRoleAndUser("reading.viewer", "VEHICLE_READING_VIEW");
         seedRoleAndUser("reading.creator", "VEHICLE_READING_CREATE");
@@ -84,6 +78,18 @@ class VehicleReadingSecurityIntegrationTest {
         correctToken = login("reading.corrector");
         resetToken = login("reading.resetter");
         unprivilegedToken = login("unprivileged");
+    }
+
+    private void cleanupUsersAndRoles() {
+        jdbc.update("DELETE FROM vehicle_meter_reset WHERE vehicle_id = ?", VEHICLE_ID);
+        jdbc.update("DELETE FROM vehicle_reading WHERE vehicle_id = ?", VEHICLE_ID);
+        jdbc.update("DELETE FROM refresh_token WHERE user_id IN (SELECT id FROM app_user WHERE username IN ('reading.viewer', 'reading.creator', 'reading.corrector', 'reading.resetter', 'unprivileged'))");
+        jdbc.update("DELETE FROM tenant_membership_role WHERE membership_id IN (SELECT membership_id FROM tenant_membership WHERE user_id IN (SELECT id FROM app_user WHERE username IN ('reading.viewer', 'reading.creator', 'reading.corrector', 'reading.resetter', 'unprivileged')))");
+        jdbc.update("DELETE FROM tenant_membership WHERE user_id IN (SELECT id FROM app_user WHERE username IN ('reading.viewer', 'reading.creator', 'reading.corrector', 'reading.resetter', 'unprivileged'))");
+        jdbc.update("DELETE FROM app_user_role WHERE user_id IN (SELECT id FROM app_user WHERE username IN ('reading.viewer', 'reading.creator', 'reading.corrector', 'reading.resetter', 'unprivileged'))");
+        jdbc.update("DELETE FROM app_user WHERE username IN ('reading.viewer', 'reading.creator', 'reading.corrector', 'reading.resetter', 'unprivileged')");
+        jdbc.update("DELETE FROM app_role_permission WHERE role_id IN (SELECT id FROM app_role WHERE name IN ('ROLE_READING_VIEWER', 'ROLE_READING_CREATOR', 'ROLE_READING_CORRECTOR', 'ROLE_READING_RESETTER', 'ROLE_UNPRIVILEGED'))");
+        jdbc.update("DELETE FROM app_role WHERE name IN ('ROLE_READING_VIEWER', 'ROLE_READING_CREATOR', 'ROLE_READING_CORRECTOR', 'ROLE_READING_RESETTER', 'ROLE_UNPRIVILEGED')");
     }
 
     @Test

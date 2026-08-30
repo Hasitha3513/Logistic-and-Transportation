@@ -69,26 +69,27 @@ class TripFuelCostApiIntegrationTest {
     }
 
     private void seedAdminIfNeeded() {
+        var roleList = jdbc.queryForList("SELECT id FROM app_role WHERE name = 'ADMIN'", UUID.class);
+        UUID roleId;
+        if (roleList.isEmpty()) {
+            roleId = UUID.randomUUID();
+            jdbc.update("INSERT INTO app_role (id, name, description, active) VALUES (?, 'ADMIN', 'Admin', true)", roleId);
+        } else {
+            roleId = roleList.getFirst();
+        }
+        jdbc.update("INSERT INTO app_permission (code, description, active) VALUES ('FUEL_COST_VIEW', 'View cost', true) ON CONFLICT DO NOTHING");
+        jdbc.update("INSERT INTO app_permission (code, description, active) VALUES ('FUEL_ISSUE_VIEW', 'View issue', true) ON CONFLICT DO NOTHING");
+        jdbc.update("INSERT INTO app_role_permission (role_id, permission_code) VALUES (?, 'FUEL_COST_VIEW') ON CONFLICT DO NOTHING", roleId);
+        jdbc.update("INSERT INTO app_role_permission (role_id, permission_code) VALUES (?, 'FUEL_ISSUE_VIEW') ON CONFLICT DO NOTHING", roleId);
+
         var count = jdbc.queryForObject("SELECT count(*) FROM app_user WHERE username = 'admin'", Integer.class);
         if (count == null || count == 0) {
             var userId = UUID.randomUUID();
-            var roleId = UUID.randomUUID();
             var now = OffsetDateTime.now();
-            jdbc.update("INSERT INTO app_role (id, name, description, active) VALUES (?, 'ADMIN', 'Admin', true)", roleId);
-            jdbc.update("INSERT INTO app_permission (code, description, active) VALUES ('FUEL_COST_VIEW', 'View cost', true) ON CONFLICT DO NOTHING");
-            jdbc.update("INSERT INTO app_permission (code, description, active) VALUES ('FUEL_ISSUE_VIEW', 'View issue', true) ON CONFLICT DO NOTHING");
-            jdbc.update("INSERT INTO app_role_permission (role_id, permission_code) VALUES (?, 'FUEL_COST_VIEW') ON CONFLICT DO NOTHING", roleId);
-            jdbc.update("INSERT INTO app_role_permission (role_id, permission_code) VALUES (?, 'FUEL_ISSUE_VIEW') ON CONFLICT DO NOTHING", roleId);
             jdbc.update("INSERT INTO app_user (id, username, email, password_hash, first_name, last_name, active, created_at, updated_at) VALUES (?, 'admin', 'admin@example.com', ?, 'Admin', 'User', true, ?, ?)",
                     userId, passwords.encode("AdminPass!2026"), now, now);
             com.transportlogistics.app.support.TenantTestFixtures.canonicalMembership(jdbc, userId);
             com.transportlogistics.app.support.TenantTestFixtures.assignCanonicalRole(jdbc, userId, roleId);
-        } else {
-            var roleId = jdbc.queryForObject("SELECT id FROM app_role WHERE name = 'ADMIN'", UUID.class);
-            jdbc.update("INSERT INTO app_permission (code, description, active) VALUES ('FUEL_COST_VIEW', 'View cost', true) ON CONFLICT DO NOTHING");
-            jdbc.update("INSERT INTO app_permission (code, description, active) VALUES ('FUEL_ISSUE_VIEW', 'View issue', true) ON CONFLICT DO NOTHING");
-            jdbc.update("INSERT INTO app_role_permission (role_id, permission_code) VALUES (?, 'FUEL_COST_VIEW') ON CONFLICT DO NOTHING", roleId);
-            jdbc.update("INSERT INTO app_role_permission (role_id, permission_code) VALUES (?, 'FUEL_ISSUE_VIEW') ON CONFLICT DO NOTHING", roleId);
         }
     }
 

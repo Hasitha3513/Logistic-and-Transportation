@@ -28,13 +28,11 @@ import com.transportlogistics.app.fuel.domain.service.FuelIssuePolicy;
 import com.transportlogistics.app.shared.domain.BusinessRuleException;
 import com.transportlogistics.app.shared.domain.NotFoundException;
 
-import java.math.BigDecimal;
 import com.transportlogistics.app.fuel.application.ports.out.FuelVehicleReadingPort;
 import java.time.Clock;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Locale;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;

@@ -6,7 +6,6 @@ import com.transportlogistics.app.freight.exception.domain.ExceptionStatus;
 import com.transportlogistics.app.freight.exception.domain.ExceptionType;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 /**

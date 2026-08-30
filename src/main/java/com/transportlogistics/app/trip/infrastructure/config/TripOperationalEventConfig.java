@@ -1,6 +1,5 @@
 package com.transportlogistics.app.trip.infrastructure.config;
 
-import com.transportlogistics.app.trip.application.ports.in.TripOperationalEventUseCase;
 import com.transportlogistics.app.trip.application.ports.out.TripHistoryRepository;
 import com.transportlogistics.app.trip.application.ports.out.TripOperationalEventRepository;
 import com.transportlogistics.app.trip.application.ports.out.TripRepository;

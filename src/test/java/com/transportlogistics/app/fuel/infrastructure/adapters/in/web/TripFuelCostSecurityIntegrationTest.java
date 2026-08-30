@@ -49,15 +49,7 @@ class TripFuelCostSecurityIntegrationTest {
 
     @BeforeEach
     void setUpSecurity() throws Exception {
-        jdbc.update("DELETE FROM fuel_issue_history");
-        jdbc.update("DELETE FROM fuel_issue");
-        jdbc.update("DELETE FROM vehicle_meter_reset");
-        jdbc.update("DELETE FROM vehicle_reading");
-        jdbc.update("DELETE FROM refresh_token");
-        jdbc.update("DELETE FROM app_user_role");
-        jdbc.update("DELETE FROM app_role_permission");
-        jdbc.update("DELETE FROM app_user");
-        jdbc.update("DELETE FROM app_role");
+        cleanupUsersAndRoles();
 
         seedRoleAndUser("cost.viewer", "FUEL_COST_VIEW");
         seedRoleAndUser("issue.viewer", "FUEL_ISSUE_VIEW");
@@ -66,6 +58,16 @@ class TripFuelCostSecurityIntegrationTest {
         fuelCostViewToken = login("cost.viewer");
         fuelIssueViewToken = login("issue.viewer");
         unprivilegedToken = login("unprivileged");
+    }
+
+    private void cleanupUsersAndRoles() {
+        jdbc.update("DELETE FROM refresh_token WHERE user_id IN (SELECT id FROM app_user WHERE username IN ('cost.viewer', 'issue.viewer', 'unprivileged'))");
+        jdbc.update("DELETE FROM tenant_membership_role WHERE membership_id IN (SELECT membership_id FROM tenant_membership WHERE user_id IN (SELECT id FROM app_user WHERE username IN ('cost.viewer', 'issue.viewer', 'unprivileged')))");
+        jdbc.update("DELETE FROM tenant_membership WHERE user_id IN (SELECT id FROM app_user WHERE username IN ('cost.viewer', 'issue.viewer', 'unprivileged'))");
+        jdbc.update("DELETE FROM app_user_role WHERE user_id IN (SELECT id FROM app_user WHERE username IN ('cost.viewer', 'issue.viewer', 'unprivileged'))");
+        jdbc.update("DELETE FROM app_user WHERE username IN ('cost.viewer', 'issue.viewer', 'unprivileged')");
+        jdbc.update("DELETE FROM app_role_permission WHERE role_id IN (SELECT id FROM app_role WHERE name IN ('ROLE_COST_VIEWER', 'ROLE_ISSUE_VIEWER', 'ROLE_UNPRIVILEGED'))");
+        jdbc.update("DELETE FROM app_role WHERE name IN ('ROLE_COST_VIEWER', 'ROLE_ISSUE_VIEWER', 'ROLE_UNPRIVILEGED')");
     }
 
     @Test

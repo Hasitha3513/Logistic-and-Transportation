@@ -1,6 +1,5 @@
 package com.transportlogistics.app.fleet.application.ports.in;
 
-import com.transportlogistics.app.fleet.CoverageStatus;
 import com.transportlogistics.app.fleet.TripDistanceSummary;
 import com.transportlogistics.app.fleet.VehicleMileageSummary;
 import com.transportlogistics.app.fleet.domain.model.VehicleMeterReset;

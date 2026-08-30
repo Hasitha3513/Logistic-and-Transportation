@@ -6,7 +6,6 @@ import com.transportlogistics.app.freight.insurance.adapters.inbound.web.dto.res
 import com.transportlogistics.app.freight.insurance.domain.ClaimSettlement;
 import com.transportlogistics.app.freight.insurance.domain.FreightInsuranceClaim;
 import com.transportlogistics.app.freight.insurance.domain.FreightInsurancePolicy;
-import com.transportlogistics.app.freight.insurance.domain.PolicyStatus;
 import org.springframework.stereotype.Component;
 
 import java.time.OffsetDateTime;

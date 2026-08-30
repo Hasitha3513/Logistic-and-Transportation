@@ -37,7 +37,9 @@ public class TenantAwareJpaRepository<T, ID extends Serializable> extends Simple
         var builder = entityManager.getCriteriaBuilder();
         var query = builder.createQuery(entityInformation.getJavaType());
         var root = query.from(entityInformation.getJavaType());
-        Predicate identifier = builder.equal(root.get(entityInformation.getIdAttribute().getName()), id);
+        var idAttr = entityInformation.getIdAttribute();
+        String idName = (idAttr != null) ? idAttr.getName() : "id";
+        Predicate identifier = builder.equal(root.get(idName), id);
         Predicate tenant = builder.equal(root.get("tenantId"), currentTenantIdentifier());
         return entityManager.createQuery(query.select(root).where(identifier, tenant)).getResultStream().findFirst();
     }

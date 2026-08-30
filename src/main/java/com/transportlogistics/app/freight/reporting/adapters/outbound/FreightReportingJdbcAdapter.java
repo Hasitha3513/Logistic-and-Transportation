@@ -114,10 +114,10 @@ class FreightReportingJdbcAdapter implements FreightReportingQuery {
                 "fo.created_at,fo.requested_pickup_at,fo.requested_delivery_at,cm.id,cm.manifest_number,cm.finalized_at," +
                 "lp.id,lp.load_plan_number,lp.readiness_status,lp.vehicle_id,v.capacity_kg,v.tare_weight_kg," +
                 "v.gross_vehicle_weight_kg,v.cargo_volume_capacity_m3,v.axle_count,v.max_axle_load_kg ORDER BY " + sort + " " + direction + " LIMIT ? OFFSET ?";
-        return jdbc.query(sql, this::mapShipment, args.toArray());
+        return jdbc.query(sql, (rs, rowNum) -> mapShipment(rs), args.toArray());
     }
 
-    private FreightShipmentReportItem mapShipment(ResultSet rs, int rowNum) throws SQLException {
+    private FreightShipmentReportItem mapShipment(ResultSet rs) throws SQLException {
         BigDecimal weight = rs.getBigDecimal("cargo_weight_kg");
         BigDecimal volume = rs.getBigDecimal("cargo_volume_m3");
         long itemCount = rs.getLong("manifest_item_count");
@@ -157,7 +157,8 @@ class FreightReportingJdbcAdapter implements FreightReportingQuery {
 
     private long countShipments(FreightReportCriteria criteria) {
         var where = where(criteria, "fo");
-        return jdbc.queryForObject("SELECT COUNT(*) FROM freight_order fo " + where.sql(), Long.class, where.args().toArray());
+        Long count = jdbc.queryForObject("SELECT COUNT(*) FROM freight_order fo " + where.sql(), Long.class, where.args().toArray());
+        return count != null ? count : 0L;
     }
 
     private long countReportRows(FreightReportCriteria criteria) {
@@ -166,11 +167,12 @@ class FreightReportingJdbcAdapter implements FreightReportingQuery {
                 "LEFT JOIN cargo_manifest cm ON cm.freight_order_id=fo.id AND cm.tenant_id=fo.tenant_id " +
                 "LEFT JOIN load_plan lp ON lp.cargo_manifest_id=cm.id AND lp.tenant_id=fo.tenant_id " + where.sql() +
                 " GROUP BY fo.id,cm.id,lp.id) report_rows";
-        return jdbc.queryForObject(sql, Long.class, where.args().toArray());
+        Long count = jdbc.queryForObject(sql, Long.class, where.args().toArray());
+        return count != null ? count : 0L;
     }
 
     private Map<String, Long> groupedCount(String table, String field, FreightReportCriteria criteria, String orderColumn) {
-        var where = whereForRelated(criteria, "x", orderColumn);
+        var where = whereForRelated(criteria);
         String sql = "SELECT x." + field + ",COUNT(*) FROM " + table + " x JOIN freight_order fo ON fo.id=x." + orderColumn +
                 " AND fo.tenant_id=x.tenant_id " + where.sql() + " GROUP BY x." + field + " ORDER BY x." + field;
         Map<String, Long> result = new LinkedHashMap<>();
@@ -180,9 +182,10 @@ class FreightReportingJdbcAdapter implements FreightReportingQuery {
     }
 
     private long relatedCount(String from, String orderColumn, FreightReportCriteria criteria) {
-        var where = whereForRelated(criteria, "x", orderColumn);
-        return jdbc.queryForObject("SELECT COUNT(*) FROM " + from + " JOIN freight_order fo ON fo.id=" + orderColumn +
+        var where = whereForRelated(criteria);
+        Long count = jdbc.queryForObject("SELECT COUNT(*) FROM " + from + " JOIN freight_order fo ON fo.id=" + orderColumn +
                 " AND fo.tenant_id=x.tenant_id " + where.sql(), Long.class, where.args().toArray());
+        return count != null ? count : 0L;
     }
 
     private SqlWhere where(FreightReportCriteria c, String alias) {
@@ -203,7 +206,7 @@ class FreightReportingJdbcAdapter implements FreightReportingQuery {
         return new SqlWhere(" WHERE " + String.join(" AND ", clauses), args);
     }
 
-    private SqlWhere whereForRelated(FreightReportCriteria c, String alias, String orderColumn) {
+    private SqlWhere whereForRelated(FreightReportCriteria c) {
         return where(c, "fo");
     }
 

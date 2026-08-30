@@ -3,7 +3,6 @@ package com.transportlogistics.app.freight.insurance.adapters.transaction;
 import com.transportlogistics.app.freight.insurance.ports.outbound.FreightInsuranceTransaction;
 import com.transportlogistics.app.shared.domain.ConflictException;
 import org.springframework.dao.OptimisticLockingFailureException;
-import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;

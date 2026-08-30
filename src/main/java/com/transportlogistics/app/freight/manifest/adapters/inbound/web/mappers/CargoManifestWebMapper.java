@@ -2,7 +2,6 @@ package com.transportlogistics.app.freight.manifest.adapters.inbound.web.mappers
 
 import com.transportlogistics.app.freight.manifest.adapters.inbound.web.dto.request.CargoManifestItemRequest;
 import com.transportlogistics.app.freight.manifest.adapters.inbound.web.dto.response.CargoManifestItemResponse;
-import com.transportlogistics.app.freight.manifest.adapters.inbound.web.dto.response.CargoManifestPageResponse;
 import com.transportlogistics.app.freight.manifest.adapters.inbound.web.dto.response.CargoManifestReadinessResponse;
 import com.transportlogistics.app.freight.manifest.adapters.inbound.web.dto.response.CargoManifestResponse;
 import com.transportlogistics.app.freight.manifest.adapters.inbound.web.dto.response.ManifestValidationFailureResponse;

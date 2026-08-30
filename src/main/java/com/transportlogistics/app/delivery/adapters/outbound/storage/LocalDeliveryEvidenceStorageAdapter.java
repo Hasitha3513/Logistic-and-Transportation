@@ -26,7 +26,10 @@ class LocalDeliveryEvidenceStorageAdapter implements DeliveryEvidenceStoragePort
         String reference = tenantId + "/" + evidenceId;
         Path target = resolve(tenantId, reference);
         try {
-            Files.createDirectories(target.getParent());
+            Path parent = target.getParent();
+            if (parent != null) {
+                Files.createDirectories(parent);
+            }
             Files.write(target, content, StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE);
             return new StoredEvidence(reference, contentType, content.length, sha256(content));
         } catch (IOException error) { throw unavailable(error); }

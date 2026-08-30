@@ -3,7 +3,6 @@ package com.transportlogistics.app.fleet.vehiclemaster.domain.model;
 import com.transportlogistics.app.fleet.vehiclemaster.domain.error.InvalidVehicleStatusTransitionException;
 
 import java.time.Year;
-import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 

@@ -6,7 +6,6 @@ import com.transportlogistics.app.tenancy.TenantDirectory;
 import org.springframework.stereotype.Component;
 
 import java.util.Optional;
-import java.util.UUID;
 
 @Component
 public class CurrentTenantDeliveryContextAdapter implements DeliveryTenantContextPort {

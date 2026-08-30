@@ -32,7 +32,6 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -182,7 +181,7 @@ public final class VehicleReadingService implements VehicleReadingUseCase, Vehic
         BigDecimal closingEngine = engineReadings.isEmpty() ? null : engineReadings.getLast().value();
         BigDecimal engineHoursUsed = calculateHoursAcrossEpochs(engineReadings);
 
-        CoverageStatus coverage = determineCoverage(odoReadings, engineReadings, from, to);
+        CoverageStatus coverage = determineCoverage(odoReadings, engineReadings);
         boolean abnormal = detectAbnormalReadings(odoReadings);
 
         return new VehicleMileageSummary(
@@ -472,8 +471,7 @@ public final class VehicleReadingService implements VehicleReadingUseCase, Vehic
         return distance.max(BigDecimal.ZERO);
     }
 
-    private CoverageStatus determineCoverage(List<VehicleReading> odo, List<VehicleReading> engine,
-                                             OffsetDateTime from, OffsetDateTime to) {
+    private CoverageStatus determineCoverage(List<VehicleReading> odo, List<VehicleReading> engine) {
         if (odo.isEmpty() && engine.isEmpty()) return CoverageStatus.NO_DATA;
         if (odo.size() < 2 && engine.size() < 2) return CoverageStatus.PARTIAL;
         return CoverageStatus.COMPLETE;

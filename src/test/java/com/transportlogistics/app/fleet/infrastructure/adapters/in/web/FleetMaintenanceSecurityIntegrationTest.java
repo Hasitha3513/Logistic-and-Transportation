@@ -53,11 +53,7 @@ class FleetMaintenanceSecurityIntegrationTest {
 
     @BeforeEach
     void setUpSecurity() throws Exception {
-        jdbc.update("DELETE FROM refresh_token");
-        jdbc.update("DELETE FROM app_user_role");
-        jdbc.update("DELETE FROM app_role_permission");
-        jdbc.update("DELETE FROM app_user");
-        jdbc.update("DELETE FROM app_role");
+        cleanupUsersAndRoles();
 
         seedRoleAndUser("fleet.viewer", "VEHICLE_VIEW");
         seedRoleAndUser("fleet.manager", "VEHICLE_VIEW", "VEHICLE_MAINTENANCE_MANAGE");
@@ -66,6 +62,16 @@ class FleetMaintenanceSecurityIntegrationTest {
         viewerToken = login("fleet.viewer");
         managerToken = login("fleet.manager");
         unprivilegedToken = login("unprivileged");
+    }
+
+    private void cleanupUsersAndRoles() {
+        jdbc.update("DELETE FROM refresh_token WHERE user_id IN (SELECT id FROM app_user WHERE username IN ('fleet.viewer', 'fleet.manager', 'unprivileged'))");
+        jdbc.update("DELETE FROM tenant_membership_role WHERE membership_id IN (SELECT membership_id FROM tenant_membership WHERE user_id IN (SELECT id FROM app_user WHERE username IN ('fleet.viewer', 'fleet.manager', 'unprivileged')))");
+        jdbc.update("DELETE FROM tenant_membership WHERE user_id IN (SELECT id FROM app_user WHERE username IN ('fleet.viewer', 'fleet.manager', 'unprivileged'))");
+        jdbc.update("DELETE FROM app_user_role WHERE user_id IN (SELECT id FROM app_user WHERE username IN ('fleet.viewer', 'fleet.manager', 'unprivileged'))");
+        jdbc.update("DELETE FROM app_user WHERE username IN ('fleet.viewer', 'fleet.manager', 'unprivileged')");
+        jdbc.update("DELETE FROM app_role_permission WHERE role_id IN (SELECT id FROM app_role WHERE name IN ('ROLE_FLEET_VIEWER', 'ROLE_FLEET_MANAGER', 'ROLE_UNPRIVILEGED'))");
+        jdbc.update("DELETE FROM app_role WHERE name IN ('ROLE_FLEET_VIEWER', 'ROLE_FLEET_MANAGER', 'ROLE_UNPRIVILEGED')");
     }
 
     @Test

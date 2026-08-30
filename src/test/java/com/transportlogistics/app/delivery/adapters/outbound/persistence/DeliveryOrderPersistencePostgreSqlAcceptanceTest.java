@@ -9,7 +9,9 @@ import com.transportlogistics.app.tenancy.TenantContextExecutor;
 import com.transportlogistics.app.tenancy.TenantExecutionContext;
 import org.flywaydb.core.Flyway;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIf;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.OffsetDateTime;
@@ -17,7 +19,23 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@Tag("postgres")
+@EnabledIf("postgresAvailable")
 class DeliveryOrderPersistencePostgreSqlAcceptanceTest extends PostgreSqlIntegrationTest {
+
+    private static boolean postgresAvailable() {
+        if (POSTGRES != null && POSTGRES.isRunning()) {
+            return true;
+        }
+        String url = System.getProperty("DB_URL", "jdbc:postgresql://localhost:5432/transport_integration");
+        String user = System.getProperty("DB_USERNAME", "transport_app");
+        String pass = System.getProperty("DB_PASSWORD", "LocalDb-Transport-2026");
+        try (var conn = java.sql.DriverManager.getConnection(url, user, pass)) {
+            return true;
+        } catch (Exception ignored) {
+            return false;
+        }
+    }
 
     private static final UUID TENANT_B = UUID.fromString("7c3e44b7-68dc-4bcb-a53c-f1a8d5df0da2");
     private static final TenantExecutionContext TENANT_A_CONTEXT = context(CanonicalTenant.ID, "tenant-a");
