@@ -109,6 +109,8 @@ class LoadPlanPersistenceIntegrationTest {
         jdbc.update("DELETE FROM load_plan");
         jdbc.update("DELETE FROM cargo_manifest_item");
         jdbc.update("DELETE FROM cargo_manifest");
+        jdbc.update("DELETE FROM freight_insurance_claim");
+        jdbc.update("DELETE FROM freight_insurance_policy");
         jdbc.update("DELETE FROM freight_order_line");
         jdbc.update("DELETE FROM freight_order");
         jdbc.update("DELETE FROM vehicle WHERE id = ?", vehicleId);

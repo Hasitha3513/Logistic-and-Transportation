@@ -17,10 +17,17 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @SpringBootTest
-@ActiveProfiles("h2")
-@Transactional
 class TenantFoundationDatabaseIntegrationTest {
     @Autowired JdbcTemplate jdbc;
+    private UUID testUser;
+
+    @org.junit.jupiter.api.AfterEach
+    void tearDown() {
+        if (testUser != null) {
+            jdbc.update("DELETE FROM tenant_membership WHERE user_id = ?", testUser);
+            jdbc.update("DELETE FROM app_user WHERE id = ?", testUser);
+        }
+    }
 
     @Test
     void cleanMigrationCreatesOnlyTheCanonicalTenant() {
@@ -37,15 +44,15 @@ class TenantFoundationDatabaseIntegrationTest {
 
     @Test
     void databaseEnforcesMembershipCardinalityAndForeignKeys() {
-        var user = UUID.randomUUID();
-        insertUser(user, "tenant-user-a");
-        insertMembership(UUID.randomUUID(), CanonicalTenant.ID, user);
+        testUser = UUID.randomUUID();
+        insertUser(testUser, "tenant-user-a");
+        insertMembership(UUID.randomUUID(), CanonicalTenant.ID, testUser);
 
-        assertThatThrownBy(() -> insertMembership(UUID.randomUUID(), CanonicalTenant.ID, user))
+        assertThatThrownBy(() -> insertMembership(UUID.randomUUID(), CanonicalTenant.ID, testUser))
                 .isInstanceOf(DataIntegrityViolationException.class);
         assertThatThrownBy(() -> insertMembership(UUID.randomUUID(), CanonicalTenant.ID, UUID.randomUUID()))
                 .isInstanceOf(DataIntegrityViolationException.class);
-        assertThatThrownBy(() -> insertMembership(UUID.randomUUID(), UUID.randomUUID(), user))
+        assertThatThrownBy(() -> insertMembership(UUID.randomUUID(), UUID.randomUUID(), testUser))
                 .isInstanceOf(DataIntegrityViolationException.class);
     }
 

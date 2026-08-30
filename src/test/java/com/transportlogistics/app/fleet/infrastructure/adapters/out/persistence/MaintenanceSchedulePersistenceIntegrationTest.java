@@ -41,6 +41,8 @@ class MaintenanceSchedulePersistenceIntegrationTest {
     void setUp() {
         jdbc.update("DELETE FROM load_plan_item_placement");
         jdbc.update("DELETE FROM load_plan");
+        jdbc.update("DELETE FROM fuel_issue_history");
+        jdbc.update("DELETE FROM fuel_issue");
         jdbc.update("DELETE FROM trip_operational_event");
         jdbc.update("DELETE FROM trip_status_history");
         jdbc.update("DELETE FROM trip_dispatch");
@@ -48,6 +50,8 @@ class MaintenanceSchedulePersistenceIntegrationTest {
         jdbc.update("DELETE FROM vehicle_document");
         jdbc.update("DELETE FROM vehicle_reading");
         jdbc.update("DELETE FROM vehicle_meter_reset");
+        jdbc.update("DELETE FROM fuel_limit_policy");
+        jdbc.update("DELETE FROM lubricant_log");
         jdbc.update("DELETE FROM maintenance_schedule");
         jdbc.update("DELETE FROM vehicle");
 

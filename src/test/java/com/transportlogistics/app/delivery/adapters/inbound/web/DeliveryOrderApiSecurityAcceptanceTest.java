@@ -111,6 +111,76 @@ class DeliveryOrderApiSecurityAcceptanceTest {
                 .andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("DELIVERY_VERSION_CONFLICT"));
     }
 
+    @MockBean private com.transportlogistics.app.delivery.ports.inbound.ProofOfDeliveryUseCase proofs;
+
+    @Test
+    void unauthenticatedPodRequestsAreRejected() throws Exception {
+        mvc.perform(get("/v1/deliveries/{id}/proof", ID)).andExpect(status().isUnauthorized());
+        mvc.perform(post("/v1/deliveries/{id}/proof", ID).contentType(MediaType.APPLICATION_JSON).content("{\"deliveryVersion\":0}"))
+                .andExpect(status().isUnauthorized());
+        mvc.perform(post("/v1/deliveries/{id}/proof/finalize", ID).contentType(MediaType.APPLICATION_JSON).content("{\"deliveryVersion\":0,\"podVersion\":0}"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @WithMockUser
+    void usersMissingPodPermissionsAreForbidden() throws Exception {
+        mvc.perform(get("/v1/deliveries/{id}/proof", ID)).andExpect(status().isForbidden());
+        mvc.perform(post("/v1/deliveries/{id}/proof", ID).contentType(MediaType.APPLICATION_JSON).content("{\"deliveryVersion\":0}"))
+                .andExpect(status().isForbidden());
+        mvc.perform(post("/v1/deliveries/{id}/proof/finalize", ID).contentType(MediaType.APPLICATION_JSON).content("{\"deliveryVersion\":0,\"podVersion\":0}"))
+                .andExpect(status().isForbidden());
+        mvc.perform(delete("/v1/deliveries/{id}/proof/evidence/{evidenceId}?podVersion=0", ID, UUID.randomUUID()))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(authorities = "DELIVERY_POD_CAPTURE")
+    void authorizedPodCaptureFlowAndFinalize() throws Exception {
+        var now = OffsetDateTime.parse("2026-08-29T10:00:00Z");
+        var podId = UUID.randomUUID();
+        var draft = new ProofOfDelivery(podId, ID, PodStatus.DRAFT, now, null, null, null, "John Doe", "Recipient", null, null, 0, now, now, "user", "user", List.of());
+        when(proofs.create(eq(ID), any(), eq("user"))).thenReturn(draft);
+
+        mvc.perform(post("/v1/deliveries/{id}/proof", ID)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"deliveryVersion\":0,\"signerName\":\"John Doe\",\"signerRelationship\":\"Recipient\"}"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").value(podId.toString()))
+                .andExpect(jsonPath("$.status").value("DRAFT"));
+
+        var finalized = new ProofOfDelivery(podId, ID, PodStatus.FINALIZED, now, null, null, null, "John Doe", "Recipient", now, "user", 1, now, now, "user", "user", List.of());
+        var deliveredOrder = order(DeliveryStatus.DELIVERED, 1);
+        when(proofs.finalizeProof(eq(ID), any(), eq("user"))).thenReturn(new com.transportlogistics.app.delivery.ports.inbound.ProofOfDeliveryUseCase.FinalizationResult(finalized, deliveredOrder));
+
+        mvc.perform(post("/v1/deliveries/{id}/proof/finalize", ID)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"deliveryVersion\":0,\"podVersion\":0}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.proof.status").value("FINALIZED"))
+                .andExpect(jsonPath("$.delivery.status").value("DELIVERED"));
+    }
+
+    @Test
+    @WithMockUser(authorities = "DELIVERY_POD_VIEW")
+    void authorizedPodViewAndContentStreaming() throws Exception {
+        var now = OffsetDateTime.parse("2026-08-29T10:00:00Z");
+        var podId = UUID.randomUUID();
+        var evidenceId = UUID.randomUUID();
+        var evidence = new PodEvidence(evidenceId, PodEvidenceType.PHOTO, "storage-ref-1", null, "image/png", 1024, "a".repeat(64), "photo.png", "FILE", "user", now);
+        var proof = new ProofOfDelivery(podId, ID, PodStatus.FINALIZED, now, null, null, null, null, null, now, "user", 1, now, now, "user", "user", List.of(evidence));
+        when(proofs.get(ID)).thenReturn(proof);
+
+        mvc.perform(get("/v1/deliveries/{id}/proof", ID)).andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("FINALIZED"))
+                .andExpect(jsonPath("$.evidence[0].type").value("PHOTO"));
+
+        when(proofs.content(ID, evidenceId)).thenReturn(new com.transportlogistics.app.delivery.ports.inbound.ProofOfDeliveryUseCase.EvidenceContent("test-image-bytes".getBytes(), "image/png", 16, "photo.png"));
+        mvc.perform(get("/v1/deliveries/{id}/proof/evidence/{evidenceId}/content", ID, evidenceId))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Content-Type", "image/png"));
+    }
+
     private String createBody() throws Exception {
         return body(null);
     }

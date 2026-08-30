@@ -1,8 +1,8 @@
 # Transport & Logistics — MVP / Product Roadmap
 
-> **Last reconciled:** 2026-08-29
+> **Last reconciled:** 2026-08-30
 > **Authority:** Original requirements, frozen contracts/decisions, verified implementation evidence, derived UML, then prior roadmap.
-> **Current active expansion:** MVP 1.3 Delivery Operations. US-56 is accepted and complete; MVP 1.3 production story closure is 1/7 and US-57 product decisions are frozen for implementation.
+> **Current active expansion:** MVP 1.3 Delivery Operations. US-56 is accepted and complete; US-57 is implementation-complete (acceptance pending); MVP 1.3 production story closure is 1/7 with 1 story acceptance-pending.
 
 ## 1. Purpose and Authority
 
@@ -24,7 +24,7 @@ The register covers Fleet Management, Trip Management, Route Management, Freight
 - MVP 1.1A Advanced Route: `COMPLETE` — 4/4.
 - MVP 1.1B Freight & Cargo: `COMPLETE` — 7/7.
 - MVP 1.2 Fuel: `CLOSED_WITH_APPROVED_DEFERMENTS` — 5 complete, 3 deferred.
-- MVP 1.3 Delivery Operations: current active expansion — US-56 `COMPLETE`; production story closure 1/7, with US-57 through US-62 not started.
+- MVP 1.3 Delivery Operations: current active expansion — US-56 `COMPLETE`, US-57 `IMPLEMENTATION_COMPLETE / ACCEPTANCE_PENDING`; US-58 through US-62 not started.
 
 ## 3. Authoritative Story Register — US-01 through US-87
 
@@ -110,7 +110,7 @@ The register covers Fleet Management, Trip Management, Route Management, Freight
 ### Delivery Management — US-56 to US-62
 
 - [x] `US-56` — Manage Delivery Orders — `✅ COMPLETE`
-- [ ] `US-57` — Capture Proof of Delivery — `NOT_STARTED`
+- [x] `US-57` — Capture Proof of Delivery — `🟡 IMPLEMENTATION_COMPLETE / ACCEPTANCE_PENDING`
 - [ ] `US-58` — Capture Signature and Photo Offline — `NOT_STARTED`
 - [ ] `US-59` — Manage Failed Deliveries — `NOT_STARTED`
 - [ ] `US-60` — Schedule Re-Delivery — `NOT_STARTED`
@@ -163,7 +163,7 @@ The register covers Fleet Management, Trip Management, Route Management, Freight
 | MVP 1.1A | Advanced Route US-20–23 | 4 | `COMPLETE` — 4/4 |
 | MVP 1.1B | Freight & Cargo US-24–30 | 7 | `COMPLETE` — 7/7 |
 | MVP 1.2 | Fuel US-31–38 | 8 | `CLOSED_WITH_APPROVED_DEFERMENTS` — 5 complete, 3 deferred |
-| MVP 1.3 | Delivery Operations US-56–62 | 7 | `IN_PROGRESS`; production story closure `1/7`, US-56 complete and US-57 implementation-ready |
+| MVP 1.3 | Delivery Operations US-56–62 | 7 | `IN_PROGRESS`; US-56 complete, US-57 implementation-complete / acceptance-pending |
 
 Post-MVP bands contain Fuel US-35/37/38, Driver/Billing US-46/47, GPS US-48–55, Last-Mile US-63–70 and Advanced Platform/Ops US-72/73/76/78/82/84–87.
 
@@ -185,30 +185,28 @@ MVP 1.2 is `CLOSED_WITH_APPROVED_DEFERMENTS`: US-31/32/33/34/36 are `COMPLETE`; 
 
 ## 9. MVP 1.3 — Delivery Operations
 
-MVP 1.3 is the **current active expansion**. Its frozen scope is US-56 through US-62. US-56 is the first accepted production story in the band. Production story closure is **1/7**; US-57 through US-62 remain not started.
+MVP 1.3 is the **current active expansion**. Its frozen scope is US-56 through US-62. US-56 is accepted. US-57 implementation is complete and verified (acceptance pending). US-58 through US-62 remain not started.
 
 Delivery remains Tenant-owned. Cross-module references are UUID/logical references behind ports; direct cross-module persistence access is prohibited.
 
 ## 10. Current Active Delivery Work
 
-### US-56 — Manage Delivery Orders
+### US-57 — Capture Proof of Delivery
 
 | Gate | Current state |
 | :--- | :--- |
-| Delivery contract | `COMPLETE` / frozen |
-| Delivery module foundation | `COMPLETE` |
-| US-56 priority/service/assignment decisions | `COMPLETE` |
-| Delivery-number policy | `COMPLETE` |
-| Central KB implementation content | `COMPLETE` at `1b579f61481276d4bc47518163d18e9c7c1d7af1` |
-| Central KB implementation synchronization | `COMPLETE` — implementation and final-acceptance governance are verified on `origin/main` |
-| US-56 production implementation | `COMPLETE` — accepted by `MVP-1.3-US56-DELIVERY-ORDERS-FINAL-ACCEPTANCE-002` |
-| US-57 POD product decisions | `PRODUCT_DECISIONS_COMPLETE` — online evidence, privacy, lifecycle, API/RBAC and US-58 boundary frozen |
-
-The former `NEW_IMPLEMENTATION_CRITICAL_PRODUCT_AMBIGUITY` blocker is resolved. The frozen number is immutable, server-generated `DEL-YYYY-NNNNNN`, allocated atomically per Tenant and Tenant-local calendar year. US-56 adds no explicit idempotency-key framework.
+| POD product decisions | `COMPLETE` — frozen in `MVP-1.3-US57-POD-PRODUCT-DECISIONS-001.md` |
+| Flyway migration & schema | `COMPLETE` — `V47__delivery_proof_of_delivery_us57.sql` |
+| Domain Aggregate & invariants | `COMPLETE` — `ProofOfDelivery`, `PodEvidence`, `PodEvidenceType` |
+| RBAC & Security endpoints | `COMPLETE` — `DELIVERY_POD_CAPTURE`, `DELIVERY_POD_VIEW` |
+| Storage & streaming adapter | `COMPLETE` — `DeliveryEvidenceStoragePort`, `LocalDeliveryEvidenceStorageAdapter` |
+| Frontend POD interface | `COMPLETE` — `ProofOfDeliverySection.tsx`, API hooks |
+| Production verification | `COMPLETE` — Checkstyle (0), PMD (0), SpotBugs (0), ESLint (0), TS build (0 errors), 987 tests run (0 failures, 0 errors) |
+| Task closure document | `COMPLETE` — `docs/mvp/MVP-1.3-US57-PROOF-OF-DELIVERY-001.md` |
 
 - **Blocker:** `NONE`.
-- **Final acceptance:** `COMPLETE` — focused backend 51/51, full backend 972 tests with 0 failures/errors and 15 skipped, frontend 234/234, Chromium Delivery E2E 2/2 PASS, and PostgreSQL 16 Flyway V1–V46 PASS.
-- **Next task:** `MVP-1.3-US57-PROOF-OF-DELIVERY-001`.
+- **Status:** `IMPLEMENTATION_COMPLETE / ACCEPTANCE_PENDING`.
+- **Next task:** Final acceptance ceremony for US-57, followed by `US-58` product decisions.
 
 ## 11. Deferred / Post-MVP Product Scope
 
@@ -241,8 +239,9 @@ The remaining 34 includes MVP 1.3. Fuel deferments remain within Fuel's 8 and ar
 
 | Current status | Count | Composition |
 | :--- | ---: | :--- |
-| `COMPLETE` | 51 | MVP 1.0 (34), Advanced Route (4), Freight (7), Fuel complete subset (5), Delivery (1) |
-| `NOT_STARTED` | 6 | US-57–62 |
+| `COMPLETE` | 51 | MVP 1.0 (34), Advanced Route (4), Freight (7), Fuel complete subset (5), Delivery US-56 (1) |
+| `IMPLEMENTATION_COMPLETE / ACCEPTANCE_PENDING` | 1 | US-57 Capture Proof of Delivery |
+| `NOT_STARTED` | 5 | US-58–62 |
 | `DEFERRED` | 30 | Fuel 3; US-46–55 10; US-63–70 8; Advanced Platform/Ops 9 |
 | **Total** | **87** | No duplicates or omissions |
 
@@ -254,8 +253,8 @@ Potential future expansion includes Full Maintenance Management, Work Orders, Jo
 
 ## 15. Immediate Execution Queue
 
-1. Run `MVP-1.3-US57-PROOF-OF-DELIVERY-001` against the frozen online POD evidence, privacy, lifecycle, API/RBAC and US-57/US-58 boundary decisions.
-2. Preserve US-58 offline capture, quality/retake and consent as separate unimplemented scope.
+1. Finalize acceptance for `MVP-1.3-US57-PROOF-OF-DELIVERY-001`.
+2. Proceed to `US-58` Capture Signature and Photo Offline product decisions and implementation.
 
 ## 16. Change / Reconciliation Notes
 

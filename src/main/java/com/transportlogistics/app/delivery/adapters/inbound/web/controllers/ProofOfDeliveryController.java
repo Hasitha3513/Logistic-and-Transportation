@@ -38,6 +38,11 @@ public class ProofOfDeliveryController {
         var result = proofs.finalizeProof(deliveryId, new ProofOfDeliveryUseCase.FinalizeCommand(request.deliveryVersion(), request.podVersion()), actor(principal));
         return new ProofFinalizationResponse(mapper.toResponse(result.proof()), orders.toResponse(result.delivery()));
     }
+    @DeleteMapping("/evidence/{evidenceId}")
+    public ProofOfDeliveryResponse remove(@PathVariable UUID deliveryId, @PathVariable UUID evidenceId,
+                                          @RequestParam long podVersion, Principal principal) {
+        return mapper.toResponse(proofs.removeEvidence(deliveryId, evidenceId, podVersion, actor(principal)));
+    }
     @GetMapping("/evidence/{evidenceId}/content")
     public ResponseEntity<byte[]> content(@PathVariable UUID deliveryId, @PathVariable UUID evidenceId) {
         var content = proofs.content(deliveryId, evidenceId);

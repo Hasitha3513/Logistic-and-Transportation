@@ -94,29 +94,54 @@ class TripFuelCostApiIntegrationTest {
     }
 
     private void setupTestData() {
-        var catId = UUID.randomUUID();
-        var typeId = UUID.randomUUID();
         vehicleId = UUID.randomUUID();
-        var locOriginId = UUID.randomUUID();
-        var locDestId = UUID.randomUUID();
         tripId = UUID.randomUUID();
         vendorId = UUID.randomUUID();
         stationId = UUID.randomUUID();
         var now = OffsetDateTime.now();
 
-        jdbc.update("INSERT INTO vehicle_category (id, code, name, active) VALUES (?, 'CAT-C1', 'Cat 1', true) ON CONFLICT DO NOTHING", catId);
-        jdbc.update("INSERT INTO vehicle_type (id, category_id, code, name, active) VALUES (?, ?, 'TYP-T1', 'Type 1', true) ON CONFLICT DO NOTHING", typeId, catId);
+        var catList = jdbc.queryForList("SELECT id FROM vehicle_category WHERE code = 'CAT-C1'", UUID.class);
+        UUID catId;
+        if (catList.isEmpty()) {
+            catId = UUID.randomUUID();
+            jdbc.update("INSERT INTO vehicle_category (id, code, name, active) VALUES (?, 'CAT-C1', 'Cat 1', true)", catId);
+        } else {
+            catId = catList.getFirst();
+        }
+
+        var typeList = jdbc.queryForList("SELECT id FROM vehicle_type WHERE code = 'TYP-T1'", UUID.class);
+        UUID typeId;
+        if (typeList.isEmpty()) {
+            typeId = UUID.randomUUID();
+            jdbc.update("INSERT INTO vehicle_type (id, category_id, code, name, active) VALUES (?, ?, 'TYP-T1', 'Type 1', true)", typeId, catId);
+        } else {
+            typeId = typeList.getFirst();
+        }
+
+        jdbc.update("DELETE FROM vehicle WHERE registration_number = 'REG-COST-1'");
         jdbc.update("INSERT INTO vehicle (id, registration_number, category_id, type_id, ownership_type, operational_status, active) VALUES (?, 'REG-COST-1', ?, ?, 'OWNED', 'AVAILABLE', true)",
                 vehicleId, catId, typeId);
 
-        jdbc.update("INSERT INTO location (id, code, name, active) VALUES (?, 'LOC-O', 'Origin', true) ON CONFLICT DO NOTHING", locOriginId);
-        jdbc.update("INSERT INTO location (id, code, name, active) VALUES (?, 'LOC-D', 'Dest', true) ON CONFLICT DO NOTHING", locDestId);
+        var locOList = jdbc.queryForList("SELECT id FROM location WHERE code = 'LOC-O'", UUID.class);
+        UUID locOriginId = locOList.isEmpty() ? UUID.randomUUID() : locOList.getFirst();
+        if (locOList.isEmpty()) {
+            jdbc.update("INSERT INTO location (id, code, name, active) VALUES (?, 'LOC-O', 'Origin', true)", locOriginId);
+        }
 
+        var locDList = jdbc.queryForList("SELECT id FROM location WHERE code = 'LOC-D'", UUID.class);
+        UUID locDestId = locDList.isEmpty() ? UUID.randomUUID() : locDList.getFirst();
+        if (locDList.isEmpty()) {
+            jdbc.update("INSERT INTO location (id, code, name, active) VALUES (?, 'LOC-D', 'Dest', true)", locDestId);
+        }
+
+        jdbc.update("DELETE FROM trip WHERE trip_number = 'TRIP-COST-01'");
         jdbc.update("""
                 INSERT INTO trip (id, trip_number, priority, status, origin_location_id, destination_location_id, vehicle_id, requested_start_time, requested_end_time, created_at, updated_at)
                 VALUES (?, 'TRIP-COST-01', 'MEDIUM', 'COMPLETED', ?, ?, ?, ?, ?, ?, ?)
                 """, tripId, locOriginId, locDestId, vehicleId, now.minusHours(4), now, now, now);
 
+        jdbc.update("DELETE FROM fuel_station WHERE code = 'ST-01'");
+        jdbc.update("DELETE FROM vendor WHERE code = 'VEND-01'");
         jdbc.update("INSERT INTO vendor (id, code, name, active) VALUES (?, 'VEND-01', 'Shell', true)", vendorId);
         jdbc.update("INSERT INTO fuel_station (id, code, name, station_type, active, vendor_id, location_id) VALUES (?, 'ST-01', 'Shell Main', 'EXTERNAL', true, ?, ?)",
                 stationId, vendorId, locOriginId);

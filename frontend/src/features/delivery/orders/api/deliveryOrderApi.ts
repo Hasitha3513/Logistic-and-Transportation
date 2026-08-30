@@ -15,6 +15,7 @@ export const deliveryOrderApi = {
     return (await api.post<ProofOfDelivery>(`/v1/deliveries/${id}/proof/evidence`, body)).data;
   },
   finalizeProof: async (id: string, deliveryVersion: number, podVersion: number) => (await api.post<{ proof: ProofOfDelivery; delivery: DeliveryOrder }>(`/v1/deliveries/${id}/proof/finalize`, { deliveryVersion, podVersion })).data,
+  deleteEvidence: async (id: string, evidenceId: string, podVersion: number) => (await api.delete<ProofOfDelivery>(`/v1/deliveries/${id}/proof/evidence/${evidenceId}`, { params: { podVersion } })).data,
   customers: async () => (await api.get<OrganizationReference[]>('/customers')).data.filter((item) => item.active),
   locations: async () => (await api.get<OrganizationReference[]>('/locations')).data.filter((item) => item.active),
 };

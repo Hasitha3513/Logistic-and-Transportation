@@ -233,6 +233,8 @@ class SecurityConfig {
                         .hasAuthority("DELIVERY_POD_VIEW")
                         .requestMatchers(HttpMethod.POST, "/v1/deliveries/*/proof", "/v1/deliveries/*/proof/evidence", "/v1/deliveries/*/proof/finalize")
                         .hasAuthority("DELIVERY_POD_CAPTURE")
+                        .requestMatchers(HttpMethod.DELETE, "/v1/deliveries/*/proof/evidence/*")
+                        .hasAuthority("DELIVERY_POD_CAPTURE")
 
                         .requestMatchers(HttpMethod.GET, "/bunker-tanks/*/movements").hasAuthority("BUNKER_LEDGER_VIEW")
                         .requestMatchers(HttpMethod.GET, "/bunker-tanks", "/bunker-tanks/*", "/bunker-tanks/*/balance", "/bunker-tanks/*/dip-readings")
