@@ -24,31 +24,86 @@ async function createReadyDelivery(page: Page) {
 }
 
 test.describe('US-57 online Proof of Delivery', () => {
-  test.beforeEach(async ({ page, request }) => { const admin = await adminLogin(request); await authenticatePage(page, admin); });
+  test.beforeEach(async ({ page, request }) => {
+    page.on('response', async (response) => {
+      if (response.url().includes('/proof') && response.status() >= 400) {
+        console.error('POD API ERROR:', response.status(), await response.text());
+      }
+    });
+    const admin = await adminLogin(request);
+    await authenticatePage(page, admin);
+  });
 
   test('E2E-MVP13-POD-001: barcode proof finalizes and completes Delivery', async ({ page }) => {
     const number = await createReadyDelivery(page);
+    const draftRes = page.waitForResponse(res => res.url().includes('/proof') && res.request().method() === 'POST' && res.status() === 201);
     await page.getByRole('button', { name: 'Start POD' }).click();
+    await draftRes;
+
+    const evidenceRes = page.waitForResponse(res => res.url().includes('/evidence') && res.request().method() === 'POST' && res.status() === 201);
     await page.getByLabel('Delivery barcode').fill(number);
-    await page.getByRole('button', { name: /Add barcode/ }).click();
+    await page.getByLabel('Delivery barcode').press('Enter');
+    await evidenceRes;
+
     await expect(page.getByText('BARCODE', { exact: true })).toBeVisible();
+    const finalizeRes = page.waitForResponse(res => res.url().includes('/finalize') && res.status() === 200);
     await page.getByRole('button', { name: 'Finalize POD' }).click();
-    await expect(page.getByText('FINALIZED')).toBeVisible();
+    await finalizeRes;
+
+    await expect(page.getByText('FINALIZED', { exact: true })).toBeVisible();
     await expect(page.getByText('DELIVERED', { exact: true }).first()).toBeVisible();
     await expect(page.getByText('Not finalized')).not.toBeVisible();
   });
 
   test('E2E-MVP13-POD-002: no primary evidence is rejected', async ({ page }) => {
-    await createReadyDelivery(page); await page.getByRole('button', { name: 'Start POD' }).click();
+    await createReadyDelivery(page);
+    const draftRes = page.waitForResponse(res => res.url().includes('/proof') && res.request().method() === 'POST' && res.status() === 201);
+    await page.getByRole('button', { name: 'Start POD' }).click();
+    await draftRes;
+
     await page.getByRole('button', { name: 'Finalize POD' }).click();
-    await expect(page.getByText(/At least one signature, photo or barcode is required/i)).toBeVisible();
+    await expect(page.getByText(/At least one signature, photo, or matching barcode is required|At least one signature, photo or barcode is required/i)).toBeVisible();
     await expect(page.getByText('READY FOR ASSIGNMENT').first()).toBeVisible();
   });
 
   test('E2E-MVP13-POD-003: mismatched barcode is rejected', async ({ page }) => {
-    await createReadyDelivery(page); await page.getByRole('button', { name: 'Start POD' }).click();
-    await page.getByLabel('Delivery barcode').fill('DEL-2027-999999'); await page.getByRole('button', { name: /Add barcode/ }).click();
+    await createReadyDelivery(page);
+    const draftRes = page.waitForResponse(res => res.url().includes('/proof') && res.request().method() === 'POST' && res.status() === 201);
+    await page.getByRole('button', { name: 'Start POD' }).click();
+    await draftRes;
+
+    const evidenceErr = page.waitForResponse(res => res.url().includes('/evidence') && res.status() >= 400);
+    await page.getByLabel('Delivery barcode').fill('DEL-2027-999999');
+    await page.getByLabel('Delivery barcode').press('Enter');
+    await evidenceErr;
+
     await expect(page.getByText(/Barcode does not match the Delivery Order number/i)).toBeVisible();
     await expect(page.getByText('No signature, photo or barcode evidence yet')).toBeVisible();
+  });
+
+  test('E2E-MVP13-POD-004: finalized POD is immutable (read-only and no mutation controls)', async ({ page }) => {
+    const number = await createReadyDelivery(page);
+    const draftRes = page.waitForResponse(res => res.url().includes('/proof') && res.request().method() === 'POST' && res.status() === 201);
+    await page.getByRole('button', { name: 'Start POD' }).click();
+    await draftRes;
+
+    const evidenceRes = page.waitForResponse(res => res.url().includes('/evidence') && res.status() === 201);
+    await page.getByLabel('Delivery barcode').fill(number);
+    await page.getByLabel('Delivery barcode').press('Enter');
+    await evidenceRes;
+
+    await expect(page.getByText('BARCODE', { exact: true })).toBeVisible();
+    const finalizeRes = page.waitForResponse(res => res.url().includes('/finalize') && res.status() === 200);
+    await page.getByRole('button', { name: 'Finalize POD' }).click();
+    await finalizeRes;
+
+    await expect(page.getByText('FINALIZED', { exact: true })).toBeVisible();
+
+    // Verify mutating controls are no longer rendered
+    await expect(page.getByRole('button', { name: 'Finalize POD' })).not.toBeVisible();
+    await expect(page.getByRole('button', { name: 'Start POD' })).not.toBeVisible();
+    await expect(page.getByRole('button', { name: 'Add barcode' })).not.toBeVisible();
+    await expect(page.getByRole('button', { name: 'Save signature' })).not.toBeVisible();
+    await expect(page.getByRole('button', { name: 'Delete' })).not.toBeVisible();
   });
 });

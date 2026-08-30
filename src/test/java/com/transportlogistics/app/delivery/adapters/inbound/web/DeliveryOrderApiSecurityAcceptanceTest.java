@@ -112,6 +112,7 @@ class DeliveryOrderApiSecurityAcceptanceTest {
     }
 
     @MockBean private com.transportlogistics.app.delivery.ports.inbound.ProofOfDeliveryUseCase proofs;
+    @MockBean private com.transportlogistics.app.delivery.OfflineProofOfDeliveryRecorder podRecorder;
 
     @Test
     void unauthenticatedPodRequestsAreRejected() throws Exception {

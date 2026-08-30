@@ -21,6 +21,11 @@ class TenantFoundationDatabaseIntegrationTest {
     @Autowired JdbcTemplate jdbc;
     private UUID testUser;
 
+    @org.junit.jupiter.api.BeforeEach
+    void setUp() {
+        jdbc.update("DELETE FROM tenant WHERE tenant_id != ?", CanonicalTenant.ID);
+    }
+
     @org.junit.jupiter.api.AfterEach
     void tearDown() {
         if (testUser != null) {

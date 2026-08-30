@@ -87,8 +87,9 @@
 | Story | Feature Title | Requirement Summary | Backend | DB | API | Frontend | RBAC | Unit/Int Tests | E2E Tests | Status | Gap / Evidence | Next Action |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
 | **US-56** | Manage Delivery Orders | Tenant-scoped create/search/read/update and readiness validation | YES | YES | YES | YES | YES | YES | YES | **COMPLETE** | `DeliveryOrder`, `V46__delivery_order_us56.sql`, `/v1/deliveries`, Delivery React workflow, four Delivery permissions, 51 focused backend tests, 972-test full verification and `deliveryOrders.spec.ts` 2/2 Chromium PASS | None |
-| **US-57** | Capture Proof of Delivery | Online POD with configured signature/photo/barcode evidence, server timestamp and optional geo-tag | NO | NO | NO | NO | NO | NO | NO | **NOT STARTED / PRODUCT DECISIONS COMPLETE** | `MVP-1.3-US57-POD-PRODUCT-DECISIONS-001.md`; no production implementation | Start `MVP-1.3-US57-PROOF-OF-DELIVERY-001` |
-| **US-58 through US-62** | Remaining Delivery Operations | Offline POD and later Delivery workflows | NO | NO | NO | NO | NO | NO | NO | **NOT STARTED** | No production implementation | Begin only after US-57 implementation/acceptance |
+| **US-57** | Capture Proof of Delivery | Online POD with signature/photo/barcode evidence, server timestamp, optional geo-tag and immutable completion | YES | YES | YES | YES | YES | YES | YES | **COMPLETE** | `ProofOfDelivery`, `V47__delivery_proof_of_delivery_us57.sql`, `/v1/deliveries/{id}/proof`, `ProofOfDeliverySection.tsx`, `DELIVERY_POD_CAPTURE`/`DELIVERY_POD_VIEW`, Checkstyle 0, PMD 0, SpotBugs 0, Vitest 237/237 PASS, full backend 987 tests PASS, `proofOfDelivery.spec.ts` 4/4 and total Delivery 6/6 Chromium PASS | None |
+| **US-58** | Capture Signature and Photo Offline | Offline signature/photo capture, quality controls, retake, consent, and IndexedDB outbox sync | NO | NO | NO | NO | NO | NO | NO | **NOT STARTED / PRODUCT DECISIONS COMPLETE** | `MVP-1.3-US58-OFFLINE-POD-PRODUCT-DECISIONS-001.md`; no production implementation | Start `MVP-1.3-US58-OFFLINE-POD-IMPLEMENTATION-001` |
+| **US-59 through US-62** | Remaining Delivery Operations | Failed deliveries, re-delivery, analytics, and exceptions | NO | NO | NO | NO | NO | NO | NO | **NOT STARTED** | No production implementation | Begin only after US-58 implementation/acceptance |
 
 ---
 

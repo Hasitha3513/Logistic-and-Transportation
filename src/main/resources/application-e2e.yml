@@ -4,4 +4,5 @@ app:
       enabled: true
       mode: test
       provider: test
+      from: e2e@example.test
       worker-delay: PT24H

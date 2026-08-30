@@ -3,11 +3,12 @@ export const OFFLINE_OPERATION_TYPES = [
   'TRIP_CHECKPOINT_RECORD',
   'TRIP_DELAY_RECORD',
   'TRIP_INCIDENT_RECORD',
+  'DELIVERY_POD_OFFLINE_SYNC',
 ] as const;
 
 export type OfflineOperationType = (typeof OFFLINE_OPERATION_TYPES)[number];
 
-export const OFFLINE_AGGREGATE_TYPES = ['VEHICLE', 'TRIP'] as const;
+export const OFFLINE_AGGREGATE_TYPES = ['VEHICLE', 'TRIP', 'DELIVERY'] as const;
 
 export type OfflineAggregateType = (typeof OFFLINE_AGGREGATE_TYPES)[number];
 
@@ -66,18 +67,48 @@ export interface TripIncidentPayload {
   remarks?: string;
 }
 
+export interface DeliveryPodOfflineEvidenceItem {
+  evidenceType: 'SIGNATURE' | 'PHOTO' | 'BARCODE';
+  binaryContent?: string;
+  barcodeValue?: string;
+  captureSource?: 'CAMERA' | 'FILE' | 'SCANNER' | 'MANUAL';
+  originalFilename?: string;
+  clientChecksum?: string;
+}
+
+export interface DeliveryPodOfflineSyncPayload {
+  deliveryId: string;
+  deliveryVersion: number;
+  signerName?: string;
+  signerRelationship?: string;
+  consentGiven: boolean;
+  consentVersion?: string;
+  consentTimestamp?: string;
+  deviceCapturedAt?: string;
+  latitude?: number;
+  longitude?: number;
+  accuracyMeters?: number;
+  finalizeIntent?: boolean;
+  evidenceList: DeliveryPodOfflineEvidenceItem[];
+}
+
 export interface OfflineOperationPayloadMap {
   VEHICLE_READING_RECORD: VehicleReadingPayload;
   TRIP_CHECKPOINT_RECORD: TripCheckpointPayload;
   TRIP_DELAY_RECORD: TripDelayPayload;
   TRIP_INCIDENT_RECORD: TripIncidentPayload;
+  DELIVERY_POD_OFFLINE_SYNC: DeliveryPodOfflineSyncPayload;
 }
 
 export type OfflineOperationInput = {
   [Type in OfflineOperationType]: {
     ownerUserId: string;
     operationType: Type;
-    aggregateType: Type extends 'VEHICLE_READING_RECORD' ? 'VEHICLE' : 'TRIP';
+    aggregateType: Type extends 'VEHICLE_READING_RECORD'
+      ? 'VEHICLE'
+      : Type extends 'DELIVERY_POD_OFFLINE_SYNC'
+        ? 'DELIVERY'
+        : 'TRIP';
     aggregateId: string;
     payload: OfflineOperationPayloadMap[Type];
   };
@@ -128,7 +159,11 @@ interface OfflineOperationBase<Type extends OfflineOperationType> {
   operationId: string;
   operationVersion: 1;
   operationType: Type;
-  aggregateType: Type extends 'VEHICLE_READING_RECORD' ? 'VEHICLE' : 'TRIP';
+  aggregateType: Type extends 'VEHICLE_READING_RECORD'
+    ? 'VEHICLE'
+    : Type extends 'DELIVERY_POD_OFFLINE_SYNC'
+      ? 'DELIVERY'
+      : 'TRIP';
   aggregateId: string;
   payload: OfflineOperationPayloadMap[Type];
   clientCreatedAt: string;

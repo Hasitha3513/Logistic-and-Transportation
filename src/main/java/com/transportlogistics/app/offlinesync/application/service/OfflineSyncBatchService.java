@@ -125,8 +125,14 @@ public class OfflineSyncBatchService implements OfflineSyncUseCase {
             return OfflineHandlerOutcome.rejected("OFFLINE_SYNC_PAYLOAD_INVALID",
                     "Idempotency key must equal the canonical operation ID");
         }
-        boolean aggregateMatches = operation.operationType().equals("VEHICLE_READING_RECORD")
-                ? operation.aggregateType().equals("VEHICLE") : operation.aggregateType().equals("TRIP");
+        boolean aggregateMatches;
+        if ("DELIVERY_POD_OFFLINE_SYNC".equals(operation.operationType())) {
+            aggregateMatches = "DELIVERY".equals(operation.aggregateType());
+        } else if ("VEHICLE_READING_RECORD".equals(operation.operationType())) {
+            aggregateMatches = "VEHICLE".equals(operation.aggregateType());
+        } else {
+            aggregateMatches = "TRIP".equals(operation.aggregateType());
+        }
         if (OfflineOperationType.supports(operation.operationType()) && !aggregateMatches) {
             return OfflineHandlerOutcome.rejected("OFFLINE_SYNC_PAYLOAD_INVALID",
                     "Operation and aggregate types do not match");

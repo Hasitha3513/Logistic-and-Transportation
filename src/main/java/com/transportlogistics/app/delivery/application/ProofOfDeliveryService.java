@@ -12,7 +12,7 @@ import java.time.OffsetDateTime;
 import java.util.Locale;
 import java.util.UUID;
 
-public final class ProofOfDeliveryService implements ProofOfDeliveryUseCase {
+public final class ProofOfDeliveryService implements ProofOfDeliveryUseCase, com.transportlogistics.app.delivery.OfflineProofOfDeliveryRecorder {
     private static final long SIGNATURE_LIMIT = 2L * 1024 * 1024;
     private static final long PHOTO_LIMIT = 10L * 1024 * 1024;
     private final DeliveryOrderRepository orders; private final ProofOfDeliveryRepository proofs;
@@ -88,6 +88,99 @@ public final class ProofOfDeliveryService implements ProofOfDeliveryUseCase {
         var found = storage.read(tenantId, item.storageReference());
         return new EvidenceContent(found.content(), found.detectedContentType(), found.contentLength(), item.originalFilename());
     }
+
+    @Override
+    public com.transportlogistics.app.delivery.OfflineProofOfDeliveryRecorder.Result recordOfflinePod(
+            com.transportlogistics.app.delivery.OfflineProofOfDeliveryRecorder.Command command) {
+        return transactions.execute(() -> {
+            UUID tenantId = requiredTenant();
+            DeliveryOrder delivery = delivery(command.deliveryId());
+            requireVersion(command.deliveryVersion(), delivery.version(), "DELIVERY_VERSION_CONFLICT");
+            if (delivery.status() == DeliveryStatus.DELIVERED) {
+                conflict("DELIVERY_ALREADY_DELIVERED", "Delivery has already been marked DELIVERED");
+            }
+            if (delivery.status() != DeliveryStatus.READY_FOR_ASSIGNMENT) {
+                conflict("POD_DELIVERY_STATE_INELIGIBLE", "Delivery is not eligible for proof capture");
+            }
+            var existingPod = proofs.findByDeliveryOrderId(command.deliveryId());
+            if (existingPod.isPresent() && existingPod.get().status() == PodStatus.FINALIZED) {
+                conflict("POD_ALREADY_FINALIZED", "Proof of delivery has already been finalized");
+            }
+
+            var evidenceItems = command.evidenceList();
+            if (evidenceItems == null || evidenceItems.isEmpty()) {
+                invalid("POD_PRIMARY_EVIDENCE_REQUIRED", "At least one primary evidence is required");
+            }
+
+            boolean hasSignature = evidenceItems.stream().anyMatch(e -> "SIGNATURE".equalsIgnoreCase(e.evidenceType()));
+            boolean hasPhoto = evidenceItems.stream().anyMatch(e -> "PHOTO".equalsIgnoreCase(e.evidenceType()));
+
+            if ((hasSignature || hasPhoto) && (!command.consentGiven() || command.consentVersion() == null || command.consentVersion().isBlank())) {
+                invalid("POD_CONSENT_REQUIRED", "Customer consent is required for signature or photo capture");
+            }
+
+            long signatureCount = evidenceItems.stream().filter(e -> "SIGNATURE".equalsIgnoreCase(e.evidenceType())).count();
+            if (signatureCount > 1) {
+                invalid("POD_EVIDENCE_INVALID", "Maximum 1 signature allowed per POD");
+            }
+            long photoCount = evidenceItems.stream().filter(e -> "PHOTO".equalsIgnoreCase(e.evidenceType())).count();
+            if (photoCount > 3) {
+                invalid("POD_EVIDENCE_INVALID", "Maximum 3 photos allowed per POD");
+            }
+            long barcodeCount = evidenceItems.stream().filter(e -> "BARCODE".equalsIgnoreCase(e.evidenceType())).count();
+            if (barcodeCount > 1) {
+                invalid("POD_EVIDENCE_INVALID", "Maximum 1 barcode allowed per POD");
+            }
+
+            if (hasSignature && (command.signerName() == null || command.signerName().trim().isEmpty())) {
+                invalid("POD_SIGNER_NAME_REQUIRED", "Signer name is required when signature evidence is present");
+            }
+
+            OffsetDateTime timestamp = now();
+            ProofOfDelivery draft = existingPod.orElseGet(() -> ProofOfDelivery.draft(
+                    UUID.randomUUID(), command.deliveryId(), command.deviceCapturedAt(),
+                    command.latitude(), command.longitude(), command.accuracyMeters(),
+                    command.signerName(), command.signerRelationship(), timestamp, command.actorUsername()));
+
+            ProofOfDelivery withEvidence = draft;
+            for (var item : evidenceItems) {
+                UUID evidenceId = UUID.randomUUID();
+                if ("BARCODE".equalsIgnoreCase(item.evidenceType())) {
+                    String value = normalizeBarcode(item.barcodeValue());
+                    if (!value.equals(delivery.deliveryNumber().value())) {
+                        invalid("POD_BARCODE_MISMATCH", "Barcode does not match the Delivery Order number");
+                    }
+                    withEvidence = withEvidence.add(new PodEvidence(evidenceId, PodEvidenceType.BARCODE, null, value, null, 0,
+                            null, null, source(item.captureSource(), "SCANNER"), command.actorUsername(), timestamp), timestamp, command.actorUsername());
+                } else if ("SIGNATURE".equalsIgnoreCase(item.evidenceType()) || "PHOTO".equalsIgnoreCase(item.evidenceType())) {
+                    PodEvidenceType pType = "SIGNATURE".equalsIgnoreCase(item.evidenceType()) ? PodEvidenceType.SIGNATURE : PodEvidenceType.PHOTO;
+                    byte[] content = item.binaryContent() == null ? new byte[0] : item.binaryContent();
+                    long limit = pType == PodEvidenceType.SIGNATURE ? SIGNATURE_LIMIT : PHOTO_LIMIT;
+                    if (content.length == 0 || content.length > limit) {
+                        invalid("POD_FILE_TOO_LARGE", "Evidence file is empty or exceeds its size limit");
+                    }
+                    var stored = storage.store(tenantId, evidenceId, content, item.originalFilename());
+                    if (!stored.detectedContentType().equals("image/png") && !stored.detectedContentType().equals("image/jpeg")) {
+                        storage.delete(tenantId, stored.storageReference());
+                        invalid("POD_MEDIA_TYPE_UNSUPPORTED", "Only decoded PNG and JPEG evidence is accepted");
+                    }
+                    withEvidence = withEvidence.add(new PodEvidence(evidenceId, pType, stored.storageReference(), null,
+                            stored.detectedContentType(), stored.contentLength(), stored.checksum(), item.originalFilename(),
+                            source(item.captureSource(), "FILE"), command.actorUsername(), timestamp), timestamp, command.actorUsername());
+                } else {
+                    invalid("POD_EVIDENCE_TYPE_UNSUPPORTED", "Unsupported evidence type: " + item.evidenceType());
+                }
+            }
+
+            OffsetDateTime accepted = now();
+            ProofOfDelivery finalized = proofs.save(withEvidence.finalizeAt(delivery.deliveryNumber().value(), accepted, command.actorUsername()));
+            DeliveryOrder completed = orders.save(delivery.markDelivered(accepted, command.actorUsername()));
+
+            return new com.transportlogistics.app.delivery.OfflineProofOfDeliveryRecorder.Result(
+                    finalized.id(), completed.id().value(), finalized.status().name(), accepted, command.actorUsername());
+        });
+    }
+
     private UUID requiredTenant() { return tenants.currentTenant().orElseThrow(() -> invalidEx("TENANT_CONTEXT_REQUIRED", "An active Tenant context is required")).tenantId(); }
     private DeliveryOrder delivery(UUID id) { return orders.findById(id).orElseThrow(() -> missing("DELIVERY_NOT_FOUND", "Delivery Order was not found")); }
     private ProofOfDelivery proof(UUID id) { return proofs.findByDeliveryOrderId(id).orElseThrow(() -> missing("POD_NOT_FOUND", "Proof of Delivery was not found")); }

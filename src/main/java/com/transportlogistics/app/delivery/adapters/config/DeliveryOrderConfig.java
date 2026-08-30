@@ -19,7 +19,7 @@ class DeliveryOrderConfig {
         return new DeliveryOrderService(orders, numbers, customers, locations, tenantContext, transactions, clock);
     }
     @Bean
-    com.transportlogistics.app.delivery.ports.inbound.ProofOfDeliveryUseCase proofOfDeliveryUseCase(
+    ProofOfDeliveryService proofOfDeliveryUseCase(
             DeliveryOrderRepository orders, ProofOfDeliveryRepository proofs, DeliveryEvidenceStoragePort storage,
             DeliveryTenantContextPort tenantContext, DeliveryOrderTransaction transactions, Clock clock) {
         return new ProofOfDeliveryService(orders, proofs, storage, tenantContext, transactions, clock);

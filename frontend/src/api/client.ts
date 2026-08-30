@@ -17,6 +17,9 @@ let refreshInFlight: Promise<string> | undefined;
 api.interceptors.request.use((config) => {
   const accessToken = localStorage.getItem(ACCESS_TOKEN_KEY);
   if (accessToken) config.headers.Authorization = `Bearer ${accessToken}`;
+  if (config.data instanceof FormData) {
+    delete config.headers['Content-Type'];
+  }
   return config;
 });
 

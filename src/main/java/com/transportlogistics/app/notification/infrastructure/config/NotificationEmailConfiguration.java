@@ -19,8 +19,9 @@ public class NotificationEmailConfiguration {
     @Bean
     EmailNotificationSenderPort emailNotificationSender(NotificationEmailProperties email, Environment environment) {
         boolean productionProfile = Arrays.stream(environment.getActiveProfiles())
-            .anyMatch(profile -> profile.equalsIgnoreCase("postgres") || profile.equalsIgnoreCase("prod")
-                || profile.equalsIgnoreCase("production"));
+            .anyMatch(profile -> profile.equalsIgnoreCase("prod") || profile.equalsIgnoreCase("production"))
+            || (Arrays.stream(environment.getActiveProfiles()).anyMatch(profile -> profile.equalsIgnoreCase("postgres"))
+                && Arrays.stream(environment.getActiveProfiles()).noneMatch(profile -> profile.equalsIgnoreCase("e2e") || profile.equalsIgnoreCase("test") || profile.equalsIgnoreCase("dev")));
         email.validate(productionProfile);
         if (!email.isEnabled()) return new EmailNotificationDeliveryAdapter();
         if (email.testMode()) return new DeterministicTestEmailNotificationSenderAdapter();

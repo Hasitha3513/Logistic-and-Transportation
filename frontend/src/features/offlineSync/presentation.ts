@@ -40,6 +40,7 @@ export function offlineOperationLabel(operation: OfflineOperation): string {
     TRIP_CHECKPOINT_RECORD: 'Trip checkpoint',
     TRIP_DELAY_RECORD: 'Trip delay',
     TRIP_INCIDENT_RECORD: 'Trip incident',
+    DELIVERY_POD_OFFLINE_SYNC: 'Proof of delivery',
   };
   return labels[operation.operationType];
 }
@@ -53,6 +54,10 @@ export function offlineOperationSummary(operation: OfflineOperation): string {
   }
   if (operation.operationType === 'TRIP_DELAY_RECORD') {
     return `${operation.payload.delayMinutes} min · ${operation.payload.reason}`;
+  }
+  if (operation.operationType === 'DELIVERY_POD_OFFLINE_SYNC') {
+    const evidenceTypes = operation.payload.evidenceList.map((e) => e.evidenceType).join(', ');
+    return `${operation.payload.signerName ?? 'Recipient'} · ${evidenceTypes || 'Evidence'}`;
   }
   return `${operation.payload.incidentSeverity} · ${operation.payload.description}`;
 }

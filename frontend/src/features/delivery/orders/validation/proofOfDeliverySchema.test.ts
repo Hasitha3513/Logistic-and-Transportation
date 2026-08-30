@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { proofDraftSchema, validateEvidenceFile } from './proofOfDeliverySchema';
+import { proofDraftSchema, validateEvidenceFile, validatePodConsent } from './proofOfDeliverySchema';
 
 describe('proofOfDeliverySchema', () => {
   it('accepts absent geolocation and valid paired coordinates', () => {
@@ -14,5 +14,10 @@ describe('proofOfDeliverySchema', () => {
     expect(validateEvidenceFile('SIGNATURE', new File([new Uint8Array(8)], 'proof.png', { type: 'image/png' }))).toBeNull();
     expect(validateEvidenceFile('PHOTO', new File([new Uint8Array(8)], 'proof.pdf', { type: 'application/pdf' }))).toMatch(/PNG or JPEG/);
     expect(validateEvidenceFile('SIGNATURE', new File([new Uint8Array(2 * 1024 * 1024 + 1)], 'large.jpg', { type: 'image/jpeg' }))).toMatch(/file-size/);
+  });
+  it('enforces customer consent for signature and photo evidence', () => {
+    expect(validatePodConsent(true, true)).toBeNull();
+    expect(validatePodConsent(false, false)).toBeNull();
+    expect(validatePodConsent(false, true)).toMatch(/Customer consent is required/);
   });
 });

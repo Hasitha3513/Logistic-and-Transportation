@@ -37,6 +37,49 @@ class ProofOfDeliveryServiceTest {
         assertThat(orders.value.status()).isEqualTo(DeliveryStatus.READY_FOR_ASSIGNMENT);
         assertThat(proofs.value.status()).isEqualTo(PodStatus.DRAFT);
     }
+    @Test void offlinePodRecordingWithValidEvidenceAndConsentCompletesDelivery() {
+        var orders = new Orders(ready()); var proofs = new Proofs(); var storage = new Storage(); var service = service(orders, proofs, storage);
+        var command = new com.transportlogistics.app.delivery.OfflineProofOfDeliveryRecorder.Command(
+                orders.value.id().value(), orders.value.version(), "Bob Recipient", "Manager",
+                true, "POD-CONSENT-V1", now, now, new java.math.BigDecimal("6.9271"), new java.math.BigDecimal("79.8612"),
+                new java.math.BigDecimal("10.0"),
+                List.of(new com.transportlogistics.app.delivery.OfflineProofOfDeliveryRecorder.OfflineEvidenceItem(
+                        "BARCODE", null, "DEL-2026-000001", "SCANNER", null, null)),
+                "offline.rider");
+        var result = service.recordOfflinePod(command);
+        assertThat(result.status()).isEqualTo("FINALIZED");
+        assertThat(result.acceptedAt()).isEqualTo(now);
+        assertThat(orders.value.status()).isEqualTo(DeliveryStatus.DELIVERED);
+        assertThat(proofs.value.status()).isEqualTo(PodStatus.FINALIZED);
+        assertThat(proofs.value.evidence()).hasSize(1);
+    }
+
+    @Test void offlinePodWithoutConsentThrowsException() {
+        var orders = new Orders(ready()); var proofs = new Proofs(); var storage = new Storage(); var service = service(orders, proofs, storage);
+        var command = new com.transportlogistics.app.delivery.OfflineProofOfDeliveryRecorder.Command(
+                orders.value.id().value(), orders.value.version(), "Bob Recipient", "Manager",
+                false, null, null, now, null, null, null,
+                List.of(new com.transportlogistics.app.delivery.OfflineProofOfDeliveryRecorder.OfflineEvidenceItem(
+                        "SIGNATURE", new byte[]{1, 2, 3}, null, "MANUAL", "sig.png", null)),
+                "offline.rider");
+        assertThatThrownBy(() -> service.recordOfflinePod(command))
+                .isInstanceOf(com.transportlogistics.app.shared.domain.BusinessRuleException.class)
+                .hasMessageContaining("Customer consent is required");
+    }
+
+    @Test void offlinePodWhenDeliveryAlreadyDeliveredThrowsConflict() {
+        var orders = new Orders(ready().markDelivered(now, "prior.rider"));
+        var proofs = new Proofs(); var storage = new Storage(); var service = service(orders, proofs, storage);
+        var command = new com.transportlogistics.app.delivery.OfflineProofOfDeliveryRecorder.Command(
+                orders.value.id().value(), orders.value.version(), "Bob Recipient", "Manager",
+                true, "POD-CONSENT-V1", now, now, null, null, null,
+                List.of(new com.transportlogistics.app.delivery.OfflineProofOfDeliveryRecorder.OfflineEvidenceItem(
+                        "BARCODE", null, "DEL-2026-000001", "SCANNER", null, null)),
+                "offline.rider");
+        assertThatThrownBy(() -> service.recordOfflinePod(command))
+                .isInstanceOf(com.transportlogistics.app.shared.domain.ConflictException.class);
+    }
+
     private ProofOfDeliveryService service(Orders orders, Proofs proofs, Storage storage) {
         DeliveryTenantContextPort tenant = () -> Optional.of(new DeliveryTenantContextPort.TenantContext(TENANT, "UTC"));
         DeliveryOrderTransaction tx = new DeliveryOrderTransaction() {
@@ -58,11 +101,19 @@ class ProofOfDeliveryServiceTest {
     private static final class Proofs implements ProofOfDeliveryRepository {
         private ProofOfDelivery value; public ProofOfDelivery save(ProofOfDelivery p) { value = p; return p; }
         public Optional<ProofOfDelivery> findByDeliveryOrderId(UUID id) { return Optional.ofNullable(value).filter(p -> p.deliveryOrderId().equals(id)); }
+        public void delete(UUID id) {}
     }
     private static final class Storage implements DeliveryEvidenceStoragePort {
         private boolean failRead;
-        public StoredEvidence store(UUID t, UUID id, byte[] c, String f) { return new StoredEvidence("opaque", "image/png", c.length, "a".repeat(64)); }
-        public StoredContent read(UUID t, String r) { if (failRead) throw new DependencyUnavailableException("POD_STORAGE_UNAVAILABLE", "storage unavailable", null); return new StoredContent(new byte[8], "image/png", 8); }
+        public StoredEvidence store(UUID t, UUID e, byte[] c, String f) {
+            String mime = "image/png";
+            if (c.length >= 2 && (c[0] & 0xFF) == 0xFF && (c[1] & 0xFF) == 0xD8) mime = "image/jpeg";
+            return new StoredEvidence("ref-" + e, mime, c.length, "chk-" + e);
+        }
+        public StoredContent read(UUID t, String r) {
+            if (failRead) throw new DependencyUnavailableException("STORAGE_UNAVAILABLE", "Storage down", null);
+            return new StoredContent(new byte[]{1, 2, 3}, "image/png", 3);
+        }
         public void delete(UUID t, String r) {}
     }
 }

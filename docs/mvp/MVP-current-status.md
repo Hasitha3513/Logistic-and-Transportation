@@ -18,9 +18,9 @@
 | MVP 1.1 Advanced Route | 4 / 4 | 0 | 0 | 0 | 0 | COMPLETE |
 | MVP 1.1 Freight | 7 / 7 | 0 | 0 | 0 | 0 | COMPLETE |
 | MVP 1.2 Fuel | 5 / 8 | 0 | 0 | 3 / 8 | 0 | CLOSED_WITH_APPROVED_DEFERMENTS |
-| MVP 1.3 Delivery Operations | 1 / 7 | 0 | 0 | 0 | 6 / 7 | IN_PROGRESS; US-56 COMPLETE |
+| MVP 1.3 Delivery Operations | 2 / 7 | 0 | 0 | 0 | 5 / 7 | IN_PROGRESS; US-56 and US-57 COMPLETE |
 
-US-56 is accepted and complete with its tenant-scoped domain, persistence, V46 migration, API/RBAC and React workflow. US-57 through US-62 remain not started.
+US-56 and US-57 are accepted and complete with tenant-scoped domain, persistence, V46/V47 migrations, API/RBAC and React workflows. US-58 through US-62 remain not started.
 
 ## Repository baseline
 
@@ -101,23 +101,18 @@ Conditions include environment-specific PostgreSQL, security, operations and ten
 - Release band: MVP 1.3 Delivery Operations
 - Domain: Delivery
 - Scope: US-56 through US-62
-- Last completed decision task: `MVP-1.3-US57-POD-PRODUCT-DECISIONS-001`
-- Status: IN_PROGRESS; US-56 `COMPLETE`; 1 / 7 accepted production stories
+- Last completed acceptance task: `MVP-1.3-US57-PROOF-OF-DELIVERY-FINAL-ACCEPTANCE-001`
+- Status: IN_PROGRESS; US-56 & US-57 `COMPLETE`; 2 / 7 accepted production stories
 
 US-56 implements the frozen priority/service catalogues, `NONE_IN_US56`, `NO_ASSIGNMENT_COLUMNS_IN_US56`, DRAFT-to-READY readiness validation and material-edit invalidation.
+US-57 implements online Proof of Delivery capture (signatures, photos, barcodes, geolocation), immutability, RBAC, and Delivery completion.
 
 Delivery numbering implements `MVP-1.3-US56-DELIVERY-NUMBER-POLICY-001`: immutable server-generated `DEL-YYYY-NNNNNN`, per-Tenant/per-tenant-local-year atomic allocation, gaps allowed, no explicit US-56 idempotency key, and tenant-scoped uniqueness.
 
-The R2 `NEW_IMPLEMENTATION_CRITICAL_PRODUCT_AMBIGUITY` blocker is `RESOLVED`. US-56 has no remaining product-semantics blocker.
-
-**Central KB implementation synchronization:** `COMPLETE` — commit `1b579f61481276d4bc47518163d18e9c7c1d7af1` is verified on `origin/main`; the final-acceptance task performs the task-scoped closure synchronization.
-
 **Current blocker:** `NONE`.
 
-**Final acceptance evidence:** focused backend 51/51 PASS; full backend `verify` 972 tests with 0 failures and 0 errors (15 skipped); frontend lint PASS, 48 files and 234/234 PASS, and production build PASS; Chromium Delivery E2E 2/2 PASS; disposable PostgreSQL 16 Flyway V1–V46 PASS.
+**Final acceptance evidence:** Checkstyle 0, PMD 0, SpotBugs 0; frontend lint PASS, 49 files and 237/237 PASS, and production build PASS; Chromium Delivery & POD E2E 6/6 PASS; full backend `mvn test` 987 tests with 0 failures and 0 errors (26 skipped); PostgreSQL 16 Flyway V1–V47 PASS.
 
-**US-57 decision gate:** `PRODUCT_DECISIONS_COMPLETE` — online POD requires at least one signature/photo/barcode evidence item; server acceptance time is authoritative; geo-tag is optional where available; finalized proof is immutable; valid finalization completes the Delivery; offline capture, quality/retake and consent remain US-58.
+US-57 production implementation and acceptance is `COMPLETE`. MVP 1.3 is 2 / 7 complete and overall completion is 52 / 87.
 
-US-57 production implementation remains `NOT_STARTED`. MVP 1.3 remains 1 / 7 complete and overall completion remains 51 / 87.
-
-**Exact next task:** `MVP-1.3-US57-PROOF-OF-DELIVERY-001`.
+**Exact next task:** `MVP-1.3-US58-OFFLINE-POD-PRODUCT-DECISIONS-001`.

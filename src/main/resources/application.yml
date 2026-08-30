@@ -31,15 +31,17 @@ spring:
     repair-on-migrate: true
     placeholders:
       deliveryStatusConstraintUpgrade: >-
+        ALTER TABLE delivery_order DROP CONSTRAINT IF EXISTS delivery_order_status_check;
+        ALTER TABLE delivery_order DROP CONSTRAINT IF EXISTS ck_delivery_order_status;
         ALTER TABLE delivery_order ADD CONSTRAINT ck_delivery_order_status
         CHECK (status IN ('DRAFT', 'READY_FOR_ASSIGNMENT', 'DELIVERED'));
       podEvidenceUniquenessIndexes: >-
-        CREATE UNIQUE INDEX uk_pod_single_signature ON pod_evidence(proof_of_delivery_id)
+        CREATE UNIQUE INDEX IF NOT EXISTS uk_pod_single_signature ON pod_evidence(proof_of_delivery_id)
         WHERE evidence_type = 'SIGNATURE';
-        CREATE UNIQUE INDEX uk_pod_single_barcode ON pod_evidence(proof_of_delivery_id)
+        CREATE UNIQUE INDEX IF NOT EXISTS uk_pod_single_barcode ON pod_evidence(proof_of_delivery_id)
         WHERE evidence_type = 'BARCODE';
       vehicleReadingSourceIdentityIndex: >-
-        CREATE UNIQUE INDEX uq_vehicle_reading_source
+        CREATE UNIQUE INDEX IF NOT EXISTS uq_vehicle_reading_source
         ON vehicle_reading(vehicle_id, reading_type, source_type, source_reference_id)
         WHERE source_reference_id IS NOT NULL AND correction_of_reading_id IS NULL
   servlet:

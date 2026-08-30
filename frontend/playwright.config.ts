@@ -48,7 +48,7 @@ export default defineConfig({
   ],
   webServer: [
     {
-      command: `${mavenWrapper} -q -f ../pom.xml spring-boot:run "-Dspring-boot.run.profiles=h2,e2e" "-Dspring-boot.run.arguments=--server.port=8088 --app.dev.identity-bootstrap.enabled=true --app.dev.identity-bootstrap.username=${e2eAdminUsername} --app.dev.identity-bootstrap.password=${e2eAdminPassword} --app.dev.identity-bootstrap.email=e2e.admin@example.test --security.jwt.secret=${e2eJwtSecret} --app.dev.sample-data.enabled=true"`,
+      command: `${mavenWrapper} -q -f ../pom.xml spring-boot:run "-Dspring-boot.run.profiles=postgres,e2e" "-Dspring-boot.run.arguments=--server.port=8088 --app.dev.identity-bootstrap.enabled=true --app.dev.identity-bootstrap.username=${e2eAdminUsername} --app.dev.identity-bootstrap.password=${e2eAdminPassword} --app.dev.identity-bootstrap.email=e2e.admin@example.test --security.jwt.secret=${e2eJwtSecret} --app.dev.sample-data.enabled=true"`,
       url: 'http://localhost:8088/api/health',
       timeout: 180_000,
       reuseExistingServer: true,
@@ -60,8 +60,8 @@ export default defineConfig({
         DEV_IDENTITY_PASSWORD: e2eAdminPassword,
         DEV_IDENTITY_EMAIL: 'e2e.admin@example.test',
         DEV_SAMPLE_DATA_ENABLED: 'true',
-        JAVA_HOME: process.env.E2E_JAVA_HOME || process.env.JAVA_HOME || '/usr/lib/jvm/jdk-21.0.12.1-oracle-x64',
-        PATH: `${process.env.E2E_JAVA_HOME || process.env.JAVA_HOME || '/usr/lib/jvm/jdk-21.0.12.1-oracle-x64'}/bin:${process.env.PATH || ''}`,
+        JAVA_HOME: process.env.E2E_JAVA_HOME || process.env.JAVA_HOME || '/usr/lib/jvm/java-1.21.0-openjdk-amd64',
+        PATH: `${process.env.E2E_JAVA_HOME || process.env.JAVA_HOME || '/usr/lib/jvm/java-1.21.0-openjdk-amd64'}/bin:${process.env.PATH || ''}`,
       },
     },
     {

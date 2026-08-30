@@ -27,8 +27,8 @@ import dayjs from 'dayjs';
 import { useAuth } from '../auth/AuthContext';
 import { OfflineOperationActions } from '../features/offlineSync/OfflineOperationActions';
 import { OFFLINE_STATUS_PRESENTATION } from '../features/offlineSync/presentation';
-import type { OfflineOperation } from '../features/offlineSync/types';
 import {
+  type TripOperationalOfflineOperation,
   useLocalTripOperationalEvents,
   useRecordTripCheckpoint,
   useRecordTripDelay,
@@ -43,11 +43,6 @@ import type {
 } from './types';
 
 const { Text, Paragraph } = Typography;
-
-type TripOperationalOfflineOperation = Exclude<
-  OfflineOperation,
-  { operationType: 'VEHICLE_READING_RECORD' }
->;
 
 const dateTimeFormat = new Intl.DateTimeFormat('en-GB', {
   dateStyle: 'medium',
