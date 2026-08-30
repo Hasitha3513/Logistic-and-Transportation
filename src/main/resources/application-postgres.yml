@@ -1,8 +1,8 @@
 spring:
   datasource:
-    url: ${DB_URL:jdbc:postgresql://localhost:5432/transport_logistics}
-    username: ${DB_USERNAME:transport_app}
-    password: ${DB_PASSWORD:transport_app}
+    url: ${DB_URL:jdbc:postgresql://localhost:${POSTGRES_PORT:5432}/${POSTGRES_DB:transport_logistics}}
+    username: ${DB_USERNAME:${POSTGRES_USER:transport_app}}
+    password: ${DB_PASSWORD:${POSTGRES_PASSWORD:transport_app_secret}}
     hikari:
       maximum-pool-size: ${DB_POOL_MAX:10}
       minimum-idle: ${DB_POOL_MIN:2}

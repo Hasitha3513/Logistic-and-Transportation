@@ -32,23 +32,24 @@ if [ -f ".env" ]; then
 fi
 
 export DB_USERNAME="${DB_USERNAME:-${POSTGRES_USER:-transport_app}}"
-export DB_PASSWORD="${DB_PASSWORD:-${POSTGRES_PASSWORD:-transport_app}}"
+export DB_PASSWORD="${DB_PASSWORD:-${POSTGRES_PASSWORD:-transport_app_secret}}"
 export DB_URL="${DB_URL:-jdbc:postgresql://localhost:${POSTGRES_PORT:-5432}/${POSTGRES_DB:-transport_logistics}}"
 
-# Select PostgreSQL only when the configured credentials can actually connect.
-if command -v psql >/dev/null 2>&1 \
-    && PGPASSWORD="$DB_PASSWORD" psql \
-        --host=localhost \
-        --port="${POSTGRES_PORT:-5432}" \
-        --username="$DB_USERNAME" \
-        --dbname="${POSTGRES_DB:-transport_logistics}" \
-        --command='SELECT 1' >/dev/null 2>&1; then
-    echo "[*] Verified PostgreSQL connection. Using 'postgres' profile..."
-    PROFILE="postgres"
-else
-    echo "[*] Configured PostgreSQL is unavailable or rejected authentication. Using embedded 'h2' profile with complete sample dataset..."
-    PROFILE="h2"
+# Ensure PostgreSQL container is running if docker is present and port is not open
+if ! nc -z localhost "${POSTGRES_PORT:-5432}" 2>/dev/null; then
+    if command -v docker >/dev/null 2>&1; then
+        echo "[*] PostgreSQL is not running. Starting PostgreSQL container via Docker Compose..."
+        docker compose up -d postgres
+        sleep 3
+    else
+        echo "[!] PostgreSQL is not reachable at localhost:${POSTGRES_PORT:-5432} and Docker is not available."
+        echo "    Please start PostgreSQL before running the application."
+        exit 1
+    fi
 fi
+
+echo "[*] Using PostgreSQL datasource at ${DB_URL}..."
+PROFILE="postgres"
 
 echo "[*] Launching Backend Spring Boot Application (Profile: ${PROFILE})..."
 mvn spring-boot:run -Dspring-boot.run.profiles=${PROFILE} -Dspring-boot.run.jvmArguments="-Dapp.dev.identity-bootstrap.enabled=true -Dapp.dev.identity-bootstrap.username=admin -Dapp.dev.identity-bootstrap.password=AdminPassword123! -Dapp.dev.sample-data.enabled=true" &

@@ -8,10 +8,24 @@ spring:
   threads:
     virtual:
       enabled: true
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:${POSTGRES_PORT:5432}/${POSTGRES_DB:transport_logistics}}
+    username: ${DB_USERNAME:${POSTGRES_USER:transport_app}}
+    password: ${DB_PASSWORD:${POSTGRES_PASSWORD:transport_app_secret}}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: ${DB_POOL_MAX:10}
+      minimum-idle: ${DB_POOL_MIN:2}
   jpa:
     open-in-view: false
+    database: postgresql
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
       ddl-auto: validate
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
   flyway:
     enabled: true
     repair-on-migrate: true
@@ -24,12 +38,16 @@ spring:
         WHERE evidence_type = 'SIGNATURE';
         CREATE UNIQUE INDEX uk_pod_single_barcode ON pod_evidence(proof_of_delivery_id)
         WHERE evidence_type = 'BARCODE';
+      vehicleReadingSourceIdentityIndex: >-
+        CREATE UNIQUE INDEX uq_vehicle_reading_source
+        ON vehicle_reading(vehicle_id, reading_type, source_type, source_reference_id)
+        WHERE source_reference_id IS NOT NULL AND correction_of_reading_id IS NULL
   servlet:
     multipart:
       max-file-size: 10MB
       max-request-size: 11MB
 server:
-  port: 8080
+  port: ${PORT:8080}
   servlet:
     context-path: /api
 management:
@@ -45,23 +63,32 @@ security:
     issuer: transport-logistics-modulith
     access-token-ttl: PT15M
     refresh-token-ttl: P30D
+    secret: ${JWT_SECRET:super_secret_jwt_key_that_is_at_least_32_bytes_long_for_security_2026}
 app:
+  dev:
+    identity-bootstrap:
+      enabled: ${APP_DEV_IDENTITY_BOOTSTRAP_ENABLED:${DEV_IDENTITY_BOOTSTRAP_ENABLED:true}}
+      username: ${APP_DEV_IDENTITY_BOOTSTRAP_USERNAME:${DEV_IDENTITY_USERNAME:admin}}
+      password: ${APP_DEV_IDENTITY_BOOTSTRAP_PASSWORD:${DEV_IDENTITY_PASSWORD:AdminPass!2026}}
+      email: ${APP_DEV_IDENTITY_BOOTSTRAP_EMAIL:${DEV_IDENTITY_EMAIL:admin@transport.local}}
+    sample-data:
+      enabled: ${APP_DEV_SAMPLE_DATA_ENABLED:${DEV_SAMPLE_DATA_ENABLED:true}}
   notification:
     email:
-      enabled: false
-      mode: test
-      provider: test
-      from: noreply@localhost.test
-      reply-to:
-      connect-timeout: PT5S
-      read-timeout: PT30S
+      enabled: ${NOTIFICATION_EMAIL_ENABLED:false}
+      mode: ${NOTIFICATION_EMAIL_MODE:production}
+      provider: ${NOTIFICATION_EMAIL_PROVIDER:smtp}
+      from: ${NOTIFICATION_EMAIL_FROM:}
+      reply-to: ${NOTIFICATION_EMAIL_REPLY_TO:}
+      connect-timeout: ${NOTIFICATION_EMAIL_CONNECT_TIMEOUT:PT5S}
+      read-timeout: ${NOTIFICATION_EMAIL_READ_TIMEOUT:PT30S}
       smtp:
-        host: localhost
-        port: 2525
-        tls-mode: none
-        authentication-required: false
-        username:
-        password:
+        host: ${NOTIFICATION_EMAIL_SMTP_HOST:localhost}
+        port: ${NOTIFICATION_EMAIL_SMTP_PORT:587}
+        tls-mode: ${NOTIFICATION_EMAIL_SMTP_TLS_MODE:starttls}
+        authentication-required: ${NOTIFICATION_EMAIL_SMTP_AUTH_REQUIRED:false}
+        username: ${NOTIFICATION_EMAIL_SMTP_USERNAME:}
+        password: ${NOTIFICATION_EMAIL_SMTP_PASSWORD:}
 delivery:
   evidence:
     storage-path: ${DELIVERY_EVIDENCE_STORAGE_PATH:./data/delivery-evidence}
