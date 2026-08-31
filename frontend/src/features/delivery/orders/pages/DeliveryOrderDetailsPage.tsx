@@ -5,6 +5,7 @@ import { useDeliveryOrder, useValidateDeliveryReadiness } from '../hooks/useDeli
 import { ProofOfDeliverySection } from '../components/ProofOfDeliverySection';
 import { FailedDeliverySection } from '../components/FailedDeliverySection';
 import { RedeliverySection } from '../components/RedeliverySection';
+import { DeliveryExceptionsSection } from '../components/DeliveryExceptionsSection';
 
 interface ErrorBody { message?: string }
 export default function DeliveryOrderDetailsPage() {
@@ -25,6 +26,7 @@ export default function DeliveryOrderDetailsPage() {
     <ProofOfDeliverySection delivery={data} />
     <FailedDeliverySection delivery={data} />
     <RedeliverySection delivery={data} />
+    <DeliveryExceptionsSection delivery={data} />
   </Flex>;
 }
 

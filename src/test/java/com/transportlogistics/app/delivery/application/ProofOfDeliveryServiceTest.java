@@ -85,7 +85,14 @@ class ProofOfDeliveryServiceTest {
         DeliveryOrderTransaction tx = new DeliveryOrderTransaction() {
             @Override public <T> T execute(Supplier<T> operation) { return operation.get(); }
         };
-        return new ProofOfDeliveryService(orders, proofs, storage, tenant, tx, Clock.fixed(now.toInstant(), ZoneOffset.UTC));
+        DeliveryExceptionRepository exceptions = new DeliveryExceptionRepository() {
+            @Override public DeliveryExceptionCase save(DeliveryExceptionCase exceptionCase) { return exceptionCase; }
+            @Override public Optional<DeliveryExceptionCase> findById(UUID id) { return Optional.empty(); }
+            @Override public List<DeliveryExceptionCase> findByDeliveryOrderId(DeliveryId deliveryOrderId) { return List.of(); }
+            @Override public boolean existsActiveByDeliveryOrderIdAndType(DeliveryId deliveryOrderId, DeliveryExceptionType exceptionType) { return false; }
+            @Override public boolean hasActiveBlockingExceptions(DeliveryId deliveryOrderId) { return false; }
+        };
+        return new ProofOfDeliveryService(orders, proofs, storage, tenant, exceptions, tx, Clock.fixed(now.toInstant(), ZoneOffset.UTC));
     }
     private DeliveryOrder ready() {
         var created = DeliveryOrder.create(new DeliveryId(UUID.randomUUID()), new DeliveryNumber("DEL-2026-000001"), UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), DeliveryPriority.NORMAL, DeliveryServiceType.STANDARD, new DeliveryWindow(now.minusHours(1), now.plusHours(1)), null, now.minusHours(2), "manager");

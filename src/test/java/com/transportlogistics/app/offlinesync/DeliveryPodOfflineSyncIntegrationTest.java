@@ -46,6 +46,8 @@ class DeliveryPodOfflineSyncIntegrationTest {
     @BeforeEach
     void setUp() {
         jdbc.update("DELETE FROM offline_sync_operation");
+        jdbc.update("DELETE FROM delivery_exception_evidence");
+        jdbc.update("DELETE FROM delivery_exception_case");
         jdbc.update("DELETE FROM delivery_redelivery_schedule");
         jdbc.update("DELETE FROM delivery_escalation");
         jdbc.update("DELETE FROM delivery_contact_attempt");
@@ -81,6 +83,8 @@ class DeliveryPodOfflineSyncIntegrationTest {
     @AfterEach
     void cleanUp() {
         jdbc.update("DELETE FROM offline_sync_operation WHERE actor_id = ?", actorId);
+        jdbc.update("DELETE FROM delivery_exception_evidence WHERE exception_case_id IN (SELECT id FROM delivery_exception_case WHERE delivery_order_id = ?)", deliveryId);
+        jdbc.update("DELETE FROM delivery_exception_case WHERE delivery_order_id = ?", deliveryId);
         jdbc.update("DELETE FROM pod_evidence WHERE proof_of_delivery_id IN (SELECT id FROM proof_of_delivery WHERE delivery_order_id = ?)", deliveryId);
         jdbc.update("DELETE FROM proof_of_delivery WHERE delivery_order_id = ?", deliveryId);
         jdbc.update("DELETE FROM delivery_order WHERE id = ?", deliveryId);

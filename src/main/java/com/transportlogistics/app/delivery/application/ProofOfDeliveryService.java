@@ -17,18 +17,24 @@ public final class ProofOfDeliveryService implements ProofOfDeliveryUseCase, com
     private static final long PHOTO_LIMIT = 10L * 1024 * 1024;
     private final DeliveryOrderRepository orders; private final ProofOfDeliveryRepository proofs;
     private final DeliveryEvidenceStoragePort storage; private final DeliveryTenantContextPort tenants;
+    private final DeliveryExceptionRepository exceptions;
     private final DeliveryOrderTransaction transactions; private final Clock clock;
 
     public ProofOfDeliveryService(DeliveryOrderRepository orders, ProofOfDeliveryRepository proofs,
                                   DeliveryEvidenceStoragePort storage, DeliveryTenantContextPort tenants,
+                                  DeliveryExceptionRepository exceptions,
                                   DeliveryOrderTransaction transactions, Clock clock) {
         this.orders = orders; this.proofs = proofs; this.storage = storage; this.tenants = tenants;
+        this.exceptions = exceptions;
         this.transactions = transactions; this.clock = clock;
     }
     @Override public ProofOfDelivery create(UUID deliveryId, CreateCommand command, String actor) {
         return transactions.execute(() -> {
             requiredTenant(); DeliveryOrder delivery = delivery(deliveryId); requireVersion(command.deliveryVersion(), delivery.version(), "DELIVERY_VERSION_CONFLICT");
             if (delivery.status() != DeliveryStatus.READY_FOR_ASSIGNMENT) conflict("POD_DELIVERY_STATE_INELIGIBLE", "Delivery is not eligible for proof capture");
+            if (exceptions != null && exceptions.hasActiveBlockingExceptions(delivery.id())) {
+                conflict("POD_COMPLETION_BLOCKED_BY_EXCEPTION", "Proof of delivery cannot be created while active blocking delivery exceptions exist");
+            }
             if (proofs.findByDeliveryOrderId(deliveryId).isPresent()) conflict("POD_ALREADY_EXISTS", "A POD already exists for this Delivery Order");
             return proofs.save(ProofOfDelivery.draft(UUID.randomUUID(), deliveryId, command.deviceCapturedAt(),
                     command.latitude(), command.longitude(), command.accuracyMeters(), command.signerName(),
@@ -74,6 +80,9 @@ public final class ProofOfDeliveryService implements ProofOfDeliveryUseCase, com
             requireVersion(command.deliveryVersion(), delivery.version(), "DELIVERY_VERSION_CONFLICT");
             requireVersion(command.podVersion(), proof.version(), "POD_VERSION_CONFLICT");
             if (delivery.status() != DeliveryStatus.READY_FOR_ASSIGNMENT) conflict("POD_DELIVERY_STATE_INELIGIBLE", "Delivery is not eligible for POD finalization");
+            if (exceptions != null && exceptions.hasActiveBlockingExceptions(delivery.id())) {
+                conflict("POD_COMPLETION_BLOCKED_BY_EXCEPTION", "Proof of delivery finalization is blocked by an active exception (OTP Mismatch or Damaged Delivery)");
+            }
             proof.evidence().stream().filter(e -> e.storageReference() != null).forEach(e -> storage.read(tenantId, e.storageReference()));
             OffsetDateTime accepted = now();
             ProofOfDelivery finalized = proofs.save(proof.finalizeAt(delivery.deliveryNumber().value(), accepted, actor));

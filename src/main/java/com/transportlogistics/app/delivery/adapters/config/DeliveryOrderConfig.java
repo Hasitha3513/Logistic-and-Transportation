@@ -1,10 +1,12 @@
 package com.transportlogistics.app.delivery.adapters.config;
 
+import com.transportlogistics.app.delivery.application.DeliveryExceptionService;
 import com.transportlogistics.app.delivery.application.DeliveryOrderService;
 import com.transportlogistics.app.delivery.application.FailedDeliveryService;
 import com.transportlogistics.app.delivery.application.ProofOfDeliveryService;
 import com.transportlogistics.app.delivery.application.RedeliveryService;
 import com.transportlogistics.app.delivery.ports.inbound.DeliveryAnalyticsUseCase;
+import com.transportlogistics.app.delivery.ports.inbound.DeliveryExceptionUseCase;
 import com.transportlogistics.app.delivery.ports.inbound.DeliveryOrderUseCase;
 import com.transportlogistics.app.delivery.ports.inbound.FailedDeliveryUseCase;
 import com.transportlogistics.app.delivery.ports.inbound.RedeliveryUseCase;
@@ -26,8 +28,9 @@ class DeliveryOrderConfig {
     @Bean
     ProofOfDeliveryService proofOfDeliveryUseCase(
             DeliveryOrderRepository orders, ProofOfDeliveryRepository proofs, DeliveryEvidenceStoragePort storage,
-            DeliveryTenantContextPort tenantContext, DeliveryOrderTransaction transactions, Clock clock) {
-        return new ProofOfDeliveryService(orders, proofs, storage, tenantContext, transactions, clock);
+            DeliveryTenantContextPort tenantContext, DeliveryExceptionRepository exceptions,
+            DeliveryOrderTransaction transactions, Clock clock) {
+        return new ProofOfDeliveryService(orders, proofs, storage, tenantContext, exceptions, transactions, clock);
     }
 
     @Bean
@@ -66,6 +69,22 @@ class DeliveryOrderConfig {
                 analyticsPersistencePort, tenantContextPort, locationLookupPort
         );
     }
+
+    @Bean
+    DeliveryExceptionUseCase deliveryExceptionUseCase(
+            DeliveryOrderRepository orders,
+            DeliveryAttemptRepository attempts,
+            DeliveryExceptionRepository exceptions,
+            DeliveryEvidenceStoragePort storage,
+            DeliveryLocationLookupPort locations,
+            DeliveryTenantContextPort tenantContext,
+            DeliveryOrderTransaction transactions,
+            Clock clock) {
+        return new DeliveryExceptionService(
+                orders, attempts, exceptions, storage, locations, tenantContext, transactions, clock
+        );
+    }
 }
+
 
 

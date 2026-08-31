@@ -108,6 +108,7 @@ export const navigation: NavigationItem[] = [
     icon: <SendOutlined />,
     children: [
       { key: 'delivery-orders', label: 'Delivery Orders', route: '/deliveries', requiredPermission: 'DELIVERY_VIEW' },
+      { key: 'delivery-zones', label: 'Delivery Zones', route: '/deliveries/zones', requiredPermission: 'DELIVERY_ZONE_VIEW' },
       { key: 'delivery-analytics', label: 'Delivery Analytics', route: '/deliveries/analytics', requiredPermission: 'DELIVERY_ANALYTICS_VIEW' },
     ],
   },
