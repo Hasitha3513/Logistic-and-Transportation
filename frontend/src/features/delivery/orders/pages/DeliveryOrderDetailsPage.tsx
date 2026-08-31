@@ -4,6 +4,7 @@ import { isAxiosError } from 'axios'; import { Link, useParams } from 'react-rou
 import { useDeliveryOrder, useValidateDeliveryReadiness } from '../hooks/useDeliveryOrders';
 import { ProofOfDeliverySection } from '../components/ProofOfDeliverySection';
 import { FailedDeliverySection } from '../components/FailedDeliverySection';
+import { RedeliverySection } from '../components/RedeliverySection';
 
 interface ErrorBody { message?: string }
 export default function DeliveryOrderDetailsPage() {
@@ -23,5 +24,7 @@ export default function DeliveryOrderDetailsPage() {
     ]} /></Card>
     <ProofOfDeliverySection delivery={data} />
     <FailedDeliverySection delivery={data} />
+    <RedeliverySection delivery={data} />
   </Flex>;
 }
+

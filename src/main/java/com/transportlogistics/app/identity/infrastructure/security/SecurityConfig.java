@@ -246,6 +246,12 @@ class SecurityConfig {
                         .hasAuthority("DELIVERY_FAIL_ESCALATE")
                         .requestMatchers(HttpMethod.POST, "/v1/deliveries/*/return-to-base")
                         .hasAuthority("DELIVERY_RETURN_INITIATE")
+                        .requestMatchers(HttpMethod.POST, "/v1/deliveries/*/redelivery/suggestions")
+                        .hasAuthority("DELIVERY_REDELIVERY_VIEW")
+                        .requestMatchers(HttpMethod.GET, "/v1/deliveries/*/redelivery/history")
+                        .hasAuthority("DELIVERY_REDELIVERY_VIEW")
+                        .requestMatchers(HttpMethod.POST, "/v1/deliveries/*/redelivery/schedule", "/v1/deliveries/*/redelivery/reschedule")
+                        .hasAuthority("DELIVERY_REDELIVERY_SCHEDULE")
 
                         .requestMatchers(HttpMethod.GET, "/bunker-tanks/*/movements").hasAuthority("BUNKER_LEDGER_VIEW")
                         .requestMatchers(HttpMethod.GET, "/bunker-tanks", "/bunker-tanks/*", "/bunker-tanks/*/balance", "/bunker-tanks/*/dip-readings")

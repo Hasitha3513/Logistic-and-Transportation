@@ -11,6 +11,13 @@ import type {
   UpdateEscalationPayload,
   ReturnToBasePayload
 } from '../types/failedDelivery';
+import type {
+  RedeliverySchedule,
+  RedeliverySuggestion,
+  ScheduleRedeliveryPayload,
+  RescheduleRedeliveryPayload,
+  RedeliverySuggestionPayload
+} from '../types/redelivery';
 
 export const deliveryOrderApi = {
   search: async (filters: DeliveryOrderFilters) => (await api.get<DeliveryOrderPage>('/v1/deliveries', { params: filters })).data,
@@ -41,6 +48,17 @@ export const deliveryOrderApi = {
   returnToBase: async (id: string, payload: ReturnToBasePayload) =>
     (await api.post<DeliveryOrder>(`/v1/deliveries/${id}/return-to-base`, payload)).data,
 
+  // US-60 Redelivery Scheduling API
+  getRedeliverySuggestions: async (id: string, payload?: RedeliverySuggestionPayload) =>
+    (await api.post<RedeliverySuggestion[]>(`/v1/deliveries/${id}/redelivery/suggestions`, payload || {})).data,
+  scheduleRedelivery: async (id: string, payload: ScheduleRedeliveryPayload) =>
+    (await api.post<RedeliverySchedule>(`/v1/deliveries/${id}/redelivery/schedule`, payload)).data,
+  rescheduleRedelivery: async (id: string, payload: RescheduleRedeliveryPayload) =>
+    (await api.post<RedeliverySchedule>(`/v1/deliveries/${id}/redelivery/reschedule`, payload)).data,
+  getRedeliveryHistory: async (id: string) =>
+    (await api.get<RedeliverySchedule[]>(`/v1/deliveries/${id}/redelivery/history`)).data,
+
   customers: async () => (await api.get<OrganizationReference[]>('/customers')).data.filter((item) => item.active),
   locations: async () => (await api.get<OrganizationReference[]>('/locations')).data.filter((item) => item.active),
 };
+

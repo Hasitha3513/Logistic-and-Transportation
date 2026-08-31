@@ -46,6 +46,10 @@ class DeliveryPodOfflineSyncIntegrationTest {
     @BeforeEach
     void setUp() {
         jdbc.update("DELETE FROM offline_sync_operation");
+        jdbc.update("DELETE FROM delivery_redelivery_schedule");
+        jdbc.update("DELETE FROM delivery_escalation");
+        jdbc.update("DELETE FROM delivery_contact_attempt");
+        jdbc.update("DELETE FROM delivery_attempt");
         jdbc.update("DELETE FROM pod_evidence");
         jdbc.update("DELETE FROM proof_of_delivery");
         jdbc.update("DELETE FROM delivery_order");
