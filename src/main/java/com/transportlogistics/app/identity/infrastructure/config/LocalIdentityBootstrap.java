@@ -55,7 +55,8 @@ class LocalIdentityBootstrap implements ApplicationRunner {
             "LUBRICANT_LOG_VIEW", "LUBRICANT_LOG_MANAGE",
             "TRIP_LOG_VIEW", "TRIP_LOG_MANAGE",
             "DELIVERY_VIEW", "DELIVERY_CREATE", "DELIVERY_UPDATE", "DELIVERY_ASSIGN",
-            "DELIVERY_POD_CAPTURE", "DELIVERY_POD_VIEW"
+            "DELIVERY_POD_CAPTURE", "DELIVERY_POD_VIEW",
+            "DELIVERY_FAIL_RECORD", "DELIVERY_FAIL_VIEW", "DELIVERY_FAIL_ESCALATE", "DELIVERY_RETURN_INITIATE"
     );
 
     private final IdentityUseCase identities;

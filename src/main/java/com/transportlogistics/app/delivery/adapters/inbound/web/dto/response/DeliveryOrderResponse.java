@@ -10,4 +10,11 @@ public record DeliveryOrderResponse(UUID id, String deliveryNumber, UUID custome
                                     DeliveryServiceType serviceType, OffsetDateTime windowStart,
                                     OffsetDateTime windowEnd, String instructions, DeliveryStatus status,
                                     long version, OffsetDateTime createdAt, OffsetDateTime updatedAt,
-                                    String createdBy, String updatedBy) {}
+                                    String createdBy, String updatedBy) {
+    public static DeliveryOrderResponse from(DeliveryOrder value) {
+        return new DeliveryOrderResponse(value.id().value(), value.deliveryNumber().value(), value.customerId(),
+                value.originLocationId(), value.destinationLocationId(), value.priority(), value.serviceType(),
+                value.window().start(), value.window().end(), value.instructions(), value.status(), value.version(),
+                value.createdAt(), value.updatedAt(), value.createdBy(), value.updatedBy());
+    }
+}

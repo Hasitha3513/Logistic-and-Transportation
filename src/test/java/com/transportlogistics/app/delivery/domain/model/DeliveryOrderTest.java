@@ -13,9 +13,10 @@ class DeliveryOrderTest {
         var order = DeliveryOrder.create(new DeliveryId(UUID.randomUUID()), new DeliveryNumber("DEL-2026-000001"), UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), null, null, new DeliveryWindow(now, now.plusHours(2)), " note ", now, "user");
         assertThat(order.priority()).isEqualTo(DeliveryPriority.NORMAL); assertThat(order.serviceType()).isEqualTo(DeliveryServiceType.STANDARD); assertThat(order.status()).isEqualTo(DeliveryStatus.DRAFT); assertThat(order.instructions()).isEqualTo("note");
     }
-    @Test void exposesOnlyTheUs56LifecycleStates() {
+    @Test void exposesTheFrozenLifecycleStates() {
         assertThat(List.of(DeliveryStatus.values()))
-                .containsExactly(DeliveryStatus.DRAFT, DeliveryStatus.READY_FOR_ASSIGNMENT, DeliveryStatus.DELIVERED);
+                .containsExactly(DeliveryStatus.DRAFT, DeliveryStatus.READY_FOR_ASSIGNMENT, DeliveryStatus.DELIVERED,
+                        DeliveryStatus.FAILED_ATTEMPT, DeliveryStatus.RETURN_TO_BASE, DeliveryStatus.ESCALATED);
     }
     @Test void materialEditReturnsReadyOrderToDraftAndKeepsNumberImmutable() {
         var number = new DeliveryNumber("DEL-2026-000001"); var origin = UUID.randomUUID();

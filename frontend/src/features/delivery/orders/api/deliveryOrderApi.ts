@@ -1,5 +1,16 @@
 import { api } from '../../../../api/client';
 import type { DeliveryOrder, DeliveryOrderFilters, DeliveryOrderPage, DeliveryOrderPayload, OrganizationReference, ProofOfDelivery, PodEvidenceType } from '../types/deliveryOrder';
+import type {
+  DeliveryAttempt,
+  DeliveryContactAttempt,
+  DeliveryEscalation,
+  DeliveryFailureHistory,
+  RecordFailedAttemptPayload,
+  RecordContactAttemptPayload,
+  EscalateDeliveryPayload,
+  UpdateEscalationPayload,
+  ReturnToBasePayload
+} from '../types/failedDelivery';
 
 export const deliveryOrderApi = {
   search: async (filters: DeliveryOrderFilters) => (await api.get<DeliveryOrderPage>('/v1/deliveries', { params: filters })).data,
@@ -16,6 +27,20 @@ export const deliveryOrderApi = {
   },
   finalizeProof: async (id: string, deliveryVersion: number, podVersion: number) => (await api.post<{ proof: ProofOfDelivery; delivery: DeliveryOrder }>(`/v1/deliveries/${id}/proof/finalize`, { deliveryVersion, podVersion })).data,
   deleteEvidence: async (id: string, evidenceId: string, podVersion: number) => (await api.delete<ProofOfDelivery>(`/v1/deliveries/${id}/proof/evidence/${evidenceId}`, { params: { podVersion } })).data,
+
+  // US-59 Failed Deliveries API
+  getAttempts: async (id: string) => (await api.get<DeliveryFailureHistory>(`/v1/deliveries/${id}/attempts`)).data,
+  recordFailedAttempt: async (id: string, payload: RecordFailedAttemptPayload) =>
+    (await api.post<DeliveryAttempt>(`/v1/deliveries/${id}/failed-attempt`, payload)).data,
+  recordContactAttempt: async (id: string, attemptId: string, payload: RecordContactAttemptPayload) =>
+    (await api.post<DeliveryContactAttempt>(`/v1/deliveries/${id}/failed-attempts/${attemptId}/contacts`, payload)).data,
+  escalateDelivery: async (id: string, payload: EscalateDeliveryPayload) =>
+    (await api.post<DeliveryEscalation>(`/v1/deliveries/${id}/escalate`, payload)).data,
+  updateEscalation: async (id: string, escalationId: string, payload: UpdateEscalationPayload) =>
+    (await api.patch<DeliveryEscalation>(`/v1/deliveries/${id}/escalations/${escalationId}`, payload)).data,
+  returnToBase: async (id: string, payload: ReturnToBasePayload) =>
+    (await api.post<DeliveryOrder>(`/v1/deliveries/${id}/return-to-base`, payload)).data,
+
   customers: async () => (await api.get<OrganizationReference[]>('/customers')).data.filter((item) => item.active),
   locations: async () => (await api.get<OrganizationReference[]>('/locations')).data.filter((item) => item.active),
 };

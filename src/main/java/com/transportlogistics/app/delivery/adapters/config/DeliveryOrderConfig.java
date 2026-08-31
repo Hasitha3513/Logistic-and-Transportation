@@ -1,8 +1,10 @@
 package com.transportlogistics.app.delivery.adapters.config;
 
 import com.transportlogistics.app.delivery.application.DeliveryOrderService;
+import com.transportlogistics.app.delivery.application.FailedDeliveryService;
 import com.transportlogistics.app.delivery.application.ProofOfDeliveryService;
 import com.transportlogistics.app.delivery.ports.inbound.DeliveryOrderUseCase;
+import com.transportlogistics.app.delivery.ports.inbound.FailedDeliveryUseCase;
 import com.transportlogistics.app.delivery.ports.outbound.*;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -23,5 +25,18 @@ class DeliveryOrderConfig {
             DeliveryOrderRepository orders, ProofOfDeliveryRepository proofs, DeliveryEvidenceStoragePort storage,
             DeliveryTenantContextPort tenantContext, DeliveryOrderTransaction transactions, Clock clock) {
         return new ProofOfDeliveryService(orders, proofs, storage, tenantContext, transactions, clock);
+    }
+
+    @Bean
+    FailedDeliveryUseCase failedDeliveryUseCase(
+            DeliveryOrderRepository orders,
+            ProofOfDeliveryRepository proofs,
+            DeliveryAttemptRepository attempts,
+            DeliveryContactAttemptRepository contactAttempts,
+            DeliveryEscalationRepository escalations,
+            DeliveryTenantContextPort tenantContext,
+            DeliveryOrderTransaction transactions,
+            Clock clock) {
+        return new FailedDeliveryService(orders, proofs, attempts, contactAttempts, escalations, tenantContext, transactions, clock);
     }
 }

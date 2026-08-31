@@ -236,6 +236,17 @@ class SecurityConfig {
                         .requestMatchers(HttpMethod.DELETE, "/v1/deliveries/*/proof/evidence/*")
                         .hasAuthority("DELIVERY_POD_CAPTURE")
 
+                        .requestMatchers(HttpMethod.GET, "/v1/deliveries/*/attempts")
+                        .hasAuthority("DELIVERY_FAIL_VIEW")
+                        .requestMatchers(HttpMethod.POST, "/v1/deliveries/*/failed-attempt", "/v1/deliveries/*/failed-attempts/*/contacts")
+                        .hasAuthority("DELIVERY_FAIL_RECORD")
+                        .requestMatchers(HttpMethod.POST, "/v1/deliveries/*/escalate")
+                        .hasAuthority("DELIVERY_FAIL_ESCALATE")
+                        .requestMatchers(HttpMethod.PATCH, "/v1/deliveries/*/escalations/*")
+                        .hasAuthority("DELIVERY_FAIL_ESCALATE")
+                        .requestMatchers(HttpMethod.POST, "/v1/deliveries/*/return-to-base")
+                        .hasAuthority("DELIVERY_RETURN_INITIATE")
+
                         .requestMatchers(HttpMethod.GET, "/bunker-tanks/*/movements").hasAuthority("BUNKER_LEDGER_VIEW")
                         .requestMatchers(HttpMethod.GET, "/bunker-tanks", "/bunker-tanks/*", "/bunker-tanks/*/balance", "/bunker-tanks/*/dip-readings")
                         .hasAuthority("BUNKER_VIEW")
@@ -320,6 +331,7 @@ class SecurityConfig {
                                 "/fuel-purchases/**", "/fuel-prices/**", "/vendors/**",
                                 "/bunker-tanks/**", "/bunker-transfers/**",
                                 "/dashboard/**", "/reports/**",
+                                "/v1/deliveries/**",
                                 "/notification-rules/**", "/notification-rule-executions/**", "/notification-deliveries/**", "/notification-event-catalogue/**", "/notification-templates/**",
                                 "/notifications/**", "/offline-sync/**").denyAll()
                         .anyRequest().authenticated())

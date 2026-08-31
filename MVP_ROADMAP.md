@@ -3,10 +3,10 @@
 <div align="center">
 
 ![Total Stories](https://img.shields.io/badge/Total%20Stories-87-0969da.svg?style=for-the-badge&logo=target)
-![Completed](https://img.shields.io/badge/Completed-53%20%2F%2087-2da44e.svg?style=for-the-badge&logo=checkmarx)
-![Progress](https://img.shields.io/badge/Progress-60.9%25-brightgreen.svg?style=for-the-badge&logo=speedtest)
-![MVP 1.3 Active](https://img.shields.io/badge/MVP%201.3%20Delivery-3%20%2F%207%20(42.9%25)-fa8c16.svg?style=for-the-badge&logo=pinboard)
-![Database](https://img.shields.io/badge/PostgreSQL%20%2F%20Flyway-V47-8a63d2.svg?style=for-the-badge&logo=postgresql)
+![Completed](https://img.shields.io/badge/Completed-54%20%2F%2087-2da44e.svg?style=for-the-badge&logo=checkmarx)
+![Progress](https://img.shields.io/badge/Progress-62.1%25-brightgreen.svg?style=for-the-badge&logo=speedtest)
+![MVP 1.3 Active](https://img.shields.io/badge/MVP%201.3%20Delivery-4%20%2F%207%20(57.1%25)-fa8c16.svg?style=for-the-badge&logo=pinboard)
+![Database](https://img.shields.io/badge/PostgreSQL%20%2F%20Flyway-V48-8a63d2.svg?style=for-the-badge&logo=postgresql)
 
 </div>
 
@@ -16,28 +16,28 @@
 > **Authoritative Baseline & Current State:**
 > - **Last Reconciled:** `2026-08-31`
 > - **Authority Order:** Original Requirements (`Traspotation & logistic.docx`), Frozen Architecture/Contracts, Verified Production Code/Tests, then Roadmap.
-> - **Active Release Band:** **`MVP 1.3 — Delivery Operations`** (3 / 7 COMPLETE — US-56 ✅, US-57 ✅, US-58 ✅).
-> - **Immediate Next Action:** Freeze Product Decisions for `US-59` Manage Failed Deliveries (`MVP-1.3-US59-FAILED-DELIVERIES-PRODUCT-DECISIONS-001`).
+> - **Active Release Band:** **`MVP 1.3 — Delivery Operations`** (4 / 7 COMPLETE — US-56 ✅, US-57 ✅, US-58 ✅, US-59 ✅).
+> - **Immediate Next Action:** Freeze Product Decisions for `US-60` Schedule Re-Delivery (`MVP-1.3-US60-REDELIVERY-PRODUCT-DECISIONS-001`).
 
 ---
 
 ## 📊 1. Executive Metrics & Milestone Progress
 
 ```
-Overall Progress: [██████████████████████████████░░░░░░░░░░░░░░░░░░░░] 53 / 87 Stories (60.9%)
-MVP 1.3 Band:     [████████████████████░░░░░░░░░░░░░░░░░░░░░░░░░░] 3 / 7 Stories (42.9%)
+Overall Progress: [███████████████████████████████░░░░░░░░░░░░░░░░░░░] 54 / 87 Stories (62.1%)
+MVP 1.3 Band:     [███████████████████████████░░░░░░░░░░░░░░░░░░░░] 4 / 7 Stories (57.1%)
 ```
 
 | Metric | Target | Current Count | Percentage | Status Indicator |
 | :--- | :---: | :---: | :---: | :--- |
-| **Completed Stories** | 87 | **53** | `60.9%` | 🟢 `ON TRACK / VERIFIED` |
+| **Completed Stories** | 87 | **54** | `62.1%` | 🟢 `ON TRACK / VERIFIED` |
 | **In Progress / Pending Acceptance** | — | **0** | `0.0%` | 🟡 `IDLE` |
-| **Not Started (MVP 1.3 Active Scope)** | 4 | **4** | `4.6%` | ⚪ `QUEUED` |
+| **Not Started (MVP 1.3 Active Scope)** | 3 | **3** | `3.4%` | ⚪ `QUEUED (US-60..62)` |
 | **Approved Deferments (Post-MVP)** | 30 | **30** | `34.5%` | ⏸️ `DEFERRED BY GOVERNANCE` |
 | **Total Registered User Stories** | **87** | **87** | **`100%`** | 🔒 `FROZEN REGISTER (US-01..US-87)` |
 
 > [!NOTE]
-> Stories `US-88`, `US-89`, and `US-90` are strictly undefined. The story accounting register is bounded exactly from `US-01` through `US-87` ($53 + 4 + 30 = 87$).
+> Stories `US-88`, `US-89`, and `US-90` are strictly undefined. The story accounting register is bounded exactly from `US-01` through `US-87` ($54 + 0 + 3 + 30 = 87$).
 
 ---
 
@@ -50,7 +50,7 @@ MVP 1.3 Band:     [████████████████████�
 | **MVP 1.1A** | **Advanced Route** | Dynamic Route Optimization, Analytics, and Disruption Handling (US-20–23) | 4 | 4 / 4 | 🟢 `COMPLETE (100%)` |
 | **MVP 1.1B** | **Freight & Cargo** | Freight Orders, Manifests, Load Planning, Weight/Volume Engine, Claims, Exceptions (US-24–30) | 7 | 7 / 7 | 🟢 `COMPLETE (100%)` |
 | **MVP 1.2** | **Fuel Management** | Fuel Issues, Purchases, Mileage, Bunkers, Stock Transfers (US-31–34, US-36) | 8 | 5 / 8 | 🟢 `CLOSED (3 DEFERRED)` |
-| **MVP 1.3** | **Delivery Operations** | Delivery Orders, Online POD, Offline POD, Failed Deliveries, Redelivery, Exceptions (US-56–62) | 7 | 3 / 7 | 🟡 `ACTIVE IN PROGRESS` |
+| **MVP 1.3** | **Delivery Operations** | Delivery Orders, Online POD, Offline POD, Failed Deliveries, Redelivery, Exceptions (US-56–62) | 7 | 4 / 7 | 🟡 `ACTIVE IN PROGRESS` |
 | **Post-MVP** | **Extended Platform** | GPS Tracking (US-48–55), Last-Mile (US-63–70), Billing (US-47), Advanced Compliance (US-72+) | 30 | 0 / 30 | ⏸️ `PLANNED POST-MVP` |
 
 ---
@@ -166,8 +166,8 @@ MVP 1.3 Band:     [████████████████████�
 | `US-56` | Manage Delivery Orders | Tenant-scoped orders, number generation, readiness | 🟢 `COMPLETE` | `DeliveryOrderPersistenceTest`, V46 |
 | `US-57` | Capture Proof of Delivery | Online signatures, photos, barcodes, finalization | 🟢 `COMPLETE` | `ProofOfDeliveryServiceTest`, V47 |
 | `US-58` | Capture Signature & Photo Offline | IndexedDB outbox, composite sync, consent | 🟢 `COMPLETE` | `DeliveryPodOfflineSyncIntegrationTest` |
-| `US-59` | Manage Failed Deliveries | Return-to-base, non-delivery reasons, parcel holds | ⚪ `NOT_STARTED` | **Immediate Next Queue Target** |
-| `US-60` | Schedule Re-Delivery | Re-attempt scheduling, alternative windows | ⚪ `NOT_STARTED` | Queued in MVP 1.3 |
+| `US-59` | Manage Failed Deliveries | Return-to-base, non-delivery reasons, parcel holds | 🟢 `COMPLETE` | `FailedDeliveryServiceTest`, `failedDelivery.spec.ts`, V48 |
+| `US-60` | Schedule Re-Delivery | Re-attempt scheduling, alternative windows | ⚪ `NOT_STARTED` | **Immediate Next Queue Target** |
 | `US-61` | Analyze Delivery Performance | On-time delivery metrics, driver delivery SLA | ⚪ `NOT_STARTED` | Queued in MVP 1.3 |
 | `US-62` | Handle Delivery Exceptions | Damaged at doorstep, recipient refusal, disputes | ⚪ `NOT_STARTED` | Queued in MVP 1.3 |
 
@@ -220,12 +220,12 @@ MVP 1.3 Band:     [████████████████████�
 
 ```
 Current Target: MVP 1.3 (Delivery Operations)
-Queue Head:     US-59 — Manage Failed Deliveries
+Queue Head:     US-60 — Schedule Re-Delivery
 ```
 
-1. **`US-59` — Manage Failed Deliveries:**
-   - **Task ID:** `MVP-1.3-US59-FAILED-DELIVERIES-PRODUCT-DECISIONS-001`
-   - **Objectives:** Freeze non-delivery reason taxonomy, parcel return-to-base states, driver hold policies, and state machine transition rules (`READY_FOR_ASSIGNMENT` / `FAILED_ATTEMPT` / `RETURNED_TO_BASE`).
+1. **`US-60` — Schedule Re-Delivery (Product Decisions):**
+   - **Task ID:** `MVP-1.3-US60-REDELIVERY-PRODUCT-DECISIONS-001`
+   - **Objectives:** Freeze redelivery scheduling rules, customer time preference capture, slot/window assignment, and `FAILED_ATTEMPT` $\to$ `READY_FOR_ASSIGNMENT` lifecycle transition.
 
 ---
 
@@ -239,4 +239,7 @@ Queue Head:     US-59 — Manage Failed Deliveries
   - `US-56`: `docs/mvp/MVP-1.3-US56-DELIVERY-ORDERS-FINAL-ACCEPTANCE-001.md`
   - `US-57`: `docs/mvp/MVP-1.3-US57-PROOF-OF-DELIVERY-FINAL-ACCEPTANCE-001.md`
   - `US-58`: [`docs/mvp/MVP-1.3-US58-OFFLINE-POD-FINAL-ACCEPTANCE-001.md`](file:///home/hasitha-wijerathna/Documents/transport-logistics-modulith/transport-logistics-modulith/docs/mvp/MVP-1.3-US58-OFFLINE-POD-FINAL-ACCEPTANCE-001.md)
-- **Central Knowledge Base:** Synced with `https://github.com/Hasitha3513/central-knowledge-base.git` at commit `390813f`.
+  - `US-59`: `docs/mvp/MVP-1.3-US59-FAILED-DELIVERIES-FINAL-ACCEPTANCE-001.md`
+- **Implementation Reports:**
+  - `US-59`: `docs/mvp/MVP-1.3-US59-FAILED-DELIVERIES-IMPLEMENTATION-001.md`
+- **Central Knowledge Base:** Synced locally at commit `5eb4f27`.

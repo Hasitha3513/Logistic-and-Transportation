@@ -73,6 +73,52 @@ public record DeliveryOrder(
                 serviceType, window, instructions, DeliveryStatus.DELIVERED, version, createdAt, now, createdBy, actor);
     }
 
+    public DeliveryOrder recordFailedAttempt(DeliveryFailureDisposition disposition, OffsetDateTime now, String actor) {
+        if (status != DeliveryStatus.READY_FOR_ASSIGNMENT && status != DeliveryStatus.FAILED_ATTEMPT) {
+            throw new BusinessRuleException("INVALID_DELIVERY_TRANSITION",
+                    "A failed attempt can only be recorded when the delivery is in READY_FOR_ASSIGNMENT or FAILED_ATTEMPT status");
+        }
+        DeliveryStatus nextStatus;
+        if (disposition == DeliveryFailureDisposition.RETURN_TO_BASE_REQUIRED) {
+            nextStatus = DeliveryStatus.RETURN_TO_BASE;
+        } else if (disposition == DeliveryFailureDisposition.ESCALATED) {
+            nextStatus = DeliveryStatus.ESCALATED;
+        } else {
+            nextStatus = DeliveryStatus.FAILED_ATTEMPT;
+        }
+        return new DeliveryOrder(id, deliveryNumber, customerId, originLocationId, destinationLocationId, priority,
+                serviceType, window, instructions, nextStatus, version, createdAt, now, createdBy, actor);
+    }
+
+    public DeliveryOrder initiateReturnToBase(OffsetDateTime now, String actor) {
+        if (status == DeliveryStatus.DELIVERED || status == DeliveryStatus.DRAFT) {
+            throw new BusinessRuleException("INVALID_DELIVERY_TRANSITION",
+                    "Return to base cannot be initiated for delivery in status " + status);
+        }
+        return new DeliveryOrder(id, deliveryNumber, customerId, originLocationId, destinationLocationId, priority,
+                serviceType, window, instructions, DeliveryStatus.RETURN_TO_BASE, version, createdAt, now, createdBy, actor);
+    }
+
+    public DeliveryOrder escalate(OffsetDateTime now, String actor) {
+        if (status == DeliveryStatus.DELIVERED || status == DeliveryStatus.DRAFT) {
+            throw new BusinessRuleException("INVALID_DELIVERY_TRANSITION",
+                    "Escalation cannot be initiated for delivery in status " + status);
+        }
+        return new DeliveryOrder(id, deliveryNumber, customerId, originLocationId, destinationLocationId, priority,
+                serviceType, window, instructions, DeliveryStatus.ESCALATED, version, createdAt, now, createdBy, actor);
+    }
+
+    public DeliveryOrder resolveEscalation(DeliveryFailureDisposition nextDisposition, OffsetDateTime now, String actor) {
+        if (status != DeliveryStatus.ESCALATED) {
+            throw new BusinessRuleException("INVALID_DELIVERY_TRANSITION", "Only an ESCALATED delivery can be resolved");
+        }
+        DeliveryStatus nextStatus = (nextDisposition == DeliveryFailureDisposition.RETURN_TO_BASE_REQUIRED)
+                ? DeliveryStatus.RETURN_TO_BASE
+                : DeliveryStatus.FAILED_ATTEMPT;
+        return new DeliveryOrder(id, deliveryNumber, customerId, originLocationId, destinationLocationId, priority,
+                serviceType, window, instructions, nextStatus, version, createdAt, now, createdBy, actor);
+    }
+
     private static String normalize(String value) { return value == null || value.isBlank() ? null : value.trim(); }
     private static String actor(String value) {
         if (value == null || value.isBlank()) throw invalid("Authenticated actor is required");
