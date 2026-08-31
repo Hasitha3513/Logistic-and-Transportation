@@ -3,6 +3,7 @@ package com.transportlogistics.app.delivery.adapters.outbound.persistence;
 import com.transportlogistics.app.delivery.domain.model.DeliveryOrder;
 import com.transportlogistics.app.delivery.ports.inbound.DeliveryOrderUseCase;
 import com.transportlogistics.app.delivery.ports.outbound.DeliveryOrderRepository;
+import com.transportlogistics.app.delivery.ports.outbound.DeliveryTenantContextPort;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -13,14 +14,31 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Component
-class DeliveryOrderPersistenceAdapter implements DeliveryOrderRepository {
+public class DeliveryOrderPersistenceAdapter implements DeliveryOrderRepository {
     private final DeliveryOrderJpaRepository repository;
     private final DeliveryOrderPersistenceMapper mapper;
-    DeliveryOrderPersistenceAdapter(DeliveryOrderJpaRepository repository, DeliveryOrderPersistenceMapper mapper) {
-        this.repository = repository; this.mapper = mapper;
+    private final DeliveryTenantContextPort tenantContext;
+
+    public DeliveryOrderPersistenceAdapter(
+            DeliveryOrderJpaRepository repository,
+            DeliveryOrderPersistenceMapper mapper,
+            DeliveryTenantContextPort tenantContext
+    ) {
+        this.repository = repository;
+        this.mapper = mapper;
+        this.tenantContext = tenantContext;
     }
-    @Override public DeliveryOrder save(DeliveryOrder order) { return mapper.toDomain(repository.saveAndFlush(mapper.toEntity(order))); }
+
+    @Override
+    public DeliveryOrder save(DeliveryOrder order) {
+        DeliveryOrderEntity entity = mapper.toEntity(order);
+        if (entity.getTenantId() == null && tenantContext != null) {
+            tenantContext.currentTenantId().ifPresent(entity::setTenantId);
+        }
+        return mapper.toDomain(repository.saveAndFlush(entity));
+    }
     @Override public Optional<DeliveryOrder> findById(UUID id) { return repository.findById(id).map(mapper::toDomain); }
+    @Override public Optional<DeliveryOrder> findByIdForUpdate(UUID id) { return repository.findByIdWithLock(id).map(mapper::toDomain); }
     @Override public Optional<DeliveryOrder> findByDeliveryNumber(String value) { return repository.findByDeliveryNumber(value).map(mapper::toDomain); }
     @Override public DeliveryOrderUseCase.PageResult<DeliveryOrder> search(DeliveryOrderUseCase.SearchQuery request) {
         var spec = (org.springframework.data.jpa.domain.Specification<DeliveryOrderEntity>) (root, query, cb) -> {

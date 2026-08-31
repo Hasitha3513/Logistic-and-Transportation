@@ -72,6 +72,11 @@ public class DeliveryZonePersistenceAdapter implements DeliveryZoneRepository {
     }
 
     @Override
+    public Optional<DeliveryZone> findByIdForUpdate(UUID id, UUID tenantId) {
+        return jpaRepository.findByIdAndTenantIdWithLock(id, tenantId).map(this::toDomain);
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public Optional<DeliveryZone> findByCode(String zoneCode, UUID tenantId) {
         return jpaRepository.findByZoneCodeAndTenantId(zoneCode.trim().toUpperCase(), tenantId).map(this::toDomain);

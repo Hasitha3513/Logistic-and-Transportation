@@ -102,6 +102,7 @@ class ProofOfDeliveryServiceTest {
         private DeliveryOrder value; Orders(DeliveryOrder value) { this.value = value; }
         public DeliveryOrder save(DeliveryOrder order) { value = order; return order; }
         public Optional<DeliveryOrder> findById(UUID id) { return value.id().value().equals(id) ? Optional.of(value) : Optional.empty(); }
+        public Optional<DeliveryOrder> findByIdForUpdate(UUID id) { return findById(id); }
         public Optional<DeliveryOrder> findByDeliveryNumber(String n) { return Optional.empty(); }
         public DeliveryOrderUseCase.PageResult<DeliveryOrder> search(DeliveryOrderUseCase.SearchQuery q) { throw new UnsupportedOperationException(); }
     }

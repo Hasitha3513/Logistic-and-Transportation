@@ -1,8 +1,6 @@
 package com.transportlogistics.app.delivery.adapters.config;
 
 import com.transportlogistics.app.delivery.application.DeliveryZoneService;
-import com.transportlogistics.app.delivery.ports.inbound.DeliveryZoneLookupPort;
-import com.transportlogistics.app.delivery.ports.inbound.DeliveryZoneUseCase;
 import com.transportlogistics.app.delivery.ports.outbound.DeliveryLocationLookupPort;
 import com.transportlogistics.app.delivery.ports.outbound.DeliveryOrderTransaction;
 import com.transportlogistics.app.delivery.ports.outbound.DeliveryTenantContextPort;

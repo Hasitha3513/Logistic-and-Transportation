@@ -43,6 +43,8 @@ import DeliveryOrderFormPage from './features/delivery/orders/pages/DeliveryOrde
 import DeliveryOrderDetailsPage from './features/delivery/orders/pages/DeliveryOrderDetailsPage';
 import DeliveryAnalyticsPage from './features/delivery/analytics/pages/DeliveryAnalyticsPage';
 import DeliveryZoneListPage from './features/delivery/zones/pages/DeliveryZoneListPage';
+import DeliverySlotListPage from './features/delivery/slots/pages/DeliverySlotListPage';
+import { DeliveryRiderListPage } from './features/delivery/riders/pages/DeliveryRiderListPage';
 
 function ProtectedRoute() {
   const { user, isLoading } = useAuth();
@@ -121,6 +123,8 @@ export default function App() {
         <Route path="freight/reports" element={<FreightReportsPage />} />
         <Route path="deliveries" element={<DeliveryOrderListPage />} />
         <Route path="deliveries/zones" element={<DeliveryZoneListPage />} />
+        <Route path="deliveries/slots" element={<DeliverySlotListPage />} />
+        <Route path="deliveries/riders" element={<DeliveryRiderListPage />} />
         <Route path="deliveries/analytics" element={<DeliveryAnalyticsPage />} />
         <Route path="deliveries/new" element={<DeliveryOrderFormPage />} />
         <Route path="deliveries/:deliveryId/edit" element={<DeliveryOrderFormPage />} />

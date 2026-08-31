@@ -3,10 +3,10 @@
 <div align="center">
 
 ![Total Stories](https://img.shields.io/badge/Total%20Stories-87-0969da.svg?style=for-the-badge&logo=target)
-![Completed](https://img.shields.io/badge/Completed-57%20%2F%2087-2da44e.svg?style=for-the-badge&logo=checkmarx)
-![Progress](https://img.shields.io/badge/Progress-65.5%25-brightgreen.svg?style=for-the-badge&logo=speedtest)
-![MVP 1.4 Active](https://img.shields.io/badge/MVP%201.4%20Last--Mile-0%20%2F%208-fa8c16.svg?style=for-the-badge&logo=pinboard)
-![Database](https://img.shields.io/badge/PostgreSQL%20%2F%20Flyway-V52-8a63d2.svg?style=for-the-badge&logo=postgresql)
+![Completed](https://img.shields.io/badge/Completed-58%20%2F%2087-2da44e.svg?style=for-the-badge&logo=checkmarx)
+![Progress](https://img.shields.io/badge/Progress-66.7%25-brightgreen.svg?style=for-the-badge&logo=speedtest)
+![MVP 1.4 Active](https://img.shields.io/badge/MVP%201.4%20Last--Mile-1%20%2F%208-fa8c16.svg?style=for-the-badge&logo=pinboard)
+![Database](https://img.shields.io/badge/PostgreSQL%20%2F%20Flyway-V54-8a63d2.svg?style=for-the-badge&logo=postgresql)
 
 </div>
 
@@ -17,32 +17,32 @@
 > - **Last Reconciled:** `2026-08-31`
 > - **Authority Order:** Original Requirements (`Traspotation & logistic.docx`), Frozen Architecture/Contracts, Verified Production Code/Tests, then Roadmap.
 > - **MVP 1.3 Delivery Operations:** 7 / 7 COMPLETE (100%) - CLOSED
-> - **MVP 1.4 Last-Mile Delivery:** 0 / 8 COMPLETE — US-63 IMPLEMENTATION COMPLETE / ACCEPTANCE PENDING
-> - **Overall Release Band:** 57 / 87 COMPLETE (29 DEFERRED, 1 ACCEPTANCE PENDING / 87 TOTAL)
-> - **Current Milestone:** MVP 1.4 Last-Mile Delivery — US-63 Delivery Zones implemented, awaiting final acceptance.
-> - **Active Focus:** `US-63` Manage Delivery Zones — Implementation complete with V52 Flyway, pure Java ray-casting Point-in-Polygon, RBAC, React/Refine UI.
-> - **Immediate Next Action:** Independent Final Acceptance for `US-63`; then product decisions for `US-64` Delivery Slots.
+> - **MVP 1.4 Last-Mile Delivery:** 2 / 8 COMPLETE — US-63 and US-64 ACCEPTED & CLOSED; US-65 IMPLEMENTATION COMPLETE (ACCEPTANCE PENDING)
+> - **Overall Release Band:** 59 / 87 COMPLETE (28 DEFERRED / 87 TOTAL)
+> - **Current Milestone:** MVP 1.4 Last-Mile Delivery — US-63 & US-64 Accepted; US-65 Implementation Complete.
+> - **Active Focus:** `US-65` Manage Riders — Courier rider registry, zone eligibility, shift scheduling, concurrency-safe assignment & override.
+> - **Immediate Next Action:** Independent Final Acceptance of `US-65` (`MVP-1.4-US65-RIDERS-FINAL-ACCEPTANCE-001`).
 
 ---
 
 ## 📊 1. Executive Metrics & Milestone Progress
 
 ```
-Overall Progress: [██████████████████████████████████░░░░░░░░░░░░░░░░] 57 / 87 Stories Complete (65.5%)
+Overall Progress: [████████████████████████████████████░░░░░░░░░░░░░░] 59 / 87 Stories Complete (67.8%)
 MVP 1.3 Band:     [██████████████████████████████████████████████████] 7 / 7 Complete (100.0%) - CLOSED
-MVP 1.4 Band:     [░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░] 0 / 8 Complete (0.0%) — US-63 ACCEPTANCE PENDING
+MVP 1.4 Band:     [████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░] 2 / 8 Complete (25.0%) - IN PROGRESS
 ```
 
 | Metric | Target | Current Count | Percentage | Status Indicator |
 | :--- | :---: | :---: | :---: | :--- |
-| **Completed Stories (Accepted)** | 87 | **57** | `65.5%` | 🟢 `ON TRACK / VERIFIED` |
-| **In Progress / Acceptance Pending** | — | **1** | `1.1%` | 🟡 `US-63 ACCEPTANCE PENDING` |
-| **Not Started (MVP 1.4 Active Scope)** | 7 | **7** | `8.0%` | ⏸️ `US-64..US-70 DEFERRED` |
-| **Approved Deferments (Post-MVP)** | 29 | **29** | `33.3%` | ⏸️ `DEFERRED BY GOVERNANCE` |
+| **Completed Stories (Accepted)** | 87 | **59** | `67.8%` | 🟢 `ON TRACK / VERIFIED` |
+| **In Progress / Decisions Frozen** | — | **1** | `1.1%` | 🟡 `US-65 ACCEPTANCE PENDING` |
+| **Not Started (MVP 1.4 Active Scope)** | 5 | **5** | `5.7%` | ⏸️ `US-66..US-70 ACTIVE BAND` |
+| **Approved Deferments (Post-MVP)** | 28 | **28** | `32.2%` | ⏸️ `DEFERRED BY GOVERNANCE` |
 | **Total Registered User Stories** | **87** | **87** | **`100%`** | 🔒 `FROZEN REGISTER (US-01..US-87)` |
 
 > [!NOTE]
-> Stories `US-88`, `US-89`, and `US-90` are strictly undefined. The story accounting register is bounded exactly from `US-01` through `US-87` ($56 + 0 + 1 + 30 = 87$).
+> Stories `US-88`, `US-89`, and `US-90` are strictly undefined. The story accounting register is bounded exactly from `US-01` through `US-87` ($59 + 0 + 28 = 87$).
 
 ---
 
@@ -56,7 +56,7 @@ MVP 1.4 Band:     [░░░░░░░░░░░░░░░░░░░░�
 | **MVP 1.1B** | **Freight & Cargo** | Freight Orders, Manifests, Load Planning, Weight/Volume Engine, Claims, Exceptions (US-24–30) | 7 | 7 / 7 | 🟢 `COMPLETE (100%)` |
 | **MVP 1.2** | **Fuel Management** | Fuel Issues, Purchases, Mileage, Bunkers, Stock Transfers (US-31–34, US-36) | 8 | 5 / 8 | 🟢 `CLOSED (3 DEFERRED)` |
 | **MVP 1.3** | **Delivery Operations** | Delivery Orders, Online POD, Offline POD, Failed Deliveries, Redelivery, Analytics, Exceptions (US-56–62) | 7 | 7 / 7 | 🟢 `COMPLETE (100%) - CLOSED` |
-| **MVP 1.4** | **Last-Mile Delivery** | Delivery Zones, Delivery Slots, Riders, Batch Orders, ETA, Exceptions, Notifications, Self-Service (US-63–70) | 8 | 0 / 8 | 🟡 `US-63 ACCEPTANCE PENDING` |
+| **MVP 1.4** | **Last-Mile Delivery** | Delivery Zones, Delivery Slots, Riders, Batch Orders, ETA, Exceptions, Notifications, Self-Service (US-63–70) | 8 | 2 / 8 | 🟡 `IN PROGRESS (US-63, US-64 ACCEPTED)` |
 | **Post-MVP** | **Extended Platform** | GPS Tracking (US-48–55), Billing (US-47), Advanced Compliance (US-72+) | 22 | 0 / 22 | ⏸️ `PLANNED POST-MVP` |
 
 ---
@@ -182,9 +182,9 @@ MVP 1.4 Band:     [░░░░░░░░░░░░░░░░░░░░�
 ### 🚲 Module 10: Last-Mile Delivery (US-63 to US-70)
 | ID | User Story Title | Scope / Feature | Status | Verification Evidence |
 | :---: | :--- | :--- | :--- | :--- |
-| `US-63` | Manage Delivery Zones | GeoJSON polygon zones, ray-casting PiP, priority overlap resolution, capacity, serviceability | 🟡 `ACCEPTANCE PENDING` | `DeliveryZoneTest`, `DeliveryZoneServiceTest`, `DeliveryZoneControllerTest`, `DeliveryZonePersistencePostgreSqlAcceptanceTest`, `DeliveryZoneConcurrencyPostgreSqlAcceptanceTest`, V52 |
-| `US-64` | Manage Delivery Slots | Time-slot bookings, customer preference windows | ⏸️ `DEFERRED` | Post-MVP last-mile band |
-| `US-65` | Manage Riders | Courier rider registry, bike/van assignment | ⏸️ `DEFERRED` | Post-MVP last-mile band |
+| `US-63` | Manage Delivery Zones | GeoJSON polygon zones, ray-casting PiP, priority overlap resolution, capacity, serviceability | 🟢 `COMPLETE` | `DeliveryZoneTest`, `DeliveryZoneServiceTest`, `DeliveryZoneControllerTest`, `DeliveryZonePersistencePostgreSqlAcceptanceTest`, `DeliveryZoneConcurrencyPostgreSqlAcceptanceTest`, `deliveryZones.spec.ts`, V52 |
+| `US-64` | Manage Delivery Slots | Time-window capacity, cutoff enforcement, manager override, concurrent reservation | 🟢 `COMPLETE` | `DeliverySlotTest`, `DeliverySlotControllerTest`, `DeliverySlotPostgreSqlAcceptanceTest`, `DeliverySlotConcurrencyPostgreSqlAcceptanceTest`, `deliverySlots.spec.ts`, V53 |
+| `US-65` | Manage Riders | Courier rider registry, zone eligibility, shift scheduling, concurrency-safe assignment & override | 🟡 `IN PROGRESS (ACCEPTANCE PENDING)` | `DeliveryRiderTest`, `DeliveryRiderControllerTest`, `DeliveryRiderPostgreSqlAcceptanceTest`, `DeliveryRiderConcurrencyPostgreSqlAcceptanceTest`, `deliveryRiders.spec.ts`, V54 |
 | `US-66` | Batch Delivery Orders | Automated order clustering for urban routes | ⏸️ `DEFERRED` | Post-MVP last-mile band |
 | `US-67` | Calculate Last-Mile ETA | Dynamic pedestrian / two-wheeler routing ETA | ⏸️ `DEFERRED` | Post-MVP last-mile band |
 | `US-68` | Handle Last-Mile Exceptions | Address unreachable, gate code missing | ⏸️ `DEFERRED` | Post-MVP last-mile band |
@@ -225,15 +225,12 @@ MVP 1.4 Band:     [░░░░░░░░░░░░░░░░░░░░�
 ## 🎯 4. Immediate Execution Queue
 
 ```
-Current Status: MVP 1.4 (Last-Mile Delivery) IN PROGRESS — US-63 ACCEPTANCE PENDING
-Queue Head:     MVP-1.4-US63-DELIVERY-ZONES-FINAL-ACCEPTANCE-001
+Current Status: MVP 1.4 (Last-Mile Delivery) IN PROGRESS — US-63 & US-64 ACCEPTED (2 / 8 COMPLETE), US-65 IMPLEMENTED (ACCEPTANCE PENDING)
+Queue Head:     MVP-1.4-US65-RIDERS-FINAL-ACCEPTANCE-001
 ```
 
-1. **`MVP-1.4-US63-DELIVERY-ZONES-FINAL-ACCEPTANCE-001`:**
-   - Independent final acceptance for US-63 Manage Delivery Zones.
-   - Verify V52 schema, domain model, ray-casting PiP, RBAC, multi-tenancy, concurrency, React UI.
-2. **`MVP-1.4-US64-DELIVERY-SLOTS-PRODUCT-DECISIONS-001`:**
-   - Freeze product decisions and domain contract for US-64 Manage Delivery Slots.
+1. **`MVP-1.4-US65-RIDERS-FINAL-ACCEPTANCE-001`:**
+   - Independent final acceptance and formal closure of US-65 Manage Riders.
 
 ---
 
@@ -249,8 +246,14 @@ Queue Head:     MVP-1.4-US63-DELIVERY-ZONES-FINAL-ACCEPTANCE-001
   - `US-58`: [`docs/mvp/MVP-1.3-US58-OFFLINE-POD-FINAL-ACCEPTANCE-001.md`](file:///home/hasitha-wijerathna/Documents/transport-logistics-modulith/transport-logistics-modulith/docs/mvp/MVP-1.3-US58-OFFLINE-POD-FINAL-ACCEPTANCE-001.md)
   - `US-59`: `docs/mvp/MVP-1.3-US59-FAILED-DELIVERIES-FINAL-ACCEPTANCE-001.md`
   - `US-60`: `docs/mvp/MVP-1.3-US60-REDELIVERY-FINAL-ACCEPTANCE-001.md`
+  - `US-61`: `docs/mvp/MVP-1.3-US61-ANALYTICS-FINAL-ACCEPTANCE-001.md`
+  - `US-62`: `docs/mvp/MVP-1.3-US62-DELIVERY-EXCEPTIONS-FINAL-ACCEPTANCE-001.md`
+  - `US-63`: `docs/mvp/MVP-1.4-US63-DELIVERY-ZONES-FINAL-ACCEPTANCE-001.md`
+  - `US-64`: `docs/mvp/MVP-1.4-US64-DELIVERY-SLOTS-FINAL-ACCEPTANCE-001.md`
 - **Implementation Reports:**
   - `US-59`: `docs/mvp/MVP-1.3-US59-FAILED-DELIVERIES-IMPLEMENTATION-001.md`
   - `US-60`: `docs/mvp/MVP-1.3-US60-REDELIVERY-IMPLEMENTATION-001.md`
+  - `US-62`: `docs/mvp/MVP-1.3-US62-DELIVERY-EXCEPTIONS-IMPLEMENTATION-001.md`
   - `US-63`: `docs/mvp/MVP-1.4-US63-DELIVERY-ZONES-IMPLEMENTATION-001.md`
+  - `US-64`: `docs/mvp/MVP-1.4-US64-DELIVERY-SLOTS-IMPLEMENTATION-001.md`
 - **Central Knowledge Base:** Synced to `origin/main`.

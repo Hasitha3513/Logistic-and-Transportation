@@ -273,6 +273,17 @@ class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/v1/delivery-zones/*/activate", "/v1/delivery-zones/*/deactivate")
                         .hasAuthority("DELIVERY_ZONE_ACTIVATE")
 
+                        .requestMatchers(HttpMethod.GET, "/api/v1/delivery-slots", "/api/v1/delivery-slots/*", "/api/v1/delivery-slots/available", "/v1/delivery-slots", "/v1/delivery-slots/*", "/v1/delivery-slots/available")
+                        .hasAuthority("DELIVERY_SLOT_VIEW")
+                        .requestMatchers(HttpMethod.POST, "/api/v1/delivery-slots", "/v1/delivery-slots")
+                        .hasAuthority("DELIVERY_SLOT_CREATE")
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/delivery-slots/*", "/v1/delivery-slots/*")
+                        .hasAuthority("DELIVERY_SLOT_UPDATE")
+                        .requestMatchers(HttpMethod.POST, "/api/v1/delivery-slots/*/activate", "/api/v1/delivery-slots/*/deactivate", "/api/v1/delivery-slots/*/close", "/v1/delivery-slots/*/activate", "/v1/delivery-slots/*/deactivate", "/v1/delivery-slots/*/close")
+                        .hasAuthority("DELIVERY_SLOT_ACTIVATE")
+                        .requestMatchers(HttpMethod.POST, "/api/v1/delivery-slots/*/reservations", "/api/v1/delivery-slots/*/reservations/*/release", "/v1/delivery-slots/*/reservations", "/v1/delivery-slots/*/reservations/*/release")
+                        .hasAnyAuthority("DELIVERY_SLOT_ASSIGN", "DELIVERY_SLOT_OVERRIDE")
+
                         .requestMatchers(HttpMethod.GET, "/bunker-tanks/*/movements").hasAuthority("BUNKER_LEDGER_VIEW")
                         .requestMatchers(HttpMethod.GET, "/bunker-tanks", "/bunker-tanks/*", "/bunker-tanks/*/balance", "/bunker-tanks/*/dip-readings")
                         .hasAuthority("BUNKER_VIEW")

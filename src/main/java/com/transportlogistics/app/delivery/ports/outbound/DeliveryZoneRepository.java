@@ -10,6 +10,7 @@ import java.util.UUID;
 public interface DeliveryZoneRepository {
     DeliveryZone save(DeliveryZone zone);
     Optional<DeliveryZone> findById(UUID id, UUID tenantId);
+    Optional<DeliveryZone> findByIdForUpdate(UUID id, UUID tenantId);
     Optional<DeliveryZone> findByCode(String zoneCode, UUID tenantId);
     List<DeliveryZone> findActiveCandidatesByBBox(double longitude, double latitude, UUID tenantId);
     List<DeliveryZone> findAll(UUID tenantId, DeliveryZoneStatus status, Boolean serviceable);

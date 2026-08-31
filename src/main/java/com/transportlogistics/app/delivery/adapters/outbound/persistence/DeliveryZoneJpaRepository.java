@@ -13,6 +13,10 @@ public interface DeliveryZoneJpaRepository extends JpaRepository<DeliveryZoneEnt
 
     Optional<DeliveryZoneEntity> findByIdAndTenantId(UUID id, UUID tenantId);
 
+    @org.springframework.data.jpa.repository.Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT z FROM DeliveryZoneEntity z WHERE z.id = :id AND z.tenantId = :tenantId")
+    Optional<DeliveryZoneEntity> findByIdAndTenantIdWithLock(@Param("id") UUID id, @Param("tenantId") UUID tenantId);
+
     Optional<DeliveryZoneEntity> findByZoneCodeAndTenantId(String zoneCode, UUID tenantId);
 
     boolean existsByZoneCodeAndTenantId(String zoneCode, UUID tenantId);

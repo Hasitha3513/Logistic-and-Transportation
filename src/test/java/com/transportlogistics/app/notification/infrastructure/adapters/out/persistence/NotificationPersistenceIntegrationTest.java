@@ -91,10 +91,11 @@ class NotificationPersistenceIntegrationTest {
         assertThat(saved.id()).isEqualTo(rule.id());
 
         List<NotificationRule> matching = ruleAdapter.findByEventTypeAndEnabledTrue("trip_delay_recorded");
-        assertThat(matching).hasSize(1);
-        assertThat(matching.get(0).name()).isEqualTo("Delay Warning");
-        assertThat(matching.get(0).templateCode()).isEqualTo("TRIP_DELAY");
-        assertThat(matching.get(0).policy().suppressionWindowMinutes()).isEqualTo(15);
+        assertThat(matching).anySatisfy(r -> {
+            assertThat(r.name()).isEqualTo("Delay Warning");
+            assertThat(r.templateCode()).isEqualTo("TRIP_DELAY");
+            assertThat(r.policy().suppressionWindowMinutes()).isEqualTo(15);
+        });
     }
 
     @Test

@@ -1,7 +1,5 @@
 package com.transportlogistics.app.delivery.domain.model;
 
-import java.util.Objects;
-
 public record DeliveryZoneCoordinate(double longitude, double latitude) {
     public DeliveryZoneCoordinate {
         if (Double.isNaN(longitude) || Double.isInfinite(longitude) || longitude < -180.0 || longitude > 180.0) {

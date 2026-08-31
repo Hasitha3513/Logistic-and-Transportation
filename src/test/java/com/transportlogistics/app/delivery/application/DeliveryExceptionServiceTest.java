@@ -248,6 +248,7 @@ class DeliveryExceptionServiceTest {
         private final Map<UUID, DeliveryOrder> store = new ConcurrentHashMap<>();
         @Override public DeliveryOrder save(DeliveryOrder order) { store.put(order.id().value(), order); return order; }
         @Override public Optional<DeliveryOrder> findById(UUID id) { return Optional.ofNullable(store.get(id)); }
+        @Override public Optional<DeliveryOrder> findByIdForUpdate(UUID id) { return findById(id); }
         @Override public Optional<DeliveryOrder> findByDeliveryNumber(String deliveryNumber) { return Optional.empty(); }
         @Override public DeliveryOrderUseCase.PageResult<DeliveryOrder> search(DeliveryOrderUseCase.SearchQuery query) { throw new UnsupportedOperationException(); }
     }

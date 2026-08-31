@@ -165,14 +165,6 @@ public record DeliveryExceptionCase(
         if (status == DeliveryExceptionStatus.RESOLVED || status == DeliveryExceptionStatus.CANCELLED) {
             throw new ConflictException("DELIVERY_EXCEPTION_ALREADY_TERMINAL", "Terminal exception case cannot be cancelled");
         }
-        String notes = cancellationReason == null || cancellationReason.isBlank() ? "Cancelled by operator" : cancellationReason.trim();
-        var cancelResolution = new DeliveryExceptionResolution(
-                DeliveryExceptionResolutionCode.RETURN_TO_BASE_APPROVED,
-                notes,
-                null,
-                now,
-                actor
-        );
         return new DeliveryExceptionCase(
                 id, deliveryOrderId, deliveryAttemptId, exceptionType, severity,
                 DeliveryExceptionStatus.CANCELLED, description,

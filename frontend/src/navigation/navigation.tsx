@@ -109,6 +109,8 @@ export const navigation: NavigationItem[] = [
     children: [
       { key: 'delivery-orders', label: 'Delivery Orders', route: '/deliveries', requiredPermission: 'DELIVERY_VIEW' },
       { key: 'delivery-zones', label: 'Delivery Zones', route: '/deliveries/zones', requiredPermission: 'DELIVERY_ZONE_VIEW' },
+      { key: 'delivery-slots', label: 'Delivery Slots', route: '/deliveries/slots', requiredPermission: 'DELIVERY_SLOT_VIEW' },
+      { key: 'delivery-riders', label: 'Delivery Riders', route: '/deliveries/riders', requiredPermission: 'DELIVERY_RIDER_VIEW' },
       { key: 'delivery-analytics', label: 'Delivery Analytics', route: '/deliveries/analytics', requiredPermission: 'DELIVERY_ANALYTICS_VIEW' },
     ],
   },

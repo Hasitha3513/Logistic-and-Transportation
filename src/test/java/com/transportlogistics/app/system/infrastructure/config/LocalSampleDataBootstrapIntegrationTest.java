@@ -47,6 +47,7 @@ class LocalSampleDataBootstrapIntegrationTest {
         jdbc.update("DELETE FROM fuel_purchase_history");
         jdbc.update("DELETE FROM fuel_purchase");
         jdbc.update("DELETE FROM trip");
+        jdbc.update("DELETE FROM route_disruption");
         jdbc.update("DELETE FROM route_stop");
         jdbc.update("DELETE FROM route");
         jdbc.update("DELETE FROM driver_license");

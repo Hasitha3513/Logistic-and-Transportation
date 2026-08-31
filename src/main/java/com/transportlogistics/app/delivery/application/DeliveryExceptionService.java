@@ -166,11 +166,11 @@ public final class DeliveryExceptionService implements DeliveryExceptionUseCase 
             DeliveryExceptionCase savedCase = exceptions.save(resolvedCase);
 
             // Align DeliveryOrder operational state if resolution disposition demands RTO
-            if (command.resolutionCode() == DeliveryExceptionResolutionCode.RETURN_TO_BASE_APPROVED
-                    || command.followUpDisposition() == DeliveryFailureDisposition.RETURN_TO_BASE_REQUIRED) {
-                if (delivery.status() != DeliveryStatus.RETURN_TO_BASE && delivery.status() != DeliveryStatus.DELIVERED) {
-                    orders.save(delivery.initiateReturnToBase(now, actor));
-                }
+            if ((command.resolutionCode() == DeliveryExceptionResolutionCode.RETURN_TO_BASE_APPROVED
+                    || command.followUpDisposition() == DeliveryFailureDisposition.RETURN_TO_BASE_REQUIRED)
+                    && delivery.status() != DeliveryStatus.RETURN_TO_BASE
+                    && delivery.status() != DeliveryStatus.DELIVERED) {
+                orders.save(delivery.initiateReturnToBase(now, actor));
             }
 
             return savedCase;

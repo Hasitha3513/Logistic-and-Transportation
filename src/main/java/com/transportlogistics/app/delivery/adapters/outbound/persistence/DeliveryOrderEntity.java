@@ -24,6 +24,8 @@ class DeliveryOrderEntity extends TenantScopedEntity {
     @Column(name = "window_start", nullable = false) private OffsetDateTime windowStart;
     @Column(name = "window_end", nullable = false) private OffsetDateTime windowEnd;
     @Column(columnDefinition = "TEXT") private String instructions;
+    @Column(name = "delivery_slot_id") private UUID deliverySlotId;
+    @Column(name = "current_rider_id") private UUID currentRiderId;
     @Column(nullable = false, length = 40) private String status;
     @Version @Column(nullable = false) private long version;
     @Column(name = "created_at", nullable = false) private OffsetDateTime createdAt;

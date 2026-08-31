@@ -2,7 +2,6 @@ package com.transportlogistics.app.delivery.application;
 
 import com.transportlogistics.app.delivery.domain.model.DeliveryZone;
 import com.transportlogistics.app.delivery.domain.model.DeliveryZoneBoundary;
-import com.transportlogistics.app.delivery.domain.model.DeliveryZoneCoordinate;
 import com.transportlogistics.app.delivery.domain.model.DeliveryZoneStatus;
 import com.transportlogistics.app.delivery.ports.inbound.DeliveryZoneLookupPort;
 import com.transportlogistics.app.delivery.ports.inbound.DeliveryZoneUseCase;
@@ -154,6 +153,12 @@ public final class DeliveryZoneService implements DeliveryZoneUseCase, DeliveryZ
     public Optional<DeliveryZone> findZone(UUID id) {
         UUID tenantId = requireTenantId();
         return zoneRepository.findById(id, tenantId);
+    }
+
+    @Override
+    public Optional<DeliveryZone> findZoneForUpdate(UUID id) {
+        UUID tenantId = requireTenantId();
+        return zoneRepository.findByIdForUpdate(id, tenantId);
     }
 
     @Override
