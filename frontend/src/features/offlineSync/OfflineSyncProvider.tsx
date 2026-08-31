@@ -49,7 +49,11 @@ export function OfflineSyncProvider({ children }: PropsWithChildren) {
         ...state,
         syncNow: () => coordinator.syncNow(),
         registerPostApply: (operationType, callback) => coordinator.registerPostApply(operationType, callback),
-        enqueueOperation: (input) => resources.storage.enqueue(input),
+        enqueueOperation: async (input) => {
+          const operation = await resources.storage.enqueue(input);
+          void coordinator.syncNow();
+          return operation;
+        },
         getOperationsForAggregate: (aggregateType, aggregateId) => {
           if (!user?.id) return Promise.resolve([]);
           return resources.storage.getForAggregate(user.id, aggregateType, aggregateId);

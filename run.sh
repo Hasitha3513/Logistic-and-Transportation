@@ -6,6 +6,49 @@ echo " Transport & Logistics Modular Monolith - Application Runner"
 echo "==================================================================="
 echo ""
 
+# Ensure .env file exists with default development credentials if not present
+if [ ! -f ".env" ]; then
+    echo "[*] Initializing default development .env file..."
+    cat <<'EOF' > .env
+POSTGRES_DB=transport_logistics
+POSTGRES_USER=transport_app
+POSTGRES_PASSWORD=transport_app_secret
+POSTGRES_PORT=5432
+JWT_SECRET=0123456789012345678901234567890123456789
+APP_ADMIN_USERNAME=admin
+APP_ADMIN_PASSWORD=AdminPassword123!
+APP_ADMIN_EMAIL=admin@localhost.test
+BACKEND_PORT=8080
+FRONTEND_PORT=5173
+NOTIFICATION_EMAIL_ENABLED=false
+EOF
+fi
+
+set -a
+# shellcheck disable=SC1091
+. ./.env
+set +a
+
+# Always start with Docker build and up by default when Docker is present
+if command -v docker >/dev/null 2>&1 && [ "$1" != "--local" ]; then
+    echo "[*] Launching Full Application Stack with Docker Compose (Build & Up)..."
+    echo ""
+    echo "==================================================================="
+    echo " Backend API:    http://localhost:${BACKEND_PORT:-8080}/api"
+    echo " Frontend UI:    http://localhost:${FRONTEND_PORT:-5173}/"
+    echo " Swagger UI:     http://localhost:${BACKEND_PORT:-8080}/api/swagger-ui.html"
+    echo " Health Check:   http://localhost:${BACKEND_PORT:-8080}/api/health"
+    echo ""
+    echo " Default Admin Login:"
+    echo "   Username: ${APP_ADMIN_USERNAME:-admin}"
+    echo "   Password: ${APP_ADMIN_PASSWORD:-AdminPassword123!}"
+    echo "==================================================================="
+    echo ""
+    exec docker compose up --build "$@"
+fi
+
+echo "[*] Running in local host mode..."
+
 # Detect Java 21 across macOS (Apple Silicon / Intel) and Linux / Ubuntu
 detect_java() {
     if [ -n "$JAVA_HOME" ] && [ -x "$JAVA_HOME/bin/java" ]; then
@@ -87,14 +130,6 @@ for port in 8080 5173; do
         exit 1
     fi
 done
-
-# Load the same database settings used by Docker Compose.
-if [ -f ".env" ]; then
-    set -a
-    # shellcheck disable=SC1091
-    . ./.env
-    set +a
-fi
 
 export DB_USERNAME="${DB_USERNAME:-${POSTGRES_USER:-transport_app}}"
 export DB_PASSWORD="${DB_PASSWORD:-${POSTGRES_PASSWORD:-transport_app_secret}}"

@@ -1,5 +1,6 @@
 import { OfflineSyncStorageError } from './errors';
 import type {
+  DeliveryPodOfflineSyncPayload,
   OfflineOperation,
   OfflineOperationInput,
   TripCheckpointPayload,
@@ -121,6 +122,22 @@ function validateIncident(payload: TripIncidentPayload): TripIncidentPayload {
   return payload;
 }
 
+function validateDeliveryPodOfflineSync(
+  payload: DeliveryPodOfflineSyncPayload,
+): DeliveryPodOfflineSyncPayload {
+  if (!payload || typeof payload !== 'object') invalid('payload is required');
+  requireUuid(payload.deliveryId, 'payload.deliveryId');
+  if (!Number.isInteger(payload.deliveryVersion) || payload.deliveryVersion < 0) {
+    invalid('payload.deliveryVersion must be a non-negative integer');
+  }
+  if (!Array.isArray(payload.evidenceList) || payload.evidenceList.length === 0) {
+    invalid('payload.evidenceList must contain at least one evidence item');
+  }
+  optionalText(payload.signerName, 'payload.signerName', 200);
+  optionalText(payload.signerRelationship, 'payload.signerRelationship', 100);
+  return payload;
+}
+
 export function createPendingOfflineOperation(
   input: OfflineOperationInput,
   clientInstanceId: string,
@@ -163,6 +180,9 @@ export function createPendingOfflineOperation(
     case 'TRIP_INCIDENT_RECORD':
       if (input.aggregateType !== 'TRIP') invalid('trip incidents require a TRIP aggregate');
       return { ...common, operationType: input.operationType, aggregateType: 'TRIP', payload: validateIncident(input.payload) };
+    case 'DELIVERY_POD_OFFLINE_SYNC':
+      if (input.aggregateType !== 'DELIVERY') invalid('delivery POD sync requires a DELIVERY aggregate');
+      return { ...common, operationType: input.operationType, aggregateType: 'DELIVERY', payload: validateDeliveryPodOfflineSync(input.payload) };
     default:
       return invalid('operationType is unsupported');
   }

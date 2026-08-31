@@ -28,6 +28,7 @@ import {
 } from 'antd';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useQueryClient } from '@tanstack/react-query';
 import { isAxiosError } from 'axios';
 import { useAuth } from '../../../../auth/AuthContext';
 import {
@@ -68,8 +69,22 @@ const errorText = (e: unknown) =>
 export function ProofOfDeliverySection({ delivery }: Props) {
   const { user, hasPermission } = useAuth();
   const { message } = App.useApp();
-  const { onlineHint, backendReachable, enqueueOperation, getOperationsForAggregate } = useOfflineSync();
+  const queryClient = useQueryClient();
+  const { onlineHint, backendReachable, enqueueOperation, getOperationsForAggregate, syncNow, registerPostApply } =
+    useOfflineSync();
   const isOnline = onlineHint && backendReachable !== false;
+
+  useEffect(() => {
+    return registerPostApply('DELIVERY_POD_OFFLINE_SYNC', async (operation) => {
+      if (operation.aggregateId === delivery.id) {
+        await Promise.all([
+          queryClient.invalidateQueries({ queryKey: ['delivery-proof', delivery.id] }),
+          queryClient.invalidateQueries({ queryKey: ['deliveries'] }),
+          queryClient.invalidateQueries({ queryKey: ['delivery-orders'] }),
+        ]);
+      }
+    });
+  }, [queryClient, registerPostApply, delivery.id]);
 
   const canCapture =
     hasPermission('DELIVERY_POD_CAPTURE') && delivery.status === 'READY_FOR_ASSIGNMENT';
@@ -238,9 +253,13 @@ export function ProofOfDeliverySection({ delivery }: Props) {
     }
   };
 
-  const handleAddStagedBarcode = (barcodeValue: string) => {
-    const trimmed = barcodeValue.trim();
+  const handleAddBarcode = async (val: string) => {
+    const trimmed = val.trim().toUpperCase();
     if (!trimmed) return;
+    if (current && current.status === 'DRAFT') {
+      await upload('BARCODE', undefined, trimmed);
+      return;
+    }
     if (trimmed !== delivery.deliveryNumber) {
       void message.error(`Barcode must match delivery number ${delivery.deliveryNumber}`);
       return;
@@ -304,6 +323,9 @@ export function ProofOfDeliverySection({ delivery }: Props) {
       });
       void message.success('Proof of Delivery saved offline and queued for sync');
       setStagedEvidence([]);
+      if (isOnline) {
+        void syncNow();
+      }
     } catch (err) {
       void message.error('Failed to save offline POD');
       console.error(err);
@@ -509,10 +531,11 @@ export function ProofOfDeliverySection({ delivery }: Props) {
                 render={({ field }) => (
                   <Form.Item
                     label="Signer name"
+                    htmlFor="signerName"
                     validateStatus={errors.signerName ? 'error' : ''}
                     help={errors.signerName?.message}
                   >
-                    <Input {...field} placeholder="Full name of recipient" />
+                    <Input id="signerName" aria-label="Signer name" {...field} placeholder="Full name of recipient" />
                   </Form.Item>
                 )}
               />
@@ -520,14 +543,15 @@ export function ProofOfDeliverySection({ delivery }: Props) {
                 name="signerRelationship"
                 control={control}
                 render={({ field }) => (
-                  <Form.Item label="Signer relationship">
-                    <Input {...field} placeholder="e.g. Recipient, Warehouse Manager" />
+                  <Form.Item label="Signer relationship" htmlFor="signerRelationship">
+                    <Input id="signerRelationship" aria-label="Signer relationship" {...field} placeholder="e.g. Recipient, Warehouse Manager" />
                   </Form.Item>
                 )}
               />
 
               <Form.Item>
                 <Checkbox
+                  id="customerConsent"
                   checked={consentGiven}
                   onChange={(e) => setConsentGiven(e.target.checked)}
                 >
@@ -587,6 +611,7 @@ export function ProofOfDeliverySection({ delivery }: Props) {
                   <Button icon={<FileImageOutlined />}>Capture / Upload Photo</Button>
                 </Upload>
                 <Input.Search
+                  id="deliveryBarcode"
                   aria-label="Delivery barcode"
                   placeholder={delivery.deliveryNumber}
                   enterButton={
@@ -594,7 +619,7 @@ export function ProofOfDeliverySection({ delivery }: Props) {
                       <ScanOutlined /> Add Barcode
                     </>
                   }
-                  onSearch={(val) => handleAddStagedBarcode(val)}
+                  onSearch={(val) => void handleAddBarcode(val)}
                   style={{ width: 320 }}
                 />
                 <Button icon={<EnvironmentOutlined />} onClick={locate}>
@@ -610,7 +635,7 @@ export function ProofOfDeliverySection({ delivery }: Props) {
                 </Button>
                 {!current && isOnline && (
                   <Button onClick={() => void handleCreateOnlineDraft()} loading={create.isPending}>
-                    Initialize Online Draft
+                    Start POD
                   </Button>
                 )}
               </Space>
@@ -665,6 +690,7 @@ export function ProofOfDeliverySection({ delivery }: Props) {
         onOk={saveCanvasSignature}
         onCancel={() => setIsSignatureModalOpen(false)}
         okText="Accept Signature"
+        maskClosable={false}
         destroyOnClose
       >
         <div style={{ textAlign: 'center' }}>

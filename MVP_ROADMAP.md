@@ -1,299 +1,242 @@
-# Transport & Logistics — MVP / Product Roadmap
-
-> **Last reconciled:** 2026-08-30
-> **Authority:** Original requirements, frozen contracts/decisions, verified implementation evidence, derived UML, then prior roadmap.
-> **Current active expansion:** MVP 1.3 Delivery Operations. US-56 and US-57 are accepted and complete; MVP 1.3 production story closure is 2/7 with 5 stories remaining (US-58 through US-62).
-
-## 1. Purpose and Authority
-
-This roadmap reconciles the complete product scope against the original DOCX, mind map, derived UML, frozen MVP contracts and current repository evidence. Newer authoritative evidence supersedes stale roadmap wording.
-
-- **Authoritative product register:** US-01 through US-87
-- **Total user stories:** 87
-- **US-88:** NOT DEFINED
-- **US-89:** NOT DEFINED
-- **US-90:** NOT DEFINED
-
-The `US-81-US-90` derived UML file does not authorize US-88 through US-90.
-
-## 2. Product Scope at a Glance
-
-The register covers Fleet Management, Trip Management, Route Management, Freight & Cargo, Fuel Management, Driver Management, Transport Billing, GPS / Real-Time Tracking, Delivery Management, Last-Mile Delivery, Offline Sync, Compliance, External Integrations, Security, Audit & Reporting, Mobile Operations, Notifications, Operational Exception Management, Master Data, Workflow, Scheduling, Operational Analytics, Document Management, Global System Failure Handling, Data Integrity, Operational Disruptions and User Risk.
-
-- MVP 1.0 Core: `COMPLETE` — 34/34.
-- MVP 1.1A Advanced Route: `COMPLETE` — 4/4.
-- MVP 1.1B Freight & Cargo: `COMPLETE` — 7/7.
-- MVP 1.2 Fuel: `CLOSED_WITH_APPROVED_DEFERMENTS` — 5 complete, 3 deferred.
-- MVP 1.3 Delivery Operations: current active expansion — US-56 and US-57 `COMPLETE` (2/7); US-58 through US-62 not started.
-
-## 3. Authoritative Story Register — US-01 through US-87
-
-### Fleet Management — US-01 to US-08
-
-- [x] `US-01` — Manage Vehicle Master — `COMPLETE`
-- [x] `US-02` — Manage Fleet Categories — `COMPLETE`
-- [x] `US-03` — Manage Vehicle Documents — `COMPLETE`
-- [x] `US-04` — Allocate Vehicles — `COMPLETE`
-- [x] `US-05` — Maintain Fuel & Lubricant Logs — `COMPLETE`
-- [x] `US-06` — Maintain Running Logs — `COMPLETE`
-- [x] `US-07` — Link Maintenance to Availability — `COMPLETE`
-- [x] `US-08` — Handle Fleet Allocation Edge Cases — `COMPLETE`
-
-### Trip Management — US-09 to US-16
-
-- [x] `US-09` — Create Trip Orders — `COMPLETE`
-- [x] `US-10` — Assign Driver and Vehicle — `COMPLETE`
-- [x] `US-11` — Assign Route — `COMPLETE`
-- [x] `US-12` — Start and End Trip — `COMPLETE`
-- [x] `US-13` — Maintain Trip Log — `COMPLETE`
-- [x] `US-14` — Complete Trip — `COMPLETE`
-- [x] `US-15` — Handle Trip Exceptions — `COMPLETE`
-- [x] `US-16` — Authorize Trip — `COMPLETE`
-
-### Route Management — US-17 to US-23
-
-- [x] `US-17` — Define Routes — `COMPLETE`
-- [x] `US-18` — Calculate Distance and ETA — `COMPLETE`
-- [x] `US-19` — Plan Multi-Stop Routes — `COMPLETE`
-- [x] `US-20` — Optimize Routes — `COMPLETE`
-- [x] `US-21` — Maintain Route History — `COMPLETE`
-- [x] `US-22` — Analyze Route Performance — `COMPLETE`
-- [x] `US-23` — Handle Route Disruptions — `COMPLETE`
-
-### Freight & Cargo — US-24 to US-30
-
-- [x] `US-24` — Manage Freight Orders — `COMPLETE`
-- [x] `US-25` — Manage Cargo Manifest — `COMPLETE`
-- [x] `US-26` — Plan Cargo Loads — `COMPLETE`
-- [x] `US-27` — Calculate Weight and Volume — `COMPLETE`
-- [x] `US-28` — Manage Freight Insurance — `COMPLETE`
-- [x] `US-29` — Generate Freight Reports — `COMPLETE`
-- [x] `US-30` — Handle Cargo Exceptions — `COMPLETE`
-
-### Fuel Management — US-31 to US-38
-
-- [x] `US-31` — Issue Fuel — `COMPLETE`
-- [x] `US-32` — Manage Fuel Purchases — `COMPLETE`
-- [x] `US-33` — Track Mileage — `COMPLETE`
-- [x] `US-34` — Allocate Fuel Cost — `COMPLETE`
-- [ ] `US-35` — Manage Fuel Cards — `DEFERRED`
-- [x] `US-36` — Manage Fuel Bunkers — `COMPLETE`
-- [ ] `US-37` — Analyze Fuel Performance — `DEFERRED`
-- [ ] `US-38` — Handle Fuel Exceptions — `DEFERRED`
-
-### Driver Management — US-39 to US-46
-
-- [x] `US-39` — Manage Driver Profiles — `COMPLETE`
-- [x] `US-40` — Manage Driver Licensing — `COMPLETE`
-- [x] `US-41` — Assess Driver Performance — `COMPLETE`
-- [x] `US-42` — Manage Violations — `COMPLETE`
-- [x] `US-43` — Manage Driver Medical Fitness — `COMPLETE`
-- [x] `US-44` — Manage Drug Tests — `COMPLETE`
-- [x] `US-45` — Handle Driver Exceptions — `COMPLETE`
-- [ ] `US-46` — Process Driver Payroll Link — `DEFERRED`
-
-### Transport Billing — US-47
-
-- [ ] `US-47` — Manage Transport Billing — `DEFERRED`
-
-### GPS / Real-Time Tracking — US-48 to US-55
-
-- [ ] `US-48` — Track Vehicles Live — `DEFERRED`
-- [ ] `US-49` — Manage Geofences — `DEFERRED`
-- [ ] `US-50` — Monitor Speed — `DEFERRED`
-- [ ] `US-51` — Monitor Idle Time — `DEFERRED`
-- [ ] `US-52` — Monitor Route Deviations — `DEFERRED`
-- [ ] `US-53` — Replay Journeys — `DEFERRED`
-- [ ] `US-54` — View Tracking Dashboard — `DEFERRED`
-- [ ] `US-55` — Handle GPS Edge Cases — `DEFERRED`
-
-### Delivery Management — US-56 to US-62
-
-- [x] `US-56` — Manage Delivery Orders — `✅ COMPLETE`
-- [x] `US-57` — Capture Proof of Delivery — `✅ COMPLETE`
-- [ ] `US-58` — Capture Signature and Photo Offline — `🟡 IMPLEMENTATION_COMPLETE / ACCEPTANCE_PENDING`
-- [ ] `US-59` — Manage Failed Deliveries — `NOT_STARTED`
-- [ ] `US-60` — Schedule Re-Delivery — `NOT_STARTED`
-- [ ] `US-61` — Analyze Delivery Performance — `NOT_STARTED`
-- [ ] `US-62` — Handle Delivery Exceptions — `NOT_STARTED`
-
-### Last-Mile Delivery — US-63 to US-70
-
-- [ ] `US-63` — Manage Delivery Zones — `DEFERRED`
-- [ ] `US-64` — Manage Delivery Slots — `DEFERRED`
-- [ ] `US-65` — Manage Riders — `DEFERRED`
-- [ ] `US-66` — Batch Delivery Orders — `DEFERRED`
-- [ ] `US-67` — Calculate Last-Mile ETA — `DEFERRED`
-- [ ] `US-68` — Handle Last-Mile Exceptions — `DEFERRED`
-- [ ] `US-69` — Receive Delivery Notifications — `DEFERRED`
-- [ ] `US-70` — Use Customer Self-Service — `DEFERRED`
-
-### Cross-Cutting / Platform — US-71 to US-78
-
-- [x] `US-71` — Support Offline Data Synchronization — `COMPLETE`
-- [ ] `US-72` — Enforce Compliance — `DEFERRED`
-- [ ] `US-73` — Manage External Integrations — `DEFERRED`
-- [x] `US-74` — Manage Security — `COMPLETE`
-- [x] `US-75` — Maintain Audit and Reports — `COMPLETE`
-- [ ] `US-76` — Support Mobile Operations — `DEFERRED`
-- [x] `US-77` — Manage Notification Rules — `COMPLETE`
-- [ ] `US-78` — Manage Operational Exceptions — `DEFERRED`
-
-### Supporting Capabilities — US-79 to US-83
-
-- [x] `US-79` — Manage Master Data — `COMPLETE`
-- [x] `US-80` — Configure Workflows — `COMPLETE`
-- [x] `US-81` — Manage Scheduling — `COMPLETE`
-- [ ] `US-82` — Use Operational Analytics — `DEFERRED`
-- [x] `US-83` — Manage Documents — `COMPLETE`
-
-### Global Edge Cases / Resilience — US-84 to US-87
-
-- [ ] `US-84` — Handle Global System Failures — `DEFERRED`
-- [ ] `US-85` — Protect Data Integrity — `DEFERRED`
-- [ ] `US-86` — Handle Operational Disruptions — `DEFERRED`
-- [ ] `US-87` — Detect User Risk — `DEFERRED`
-
-## 4. MVP Phase Dashboard
-
-| Phase | Scope | Story Count | Status |
-| :--- | :--- | ---: | :--- |
-| Phase 0 | Architecture / Platform Baseline | Enabler | `FOUNDATIONAL_CAPABILITY` |
-| MVP 1.0 | Fleet US-01–08; Trip US-09–16; Basic Route US-17–19; Driver US-39–45; required enablers | 34 | `COMPLETE` — 34/34 |
-| MVP 1.1A | Advanced Route US-20–23 | 4 | `COMPLETE` — 4/4 |
-| MVP 1.1B | Freight & Cargo US-24–30 | 7 | `COMPLETE` — 7/7 |
-| MVP 1.2 | Fuel US-31–38 | 8 | `CLOSED_WITH_APPROVED_DEFERMENTS` — 5 complete, 3 deferred |
-| MVP 1.3 | Delivery Operations US-56–62 | 7 | `IN_PROGRESS`; US-56 and US-57 complete (2/7) |
-
-Post-MVP bands contain Fuel US-35/37/38, Driver/Billing US-46/47, GPS US-48–55, Last-Mile US-63–70 and Advanced Platform/Ops US-72/73/76/78/82/84–87.
-
-## 5. MVP 1.0 — Core
-
-MVP 1.0 is `COMPLETE`: **34/34**. It contains Fleet US-01–08 (8), Trip US-09–16 (8), Basic Route US-17–19 (3), Driver US-39–45 (7), and required enablers US-71/74/75/77/79/80/81/83 (8). US-46 and US-47 are excluded.
-
-## 6. MVP 1.1A — Advanced Route
-
-US-20 through US-23 are `COMPLETE`: **4/4**.
-
-## 7. MVP 1.1B — Freight & Cargo
-
-US-24 through US-30 are `COMPLETE`: **7/7**. US-29 Generate Freight Reports is complete with Tenant-scoped reporting sources. Its historical Tenant-isolation blocker is superseded by the implemented Tenant foundation and operational-data retrofit.
-
-## 8. MVP 1.2 — Fuel
-
-MVP 1.2 is `CLOSED_WITH_APPROVED_DEFERMENTS`: US-31/32/33/34/36 are `COMPLETE`; US-35/37/38 are `DEFERRED`. Deferred stories remain in the register and are not double-counted.
-
-## 9. MVP 1.3 — Delivery Operations
-
-MVP 1.3 is the **current active expansion**. Its frozen scope is US-56 through US-62. US-56 and US-57 are accepted and complete. US-58 through US-62 remain not started.
-
-Delivery remains Tenant-owned. Cross-module references are UUID/logical references behind ports; direct cross-module persistence access is prohibited.
-
-## 10. Current Active Delivery Work
-
-### US-57 — Capture Proof of Delivery
-
-| Gate | Current state |
-| :--- | :--- |
-| POD product decisions | `COMPLETE` — frozen in `MVP-1.3-US57-POD-PRODUCT-DECISIONS-001.md` |
-| Flyway migration & schema | `COMPLETE` — `V47__delivery_proof_of_delivery_us57.sql` |
-| Domain Aggregate & invariants | `COMPLETE` — `ProofOfDelivery`, `PodEvidence`, `PodEvidenceType` |
-| RBAC & Security endpoints | `COMPLETE` — `DELIVERY_POD_CAPTURE`, `DELIVERY_POD_VIEW` |
-| Storage & streaming adapter | `COMPLETE` — `DeliveryEvidenceStoragePort`, `LocalDeliveryEvidenceStorageAdapter` |
-| Frontend POD interface | `COMPLETE` — `ProofOfDeliverySection.tsx`, API hooks |
-| Production verification | `COMPLETE` — Checkstyle (0), PMD (0), SpotBugs (0), ESLint (0), TS build (0 errors), 987 tests run (0 failures, 0 errors) |
-| Playwright Chromium E2E | `COMPLETE` — 6/6 tests passed (US-56 & US-57 online POD flows) |
-| Final acceptance document | `COMPLETE` — `docs/mvp/MVP-1.3-US57-PROOF-OF-DELIVERY-FINAL-ACCEPTANCE-001.md` |
-
-- **Blocker:** `NONE`.
-- **Status:** `✅ COMPLETE`.
-
-### US-58 — Capture Signature and Photo Offline
-
-| Gate | Current state |
-| :--- | :--- |
-| Offline POD product decisions | `COMPLETE` — frozen in `MVP-1.3-US58-OFFLINE-POD-PRODUCT-DECISIONS-001.md` |
-| Client execution & IndexedDB model | `COMPLETE` — React SPA + IndexedDB outbox queue (`features/offlineSync`) |
-| Quality, Retake & Consent rules | `COMPLETE` — Resolution checks, decodability, mandatory consent, draft retake |
-| Sync granularity & idempotency | `COMPLETE` — Atomic `DELIVERY_POD_OFFLINE_SYNC` with UUID operationId |
-| OfflineSync module boundary | `COMPLETE` — Delivery implements `OfflineProofOfDeliveryRecorder`; `DeliveryPodOfflineOperationHandler` handles outbox transport |
-| RBAC & Tenant revalidation | `COMPLETE` — Server-side revalidation of `DELIVERY_POD_CAPTURE` and `TenantExecutionContext` |
-| Implementation & Verification | `COMPLETE` — Checkstyle (0), PMD (0), SpotBugs (0), ESLint (0), TS build (0 errors), 995 tests passed |
-
-- **Blocker:** `NONE`.
-- **Status:** `🟡 IMPLEMENTATION_COMPLETE / ACCEPTANCE_PENDING`.
-- **Next task:** `MVP-1.3-US58-OFFLINE-POD-FINAL-ACCEPTANCE-001`.
-
-## 11. Deferred / Post-MVP Product Scope
-
-- **Deferred Fuel:** US-35, US-37, US-38.
-- **Driver Payroll / Billing:** US-46, US-47.
-- **GPS / Tracking:** US-48 through US-55 (8 stories).
-- **Last-Mile:** US-63 through US-70 (8 stories).
-- **Advanced Platform / Operations:** US-72, US-73, US-76, US-78, US-82, US-84, US-85, US-86, US-87 (**9 stories**).
-
-## 12. Platform / Cross-Cutting Capabilities
-
-- `FOUNDATIONAL_CAPABILITY`: RBAC, audit, notifications, offline/store-and-forward, workflows, scheduling/resource calendars, document metadata/versioning patterns, Tenant isolation, server-side `CurrentTenant` / `TenantExecutionContext`, tenant-membership-scoped runtime RBAC, forward-only Flyway and hexagonal/Spring Modulith boundaries.
-- ABAC, MFA and SSO appear in security governance; their architectural presence does not prove completion of every related product workflow.
-- OCR, advanced analytics, external integrations, mobile operations, global resilience and broader operational exceptions remain story-scoped future work unless explicitly completed in the register.
-
-`FOUNDATIONAL_CAPABILITY` is not equivalent to `USER_STORY_COMPLETE`.
-
-## 13. Story Accounting
-
-| Partition | Story IDs | Count |
-| :--- | :--- | ---: |
-| MVP 1.0 | US-01–19, US-39–45, US-71/74/75/77/79/80/81/83 | 34 |
-| MVP 1.1A Advanced Route | US-20–23 | 4 |
-| MVP 1.1B Freight & Cargo | US-24–30 | 7 |
-| MVP 1.2 Fuel | US-31–38 | 8 |
-| Remaining product scope | US-46–70 plus US-72/73/76/78/82/84–87 | 34 |
-| **Total** | **US-01 through US-87** | **87** |
-
-The remaining 34 includes MVP 1.3. Fuel deferments remain within Fuel's 8 and are not duplicated.
-
-| Current status | Count | Composition |
-| :--- | ---: | :--- |
-| `COMPLETE` | 52 | MVP 1.0 (34), Advanced Route (4), Freight (7), Fuel complete subset (5), Delivery US-56 & US-57 (2) |
-| `IMPLEMENTATION_COMPLETE / ACCEPTANCE_PENDING` | 1 | Delivery US-58 (1) |
-| `NOT_STARTED` | 4 | US-59–62 |
-| `DEFERRED` | 30 | Fuel 3; US-46–55 10; US-63–70 8; Advanced Platform/Ops 9 |
-| **Total** | **87** | No duplicates or omissions |
-
-## 14. Future Product Expansion — Not Yet Part of US-01..US-87
-
-US-07 covers maintenance/breakdown information affecting vehicle availability and scheduling. It is not a complete Maintenance Management, Work Order, Job Card, Parts Inventory or Inspection Management product.
-
-Potential future expansion includes Full Maintenance Management, Work Orders, Job Cards, Parts / Inventory and Inspection Management. These are not assigned US-88, US-89 or US-90 and require separate requirements and story-definition work.
-
-## 15. Immediate Execution Queue
-
-1. Final acceptance, hardening, regression validation, and closure for `US-58` Offline Proof of Delivery (`MVP-1.3-US58-OFFLINE-POD-FINAL-ACCEPTANCE-001`).
-
-## 16. Change / Reconciliation Notes
-
-- Register corrected to US-01 through US-87; US-88 through US-90 are undefined.
-- Original story titles replace implementation-oriented paraphrases.
-- US-41 is Assess Driver Performance; US-46 is Process Driver Payroll Link; US-47 is Manage Transport Billing.
-- US-29 and all Freight stories are `COMPLETE` (7/7).
-- Fuel is 5 `COMPLETE`, 3 `DEFERRED`, and `CLOSED_WITH_APPROVED_DEFERMENTS`.
-- Delivery US-56–62 is MVP 1.3 and no longer `CONTRACT_PENDING`.
-- Delivery-number ambiguity is resolved and implementation KB commit `1b579f61481276d4bc47518163d18e9c7c1d7af1` is verified on `origin/main`.
-- Advanced Platform/Ops contains 9 stories: US-72/73/76/78/82/84/85/86/87.
-- US-07 is availability linkage, not a complete workshop/maintenance product.
-- Tenant isolation and membership-scoped RBAC are completed current-scope architecture, not future stories.
-
-## 17. Evidence Index
-
-- `docs/requirements/Traspotation & logistic.docx`
-- `docs/requirements/Mind-Map-Trasportation-and-Logistic.txt`
-- `docs/requirements/US-01-US-10-UseCase-Activity-Sequence-Diagrams.md` through `docs/requirements/US-81-US-90-UseCase-Activity-Sequence-Diagrams.md`
-- `docs/mvp/MVP-current-status.md` and `docs/mvp/MVP-story-traceability-current.md`
-- `docs/mvp/MVP-1.1-FREIGHT-FINAL-CLOSURE-001.md`
-- `docs/mvp/MVP-1.2-FUEL-CLOSURE-001.md`
-- `docs/mvp/MVP-1.3-DELIVERY-OPERATIONS-CONTRACT-001.md`
-- `docs/mvp/MVP-1.3-DELIVERY-MODULE-FOUNDATION-001.md`
-- `docs/mvp/MVP-1.3-US56-PRODUCT-DECISIONS-001.md`
-- `docs/mvp/MVP-1.3-US56-DELIVERY-NUMBER-POLICY-001.md`
-- Central KB architecture, integration registry and Transportation & Logistics module records
+# 🚚 Transport & Logistics — Enterprise Modular Monolith Roadmap
+
+<div align="center">
+
+![Total Stories](https://img.shields.io/badge/Total%20Stories-87-0969da.svg?style=for-the-badge&logo=target)
+![Completed](https://img.shields.io/badge/Completed-53%20%2F%2087-2da44e.svg?style=for-the-badge&logo=checkmarx)
+![Progress](https://img.shields.io/badge/Progress-60.9%25-brightgreen.svg?style=for-the-badge&logo=speedtest)
+![MVP 1.3 Active](https://img.shields.io/badge/MVP%201.3%20Delivery-3%20%2F%207%20(42.9%25)-fa8c16.svg?style=for-the-badge&logo=pinboard)
+![Database](https://img.shields.io/badge/PostgreSQL%20%2F%20Flyway-V47-8a63d2.svg?style=for-the-badge&logo=postgresql)
+
+</div>
+
+---
+
+> [!IMPORTANT]
+> **Authoritative Baseline & Current State:**
+> - **Last Reconciled:** `2026-08-31`
+> - **Authority Order:** Original Requirements (`Traspotation & logistic.docx`), Frozen Architecture/Contracts, Verified Production Code/Tests, then Roadmap.
+> - **Active Release Band:** **`MVP 1.3 — Delivery Operations`** (3 / 7 COMPLETE — US-56 ✅, US-57 ✅, US-58 ✅).
+> - **Immediate Next Action:** Freeze Product Decisions for `US-59` Manage Failed Deliveries (`MVP-1.3-US59-FAILED-DELIVERIES-PRODUCT-DECISIONS-001`).
+
+---
+
+## 📊 1. Executive Metrics & Milestone Progress
+
+```
+Overall Progress: [██████████████████████████████░░░░░░░░░░░░░░░░░░░░] 53 / 87 Stories (60.9%)
+MVP 1.3 Band:     [████████████████████░░░░░░░░░░░░░░░░░░░░░░░░░░] 3 / 7 Stories (42.9%)
+```
+
+| Metric | Target | Current Count | Percentage | Status Indicator |
+| :--- | :---: | :---: | :---: | :--- |
+| **Completed Stories** | 87 | **53** | `60.9%` | 🟢 `ON TRACK / VERIFIED` |
+| **In Progress / Pending Acceptance** | — | **0** | `0.0%` | 🟡 `IDLE` |
+| **Not Started (MVP 1.3 Active Scope)** | 4 | **4** | `4.6%` | ⚪ `QUEUED` |
+| **Approved Deferments (Post-MVP)** | 30 | **30** | `34.5%` | ⏸️ `DEFERRED BY GOVERNANCE` |
+| **Total Registered User Stories** | **87** | **87** | **`100%`** | 🔒 `FROZEN REGISTER (US-01..US-87)` |
+
+> [!NOTE]
+> Stories `US-88`, `US-89`, and `US-90` are strictly undefined. The story accounting register is bounded exactly from `US-01` through `US-87` ($53 + 4 + 30 = 87$).
+
+---
+
+## 🧭 2. MVP Phase Breakdown & Status Matrix
+
+| Phase | Milestone Scope | Scope Definition | Stories | Progress | Status |
+| :--- | :--- | :--- | :---: | :---: | :--- |
+| **Phase 0** | **Foundation** | Spring Modulith, Multi-Tenancy, Hexagonal Architecture, Flyway Baseline | Enabler | 100% | 🟢 `COMPLETE` |
+| **MVP 1.0** | **Core Operations** | Fleet (US-01–08), Trips (US-09–16), Basic Route (US-17–19), Drivers (US-39–45), Core Enablers | 34 | 34 / 34 | 🟢 `COMPLETE (100%)` |
+| **MVP 1.1A** | **Advanced Route** | Dynamic Route Optimization, Analytics, and Disruption Handling (US-20–23) | 4 | 4 / 4 | 🟢 `COMPLETE (100%)` |
+| **MVP 1.1B** | **Freight & Cargo** | Freight Orders, Manifests, Load Planning, Weight/Volume Engine, Claims, Exceptions (US-24–30) | 7 | 7 / 7 | 🟢 `COMPLETE (100%)` |
+| **MVP 1.2** | **Fuel Management** | Fuel Issues, Purchases, Mileage, Bunkers, Stock Transfers (US-31–34, US-36) | 8 | 5 / 8 | 🟢 `CLOSED (3 DEFERRED)` |
+| **MVP 1.3** | **Delivery Operations** | Delivery Orders, Online POD, Offline POD, Failed Deliveries, Redelivery, Exceptions (US-56–62) | 7 | 3 / 7 | 🟡 `ACTIVE IN PROGRESS` |
+| **Post-MVP** | **Extended Platform** | GPS Tracking (US-48–55), Last-Mile (US-63–70), Billing (US-47), Advanced Compliance (US-72+) | 30 | 0 / 30 | ⏸️ `PLANNED POST-MVP` |
+
+---
+
+## 📋 3. Complete User Story Register (US-01 through US-87)
+
+### 🚛 Module 1: Fleet Management (US-01 to US-08)
+| ID | User Story Title | Scope / Feature | Status | Verification Evidence |
+| :---: | :--- | :--- | :---: | :--- |
+| `US-01` | Manage Vehicle Master | Vehicle registry, categories, fuel types, lifecycle | 🟢 `COMPLETE` | `VehicleMasterTest`, V1–V3 |
+| `US-02` | Manage Fleet Categories | Fleet classifications, capacity constraints | 🟢 `COMPLETE` | `FleetCategoryTest`, V2 |
+| `US-03` | Manage Vehicle Documents | Registrations, insurance, roadworthiness | 🟢 `COMPLETE` | `VehicleDocumentTest`, V4 |
+| `US-04` | Allocate Vehicles | Vehicle allocation state machine & scheduling | 🟢 `COMPLETE` | `VehicleAllocationTest`, V5 |
+| `US-05` | Maintain Fuel & Lubricant Logs | Consumption tracking, fluid top-ups | 🟢 `COMPLETE` | `LubricantLogTest`, V6 |
+| `US-06` | Maintain Running Logs | Odometer, engine hours, daily vehicle logs | 🟢 `COMPLETE` | `RunningLogTest`, V7 |
+| `US-07` | Link Maintenance to Availability | Maintenance blocking availability schedules | 🟢 `COMPLETE` | `MaintenanceAvailabilityTest`, V8 |
+| `US-08` | Handle Fleet Allocation Edge Cases | Emergency reallocations, conflict resolution | 🟢 `COMPLETE` | `FleetAllocationEdgeCaseTest`, V9 |
+
+---
+
+### 🗺️ Module 2: Trip Management (US-09 to US-16)
+| ID | User Story Title | Scope / Feature | Status | Verification Evidence |
+| :---: | :--- | :--- | :---: | :--- |
+| `US-09` | Create Trip Orders | Trip requisition, multi-stop planning, manifests | 🟢 `COMPLETE` | `TripCreationTest`, V10 |
+| `US-10` | Assign Driver and Vehicle | Resource matching, license validation, conflict checks | 🟢 `COMPLETE` | `TripAssignmentTest`, V11 |
+| `US-11` | Assign Route | Waypoints, corridor selection, toll paths | 🟢 `COMPLETE` | `TripRouteAssignmentTest`, V12 |
+| `US-12` | Start and End Trip | Dispatch lifecycle, odometer verification | 🟢 `COMPLETE` | `TripLifecycleTest`, V13 |
+| `US-13` | Maintain Trip Log | Checkpoints, delays, en-route event logs | 🟢 `COMPLETE` | `TripLogTest`, V14 |
+| `US-14` | Complete Trip | Final settlement, closing readings, audit trail | 🟢 `COMPLETE` | `TripCompletionTest`, V15 |
+| `US-15` | Handle Trip Exceptions | Breakdowns, route detours, emergency swaps | 🟢 `COMPLETE` | `TripExceptionTest`, V16 |
+| `US-16` | Authorize Trip | Manager approval gates, compliance checks | 🟢 `COMPLETE` | `TripAuthorizationTest`, V17 |
+
+---
+
+### 🛣️ Module 3: Route Management (US-17 to US-23)
+| ID | User Story Title | Scope / Feature | Status | Verification Evidence |
+| :---: | :--- | :--- | :---: | :--- |
+| `US-17` | Define Routes | Master route paths, geofenced corridors | 🟢 `COMPLETE` | `RouteDefinitionTest`, V18 |
+| `US-18` | Calculate Distance and ETA | Distance matrices, travel time heuristics | 🟢 `COMPLETE` | `RouteDistanceEtaTest`, V19 |
+| `US-19` | Plan Multi-Stop Routes | Stop sequencing, delivery windows | 🟢 `COMPLETE` | `MultiStopRouteTest`, V20 |
+| `US-20` | Optimize Routes | Cost-based routing, congestion bypass | 🟢 `COMPLETE` | `RouteOptimizationTest`, V30 |
+| `US-21` | Maintain Route History | Historical corridor timings, speed logs | 🟢 `COMPLETE` | `RouteHistoryTest`, V30 |
+| `US-22` | Analyze Route Performance | Variance against planned ETAs, cost analysis | 🟢 `COMPLETE` | `RouteAnalyticsTest`, V30 |
+| `US-23` | Handle Route Disruptions | Real-time rerouting, obstruction alerts | 🟢 `COMPLETE` | `RouteDisruptionTest`, V30 |
+
+---
+
+### 📦 Module 4: Freight & Cargo (US-24 to US-30)
+| ID | User Story Title | Scope / Feature | Status | Verification Evidence |
+| :---: | :--- | :--- | :---: | :--- |
+| `US-24` | Manage Freight Orders | Freight order creation, commodities, consignees | 🟢 `COMPLETE` | `FreightOrderTest`, V31 |
+| `US-25` | Manage Cargo Manifest | Tri-state cargo classification, physical metrics | 🟢 `COMPLETE` | `CargoManifestTest`, V32/V37/V42 |
+| `US-26` | Plan Cargo Loads | Load planning, structural readiness, draft locks | 🟢 `COMPLETE` | `LoadPlanningTest`, V34/V38 |
+| `US-27` | Calculate Weight and Volume | GVW, axle limits, volumetric utilization engine | 🟢 `COMPLETE` | `WeightVolumeCalculationTest`, V39 |
+| `US-28` | Manage Freight Insurance | Policies, claims, survey records, settlements | 🟢 `COMPLETE` | `FreightInsuranceTest`, V35/V36 |
+| `US-29` | Generate Freight Reports | Tenant-scoped cargo summaries, capacity audits | 🟢 `COMPLETE` | `FreightReportTest`, V45 |
+| `US-30` | Handle Cargo Exceptions | Damage, shortages, seal tampering, escalations | 🟢 `COMPLETE` | `CargoExceptionTest`, V40/V41 |
+
+---
+
+### ⛽ Module 5: Fuel Management (US-31 to US-38)
+| ID | User Story Title | Scope / Feature | Status | Verification Evidence |
+| :---: | :--- | :--- | :---: | :--- |
+| `US-31` | Issue Fuel | Fuel dispensing, trip allocations, tank dips | 🟢 `COMPLETE` | `FuelIssueTest`, V21/V22 |
+| `US-32` | Manage Fuel Purchases | Vendor invoices, bowser receipts, bulk intake | 🟢 `COMPLETE` | `FuelPurchaseTest`, V23 |
+| `US-33` | Track Mileage | Fuel efficiency, km/l calculation, anomaly flags | 🟢 `COMPLETE` | `FuelMileageTest`, V24 |
+| `US-34` | Allocate Fuel Cost | Cost centers, vehicle cost distribution | 🟢 `COMPLETE` | `FuelCostAllocationTest`, V25 |
+| `US-35` | Manage Fuel Cards | External fuel card integration | ⏸️ `DEFERRED` | Approved post-MVP deferment |
+| `US-36` | Manage Fuel Bunkers | Stationary tanks, dips, stock adjustments | 🟢 `COMPLETE` | `FuelBunkerTest`, V26 |
+| `US-37` | Analyze Fuel Performance | Advanced thermodynamic consumption modeling | ⏸️ `DEFERRED` | Approved post-MVP deferment |
+| `US-38` | Handle Fuel Exceptions | Theft detection, excessive variance workflows | ⏸️ `DEFERRED` | Approved post-MVP deferment |
+
+---
+
+### 👨‍✈️ Module 6: Driver Management (US-39 to US-46)
+| ID | User Story Title | Scope / Feature | Status | Verification Evidence |
+| :---: | :--- | :--- | :---: | :--- |
+| `US-39` | Manage Driver Profiles | Driver master registry, contact, credentials | 🟢 `COMPLETE` | `DriverProfileTest`, V27 |
+| `US-40` | Manage Driver Licensing | License classes, endorsements, expiry alerts | 🟢 `COMPLETE` | `DriverLicenseTest`, V27 |
+| `US-41` | Assess Driver Performance | Safety ratings, incident frequency, on-time rate | 🟢 `COMPLETE` | `DriverPerformanceTest`, V27 |
+| `US-42` | Manage Violations | Speeding, traffic violations, demerit points | 🟢 `COMPLETE` | `DriverViolationTest`, V27 |
+| `US-43` | Manage Driver Medical Fitness | Health screenings, vision tests, fitness certs | 🟢 `COMPLETE` | `DriverMedicalTest`, V27 |
+| `US-44` | Manage Drug Tests | Random screening records, compliance locks | 🟢 `COMPLETE` | `DriverDrugTestTest`, V27 |
+| `US-45` | Handle Driver Exceptions | Absenteeism, sudden leave, license suspensions | 🟢 `COMPLETE` | `DriverExceptionTest`, V27 |
+| `US-46` | Process Driver Payroll Link | Wage rules, overtime export to external ERP | ⏸️ `DEFERRED` | Approved post-MVP deferment |
+
+---
+
+### 💰 Module 7: Transport Billing (US-47)
+| ID | User Story Title | Scope / Feature | Status | Verification Evidence |
+| :---: | :--- | :--- | :---: | :--- |
+| `US-47` | Manage Transport Billing | Customer freight invoicing & ERP billing integration | ⏸️ `DEFERRED` | Approved post-MVP deferment |
+
+---
+
+### 🛰️ Module 8: GPS & Real-Time Tracking (US-48 to US-55)
+| ID | User Story Title | Scope / Feature | Status | Verification Evidence |
+| :---: | :--- | :--- | :---: | :--- |
+| `US-48` | Track Vehicles Live | Telematics stream processing, live map | ⏸️ `DEFERRED` | Post-MVP telematics band |
+| `US-49` | Manage Geofences | Polygon geofence entry/exit triggers | ⏸️ `DEFERRED` | Post-MVP telematics band |
+| `US-50` | Monitor Speed | Real-time overspeeding alert triggers | ⏸️ `DEFERRED` | Post-MVP telematics band |
+| `US-51` | Monitor Idle Time | Excessive engine idling alerts | ⏸️ `DEFERRED` | Post-MVP telematics band |
+| `US-52` | Monitor Route Deviations | Off-corridor detour detection | ⏸️ `DEFERRED` | Post-MVP telematics band |
+| `US-53` | Replay Journeys | Telematics breadcrumb historical replay | ⏸️ `DEFERRED` | Post-MVP telematics band |
+| `US-54` | View Tracking Dashboard | Fleetwide real-time operations dashboard | ⏸️ `DEFERRED` | Post-MVP telematics band |
+| `US-55` | Handle GPS Edge Cases | Signal blackouts, satellite drift smoothing | ⏸️ `DEFERRED` | Post-MVP telematics band |
+
+---
+
+### 📬 Module 9: Delivery Operations — Active MVP 1.3 (US-56 to US-62)
+| ID | User Story Title | Scope / Feature | Status | Verification Evidence |
+| :---: | :--- | :--- | :---: | :--- |
+| `US-56` | Manage Delivery Orders | Tenant-scoped orders, number generation, readiness | 🟢 `COMPLETE` | `DeliveryOrderPersistenceTest`, V46 |
+| `US-57` | Capture Proof of Delivery | Online signatures, photos, barcodes, finalization | 🟢 `COMPLETE` | `ProofOfDeliveryServiceTest`, V47 |
+| `US-58` | Capture Signature & Photo Offline | IndexedDB outbox, composite sync, consent | 🟢 `COMPLETE` | `DeliveryPodOfflineSyncIntegrationTest` |
+| `US-59` | Manage Failed Deliveries | Return-to-base, non-delivery reasons, parcel holds | ⚪ `NOT_STARTED` | **Immediate Next Queue Target** |
+| `US-60` | Schedule Re-Delivery | Re-attempt scheduling, alternative windows | ⚪ `NOT_STARTED` | Queued in MVP 1.3 |
+| `US-61` | Analyze Delivery Performance | On-time delivery metrics, driver delivery SLA | ⚪ `NOT_STARTED` | Queued in MVP 1.3 |
+| `US-62` | Handle Delivery Exceptions | Damaged at doorstep, recipient refusal, disputes | ⚪ `NOT_STARTED` | Queued in MVP 1.3 |
+
+---
+
+### 🚲 Module 10: Last-Mile Delivery (US-63 to US-70)
+| ID | User Story Title | Scope / Feature | Status | Verification Evidence |
+| :---: | :--- | :--- | :---: | :--- |
+| `US-63` | Manage Delivery Zones | Micro-zones, urban courier dispatch zones | ⏸️ `DEFERRED` | Post-MVP last-mile band |
+| `US-64` | Manage Delivery Slots | Time-slot bookings, customer preference windows | ⏸️ `DEFERRED` | Post-MVP last-mile band |
+| `US-65` | Manage Riders | Courier rider registry, bike/van assignment | ⏸️ `DEFERRED` | Post-MVP last-mile band |
+| `US-66` | Batch Delivery Orders | Automated order clustering for urban routes | ⏸️ `DEFERRED` | Post-MVP last-mile band |
+| `US-67` | Calculate Last-Mile ETA | Dynamic pedestrian / two-wheeler routing ETA | ⏸️ `DEFERRED` | Post-MVP last-mile band |
+| `US-68` | Handle Last-Mile Exceptions | Address unreachable, gate code missing | ⏸️ `DEFERRED` | Post-MVP last-mile band |
+| `US-69` | Receive Delivery Notifications | Customer SMS/push tracking updates | ⏸️ `DEFERRED` | Post-MVP last-mile band |
+| `US-70` | Use Customer Self-Service | Customer delivery rescheduling portal | ⏸️ `DEFERRED` | Post-MVP last-mile band |
+
+---
+
+### ⚙️ Module 11: Cross-Cutting Platform & Security (US-71 to US-78)
+| ID | User Story Title | Scope / Feature | Status | Verification Evidence |
+| :---: | :--- | :--- | :---: | :--- |
+| `US-71` | Support Offline Data Sync | Generic IndexedDB sync framework, idempotency | 🟢 `COMPLETE` | `OfflineSyncCoordinatorTest`, V29 |
+| `US-72` | Enforce Compliance | Regulatory vehicle inspection audits | ⏸️ `DEFERRED` | Post-MVP compliance band |
+| `US-73` | Manage External Integrations | Third-party 3PL REST webhook webhooks | ⏸️ `DEFERRED` | Post-MVP platform band |
+| `US-74` | Manage Security | JWT authentication, multi-tenant RBAC | 🟢 `COMPLETE` | `SecurityAccessTest`, `TenantFilterTest` |
+| `US-75` | Maintain Audit and Reports | Comprehensive audit log trail, CSV exports | 🟢 `COMPLETE` | `AuditLogTest`, `AuditReportTest` |
+| `US-76` | Support Mobile Operations | Dedicated native mobile packaging | ⏸️ `DEFERRED` | Web SPA approved for MVP |
+| `US-77` | Manage Notification Rules | Rule-based alerts, multi-channel dispatch | 🟢 `COMPLETE` | `NotificationRuleTest`, V28 |
+| `US-78` | Manage Operational Exceptions | Cross-module global incident escalations | ⏸️ `DEFERRED` | Post-MVP platform band |
+
+---
+
+### 🧩 Module 12: Supporting Architecture & Resilience (US-79 to US-87)
+| ID | User Story Title | Scope / Feature | Status | Verification Evidence |
+| :---: | :--- | :--- | :---: | :--- |
+| `US-79` | Manage Master Data | Locations, customer records, branches | 🟢 `COMPLETE` | `MasterDataTest`, V1 |
+| `US-80` | Configure Workflows | Multi-step approval state machine definitions | 🟢 `COMPLETE` | `WorkflowEngineTest` |
+| `US-81` | Manage Scheduling | Universal operational cron schedule engine | 🟢 `COMPLETE` | `ScheduleCoordinatorTest` |
+| `US-82` | Use Operational Analytics | Cross-functional executive analytics | ⏸️ `DEFERRED` | Post-MVP analytics band |
+| `US-83` | Manage Documents | Attachment storage, MIME type validation | 🟢 `COMPLETE` | `DocumentStorageTest` |
+| `US-84` | Handle Global System Failures | Cross-region failover and disaster recovery | ⏸️ `DEFERRED` | Enterprise resilience band |
+| `US-85` | Protect Data Integrity | Distributed consensus integrity scanners | ⏸️ `DEFERRED` | Enterprise resilience band |
+| `US-86` | Handle Operational Disruptions | Fleetwide disaster rerouting workflows | ⏸️ `DEFERRED` | Enterprise resilience band |
+| `US-87` | Detect User Risk | Anomaly detection for operator behavior | ⏸️ `DEFERRED` | Enterprise resilience band |
+
+---
+
+## 🎯 4. Immediate Execution Queue
+
+```
+Current Target: MVP 1.3 (Delivery Operations)
+Queue Head:     US-59 — Manage Failed Deliveries
+```
+
+1. **`US-59` — Manage Failed Deliveries:**
+   - **Task ID:** `MVP-1.3-US59-FAILED-DELIVERIES-PRODUCT-DECISIONS-001`
+   - **Objectives:** Freeze non-delivery reason taxonomy, parcel return-to-base states, driver hold policies, and state machine transition rules (`READY_FOR_ASSIGNMENT` / `FAILED_ATTEMPT` / `RETURNED_TO_BASE`).
+
+---
+
+## 📚 5. Authoritative Traceability Index
+
+- **Requirements Baseline:** `docs/requirements/Traspotation & logistic.docx`
+- **UML Specifications:** `docs/requirements/US-01-US-10-UseCase-Activity-Sequence-Diagrams.md` through `US-81-US-90`
+- **Current MVP Status:** [`docs/mvp/MVP-current-status.md`](file:///home/hasitha-wijerathna/Documents/transport-logistics-modulith/transport-logistics-modulith/docs/mvp/MVP-current-status.md)
+- **Delivery Contracts:** `docs/mvp/MVP-1.3-DELIVERY-OPERATIONS-CONTRACT-001.md`
+- **Accepted Acceptance Reports:**
+  - `US-56`: `docs/mvp/MVP-1.3-US56-DELIVERY-ORDERS-FINAL-ACCEPTANCE-001.md`
+  - `US-57`: `docs/mvp/MVP-1.3-US57-PROOF-OF-DELIVERY-FINAL-ACCEPTANCE-001.md`
+  - `US-58`: [`docs/mvp/MVP-1.3-US58-OFFLINE-POD-FINAL-ACCEPTANCE-001.md`](file:///home/hasitha-wijerathna/Documents/transport-logistics-modulith/transport-logistics-modulith/docs/mvp/MVP-1.3-US58-OFFLINE-POD-FINAL-ACCEPTANCE-001.md)
+- **Central Knowledge Base:** Synced with `https://github.com/Hasitha3513/central-knowledge-base.git` at commit `390813f`.
