@@ -41,6 +41,7 @@ import FreightReportsPage from './features/freight/reports/pages/FreightReportsP
 import DeliveryOrderListPage from './features/delivery/orders/pages/DeliveryOrderListPage';
 import DeliveryOrderFormPage from './features/delivery/orders/pages/DeliveryOrderFormPage';
 import DeliveryOrderDetailsPage from './features/delivery/orders/pages/DeliveryOrderDetailsPage';
+import DeliveryAnalyticsPage from './features/delivery/analytics/pages/DeliveryAnalyticsPage';
 
 function ProtectedRoute() {
   const { user, isLoading } = useAuth();
@@ -118,6 +119,7 @@ export default function App() {
         <Route path="freight/exceptions/:id" element={<CargoExceptionDetailsPage />} />
         <Route path="freight/reports" element={<FreightReportsPage />} />
         <Route path="deliveries" element={<DeliveryOrderListPage />} />
+        <Route path="deliveries/analytics" element={<DeliveryAnalyticsPage />} />
         <Route path="deliveries/new" element={<DeliveryOrderFormPage />} />
         <Route path="deliveries/:deliveryId/edit" element={<DeliveryOrderFormPage />} />
         <Route path="deliveries/:deliveryId" element={<DeliveryOrderDetailsPage />} />

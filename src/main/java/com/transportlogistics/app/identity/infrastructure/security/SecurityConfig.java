@@ -252,6 +252,8 @@ class SecurityConfig {
                         .hasAuthority("DELIVERY_REDELIVERY_VIEW")
                         .requestMatchers(HttpMethod.POST, "/v1/deliveries/*/redelivery/schedule", "/v1/deliveries/*/redelivery/reschedule")
                         .hasAuthority("DELIVERY_REDELIVERY_SCHEDULE")
+                        .requestMatchers(HttpMethod.GET, "/v1/deliveries/analytics/**")
+                        .hasAuthority("DELIVERY_ANALYTICS_VIEW")
 
                         .requestMatchers(HttpMethod.GET, "/bunker-tanks/*/movements").hasAuthority("BUNKER_LEDGER_VIEW")
                         .requestMatchers(HttpMethod.GET, "/bunker-tanks", "/bunker-tanks/*", "/bunker-tanks/*/balance", "/bunker-tanks/*/dip-readings")

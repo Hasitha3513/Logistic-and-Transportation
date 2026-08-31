@@ -405,7 +405,7 @@ export const RedeliverySection: React.FC<RedeliverySectionProps> = ({ delivery }
           <Button
             type="dashed"
             icon={<ReloadOutlined />}
-            onClick={() => getSuggestions()}
+            onClick={() => getSuggestions({})}
             loading={isGettingSuggestions}
             style={{ marginBottom: 16, width: '100%' }}
             data-testid="reschedule-get-suggestions-btn"

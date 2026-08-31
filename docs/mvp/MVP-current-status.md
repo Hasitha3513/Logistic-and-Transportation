@@ -18,9 +18,9 @@
 | MVP 1.1 Advanced Route | 4 / 4 | 0 | 0 | 0 | 0 | COMPLETE |
 | MVP 1.1 Freight | 7 / 7 | 0 | 0 | 0 | 0 | COMPLETE |
 | MVP 1.2 Fuel | 5 / 8 | 0 | 0 | 3 / 8 | 0 | CLOSED_WITH_APPROVED_DEFERMENTS |
-| MVP 1.3 Delivery Operations | 4 / 7 | 0 | 0 | 0 | 3 / 7 | IN_PROGRESS; US-56, US-57, US-58, and US-59 COMPLETE |
+| MVP 1.3 Delivery Operations | 5 / 7 | 0 | 0 | 0 | 2 / 7 | IN_PROGRESS; US-56, US-57, US-58, US-59, and US-60 COMPLETE |
 
-US-56, US-57, US-58, and US-59 are accepted and complete with tenant-scoped domain, persistence, V46/V47/V48 migrations, API/RBAC, offline IndexedDB sync, failure tracking, and React workflows. US-60 through US-62 remain queued in MVP 1.3.
+US-56, US-57, US-58, US-59, and US-60 are accepted and complete with tenant-scoped domain, persistence, V46/V47/V48/V49 migrations, API/RBAC, offline IndexedDB sync, failure tracking, redelivery scheduling with capacity validation, and React workflows. US-61 and US-62 remain queued in MVP 1.3.
 
 ## Repository baseline
 

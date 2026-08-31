@@ -4,6 +4,7 @@ import com.transportlogistics.app.delivery.application.DeliveryOrderService;
 import com.transportlogistics.app.delivery.application.FailedDeliveryService;
 import com.transportlogistics.app.delivery.application.ProofOfDeliveryService;
 import com.transportlogistics.app.delivery.application.RedeliveryService;
+import com.transportlogistics.app.delivery.ports.inbound.DeliveryAnalyticsUseCase;
 import com.transportlogistics.app.delivery.ports.inbound.DeliveryOrderUseCase;
 import com.transportlogistics.app.delivery.ports.inbound.FailedDeliveryUseCase;
 import com.transportlogistics.app.delivery.ports.inbound.RedeliveryUseCase;
@@ -53,6 +54,16 @@ class DeliveryOrderConfig {
             Clock clock) {
         return new RedeliveryService(
                 orders, proofs, attempts, schedules, tenantContext, transactions, clock
+        );
+    }
+
+    @Bean
+    DeliveryAnalyticsUseCase deliveryAnalyticsUseCase(
+            DeliveryAnalyticsPersistencePort analyticsPersistencePort,
+            DeliveryTenantContextPort tenantContextPort,
+            DeliveryLocationLookupPort locationLookupPort) {
+        return new com.transportlogistics.app.delivery.application.DeliveryAnalyticsService(
+                analyticsPersistencePort, tenantContextPort, locationLookupPort
         );
     }
 }

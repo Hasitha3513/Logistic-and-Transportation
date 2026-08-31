@@ -16,28 +16,29 @@
 > **Authoritative Baseline & Current State:**
 > - **Last Reconciled:** `2026-08-31`
 > - **Authority Order:** Original Requirements (`Traspotation & logistic.docx`), Frozen Architecture/Contracts, Verified Production Code/Tests, then Roadmap.
-> - **Active Release Band:** **`MVP 1.3 — Delivery Operations`** (4 ACCEPTED COMPLETE — US-56 ✅, US-57 ✅, US-58 ✅, US-59 ✅; 1 IMPLEMENTATION COMPLETE / ACCEPTANCE PENDING — US-60 🟡).
-> - **Immediate Next Action:** Independent Final Acceptance Audit and Closure for `US-60` Schedule Re-Delivery (`MVP-1.3-US60-REDELIVERY-FINAL-ACCEPTANCE-001`).
+> - **Current Milestone:** Phase 1.3 — Delivery Operations Foundation (Target: End of Q3 2026)
+> - **Active Focus:** Product Decisions and Domain Contract Freeze for `US-61` Analyze Delivery Performance (`MVP-1.3-US61-ANALYTICS-PRODUCT-DECISIONS-001`).
+> - **Immediate Next Action:** Freeze analytics metrics, SLA calculations, and reporting boundaries for `US-61`.
 
 ---
 
 ## 📊 1. Executive Metrics & Milestone Progress
 
 ```
-Overall Progress: [███████████████████████████████░░░░░░░░░░░░░░░░░░░] 54 / 87 Stories Complete (62.1%) + 1 In Acceptance
-MVP 1.3 Band:     [████████████████████████████████░░░░░░░░░░░░░░░░░] 4 / 7 Complete (57.1%) + 1 In Acceptance
+Overall Progress: [████████████████████████████████░░░░░░░░░░░░░░░░░░] 55 / 87 Stories Complete (63.2%)
+MVP 1.3 Band:     [███████████████████████████████████████░░░░░░░░░░] 5 / 7 Complete (71.4%)
 ```
 
 | Metric | Target | Current Count | Percentage | Status Indicator |
 | :--- | :---: | :---: | :---: | :--- |
-| **Completed Stories (Accepted)** | 87 | **54** | `62.1%` | 🟢 `ON TRACK / VERIFIED` |
-| **In Progress / Pending Acceptance** | — | **1** | `1.1%` | 🟡 `ACCEPTANCE PENDING (US-60)` |
+| **Completed Stories (Accepted)** | 87 | **55** | `63.2%` | 🟢 `ON TRACK / VERIFIED` |
+| **In Progress / Pending Acceptance** | — | **0** | `0.0%` | 🟢 `ALL PREVIOUS ACCEPTED` |
 | **Not Started (MVP 1.3 Active Scope)** | 2 | **2** | `2.3%` | ⚪ `QUEUED (US-61..62)` |
 | **Approved Deferments (Post-MVP)** | 30 | **30** | `34.5%` | ⏸️ `DEFERRED BY GOVERNANCE` |
 | **Total Registered User Stories** | **87** | **87** | **`100%`** | 🔒 `FROZEN REGISTER (US-01..US-87)` |
 
 > [!NOTE]
-> Stories `US-88`, `US-89`, and `US-90` are strictly undefined. The story accounting register is bounded exactly from `US-01` through `US-87` ($54 + 1 + 2 + 30 = 87$).
+> Stories `US-88`, `US-89`, and `US-90` are strictly undefined. The story accounting register is bounded exactly from `US-01` through `US-87` ($55 + 0 + 2 + 30 = 87$).
 
 ---
 
@@ -50,7 +51,7 @@ MVP 1.3 Band:     [████████████████████�
 | **MVP 1.1A** | **Advanced Route** | Dynamic Route Optimization, Analytics, and Disruption Handling (US-20–23) | 4 | 4 / 4 | 🟢 `COMPLETE (100%)` |
 | **MVP 1.1B** | **Freight & Cargo** | Freight Orders, Manifests, Load Planning, Weight/Volume Engine, Claims, Exceptions (US-24–30) | 7 | 7 / 7 | 🟢 `COMPLETE (100%)` |
 | **MVP 1.2** | **Fuel Management** | Fuel Issues, Purchases, Mileage, Bunkers, Stock Transfers (US-31–34, US-36) | 8 | 5 / 8 | 🟢 `CLOSED (3 DEFERRED)` |
-| **MVP 1.3** | **Delivery Operations** | Delivery Orders, Online POD, Offline POD, Failed Deliveries, Redelivery, Exceptions (US-56–62) | 7 | 4 / 7 (1 Pending) | 🟡 `ACTIVE IN PROGRESS` |
+| **MVP 1.3** | **Delivery Operations** | Delivery Orders, Online POD, Offline POD, Failed Deliveries, Redelivery, Exceptions (US-56–62) | 7 | 5 / 7 | 🟡 `ACTIVE IN PROGRESS` |
 | **Post-MVP** | **Extended Platform** | GPS Tracking (US-48–55), Last-Mile (US-63–70), Billing (US-47), Advanced Compliance (US-72+) | 30 | 0 / 30 | ⏸️ `PLANNED POST-MVP` |
 
 ---
@@ -167,8 +168,8 @@ MVP 1.3 Band:     [████████████████████�
 | `US-57` | Capture Proof of Delivery | Online signatures, photos, barcodes, finalization | 🟢 `COMPLETE` | `ProofOfDeliveryServiceTest`, V47 |
 | `US-58` | Capture Signature & Photo Offline | IndexedDB outbox, composite sync, consent | 🟢 `COMPLETE` | `DeliveryPodOfflineSyncIntegrationTest` |
 | `US-59` | Manage Failed Deliveries | Return-to-base, non-delivery reasons, parcel holds | 🟢 `COMPLETE` | `FailedDeliveryServiceTest`, `failedDelivery.spec.ts`, V48 |
-| `US-60` | Schedule Re-Delivery | Re-attempt scheduling, alternative windows | 🟡 `IMPLEMENTATION_COMPLETE` | `RedeliveryServiceTest`, `redelivery.spec.ts`, V49 |
-| `US-61` | Analyze Delivery Performance | On-time delivery metrics, driver delivery SLA | ⚪ `NOT_STARTED` | Queued in MVP 1.3 |
+| `US-60` | Schedule Re-Delivery | Re-attempt scheduling, alternative windows | 🟢 `COMPLETE` | `RedeliveryPersistencePostgreSqlAcceptanceTest`, `redelivery.spec.ts`, V49 |
+| `US-61` | Analyze Delivery Performance | On-time delivery metrics, driver delivery SLA | 🟡 `IMPLEMENTATION_COMPLETE` | `DeliveryAnalyticsPersistencePostgreSqlAcceptanceTest`, V50 |
 | `US-62` | Handle Delivery Exceptions | Damaged at doorstep, recipient refusal, disputes | ⚪ `NOT_STARTED` | Queued in MVP 1.3 |
 
 ---
@@ -220,15 +221,15 @@ MVP 1.3 Band:     [████████████████████�
 
 ```
 Current Target: MVP 1.3 (Delivery Operations)
-Queue Head:     US-60 — Final Acceptance Audit (MVP-1.3-US60-REDELIVERY-FINAL-ACCEPTANCE-001)
+Queue Head:     US-61 — Analyze Delivery Performance (MVP-1.3-US61-ANALYTICS-FINAL-ACCEPTANCE-001)
 ```
 
-1. **`US-60` — Schedule Re-Delivery (Final Acceptance):**
-   - **Task ID:** `MVP-1.3-US60-REDELIVERY-FINAL-ACCEPTANCE-001`
-   - **Objectives:** Independent final acceptance audit, PostgreSQL validation, multi-tenancy security verification, regression certification, and formal closure of US-60.
-2. **`US-61` — Analyze Delivery Performance (Product Decisions):**
-   - **Task ID:** `MVP-1.3-US61-ANALYTICS-PRODUCT-DECISIONS-001`
-   - **Objectives:** Freeze metrics taxonomy, SLA calculation, aggregations, and reporting boundaries.
+1. **`US-61` — Analyze Delivery Performance (Final Acceptance Audit):**
+   - **Task ID:** `MVP-1.3-US61-ANALYTICS-FINAL-ACCEPTANCE-001`
+   - **Objectives:** Independent multi-tenancy audit, mathematical verification of KPI formulas, and formal closure.
+2. **`US-62` — Handle Delivery Exceptions (Product Decisions):**
+   - **Task ID:** `MVP-1.3-US62-EXCEPTIONS-PRODUCT-DECISIONS-001`
+   - **Objectives:** Freeze damaged cargo protocols, dispute handling, and partial delivery exceptions.
 
 ---
 
@@ -243,6 +244,7 @@ Queue Head:     US-60 — Final Acceptance Audit (MVP-1.3-US60-REDELIVERY-FINAL-
   - `US-57`: `docs/mvp/MVP-1.3-US57-PROOF-OF-DELIVERY-FINAL-ACCEPTANCE-001.md`
   - `US-58`: [`docs/mvp/MVP-1.3-US58-OFFLINE-POD-FINAL-ACCEPTANCE-001.md`](file:///home/hasitha-wijerathna/Documents/transport-logistics-modulith/transport-logistics-modulith/docs/mvp/MVP-1.3-US58-OFFLINE-POD-FINAL-ACCEPTANCE-001.md)
   - `US-59`: `docs/mvp/MVP-1.3-US59-FAILED-DELIVERIES-FINAL-ACCEPTANCE-001.md`
+  - `US-60`: `docs/mvp/MVP-1.3-US60-REDELIVERY-FINAL-ACCEPTANCE-001.md`
 - **Implementation Reports:**
   - `US-59`: `docs/mvp/MVP-1.3-US59-FAILED-DELIVERIES-IMPLEMENTATION-001.md`
   - `US-60`: `docs/mvp/MVP-1.3-US60-REDELIVERY-IMPLEMENTATION-001.md`
