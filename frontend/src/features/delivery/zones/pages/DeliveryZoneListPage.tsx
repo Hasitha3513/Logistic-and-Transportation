@@ -311,7 +311,7 @@ export const DeliveryZoneListPage: React.FC = () => {
       </Flex>
 
       <Card style={{ marginBottom: 16 }}>
-        <Space orientation="horizontal" size="middle" wrap>
+        <Space size="middle" wrap>
           <Input
             placeholder="Search zones..."
             prefix={<SearchOutlined />}
