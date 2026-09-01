@@ -1,6 +1,8 @@
 package com.transportlogistics.app.freight.reporting.adapters.outbound;
 
 import com.transportlogistics.app.freight.FreightReportingQuery;
+import com.transportlogistics.app.fleet.FleetReportingQuery;
+import com.transportlogistics.app.fleet.FleetVehicleSummary;
 import com.transportlogistics.app.tenancy.CurrentTenant;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -24,10 +26,13 @@ class FreightReportingJdbcAdapter implements FreightReportingQuery {
     private static final int SUMMARY_LIMIT = 10_000;
     private final JdbcTemplate jdbc;
     private final CurrentTenant currentTenant;
+    private final FleetReportingQuery fleetReporting;
 
-    FreightReportingJdbcAdapter(JdbcTemplate jdbc, CurrentTenant currentTenant) {
+    FreightReportingJdbcAdapter(JdbcTemplate jdbc, CurrentTenant currentTenant,
+                                 FleetReportingQuery fleetReporting) {
         this.jdbc = jdbc;
         this.currentTenant = currentTenant;
+        this.fleetReporting = fleetReporting;
     }
 
     @Override
@@ -103,17 +108,14 @@ class FreightReportingJdbcAdapter implements FreightReportingQuery {
                       CASE cmi.dimension_unit WHEN 'CM' THEN 0.000001 WHEN 'MM' THEN 0.000000001 ELSE 1 END END) cargo_volume_m3,
                   SUM(CASE WHEN cmi.id IS NOT NULL AND (cmi.unit_weight IS NULL OR cmi.weight_unit IS NULL) THEN 1 ELSE 0 END) missing_weight,
                   SUM(CASE WHEN cmi.id IS NOT NULL AND (cmi.length IS NULL OR cmi.width IS NULL OR cmi.height IS NULL OR cmi.dimension_unit IS NULL) THEN 1 ELSE 0 END) missing_volume,
-                  v.capacity_kg, v.tare_weight_kg, v.gross_vehicle_weight_kg, v.cargo_volume_capacity_m3,
-                  v.axle_count, v.max_axle_load_kg
+                  lp.vehicle_id
                 FROM freight_order fo
                 LEFT JOIN cargo_manifest cm ON cm.freight_order_id=fo.id AND cm.tenant_id=fo.tenant_id
                 LEFT JOIN cargo_manifest_item cmi ON cmi.cargo_manifest_id=cm.id AND cmi.tenant_id=fo.tenant_id
                 LEFT JOIN load_plan lp ON lp.cargo_manifest_id=cm.id AND lp.tenant_id=fo.tenant_id
-                LEFT JOIN vehicle v ON v.id=lp.vehicle_id AND v.tenant_id=fo.tenant_id
                 """ + where.sql() + " GROUP BY fo.id,fo.order_number,fo.customer_id,fo.origin_location_id,fo.destination_location_id," +
                 "fo.created_at,fo.requested_pickup_at,fo.requested_delivery_at,cm.id,cm.manifest_number,cm.finalized_at," +
-                "lp.id,lp.load_plan_number,lp.readiness_status,lp.vehicle_id,v.capacity_kg,v.tare_weight_kg," +
-                "v.gross_vehicle_weight_kg,v.cargo_volume_capacity_m3,v.axle_count,v.max_axle_load_kg ORDER BY " + sort + " " + direction + " LIMIT ? OFFSET ?";
+                "lp.id,lp.load_plan_number,lp.readiness_status,lp.vehicle_id ORDER BY " + sort + " " + direction + " LIMIT ? OFFSET ?";
         return jdbc.query(sql, (rs, rowNum) -> mapShipment(rs), args.toArray());
     }
 
@@ -128,10 +130,12 @@ class FreightReportingJdbcAdapter implements FreightReportingQuery {
         var diagnostics = new ArrayList<String>();
         if (weight == null) diagnostics.add("CARGO_ITEM_WEIGHT_DATA_MISSING");
         if (volume == null) diagnostics.add("CARGO_ITEM_DIMENSIONS_DATA_MISSING");
-        Double capacity = nullableDouble(rs, "capacity_kg");
-        Double volumeCapacity = nullableDouble(rs, "cargo_volume_capacity_m3");
-        Double tare = nullableDouble(rs, "tare_weight_kg");
-        Double gvw = nullableDouble(rs, "gross_vehicle_weight_kg");
+        UUID vehicleId = uuid(rs, "vehicle_id");
+        FleetVehicleSummary vehicle = vehicleId == null ? null : fleetReporting.findVehicle(vehicleId).orElse(null);
+        Double capacity = vehicle == null ? null : vehicle.capacityKg();
+        Double volumeCapacity = vehicle == null ? null : vehicle.cargoVolumeCapacityM3();
+        Double tare = vehicle == null ? null : vehicle.tareWeightKg();
+        Double gvw = vehicle == null ? null : vehicle.grossVehicleWeightKg();
         if (capacity == null) diagnostics.add("VEHICLE_PAYLOAD_CAPACITY_MISSING");
         if (volumeCapacity == null) diagnostics.add("VEHICLE_VOLUME_CAPACITY_UNAVAILABLE");
         if (tare == null || gvw == null) diagnostics.add("VEHICLE_GVW_DATA_MISSING");
@@ -152,7 +156,7 @@ class FreightReportingJdbcAdapter implements FreightReportingQuery {
                 rs.getObject("requested_delivery_at", java.time.OffsetDateTime.class), uuid(rs, "manifest_id"),
                 rs.getString("manifest_number"), rs.getObject("finalized_at") != null, itemCount,
                 uuid(rs, "load_plan_id"), rs.getString("load_plan_number"), rs.getString("readiness_status"),
-                uuid(rs, "vehicle_id"), weight, volume, payloadUtilization, volumeUtilization, outcome, List.copyOf(diagnostics));
+                vehicleId, weight, volume, payloadUtilization, volumeUtilization, outcome, List.copyOf(diagnostics));
     }
 
     private long countShipments(FreightReportCriteria criteria) {
@@ -219,7 +223,6 @@ class FreightReportingJdbcAdapter implements FreightReportingQuery {
         Map<String, Long> result = new LinkedHashMap<>(); values.forEach(value -> result.merge(value, 1L, Long::sum)); return Map.copyOf(result);
     }
     private static UUID uuid(ResultSet rs, String name) throws SQLException { return rs.getObject(name, UUID.class); }
-    private static Double nullableDouble(ResultSet rs, String name) throws SQLException { double value=rs.getDouble(name); return rs.wasNull()?null:value; }
     private static BigDecimal percent(BigDecimal value, Double capacity) {
         return value == null || capacity == null || capacity <= 0 ? null : value.divide(BigDecimal.valueOf(capacity), 4, RoundingMode.HALF_UP).multiply(BigDecimal.valueOf(100)).setScale(2, RoundingMode.HALF_UP);
     }

@@ -29,10 +29,7 @@ class DatabaseTableOwnershipArchitectureTest {
 
     private static final Map<String, String> OWNERS = ownershipRegistry();
 
-    private static final Set<String> LEGACY_FOREIGN_SQL_BASELINE = Set.of(
-            "freight/reporting/adapters/outbound/FreightReportingJdbcAdapter.java->vehicle",
-            "system/infrastructure/config/LocalSampleDataBootstrap.java->customer"
-    );
+    private static final Set<String> APPROVED_FOREIGN_SQL_EXCEPTIONS = Set.of();
 
     @Test
     void everyFlywayTableHasExactlyOneDeclaredOwner() throws IOException {
@@ -104,7 +101,7 @@ class DatabaseTableOwnershipArchitectureTest {
 
         assertThat(detected)
                 .as("legacy foreign-table SQL is not approval; P0-03 must remove this exact baseline")
-                .containsExactlyInAnyOrderElementsOf(LEGACY_FOREIGN_SQL_BASELINE);
+                .containsExactlyInAnyOrderElementsOf(APPROVED_FOREIGN_SQL_EXCEPTIONS);
     }
 
     private static boolean usesDirectDatabaseAccess(String source) {

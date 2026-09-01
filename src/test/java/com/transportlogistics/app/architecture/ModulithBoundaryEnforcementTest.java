@@ -26,9 +26,9 @@ class ModulithBoundaryEnforcementTest {
 
     private static final String BASE_PACKAGE = "com.transportlogistics.app";
 
-    // Temporary P0-01 baseline. P0-02/P0-03 must replace legacy edges with explicitly
-    // governed public contracts before removing them from this set.
-    private static final Set<String> LEGACY_MODULE_DEPENDENCY_BASELINE = Set.of(
+    // P0-03 approved dependency graph. Cross-module targets are additionally constrained
+    // below to published types in the provider module's root package.
+    private static final Set<String> APPROVED_MODULE_DEPENDENCIES = Set.of(
             "delivery->fleet", "delivery->organization", "delivery->tenancy",
             "fleet->identity", "fleet->notification", "fleet->tenancy",
             "freight->fleet", "freight->organization", "freight->tenancy",
@@ -38,7 +38,7 @@ class ModulithBoundaryEnforcementTest {
             "offlinesync->delivery", "offlinesync->fleet", "offlinesync->identity", "offlinesync->trip",
             "reporting->fleet", "reporting->freight", "reporting->trip",
             "routing->organization",
-            "system->fleet", "system->trip",
+            "system->fleet", "system->organization", "system->trip",
             "trip->fleet", "trip->identity", "trip->notification", "trip->routing"
     );
 
@@ -100,8 +100,13 @@ class ModulithBoundaryEnforcementTest {
     }
 
     @Test
-    void newModuleDependenciesOutsideTheLegacyBaselineAreForbidden() {
-        classes().should(useOnlyLegacyBaselineModuleDependencies()).check(importedClasses);
+    void onlyApprovedModuleDependenciesAreAllowed() {
+        classes().should(useOnlyApprovedModuleDependencies()).check(importedClasses);
+    }
+
+    @Test
+    void crossModuleDependenciesMustTargetPublishedContracts() {
+        classes().should(targetOnlyPublishedModuleContracts()).check(importedClasses);
     }
 
     private static ArchCondition<JavaClass> notDependOnForeignTypeAssignableTo(
@@ -134,8 +139,8 @@ class ModulithBoundaryEnforcementTest {
         };
     }
 
-    private static ArchCondition<JavaClass> useOnlyLegacyBaselineModuleDependencies() {
-        return new ArchCondition<>("use only module dependencies in the temporary P0-01 legacy baseline") {
+    private static ArchCondition<JavaClass> useOnlyApprovedModuleDependencies() {
+        return new ArchCondition<>("use only approved module dependencies") {
             @Override
             public void check(JavaClass source, ConditionEvents events) {
                 String sourceModule = moduleOf(source);
@@ -148,10 +153,35 @@ class ModulithBoundaryEnforcementTest {
                         continue;
                     }
                     String edge = sourceModule + "->" + targetModule;
-                    if (!LEGACY_MODULE_DEPENDENCY_BASELINE.contains(edge)) {
+                    if (!APPROVED_MODULE_DEPENDENCIES.contains(edge)) {
                         events.add(SimpleConditionEvent.violated(source,
                                 dependency.getDescription() + " creates module edge " + edge
-                                        + " that is not in the temporary P0-01 legacy baseline"));
+                                        + " that is not in the P0-03 approved dependency graph"));
+                    }
+                }
+            }
+        };
+    }
+
+    private static ArchCondition<JavaClass> targetOnlyPublishedModuleContracts() {
+        return new ArchCondition<>("target only contracts published in a provider module's root package") {
+            @Override
+            public void check(JavaClass source, ConditionEvents events) {
+                String sourceModule = moduleOf(source);
+                if (sourceModule == null) {
+                    return;
+                }
+                for (Dependency dependency : source.getDirectDependenciesFromSelf()) {
+                    JavaClass target = dependency.getTargetClass();
+                    String targetModule = moduleOf(target);
+                    if (targetModule == null || sourceModule.equals(targetModule) || "shared".equals(targetModule)) {
+                        continue;
+                    }
+                    String publishedPackage = BASE_PACKAGE + "." + targetModule;
+                    if (!target.getPackageName().equals(publishedPackage)) {
+                        events.add(SimpleConditionEvent.violated(source,
+                                dependency.getDescription() + " targets non-published package "
+                                        + target.getPackageName()));
                     }
                 }
             }

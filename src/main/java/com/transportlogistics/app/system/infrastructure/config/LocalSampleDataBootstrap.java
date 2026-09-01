@@ -1,5 +1,6 @@
 package com.transportlogistics.app.system.infrastructure.config;
 
+import com.transportlogistics.app.organization.CustomerDataReadiness;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
@@ -20,18 +21,12 @@ import javax.sql.DataSource;
 @RequiredArgsConstructor
 class LocalSampleDataBootstrap implements ApplicationRunner {
     private final DataSource dataSource;
+    private final CustomerDataReadiness customers;
 
     @Override
     public void run(ApplicationArguments args) {
-        try (var conn = dataSource.getConnection()) {
-            try (var stmt = conn.createStatement()) {
-                var rs = stmt.executeQuery("SELECT count(*) FROM customer");
-                if (rs.next() && rs.getInt(1) > 0) {
-                    return;
-                }
-            }
-        } catch (Exception ignored) {
-            // Table might not exist yet or query failed; proceed to attempt populating
+        if (customers.anyCustomerExists()) {
+            return;
         }
         var script = new ClassPathResource("db/sample-data/h2-phase1.sql");
         var populator = new ResourceDatabasePopulator(script);
