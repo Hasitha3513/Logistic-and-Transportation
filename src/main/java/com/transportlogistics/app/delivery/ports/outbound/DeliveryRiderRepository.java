@@ -45,6 +45,8 @@ public interface DeliveryRiderRepository {
 
     Optional<DeliveryOrderRiderAssignment> findActiveAssignmentForOrder(UUID deliveryOrderId, UUID tenantId);
 
+    List<DeliveryOrderRiderAssignment> findActiveAssignmentsForRider(UUID riderId, UUID tenantId);
+
     List<DeliveryOrderRiderAssignment> findAssignmentHistoryForOrder(UUID deliveryOrderId, UUID tenantId);
 
     int countActiveAssignmentsForRider(UUID riderId, UUID tenantId);

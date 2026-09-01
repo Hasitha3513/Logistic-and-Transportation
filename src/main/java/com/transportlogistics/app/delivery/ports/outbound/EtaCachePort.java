@@ -10,13 +10,19 @@ public interface EtaCachePort {
 
     Optional<SingleOrderEtaEstimate> getOrderEta(UUID tenantId, UUID orderId, String inputFingerprint);
 
-    void putOrderEta(UUID tenantId, UUID orderId, String inputFingerprint, SingleOrderEtaEstimate estimate);
+    long beginOrderCalculation(UUID tenantId, UUID orderId);
+
+    boolean putOrderEtaIfCurrent(UUID tenantId, UUID orderId, long generation,
+                                 String inputFingerprint, SingleOrderEtaEstimate estimate);
 
     void evictOrderEta(UUID tenantId, UUID orderId);
 
     Optional<BatchEtaEstimate> getBatchEta(UUID tenantId, UUID batchId, String inputFingerprint);
 
-    void putBatchEta(UUID tenantId, UUID batchId, String inputFingerprint, BatchEtaEstimate estimate);
+    long beginBatchCalculation(UUID tenantId, UUID batchId);
+
+    boolean putBatchEtaIfCurrent(UUID tenantId, UUID batchId, long generation,
+                                 String inputFingerprint, BatchEtaEstimate estimate);
 
     void evictBatchEta(UUID tenantId, UUID batchId);
 

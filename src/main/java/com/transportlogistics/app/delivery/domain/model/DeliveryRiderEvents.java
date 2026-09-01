@@ -14,8 +14,14 @@ public final class DeliveryRiderEvents {
             String riderCode,
             UUID primaryZoneId,
             DeliveryRiderType riderType,
+            DeliveryTransportMode transportMode,
             OffsetDateTime createdAt,
             String actor
+    ) {}
+
+    public record DeliveryRiderTransportModeChangedEvent(
+            UUID tenantId, UUID riderId, DeliveryTransportMode oldMode,
+            DeliveryTransportMode newMode, OffsetDateTime changedAt, String actor
     ) {}
 
     public record DeliveryRiderStatusChangedEvent(

@@ -8,6 +8,7 @@ import com.transportlogistics.app.delivery.domain.model.DeliveryRider;
 import com.transportlogistics.app.delivery.domain.model.DeliveryRiderAssignmentStatus;
 import com.transportlogistics.app.delivery.domain.model.DeliveryRiderShift;
 import com.transportlogistics.app.delivery.domain.model.DeliveryRiderType;
+import com.transportlogistics.app.delivery.domain.model.DeliveryTransportMode;
 import com.transportlogistics.app.delivery.domain.model.DeliveryServiceType;
 import com.transportlogistics.app.delivery.domain.model.DeliveryStatus;
 import com.transportlogistics.app.delivery.domain.model.DeliveryWindow;
@@ -115,12 +116,12 @@ public class DeliveryRiderConcurrencyPostgreSqlAcceptanceTest {
         UUID driver2 = UUID.randomUUID();
 
         UUID rider1Id = riderUseCase.onboardRider(
-                new DeliveryRiderUseCase.OnboardRiderCommand("RDR-RACE-1-" + UUID.randomUUID().toString().substring(0, 5), driver1, DeliveryRiderType.FULL_TIME, zoneAId, Set.of(), 5),
+                new DeliveryRiderUseCase.OnboardRiderCommand("RDR-RACE-1-" + UUID.randomUUID().toString().substring(0, 5), driver1, DeliveryRiderType.FULL_TIME, DeliveryTransportMode.MOTORBIKE, zoneAId, Set.of(), 5),
                 "admin"
         ).getId();
 
         UUID rider2Id = riderUseCase.onboardRider(
-                new DeliveryRiderUseCase.OnboardRiderCommand("RDR-RACE-2-" + UUID.randomUUID().toString().substring(0, 5), driver2, DeliveryRiderType.FULL_TIME, zoneAId, Set.of(), 5),
+                new DeliveryRiderUseCase.OnboardRiderCommand("RDR-RACE-2-" + UUID.randomUUID().toString().substring(0, 5), driver2, DeliveryRiderType.FULL_TIME, DeliveryTransportMode.BICYCLE, zoneAId, Set.of(), 5),
                 "admin"
         ).getId();
 
@@ -176,7 +177,7 @@ public class DeliveryRiderConcurrencyPostgreSqlAcceptanceTest {
         UUID driverId = UUID.randomUUID();
         // Capacity of 1
         UUID riderId = riderUseCase.onboardRider(
-                new DeliveryRiderUseCase.OnboardRiderCommand("RDR-CAP-" + UUID.randomUUID().toString().substring(0, 5), driverId, DeliveryRiderType.FULL_TIME, zoneAId, Set.of(), 1),
+                new DeliveryRiderUseCase.OnboardRiderCommand("RDR-CAP-" + UUID.randomUUID().toString().substring(0, 5), driverId, DeliveryRiderType.FULL_TIME, DeliveryTransportMode.VAN, zoneAId, Set.of(), 1),
                 "admin"
         ).getId();
 
@@ -240,7 +241,7 @@ public class DeliveryRiderConcurrencyPostgreSqlAcceptanceTest {
     void concurrentOverlappingShiftCreationRace() throws Exception {
         UUID driverId = UUID.randomUUID();
         UUID riderId = riderUseCase.onboardRider(
-                new DeliveryRiderUseCase.OnboardRiderCommand("RDR-SHIFT-" + UUID.randomUUID().toString().substring(0, 5), driverId, DeliveryRiderType.FULL_TIME, zoneAId, Set.of(), 5),
+                new DeliveryRiderUseCase.OnboardRiderCommand("RDR-SHIFT-" + UUID.randomUUID().toString().substring(0, 5), driverId, DeliveryRiderType.FULL_TIME, DeliveryTransportMode.MOTORBIKE, zoneAId, Set.of(), 5),
                 "admin"
         ).getId();
 

@@ -12,6 +12,7 @@ import com.transportlogistics.app.delivery.domain.model.DeliveryPriority;
 import com.transportlogistics.app.delivery.domain.model.DeliveryRider;
 import com.transportlogistics.app.delivery.domain.model.DeliveryRiderStatus;
 import com.transportlogistics.app.delivery.domain.model.DeliveryRiderType;
+import com.transportlogistics.app.delivery.domain.model.DeliveryTransportMode;
 import com.transportlogistics.app.delivery.domain.model.DeliveryServiceType;
 import com.transportlogistics.app.delivery.domain.model.DeliveryStatus;
 import com.transportlogistics.app.delivery.domain.model.DeliveryWindow;
@@ -203,7 +204,7 @@ class DeliveryBatchServiceTest {
         when(batchRepository.findByIdForUpdate(tenantId, batch.id())).thenReturn(Optional.of(batch));
 
         DeliveryRider rider = DeliveryRider.create(
-                riderId, tenantId, "RDR-001", driverId, DeliveryRiderType.FULL_TIME, zoneId, Set.of(), 5, "admin", OffsetDateTime.now(clock)
+                riderId, tenantId, "RDR-001", driverId, DeliveryRiderType.FULL_TIME, DeliveryTransportMode.VAN, zoneId, Set.of(), 5, "admin", OffsetDateTime.now(clock)
         );
         when(riderRepository.findByIdForUpdate(riderId, tenantId)).thenReturn(Optional.of(rider));
         when(driverEligibilityPort.findDriver(driverId)).thenReturn(Optional.of(new DriverEligibilityPort.DriverSummary(

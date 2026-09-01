@@ -60,10 +60,12 @@ public class ZoneModeHeuristicRoutingAdapter implements LastMileRoutingPort {
     }
 
     public static double resolveSpeedKmPerHour(DeliveryTransportMode mode, DeliveryZoneType zoneType) {
-        DeliveryTransportMode effectiveMode = mode != null ? mode : DeliveryTransportMode.MOTORBIKE;
+        if (mode == null) {
+            throw new IllegalArgumentException("Delivery Rider transport mode is required");
+        }
         DeliveryZoneType effectiveZone = zoneType != null ? zoneType : DeliveryZoneType.URBAN_DENSE;
 
-        return switch (effectiveMode) {
+        return switch (mode) {
             case BICYCLE -> switch (effectiveZone) {
                 case URBAN_DENSE -> 15.0;
                 case SUBURBAN -> 18.0;

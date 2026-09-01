@@ -22,8 +22,8 @@ class DeliveryOrderConfig {
     DeliveryOrderUseCase deliveryOrderUseCase(DeliveryOrderRepository orders, DeliveryNumberGenerator numbers,
                                               DeliveryCustomerLookupPort customers, DeliveryLocationLookupPort locations,
                                               DeliveryTenantContextPort tenantContext, DeliveryOrderTransaction transactions,
-                                              Clock clock) {
-        return new DeliveryOrderService(orders, numbers, customers, locations, tenantContext, transactions, clock);
+                                              DeliveryOrderEventPublisherPort eventPublisher, Clock clock) {
+        return new DeliveryOrderService(orders, numbers, customers, locations, tenantContext, transactions, eventPublisher, clock);
     }
     @Bean
     ProofOfDeliveryService proofOfDeliveryUseCase(
@@ -85,6 +85,5 @@ class DeliveryOrderConfig {
         );
     }
 }
-
 
 

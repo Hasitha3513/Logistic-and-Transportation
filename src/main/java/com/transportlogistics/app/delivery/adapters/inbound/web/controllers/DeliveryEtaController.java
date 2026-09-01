@@ -26,14 +26,14 @@ public class DeliveryEtaController {
     }
 
     @GetMapping("/orders/{orderId}/eta")
-    @PreAuthorize("hasAuthority('DELIVERY_ORDER_VIEW')")
+    @PreAuthorize("hasAuthority('DELIVERY_VIEW')")
     public ResponseEntity<SingleOrderEtaResponse> getOrderEta(@PathVariable UUID orderId) {
         SingleOrderEtaEstimate estimate = etaUseCase.getOrderEta(orderId);
         return ResponseEntity.ok(toOrderResponse(estimate));
     }
 
     @PostMapping("/orders/{orderId}/eta/calculate")
-    @PreAuthorize("hasAuthority('DELIVERY_ORDER_UPDATE')")
+    @PreAuthorize("hasAuthority('DELIVERY_UPDATE')")
     public ResponseEntity<SingleOrderEtaResponse> calculateOrderEta(
             @PathVariable UUID orderId,
             Authentication authentication

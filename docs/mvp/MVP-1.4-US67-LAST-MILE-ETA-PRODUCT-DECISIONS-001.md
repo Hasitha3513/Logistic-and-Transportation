@@ -3,8 +3,20 @@
 **Task ID:** `MVP-1.4-US67-LAST-MILE-ETA-PRODUCT-DECISIONS-001`  
 **User Story:** `US-67` — Calculate Last-Mile ETA  
 **Date:** 2026-09-01  
-**Status:** `PRODUCT_DECISIONS_FROZEN`  
-**Implementation State:** `NOT_STARTED`  
+**Status:** `PRODUCT_DECISIONS_FROZEN / GOVERNANCE_RECONCILED`
+**Implementation State:** `IMPLEMENTATION_COMPLETE / ACCEPTANCE_BLOCKED`
+
+> **Governance reconciliation (2026-09-01):** Commit
+> `ab0b3965beffa14d3e78697946f1a5883b5bba27` is accepted as the existing,
+> non-destructive implementation baseline. The earlier `NOT_STARTED` label was
+> a sequencing/documentation mismatch, not authority to revert implementation.
+> Independent acceptance remains blocked by the findings recorded in
+> `MVP-1.4-US67-LAST-MILE-ETA-FINAL-ACCEPTANCE-001.md`.
+
+> **PRODUCT_DECISION_RECONCILIATION — APPROVED (2026-09-01):**
+> `MVP_PROVIDER_STRATEGY = HEURISTIC_ONLY`. External routing providers are
+> deferred and external-provider fallback is not applicable to MVP 1.4.
+> `LastMileRoutingPort` remains the provider-neutral future extension seam.
 
 ---
 
@@ -49,10 +61,10 @@
 └────────────────────────────────────────┬─────────────────────────────────────────────────┘
                                          │ Consumes via Port / In-Memory Adapter
 ┌────────────────────────────────────────▼─────────────────────────────────────────────────┐
-│                                 ROUTING / PROVIDER ADAPTER                               │
+│                                ROUTING HEURISTIC ADAPTER                                 │
 │                                                                                          │
-│  - Default Adapter: Zone & Mode Aware Haversine / Road Network Matrix Heuristic Engine   │
-│  - Pluggable Outbound Provider: OSRM / OpenRouteService / Google Routes (Domain-Neutral) │
+│  - MVP Adapter: Zone & Mode Aware Haversine / Road Distance Heuristic Engine              │
+│  - Future external providers remain deferred behind LastMileRoutingPort                   │
 │  - Route module (US-18/US-20) remains untouched for line-haul freight & standard routes  │
 └──────────────────────────────────────────────────────────────────────────────────────────┘
 ```
@@ -117,14 +129,18 @@ For each stop $i$ with arrival time $\text{ETA}_i$ and associated `DeliverySlot`
 
 ---
 
-## 7. Routing Provider Strategy & Fallback Mechanics
+## 7. Routing Provider Strategy & Failure Mechanics
 
-1. **Provider Strategy:** Domain-neutral `LastMileRoutingPort` interface.
-2. **Primary Adapter:** High-performance in-memory Zone & Mode Road Distance Heuristic Adapter (Haversine distance with urban circuity factor $1.3\times$ and zone-specific speed curves).
-3. **External Provider Integration (Pluggable):** HTTP adapter for OSRM / OpenRouteService / Google Routes.
-4. **Failure Behavior:**
-   - If external provider times out (>2000ms) or returns 5xx/429, fall back seamlessly to internal Zone Road Heuristic and mark `EtaSource.HEURISTIC_FALLBACK`.
-   - If coordinates are geographically unreachable: Return `DELIVERY_ETA_ROUTE_UNAVAILABLE`.
+1. **MVP Provider Strategy:** **`HEURISTIC_ONLY`**, using the domain-neutral `LastMileRoutingPort` interface.
+2. **MVP Adapter:** In-memory Zone & Mode Road Distance Heuristic Adapter (Haversine distance with accepted circuity factor $1.3\times$ and zone-specific speed curves).
+3. **External Provider:** **`DEFERRED`**. No external endpoint, credential, traffic feed, quota, timeout, retry, or rate-limit contract is part of MVP 1.4.
+4. **Source Semantics:**
+   - `EtaSource.HEURISTIC` is the normal MVP production result.
+   - `EtaSource.HEURISTIC_FALLBACK` is reserved for a future adapter/decorator that actually attempts an upstream provider and falls back.
+   - `EtaSource.EXTERNAL_PROVIDER` is reserved for a future external adapter.
+   - Reserved sources must not be emitted by the current MVP execution path.
+5. **Current Failure Behavior:** Invalid/missing coordinates produce `DELIVERY_ETA_COORDINATES_MISSING`; invalid operational input uses existing domain validation; `DELIVERY_ETA_ROUTE_UNAVAILABLE` applies only if the heuristic cannot produce a valid estimate.
+6. **Future Extension:** An external adapter plus fallback decorator may be introduced behind `LastMileRoutingPort` without changing the ETA domain model, `DeliveryEtaUseCase`, REST API, or frontend contract.
 
 ---
 
@@ -198,13 +214,15 @@ Base Path: `/api/v1/deliveries`
 | **VM67-05** | Transport mode speed adjustment | Bicycle vs Van yields distinct transit times |
 | **VM67-06** | Slot SLA risk status | Evaluates `ON_TIME`, `AT_RISK`, `LATE` correctly |
 | **VM67-07** | Batch order sequence alteration | Recomputes stop arrival times based on updated sequence |
-| **VM67-08** | Provider fallback resilience | Primary timeout gracefully falls back to internal heuristic |
+| **VM67-08** | External provider timeout/fallback | `NOT_APPLICABLE_EXTERNAL_PROVIDER_DEFERRED`; normal MVP source remains `HEURISTIC` |
 | **VM67-09** | Freshness & stale indicator | Returns `isStale = true` after 15 minutes TTL |
 | **VM67-10** | Architecture compliance | Zero leakage into Route internals; domain purity preserved |
 
 ---
 
-## 14. Implementation Next Step
+## 14. Acceptance Remediation Next Step
 
-**Next Immediate Task:** `MVP-1.4-US67-LAST-MILE-ETA-IMPLEMENTATION-001`  
-(Production Implementation of US-67 Last-Mile ETA calculation engine, ports, adapters, REST endpoints, frontend drawer projection, and test suites).
+**Next Immediate Task:** `MVP-1.4-US67-LAST-MILE-ETA-ACCEPTANCE-REMEDIATION-001-RERUN`
+(Close the independently verified stale-write, invalidation, rider-mode,
+concurrency, security, and real-path Chromium evidence gaps;
+then rerun final acceptance.)

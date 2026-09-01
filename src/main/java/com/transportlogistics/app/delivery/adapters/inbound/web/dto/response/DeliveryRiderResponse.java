@@ -3,6 +3,7 @@ package com.transportlogistics.app.delivery.adapters.inbound.web.dto.response;
 import com.transportlogistics.app.delivery.domain.model.DeliveryRider;
 import com.transportlogistics.app.delivery.domain.model.DeliveryRiderStatus;
 import com.transportlogistics.app.delivery.domain.model.DeliveryRiderType;
+import com.transportlogistics.app.delivery.domain.model.DeliveryTransportMode;
 
 import java.time.OffsetDateTime;
 import java.util.Set;
@@ -13,6 +14,7 @@ public record DeliveryRiderResponse(
         String riderCode,
         UUID driverId,
         DeliveryRiderType riderType,
+        DeliveryTransportMode transportMode,
         DeliveryRiderStatus status,
         UUID primaryZoneId,
         Set<UUID> secondaryZoneIds,
@@ -29,6 +31,7 @@ public record DeliveryRiderResponse(
                 domain.getRiderCode(),
                 domain.getDriverId(),
                 domain.getRiderType(),
+                domain.getTransportMode(),
                 domain.getStatus(),
                 domain.getPrimaryZoneId(),
                 domain.getSecondaryZoneIds(),

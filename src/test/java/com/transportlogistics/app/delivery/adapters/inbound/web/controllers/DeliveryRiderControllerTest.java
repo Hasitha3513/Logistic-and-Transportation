@@ -13,6 +13,7 @@ import com.transportlogistics.app.delivery.domain.model.DeliveryRiderAvailabilit
 import com.transportlogistics.app.delivery.domain.model.DeliveryRiderShift;
 import com.transportlogistics.app.delivery.domain.model.DeliveryRiderStatus;
 import com.transportlogistics.app.delivery.domain.model.DeliveryRiderType;
+import com.transportlogistics.app.delivery.domain.model.DeliveryTransportMode;
 import com.transportlogistics.app.delivery.ports.inbound.DeliveryRiderUseCase;
 import com.transportlogistics.app.delivery.ports.outbound.DriverEligibilityPort;
 import com.transportlogistics.app.shared.domain.ConflictException;
@@ -69,11 +70,11 @@ class DeliveryRiderControllerTest {
     @WithMockUser(authorities = "DELIVERY_RIDER_CREATE")
     void onboardRider_authorized_returnsCreated() throws Exception {
         OnboardDeliveryRiderRequest request = new OnboardDeliveryRiderRequest(
-                "RDR-001", driverId, DeliveryRiderType.FULL_TIME, zoneId, Set.of(), 5
+                "RDR-001", driverId, DeliveryRiderType.FULL_TIME, DeliveryTransportMode.MOTORBIKE, zoneId, Set.of(), 5
         );
 
         DeliveryRider rider = DeliveryRider.create(
-                riderId, UUID.randomUUID(), "RDR-001", driverId, DeliveryRiderType.FULL_TIME, zoneId, Set.of(), 5, "admin", now
+                riderId, UUID.randomUUID(), "RDR-001", driverId, DeliveryRiderType.FULL_TIME, DeliveryTransportMode.MOTORBIKE, zoneId, Set.of(), 5, "admin", now
         );
 
         when(riderUseCase.onboardRider(any(), any())).thenReturn(rider);
@@ -84,7 +85,28 @@ class DeliveryRiderControllerTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.riderCode").value("RDR-001"))
+                .andExpect(jsonPath("$.transportMode").value("MOTORBIKE"))
                 .andExpect(jsonPath("$.status").value("ACTIVE"));
+    }
+
+    @Test
+    void onboardRider_missingTransportMode_returns400() throws Exception {
+        String request = """
+                {"driverId":"%s","riderType":"FULL_TIME","primaryZoneId":"%s","maxConcurrentDeliveries":5}
+                """.formatted(driverId, zoneId);
+        mockMvc.perform(post("/api/v1/delivery-riders").with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON).content(request))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void onboardRider_invalidTransportMode_returns400() throws Exception {
+        String request = """
+                {"driverId":"%s","riderType":"FULL_TIME","transportMode":"SCOOTER","primaryZoneId":"%s","maxConcurrentDeliveries":5}
+                """.formatted(driverId, zoneId);
+        mockMvc.perform(post("/api/v1/delivery-riders").with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON).content(request))
+                .andExpect(status().isBadRequest());
     }
 
     @Test
@@ -94,7 +116,7 @@ class DeliveryRiderControllerTest {
         DeliveryRiderUseCase.DeliveryRiderSummary summary = new DeliveryRiderUseCase.DeliveryRiderSummary(
                 riderId, "RDR-001", driverId,
                 new DriverEligibilityPort.DriverSummary(driverId, "EMP-100", "John", "Doe", "AVAILABLE", true),
-                DeliveryRiderType.FULL_TIME, DeliveryRiderStatus.ACTIVE, DeliveryRiderAvailability.AVAILABLE,
+                DeliveryRiderType.FULL_TIME, DeliveryTransportMode.MOTORBIKE, DeliveryRiderStatus.ACTIVE, DeliveryRiderAvailability.AVAILABLE,
                 zoneId, Set.of(), 2, 5, Optional.empty()
         );
 
@@ -103,6 +125,7 @@ class DeliveryRiderControllerTest {
         mockMvc.perform(get("/api/v1/delivery-riders"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].riderCode").value("RDR-001"))
+                .andExpect(jsonPath("$[0].transportMode").value("MOTORBIKE"))
                 .andExpect(jsonPath("$[0].driverName").value("John Doe"))
                 .andExpect(jsonPath("$[0].availability").value("AVAILABLE"))
                 .andExpect(jsonPath("$[0].activeWorkload").value(2));

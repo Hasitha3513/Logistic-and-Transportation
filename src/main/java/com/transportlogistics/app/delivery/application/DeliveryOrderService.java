@@ -1,6 +1,7 @@
 package com.transportlogistics.app.delivery.application;
 
 import com.transportlogistics.app.delivery.domain.model.*;
+import com.transportlogistics.app.delivery.domain.events.DeliveryOrderDestinationChangedEvent;
 import com.transportlogistics.app.delivery.ports.inbound.DeliveryOrderUseCase;
 import com.transportlogistics.app.delivery.ports.outbound.*;
 import com.transportlogistics.app.shared.domain.BusinessRuleException;
@@ -17,14 +18,15 @@ public final class DeliveryOrderService implements DeliveryOrderUseCase {
     private final DeliveryLocationLookupPort locations;
     private final DeliveryTenantContextPort tenantContext;
     private final DeliveryOrderTransaction transactions;
+    private final DeliveryOrderEventPublisherPort eventPublisher;
     private final Clock clock;
 
     public DeliveryOrderService(DeliveryOrderRepository orders, DeliveryNumberGenerator numbers,
                                 DeliveryCustomerLookupPort customers, DeliveryLocationLookupPort locations,
                                 DeliveryTenantContextPort tenantContext, DeliveryOrderTransaction transactions,
-                                Clock clock) {
+                                DeliveryOrderEventPublisherPort eventPublisher, Clock clock) {
         this.orders = orders; this.numbers = numbers; this.customers = customers; this.locations = locations;
-        this.tenantContext = tenantContext; this.transactions = transactions; this.clock = clock;
+        this.tenantContext = tenantContext; this.transactions = transactions; this.eventPublisher = eventPublisher; this.clock = clock;
     }
 
     @Override
@@ -59,10 +61,15 @@ public final class DeliveryOrderService implements DeliveryOrderUseCase {
             DeliveryOrder current = get(id);
             requireVersion(command.version(), current.version());
             validateReferences(command.customerId(), command.originLocationId(), command.destinationLocationId());
-            return orders.save(current.updateRequirements(command.customerId(), command.originLocationId(),
+            DeliveryOrder saved = orders.save(current.updateRequirements(command.customerId(), command.originLocationId(),
                     command.destinationLocationId(), command.priority(), command.serviceType(),
                     new DeliveryWindow(command.windowStart(), command.windowEnd()), command.instructions(),
                     OffsetDateTime.now(clock), actor));
+            if (!current.destinationLocationId().equals(saved.destinationLocationId())) {
+                eventPublisher.publishEvent(new DeliveryOrderDestinationChangedEvent(requiredTenant().tenantId(), id,
+                        current.destinationLocationId(), saved.destinationLocationId(), OffsetDateTime.now(clock), actor));
+            }
+            return saved;
         });
     }
 

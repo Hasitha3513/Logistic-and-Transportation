@@ -16,6 +16,7 @@ public class DeliveryRider {
     private final String riderCode;
     private final UUID driverId;
     private final DeliveryRiderType riderType;
+    private DeliveryTransportMode transportMode;
     private DeliveryRiderStatus status;
     private UUID primaryZoneId;
     private final Set<UUID> secondaryZoneIds;
@@ -32,6 +33,7 @@ public class DeliveryRider {
             String riderCode,
             UUID driverId,
             DeliveryRiderType riderType,
+            DeliveryTransportMode transportMode,
             DeliveryRiderStatus status,
             UUID primaryZoneId,
             Set<UUID> secondaryZoneIds,
@@ -54,6 +56,7 @@ public class DeliveryRider {
         this.riderCode = riderCode.trim().toUpperCase();
         this.driverId = driverId;
         this.riderType = riderType != null ? riderType : DeliveryRiderType.FULL_TIME;
+        this.transportMode = transportMode;
         this.status = status != null ? status : DeliveryRiderStatus.ACTIVE;
         this.primaryZoneId = primaryZoneId;
         this.secondaryZoneIds = new HashSet<>(secondaryZoneIds != null ? secondaryZoneIds : Collections.emptySet());
@@ -72,18 +75,23 @@ public class DeliveryRider {
             String riderCode,
             UUID driverId,
             DeliveryRiderType riderType,
+            DeliveryTransportMode transportMode,
             UUID primaryZoneId,
             Set<UUID> secondaryZoneIds,
             int maxConcurrentDeliveries,
             String actor,
             OffsetDateTime now
     ) {
+        if (transportMode == null) {
+            throw new BusinessRuleException("DELIVERY_RIDER_TRANSPORT_MODE_REQUIRED", "Transport mode is required");
+        }
         return new DeliveryRider(
                 id != null ? id : UUID.randomUUID(),
                 tenantId,
                 riderCode,
                 driverId,
                 riderType,
+                transportMode,
                 DeliveryRiderStatus.ACTIVE,
                 primaryZoneId,
                 secondaryZoneIds,
@@ -103,12 +111,16 @@ public class DeliveryRider {
         return this.primaryZoneId.equals(zoneId) || this.secondaryZoneIds.contains(zoneId);
     }
 
-    public void updateProfile(UUID primaryZoneId, Set<UUID> secondaryZoneIds, int maxConcurrentDeliveries, String actor, OffsetDateTime now) {
+    public void updateProfile(UUID primaryZoneId, Set<UUID> secondaryZoneIds, int maxConcurrentDeliveries,
+                              DeliveryTransportMode transportMode, String actor, OffsetDateTime now) {
         if (primaryZoneId == null) {
             throw new BusinessRuleException("DELIVERY_RIDER_PRIMARY_ZONE_REQUIRED", "Primary zone is required");
         }
         if (maxConcurrentDeliveries <= 0) {
             throw new BusinessRuleException("DELIVERY_RIDER_CAPACITY_INVALID", "Max concurrent deliveries must be positive");
+        }
+        if (transportMode == null) {
+            throw new BusinessRuleException("DELIVERY_RIDER_TRANSPORT_MODE_REQUIRED", "Transport mode is required");
         }
         this.primaryZoneId = primaryZoneId;
         this.secondaryZoneIds.clear();
@@ -117,6 +129,7 @@ public class DeliveryRider {
             this.secondaryZoneIds.remove(primaryZoneId);
         }
         this.maxConcurrentDeliveries = maxConcurrentDeliveries;
+        this.transportMode = transportMode;
         this.updatedAt = now;
         this.updatedBy = actor != null ? actor : "system";
     }
@@ -144,6 +157,7 @@ public class DeliveryRider {
     public String getRiderCode() { return riderCode; }
     public UUID getDriverId() { return driverId; }
     public DeliveryRiderType getRiderType() { return riderType; }
+    public DeliveryTransportMode getTransportMode() { return transportMode; }
     public DeliveryRiderStatus getStatus() { return status; }
     public UUID getPrimaryZoneId() { return primaryZoneId; }
     public Set<UUID> getSecondaryZoneIds() { return Collections.unmodifiableSet(secondaryZoneIds); }

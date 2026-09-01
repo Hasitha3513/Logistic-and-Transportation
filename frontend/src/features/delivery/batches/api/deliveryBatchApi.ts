@@ -76,14 +76,14 @@ export interface DeliveryBatchFilterParams {
 
 export const deliveryBatchApi = {
   getBatches: async (params?: DeliveryBatchFilterParams) => {
-    const res = await api.get<{
-      content: DeliveryBatch[];
-      page: number;
-      size: number;
-      totalElements: number;
-      totalPages: number;
-    }>('/api/v1/deliveries/batches', { params });
-    return res.data;
+    const res = await api.get<{ items: DeliveryBatch[]; total: number; limit: number; offset: number }>('/api/v1/deliveries/batches', { params });
+    return {
+      content: res.data.items,
+      page: Math.floor(res.data.offset / res.data.limit),
+      size: res.data.limit,
+      totalElements: res.data.total,
+      totalPages: Math.ceil(res.data.total / res.data.limit),
+    };
   },
 
   getBatch: async (batchId: string) => {

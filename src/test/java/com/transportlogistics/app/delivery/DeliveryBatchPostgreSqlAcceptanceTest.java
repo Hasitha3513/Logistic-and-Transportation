@@ -11,6 +11,7 @@ import com.transportlogistics.app.delivery.domain.model.DeliveryOrder;
 import com.transportlogistics.app.delivery.domain.model.DeliveryPriority;
 import com.transportlogistics.app.delivery.domain.model.DeliveryRider;
 import com.transportlogistics.app.delivery.domain.model.DeliveryRiderType;
+import com.transportlogistics.app.delivery.domain.model.DeliveryTransportMode;
 import com.transportlogistics.app.delivery.domain.model.DeliveryServiceType;
 import com.transportlogistics.app.delivery.domain.model.DeliveryStatus;
 import com.transportlogistics.app.delivery.domain.model.DeliveryWindow;
@@ -121,7 +122,7 @@ class DeliveryBatchPostgreSqlAcceptanceTest {
     private DeliveryRider seedRider(UUID tenantId, String code, UUID zoneId) {
         return riderAdapter.save(DeliveryRider.create(
                 UUID.randomUUID(), tenantId, code, UUID.randomUUID(), DeliveryRiderType.FULL_TIME,
-                zoneId, Set.of(), 5, "admin", now
+                DeliveryTransportMode.MOTORBIKE, zoneId, Set.of(), 5, "admin", now
         ));
     }
 

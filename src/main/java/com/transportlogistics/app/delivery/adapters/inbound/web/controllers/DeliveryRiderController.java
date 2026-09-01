@@ -61,6 +61,7 @@ public class DeliveryRiderController {
                         request.riderCode(),
                         request.driverId(),
                         request.riderType() != null ? request.riderType() : DeliveryRiderType.FULL_TIME,
+                        request.transportMode(),
                         request.primaryZoneId(),
                         request.secondaryZoneIds(),
                         request.maxConcurrentDeliveries() != null ? request.maxConcurrentDeliveries() : 5
@@ -103,6 +104,7 @@ public class DeliveryRiderController {
                 id,
                 new DeliveryRiderUseCase.UpdateRiderCommand(
                         request.primaryZoneId(),
+                        request.transportMode(),
                         request.secondaryZoneIds(),
                         request.maxConcurrentDeliveries() != null ? request.maxConcurrentDeliveries() : 5
                 ),

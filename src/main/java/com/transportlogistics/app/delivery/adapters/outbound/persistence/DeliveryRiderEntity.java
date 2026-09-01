@@ -3,6 +3,7 @@ package com.transportlogistics.app.delivery.adapters.outbound.persistence;
 import com.transportlogistics.app.delivery.domain.model.DeliveryRider;
 import com.transportlogistics.app.delivery.domain.model.DeliveryRiderStatus;
 import com.transportlogistics.app.delivery.domain.model.DeliveryRiderType;
+import com.transportlogistics.app.delivery.domain.model.DeliveryTransportMode;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
@@ -39,6 +40,10 @@ public class DeliveryRiderEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "rider_type", nullable = false, length = 30)
     private DeliveryRiderType riderType;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "transport_mode", length = 20)
+    private DeliveryTransportMode transportMode;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 20)
@@ -84,6 +89,7 @@ public class DeliveryRiderEntity {
         entity.riderCode = domain.getRiderCode();
         entity.driverId = domain.getDriverId();
         entity.riderType = domain.getRiderType();
+        entity.transportMode = domain.getTransportMode();
         entity.status = domain.getStatus();
         entity.primaryZoneId = domain.getPrimaryZoneId();
         entity.secondaryZoneIds = new HashSet<>(domain.getSecondaryZoneIds());
@@ -103,6 +109,7 @@ public class DeliveryRiderEntity {
                 riderCode,
                 driverId,
                 riderType,
+                transportMode,
                 status,
                 primaryZoneId,
                 secondaryZoneIds,
@@ -120,6 +127,7 @@ public class DeliveryRiderEntity {
     public String getRiderCode() { return riderCode; }
     public UUID getDriverId() { return driverId; }
     public DeliveryRiderType getRiderType() { return riderType; }
+    public DeliveryTransportMode getTransportMode() { return transportMode; }
     public DeliveryRiderStatus getStatus() { return status; }
     public UUID getPrimaryZoneId() { return primaryZoneId; }
     public Set<UUID> getSecondaryZoneIds() { return secondaryZoneIds; }

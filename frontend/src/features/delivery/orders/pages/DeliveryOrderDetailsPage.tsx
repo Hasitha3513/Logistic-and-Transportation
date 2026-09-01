@@ -6,6 +6,7 @@ import { ProofOfDeliverySection } from '../components/ProofOfDeliverySection';
 import { FailedDeliverySection } from '../components/FailedDeliverySection';
 import { RedeliverySection } from '../components/RedeliverySection';
 import { DeliveryExceptionsSection } from '../components/DeliveryExceptionsSection';
+import { DeliveryOrderEtaSection } from '../components/DeliveryOrderEtaSection';
 
 interface ErrorBody { message?: string }
 export default function DeliveryOrderDetailsPage() {
@@ -23,10 +24,10 @@ export default function DeliveryOrderDetailsPage() {
       { key: 'service', label: 'Service type', children: data.serviceType.replaceAll('_', ' ') }, { key: 'window', label: 'Delivery window', children: `${new Date(data.windowStart).toLocaleString()} — ${new Date(data.windowEnd).toLocaleString()}` },
       { key: 'instructions', label: 'Instructions', span: 2, children: data.instructions || 'None' }, { key: 'updated', label: 'Last updated', children: new Date(data.updatedAt).toLocaleString() },
     ]} /></Card>
+    <DeliveryOrderEtaSection orderId={data.id} />
     <ProofOfDeliverySection delivery={data} />
     <FailedDeliverySection delivery={data} />
     <RedeliverySection delivery={data} />
     <DeliveryExceptionsSection delivery={data} />
   </Flex>;
 }
-

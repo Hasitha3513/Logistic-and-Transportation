@@ -6,7 +6,6 @@ import com.transportlogistics.app.delivery.domain.model.BatchEtaStopEstimate;
 import com.transportlogistics.app.delivery.domain.model.DeliveryBatch;
 import com.transportlogistics.app.delivery.domain.model.DeliveryBatchOrder;
 import com.transportlogistics.app.delivery.domain.model.DeliveryOrder;
-import com.transportlogistics.app.delivery.domain.model.DeliveryRider;
 import com.transportlogistics.app.delivery.domain.model.DeliveryTransportMode;
 import com.transportlogistics.app.delivery.domain.model.DeliveryZone;
 import com.transportlogistics.app.delivery.domain.model.DeliveryZoneType;
@@ -18,7 +17,7 @@ import com.transportlogistics.app.delivery.ports.outbound.DeliveryBatchRepositor
 import com.transportlogistics.app.delivery.ports.outbound.DeliveryEtaEventPublisherPort;
 import com.transportlogistics.app.delivery.ports.outbound.DeliveryLocationLookupPort;
 import com.transportlogistics.app.delivery.ports.outbound.DeliveryOrderRepository;
-import com.transportlogistics.app.delivery.ports.outbound.DeliveryRiderRepository;
+import com.transportlogistics.app.delivery.ports.outbound.RiderEtaContextPort;
 import com.transportlogistics.app.delivery.ports.outbound.DeliveryTenantContextPort;
 import com.transportlogistics.app.delivery.ports.outbound.DeliveryZoneRepository;
 import com.transportlogistics.app.delivery.ports.outbound.EtaCachePort;
@@ -47,7 +46,7 @@ public class DeliveryEtaService implements DeliveryEtaUseCase {
     private final DeliveryOrderRepository orderRepository;
     private final DeliveryBatchRepository batchRepository;
     private final DeliveryZoneRepository zoneRepository;
-    private final DeliveryRiderRepository riderRepository;
+    private final RiderEtaContextPort riderEtaContextPort;
     private final DeliveryLocationLookupPort locationLookupPort;
     private final LastMileRoutingPort routingPort;
     private final EtaCachePort cachePort;
@@ -58,7 +57,7 @@ public class DeliveryEtaService implements DeliveryEtaUseCase {
             DeliveryOrderRepository orderRepository,
             DeliveryBatchRepository batchRepository,
             DeliveryZoneRepository zoneRepository,
-            DeliveryRiderRepository riderRepository,
+            RiderEtaContextPort riderEtaContextPort,
             DeliveryLocationLookupPort locationLookupPort,
             LastMileRoutingPort routingPort,
             EtaCachePort cachePort,
@@ -68,7 +67,7 @@ public class DeliveryEtaService implements DeliveryEtaUseCase {
         this.orderRepository = orderRepository;
         this.batchRepository = batchRepository;
         this.zoneRepository = zoneRepository;
-        this.riderRepository = riderRepository;
+        this.riderEtaContextPort = riderEtaContextPort;
         this.locationLookupPort = locationLookupPort;
         this.routingPort = routingPort;
         this.cachePort = cachePort;
@@ -93,7 +92,8 @@ public class DeliveryEtaService implements DeliveryEtaUseCase {
             return cached.get();
         }
 
-        return doCalculateOrderEta(tenantId, order, fingerprint, "system");
+        long generation = cachePort.beginOrderCalculation(tenantId, orderId);
+        return doCalculateOrderEta(tenantId, order, fingerprint, generation, "system");
     }
 
     @Override
@@ -103,7 +103,8 @@ public class DeliveryEtaService implements DeliveryEtaUseCase {
                 .orElseThrow(() -> new NotFoundException("DELIVERY_ETA_SUBJECT_NOT_FOUND", "Delivery order not found: " + orderId));
 
         String fingerprint = buildOrderFingerprint(tenantId, order);
-        return doCalculateOrderEta(tenantId, order, fingerprint, actor);
+        long generation = cachePort.beginOrderCalculation(tenantId, orderId);
+        return doCalculateOrderEta(tenantId, order, fingerprint, generation, actor);
     }
 
     @Override
@@ -120,7 +121,8 @@ public class DeliveryEtaService implements DeliveryEtaUseCase {
             return cached.get();
         }
 
-        return doCalculateBatchEta(tenantId, batch, activeMembers, fingerprint, "system");
+        long generation = cachePort.beginBatchCalculation(tenantId, batchId);
+        return doCalculateBatchEta(tenantId, batch, activeMembers, fingerprint, generation, "system");
     }
 
     @Override
@@ -131,14 +133,15 @@ public class DeliveryEtaService implements DeliveryEtaUseCase {
 
         List<DeliveryBatchOrder> activeMembers = batchRepository.findActiveOrderMembershipsByBatchId(tenantId, batchId);
         String fingerprint = buildBatchFingerprint(tenantId, batch, activeMembers);
-
-        return doCalculateBatchEta(tenantId, batch, activeMembers, fingerprint, actor);
+        long generation = cachePort.beginBatchCalculation(tenantId, batchId);
+        return doCalculateBatchEta(tenantId, batch, activeMembers, fingerprint, generation, actor);
     }
 
     private SingleOrderEtaEstimate doCalculateOrderEta(
             UUID tenantId,
             DeliveryOrder order,
             String fingerprint,
+            long generation,
             String actor
     ) {
         OffsetDateTime now = OffsetDateTime.now(ZoneOffset.UTC);
@@ -156,7 +159,7 @@ public class DeliveryEtaService implements DeliveryEtaUseCase {
         LastMileRoutingPort.Coordinate origin = new LastMileRoutingPort.Coordinate(originLoc.latitude(), originLoc.longitude());
         LastMileRoutingPort.Coordinate dest = new LastMileRoutingPort.Coordinate(destLoc.latitude(), destLoc.longitude());
 
-        DeliveryTransportMode mode = DeliveryTransportMode.MOTORBIKE;
+        DeliveryTransportMode mode = requireMode(riderEtaContextPort.findForOrder(tenantId, order.id().value()));
         DeliveryZoneType zoneType = DeliveryZoneType.URBAN_DENSE;
 
         LastMileRoutingPort.RouteEstimate estimate = routingPort.estimate(origin, dest, mode, zoneType, now);
@@ -177,7 +180,7 @@ public class DeliveryEtaService implements DeliveryEtaUseCase {
                 staleAt
         );
 
-        cachePort.putOrderEta(tenantId, order.id().value(), fingerprint, result);
+        cachePort.putOrderEtaIfCurrent(tenantId, order.id().value(), generation, fingerprint, result);
 
         eventPublisherPort.publish(DeliveryEtaCalculatedEvent.of(
                 tenantId,
@@ -199,6 +202,7 @@ public class DeliveryEtaService implements DeliveryEtaUseCase {
             DeliveryBatch batch,
             List<DeliveryBatchOrder> activeMembers,
             String fingerprint,
+            long generation,
             String actor
     ) {
         OffsetDateTime now = OffsetDateTime.now(ZoneOffset.UTC);
@@ -215,7 +219,7 @@ public class DeliveryEtaService implements DeliveryEtaUseCase {
                     EtaSource.HEURISTIC,
                     List.of()
             );
-            cachePort.putBatchEta(tenantId, batch.id(), fingerprint, emptyResult);
+            cachePort.putBatchEtaIfCurrent(tenantId, batch.id(), generation, fingerprint, emptyResult);
             return emptyResult;
         }
 
@@ -223,14 +227,10 @@ public class DeliveryEtaService implements DeliveryEtaUseCase {
                 .orElseThrow(() -> new BusinessRuleException("DELIVERY_ETA_INVALID_STATE", "Delivery zone not found for batch"));
 
         DeliveryZoneType zoneType = zone.zoneType() != null ? zone.zoneType() : DeliveryZoneType.URBAN_DENSE;
-        DeliveryTransportMode mode = DeliveryTransportMode.MOTORBIKE;
-
-        if (batch.riderId() != null) {
-            Optional<DeliveryRider> riderOpt = riderRepository.findById(batch.riderId(), tenantId);
-            if (riderOpt.isPresent()) {
-                mode = DeliveryTransportMode.MOTORBIKE;
-            }
+        if (batch.riderId() == null) {
+            throw new BusinessRuleException("DELIVERY_ETA_INVALID_STATE", "A Rider must be assigned before ETA calculation");
         }
+        DeliveryTransportMode mode = requireMode(riderEtaContextPort.findForRider(tenantId, batch.riderId()));
 
         LastMileRoutingPort.Coordinate currentOrigin = null;
         if (zone.depotLocationId() != null) {
@@ -319,7 +319,7 @@ public class DeliveryEtaService implements DeliveryEtaUseCase {
                 stopEstimates
         );
 
-        cachePort.putBatchEta(tenantId, batch.id(), fingerprint, batchEstimate);
+        cachePort.putBatchEtaIfCurrent(tenantId, batch.id(), generation, fingerprint, batchEstimate);
 
         eventPublisherPort.publish(DeliveryEtaCalculatedEvent.of(
                 tenantId,
@@ -353,6 +353,15 @@ public class DeliveryEtaService implements DeliveryEtaUseCase {
         }
     }
 
+    private DeliveryTransportMode requireMode(Optional<RiderEtaContextPort.RiderEtaContext> context) {
+        RiderEtaContextPort.RiderEtaContext rider = context.orElseThrow(() ->
+                new BusinessRuleException("DELIVERY_ETA_INVALID_STATE", "A Rider must be assigned before ETA calculation"));
+        if (rider.transportMode() == null) {
+            throw new BusinessRuleException("DELIVERY_RIDER_TRANSPORT_MODE_REQUIRED", "Assigned Rider transport mode is not configured");
+        }
+        return rider.transportMode();
+    }
+
     private long resolveServiceBufferSeconds(DeliveryZoneType zoneType) {
         if (zoneType == DeliveryZoneType.URBAN_DENSE) {
             return APARTMENT_SERVICE_BUFFER_SECONDS; // 10m
@@ -362,14 +371,17 @@ public class DeliveryEtaService implements DeliveryEtaUseCase {
 
     private String buildOrderFingerprint(UUID tenantId, DeliveryOrder order) {
         String raw = tenantId + ":" + order.id().value() + ":" + order.destinationLocationId() + ":"
-                + order.status() + ":" + order.version();
+                + order.status() + ":" + order.version() + ":"
+                + riderEtaContextPort.findForOrder(tenantId, order.id().value()).map(RiderEtaContextPort.RiderEtaContext::transportMode).orElse(null);
         return sha256(raw);
     }
 
     private String buildBatchFingerprint(UUID tenantId, DeliveryBatch batch, List<DeliveryBatchOrder> members) {
         StringBuilder sb = new StringBuilder();
         sb.append(tenantId).append(":").append(batch.id()).append(":").append(batch.version())
-                .append(":").append(batch.riderId()).append(":").append(batch.status());
+                .append(":").append(batch.riderId()).append(":").append(batch.status()).append(":")
+                .append(batch.riderId() == null ? null : riderEtaContextPort.findForRider(tenantId, batch.riderId())
+                        .map(RiderEtaContextPort.RiderEtaContext::transportMode).orElse(null));
 
         if (members != null) {
             List<DeliveryBatchOrder> sorted = new ArrayList<>(members);

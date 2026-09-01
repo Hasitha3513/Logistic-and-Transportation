@@ -48,4 +48,8 @@ public interface NotificationJpaRepository extends JpaRepository<NotificationEnt
         @Param("toTime") OffsetDateTime to, Pageable pageable);
 
     boolean existsByParentNotificationIdAndRecipient(UUID parentNotificationId, String recipient);
+
+    @Modifying
+    @Query("DELETE FROM NotificationEntity n WHERE n.parentNotificationId IS NOT NULL")
+    void deleteEscalationChildren();
 }

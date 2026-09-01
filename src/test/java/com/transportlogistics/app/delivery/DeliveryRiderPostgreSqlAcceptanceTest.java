@@ -8,6 +8,7 @@ import com.transportlogistics.app.delivery.domain.model.DeliveryPriority;
 import com.transportlogistics.app.delivery.domain.model.DeliveryRider;
 import com.transportlogistics.app.delivery.domain.model.DeliveryRiderShift;
 import com.transportlogistics.app.delivery.domain.model.DeliveryRiderType;
+import com.transportlogistics.app.delivery.domain.model.DeliveryTransportMode;
 import com.transportlogistics.app.delivery.domain.model.DeliveryServiceType;
 import com.transportlogistics.app.delivery.domain.model.DeliveryStatus;
 import com.transportlogistics.app.delivery.domain.model.DeliveryWindow;
@@ -95,7 +96,7 @@ class DeliveryRiderPostgreSqlAcceptanceTest {
         txTemplate.execute(status -> {
             DeliveryRider rider = DeliveryRider.create(
                     UUID.randomUUID(), TENANT_A, code, driverId,
-                    DeliveryRiderType.FULL_TIME, zoneAId, Set.of(), 5, "actor", now
+                    DeliveryRiderType.FULL_TIME, DeliveryTransportMode.BICYCLE, zoneAId, Set.of(), 5, "actor", now
             );
             riderAdapter.save(rider);
             return null;
@@ -121,7 +122,7 @@ class DeliveryRiderPostgreSqlAcceptanceTest {
         txTemplate.execute(status -> {
             DeliveryRider rider1 = DeliveryRider.create(
                     UUID.randomUUID(), TENANT_A, code1, driverId,
-                    DeliveryRiderType.FULL_TIME, zoneAId, Set.of(), 5, "actor", now
+                    DeliveryRiderType.FULL_TIME, DeliveryTransportMode.VAN, zoneAId, Set.of(), 5, "actor", now
             );
             riderAdapter.save(rider1);
             return null;
@@ -130,7 +131,7 @@ class DeliveryRiderPostgreSqlAcceptanceTest {
         assertThatThrownBy(() -> txTemplate.execute(status -> {
             DeliveryRider rider2 = DeliveryRider.create(
                     UUID.randomUUID(), TENANT_A, code2, driverId,
-                    DeliveryRiderType.GIG, zoneAId, Set.of(), 5, "actor", now
+                    DeliveryRiderType.GIG, DeliveryTransportMode.MOTORBIKE, zoneAId, Set.of(), 5, "actor", now
             );
             riderAdapter.save(rider2);
             return null;
@@ -147,7 +148,7 @@ class DeliveryRiderPostgreSqlAcceptanceTest {
         txTemplate.execute(status -> {
             DeliveryRider rider = DeliveryRider.create(
                     riderId, TENANT_A, "RDR-ASSIGN-" + UUID.randomUUID().toString().substring(0, 6).toUpperCase(), driverId,
-                    DeliveryRiderType.FULL_TIME, zoneAId, Set.of(), 5, "actor", now
+                    DeliveryRiderType.FULL_TIME, DeliveryTransportMode.MOTORBIKE, zoneAId, Set.of(), 5, "actor", now
             );
             riderAdapter.save(rider);
 

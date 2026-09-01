@@ -278,6 +278,7 @@ export const DeliveryRiderListPage: React.FC = () => {
                 setSelectedRider(record);
                 editForm.setFieldsValue({
                   riderType: record.riderType,
+                  transportMode: record.transportMode ?? undefined,
                   primaryZoneId: record.primaryZoneId,
                   secondaryZoneIds: record.secondaryZoneIds,
                   maxConcurrentDeliveries: record.maxConcurrentDeliveries,
@@ -494,6 +495,23 @@ export const DeliveryRiderListPage: React.FC = () => {
           </Form.Item>
 
           <Form.Item
+            name="transportMode"
+            label="Transport Mode"
+            rules={[{ required: true, message: 'Transport mode is required' }]}
+          >
+            <Select
+              placeholder="Select transport mode"
+              options={[
+                { label: 'Bicycle', value: 'BICYCLE' },
+                { label: 'Motorbike', value: 'MOTORBIKE' },
+                { label: 'Van', value: 'VAN' },
+                { label: 'Car', value: 'CAR' },
+                { label: 'Walker', value: 'WALKER' },
+              ]}
+            />
+          </Form.Item>
+
+          <Form.Item
             name="primaryZoneId"
             label="Primary Zone"
             rules={[{ required: true, message: 'Primary zone is required' }]}
@@ -556,6 +574,23 @@ export const DeliveryRiderListPage: React.FC = () => {
                 { label: 'Part Time', value: 'PART_TIME' },
                 { label: 'Contractor', value: 'CONTRACTOR' },
                 { label: 'Gig Worker', value: 'GIG' },
+              ]}
+            />
+          </Form.Item>
+
+          <Form.Item
+            name="transportMode"
+            label="Transport Mode"
+            rules={[{ required: true, message: 'Transport mode is required' }]}
+          >
+            <Select
+              placeholder="Transport mode is not configured"
+              options={[
+                { label: 'Bicycle', value: 'BICYCLE' },
+                { label: 'Motorbike', value: 'MOTORBIKE' },
+                { label: 'Van', value: 'VAN' },
+                { label: 'Car', value: 'CAR' },
+                { label: 'Walker', value: 'WALKER' },
               ]}
             />
           </Form.Item>
@@ -674,6 +709,9 @@ export const DeliveryRiderListPage: React.FC = () => {
             <Descriptions.Item label="Driver ID">{selectedRider.driverId}</Descriptions.Item>
             <Descriptions.Item label="Rider Type">
               <Tag color="blue">{selectedRider.riderType}</Tag>
+            </Descriptions.Item>
+            <Descriptions.Item label="Transport Mode">
+              {selectedRider.transportMode ? <Tag color="purple">{selectedRider.transportMode}</Tag> : <Text type="warning">Not configured</Text>}
             </Descriptions.Item>
             <Descriptions.Item label="Primary Zone">
               {zoneMap.get(selectedRider.primaryZoneId) || selectedRider.primaryZoneId}

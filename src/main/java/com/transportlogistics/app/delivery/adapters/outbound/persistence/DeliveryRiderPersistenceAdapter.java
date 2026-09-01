@@ -115,6 +115,13 @@ public class DeliveryRiderPersistenceAdapter implements DeliveryRiderRepository 
     }
 
     @Override
+    public List<DeliveryOrderRiderAssignment> findActiveAssignmentsForRider(UUID riderId, UUID tenantId) {
+        return assignmentJpaRepository.findActiveAssignmentsForRider(riderId, tenantId).stream()
+                .map(DeliveryOrderRiderAssignmentEntity::toDomain)
+                .toList();
+    }
+
+    @Override
     public List<DeliveryOrderRiderAssignment> findAssignmentHistoryForOrder(UUID deliveryOrderId, UUID tenantId) {
         return assignmentJpaRepository.findByDeliveryOrderIdAndTenantIdOrderByAssignedAtDesc(deliveryOrderId, tenantId).stream()
                 .map(DeliveryOrderRiderAssignmentEntity::toDomain)

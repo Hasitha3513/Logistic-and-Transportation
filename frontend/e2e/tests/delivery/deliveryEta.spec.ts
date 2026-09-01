@@ -66,11 +66,11 @@ test.describe('Last-Mile ETA & Route Projections UX (US-67)', () => {
       });
     });
 
-    await page.route('**/api/v1/delivery-batches', async (route) => {
+    await page.route('**/api/v1/deliveries/batches*', async (route) => {
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
-        body: JSON.stringify([
+        body: JSON.stringify({ content: [
           {
             id: batchId,
             tenantId,
@@ -86,11 +86,11 @@ test.describe('Last-Mile ETA & Route Projections UX (US-67)', () => {
             createdBy: 'dispatcher.john',
             updatedBy: 'dispatcher.john',
           },
-        ]),
+        ], page: 0, size: 10, totalElements: 1, totalPages: 1 }),
       });
     });
 
-    await page.route(`**/api/v1/delivery-batches/${batchId}/orders`, async (route) => {
+    await page.route(`**/api/v1/deliveries/batches/${batchId}/orders`, async (route) => {
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
@@ -168,19 +168,19 @@ test.describe('Last-Mile ETA & Route Projections UX (US-67)', () => {
   });
 
   test('E2E-ETA-01: Displays batch completion ETA and stop arrival times with SLA badge in drawer', async ({ page }) => {
-    await page.goto('/delivery/batches');
+    await page.goto('/deliveries/batches');
 
     // Batch row should be visible
     await expect(page.getByText('BAT-2026-000010')).toBeVisible();
 
     // Click View Details to open drawer
-    await page.getByRole('button', { name: 'View Details' }).click();
+    await page.getByRole('button', { name: /Details/ }).click();
 
     // Drawer should open and display ETA projection
     await expect(page.getByText('Estimated Arrival & Route Projection')).toBeVisible();
     await expect(page.getByText('Completion ETA')).toBeVisible();
     await expect(page.getByText('HEURISTIC')).toBeVisible();
-    await expect(page.getByText('Fresh')).toBeVisible();
+    await expect(page.getByText('Fresh', { exact: true })).toBeVisible();
 
     // Stop table should show calculated stop ETA and ON_TIME tag
     await expect(page.getByText('ON_TIME')).toBeVisible();

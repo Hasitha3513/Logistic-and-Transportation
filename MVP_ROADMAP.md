@@ -20,8 +20,8 @@
 > - **MVP 1.4 Last-Mile Delivery:** 4 / 8 COMPLETE (US-63, US-64, US-65, US-66 Accepted & Closed)
 > - **Overall Release Band:** 61 / 87 COMPLETE (26 DEFERRED / 87 TOTAL)
 > - **Current Milestone:** MVP 1.4 Last-Mile Delivery — US-63, US-64, US-65, US-66 Accepted & Closed.
-> - **Active Focus:** `US-67` Calculate Last-Mile ETA — Product Decisions & Domain Contract Freeze.
-> - **Immediate Next Action:** Freeze Product Decisions for `US-67` (`MVP-1.4-US67-LAST-MILE-ETA-PRODUCT-DECISIONS-001`).
+> - **Active Focus:** `US-67` Calculate Last-Mile ETA — implementation complete, independent acceptance blocked.
+> - **Immediate Next Action:** Rerun US-67 remediation under the approved heuristic-only provider contract (`MVP-1.4-US67-LAST-MILE-ETA-ACCEPTANCE-REMEDIATION-001-RERUN`).
 
 ---
 
@@ -64,6 +64,7 @@ MVP 1.4 Band:     [████████████████████�
 | Batch | Scope | Status | Verification Evidence |
 | :--- | :--- | :---: | :--- |
 | `P0-01` | Enforce Spring Modulith boundaries, acyclic modules, repository/entity ownership, hexagonal direction, Reporting isolation, and baseline dependency edges | ✅ `COMPLETE` | Architecture suite 32/32 PASS on Java 21; full suite reached 1,164 tests with one unrelated identity-bootstrap permission-count failure |
+| `P0-02` | Establish explicit database/table ownership and prevent new cross-module repository, JPA mapping, or direct-SQL access | 🟡 `IMPLEMENTED / VERIFICATION BLOCKED` | Ownership tests 3/3, architecture/affected tests 39/39, persistence 52 executed PASS; full suite 1,167 tests with one unrelated identity permission-count failure; two legacy SQL paths reserved for P0-03 |
 
 ---
 
@@ -186,7 +187,7 @@ MVP 1.4 Band:     [████████████████████�
 | `US-64` | Manage Delivery Slots | Time-window capacity, cutoff enforcement, manager override, concurrent reservation | 🟢 `COMPLETE` | `DeliverySlotTest`, `DeliverySlotControllerTest`, `DeliverySlotPostgreSqlAcceptanceTest`, `DeliverySlotConcurrencyPostgreSqlAcceptanceTest`, `deliverySlots.spec.ts`, V53 |
 | `US-65` | Manage Riders | Courier rider registry, zone eligibility, shift scheduling, concurrency-safe assignment & override | 🟢 `COMPLETE` | `DeliveryRiderTest`, `DeliveryRiderControllerTest`, `DeliveryRiderPostgreSqlAcceptanceTest`, `DeliveryRiderConcurrencyPostgreSqlAcceptanceTest`, `deliveryRiders.spec.ts`, V54 |
 | `US-66` | Batch Delivery Orders | Automated order clustering for urban routes, manual batching, zone & capacity constraints, rider assignment | 🟢 `COMPLETE` | `DeliveryBatchTest`, `DeliveryBatchServiceTest`, `DeliveryBatchControllerTest`, `DeliveryBatchPostgreSqlAcceptanceTest`, `DeliveryBatchConcurrencyPostgreSqlAcceptanceTest`, `deliveryBatches.spec.ts`, `DeliveryBatchListPage.test.tsx`, V55 |
-| `US-67` | Calculate Last-Mile ETA | Multi-modal last-mile routing ETA, SLA risk detection, stop service buffers, cache & event publication | 🟡 `IN PROGRESS / ACCEPTANCE PENDING` | `EtaModelTest`, `ZoneModeHeuristicRoutingAdapterTest`, `DeliveryEtaServiceTest`, `DeliveryEtaControllerTest`, `deliveryEta.spec.ts` |
+| `US-67` | Calculate Last-Mile ETA | Multi-modal last-mile routing ETA, SLA risk detection, stop service buffers, cache & event publication | 🔴 `IMPLEMENTATION COMPLETE / ACCEPTANCE BLOCKED` | Provider strategy reconciled to `HEURISTIC_ONLY`; remaining failures are stale-write, invalidation, rider-mode/origin, concurrency/security, and real-path Chromium gates; see `MVP-1.4-US67-LAST-MILE-ETA-FINAL-ACCEPTANCE-001.md` |
 | `US-68` | Handle Last-Mile Exceptions | Address unreachable, gate code missing | ⏸️ `DEFERRED` | Post-MVP last-mile band |
 | `US-69` | Receive Delivery Notifications | Customer SMS/push tracking updates | ⏸️ `DEFERRED` | Post-MVP last-mile band |
 | `US-70` | Use Customer Self-Service | Customer delivery rescheduling portal | ⏸️ `DEFERRED` | Post-MVP last-mile band |
@@ -225,15 +226,15 @@ MVP 1.4 Band:     [████████████████████�
 ## 🎯 4. Immediate Execution Queue
 
 ```
-Current Status: MVP 1.4 (Last-Mile Delivery) IN PROGRESS — US-67 IMPLEMENTATION COMPLETE (ACCEPTANCE PENDING)
-Queue Head:     MVP-1.4-US67-LAST-MILE-ETA-FINAL-ACCEPTANCE-001
+Current Status: MVP 1.4 (Last-Mile Delivery) IN PROGRESS — US-67 IMPLEMENTATION COMPLETE (ACCEPTANCE BLOCKED)
+Queue Head:     MVP-1.4-US67-LAST-MILE-ETA-ACCEPTANCE-REMEDIATION-001-RERUN
 ```
 
-1. **`MVP-1.4-US67-LAST-MILE-ETA-FINAL-ACCEPTANCE-001`:**
-   - Independent final acceptance and verification for US-67 Last-Mile ETA.
+1. **`MVP-1.4-US67-LAST-MILE-ETA-ACCEPTANCE-REMEDIATION-001-RERUN`:**
+   - Close the independently verified stale-write, invalidation, rider-mode/origin, concurrency/security, and real-path Chromium gaps under the approved heuristic-only provider contract.
 
-2. **`P0-02` (recommended architecture batch):**
-   - Harden explicit public module contracts and package visibility without changing runtime behavior or APIs.
+2. **`P0-03` (recommended architecture batch):**
+   - Replace Freight-to-Fleet reporting SQL and the multi-owner System sample-data bootstrap with owner-provided contracts or owner-maintained read models.
 
 ---
 

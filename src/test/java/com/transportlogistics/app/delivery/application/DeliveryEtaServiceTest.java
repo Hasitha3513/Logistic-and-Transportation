@@ -29,7 +29,7 @@ class DeliveryEtaServiceTest {
     @Mock private DeliveryOrderRepository orderRepository;
     @Mock private DeliveryBatchRepository batchRepository;
     @Mock private DeliveryZoneRepository zoneRepository;
-    @Mock private DeliveryRiderRepository riderRepository;
+    @Mock private RiderEtaContextPort riderEtaContextPort;
     @Mock private DeliveryLocationLookupPort locationLookupPort;
     @Mock private LastMileRoutingPort routingPort;
     @Mock private EtaCachePort cachePort;
@@ -51,7 +51,7 @@ class DeliveryEtaServiceTest {
                 orderRepository,
                 batchRepository,
                 zoneRepository,
-                riderRepository,
+                riderEtaContextPort,
                 locationLookupPort,
                 routingPort,
                 cachePort,
@@ -83,6 +83,10 @@ class DeliveryEtaServiceTest {
         );
 
         when(orderRepository.findById(orderId)).thenReturn(Optional.of(order));
+        when(riderEtaContextPort.findForOrder(tenantId, orderId)).thenReturn(Optional.of(
+                new RiderEtaContextPort.RiderEtaContext(UUID.randomUUID(), DeliveryTransportMode.BICYCLE)));
+        when(cachePort.beginOrderCalculation(tenantId, orderId)).thenReturn(1L);
+        when(cachePort.putOrderEtaIfCurrent(eq(tenantId), eq(orderId), eq(1L), any(), any())).thenReturn(true);
         when(locationLookupPort.findLocation(originLocId)).thenReturn(Optional.of(
                 new DeliveryLocationLookupPort.LocationReference(originLocId, "ORIG", "Origin", "Address 1", 6.9271, 79.8436, true)
         ));
@@ -101,7 +105,7 @@ class DeliveryEtaServiceTest {
         assertThat(estimate.slaStatus()).isEqualTo(EtaStatus.ON_TIME);
         assertThat(estimate.source()).isEqualTo(EtaSource.HEURISTIC);
 
-        verify(cachePort).putOrderEta(eq(tenantId), eq(orderId), any(), any());
+        verify(cachePort).putOrderEtaIfCurrent(eq(tenantId), eq(orderId), eq(1L), any(), any());
         verify(eventPublisherPort).publish(any());
     }
 
@@ -122,6 +126,8 @@ class DeliveryEtaServiceTest {
                 now,
                 "dispatcher"
         );
+        UUID riderId = UUID.randomUUID();
+        batch = batch.assignRider(riderId, now, "dispatcher");
 
         DeliveryBatchOrder member1 = DeliveryBatchOrder.create(UUID.randomUUID(), tenantId, batchId, orderId, 1, now, "dispatcher");
 
@@ -165,6 +171,10 @@ class DeliveryEtaServiceTest {
         );
 
         when(batchRepository.findById(tenantId, batchId)).thenReturn(Optional.of(batch));
+        when(riderEtaContextPort.findForRider(tenantId, riderId)).thenReturn(Optional.of(
+                new RiderEtaContextPort.RiderEtaContext(riderId, DeliveryTransportMode.VAN)));
+        when(cachePort.beginBatchCalculation(tenantId, batchId)).thenReturn(1L);
+        when(cachePort.putBatchEtaIfCurrent(eq(tenantId), eq(batchId), eq(1L), any(), any())).thenReturn(true);
         when(batchRepository.findActiveOrderMembershipsByBatchId(tenantId, batchId)).thenReturn(List.of(member1));
         when(zoneRepository.findById(zoneId, tenantId)).thenReturn(Optional.of(zone));
         when(orderRepository.findById(orderId)).thenReturn(Optional.of(order));
@@ -188,7 +198,7 @@ class DeliveryEtaServiceTest {
         assertThat(batchEta.totalDurationSeconds()).isEqualTo(1400L); // 800 travel + 600 service
         assertThat(batchEta.totalDistanceMeters()).isEqualTo(4000L);
 
-        verify(cachePort).putBatchEta(eq(tenantId), eq(batchId), any(), any());
+        verify(cachePort).putBatchEtaIfCurrent(eq(tenantId), eq(batchId), eq(1L), any(), any());
         verify(eventPublisherPort).publish(any());
     }
 

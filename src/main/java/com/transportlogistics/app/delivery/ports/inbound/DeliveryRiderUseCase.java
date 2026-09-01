@@ -6,6 +6,7 @@ import com.transportlogistics.app.delivery.domain.model.DeliveryRiderAvailabilit
 import com.transportlogistics.app.delivery.domain.model.DeliveryRiderShift;
 import com.transportlogistics.app.delivery.domain.model.DeliveryRiderStatus;
 import com.transportlogistics.app.delivery.domain.model.DeliveryRiderType;
+import com.transportlogistics.app.delivery.domain.model.DeliveryTransportMode;
 import com.transportlogistics.app.delivery.ports.outbound.DriverEligibilityPort;
 
 import java.time.LocalDate;
@@ -53,6 +54,7 @@ public interface DeliveryRiderUseCase {
             String riderCode,
             UUID driverId,
             DeliveryRiderType riderType,
+            DeliveryTransportMode transportMode,
             UUID primaryZoneId,
             Set<UUID> secondaryZoneIds,
             int maxConcurrentDeliveries
@@ -61,6 +63,7 @@ public interface DeliveryRiderUseCase {
 
     record UpdateRiderCommand(
             UUID primaryZoneId,
+            DeliveryTransportMode transportMode,
             Set<UUID> secondaryZoneIds,
             int maxConcurrentDeliveries
     ) {
@@ -100,6 +103,7 @@ public interface DeliveryRiderUseCase {
             UUID driverId,
             DriverEligibilityPort.DriverSummary driverSummary,
             DeliveryRiderType riderType,
+            DeliveryTransportMode transportMode,
             DeliveryRiderStatus status,
             DeliveryRiderAvailability availability,
             UUID primaryZoneId,

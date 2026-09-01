@@ -101,6 +101,7 @@ public final class DeliveryRiderService implements DeliveryRiderUseCase {
                     code,
                     command.driverId(),
                     command.riderType(),
+                    command.transportMode(),
                     command.primaryZoneId(),
                     command.secondaryZoneIds(),
                     command.maxConcurrentDeliveries(),
@@ -112,7 +113,7 @@ public final class DeliveryRiderService implements DeliveryRiderUseCase {
             if (eventPublisher != null) {
                 eventPublisher.publishEvent(new DeliveryRiderEvents.DeliveryRiderCreatedEvent(
                         tenantId, saved.getId(), saved.getDriverId(), saved.getRiderCode(),
-                        saved.getPrimaryZoneId(), saved.getRiderType(), saved.getCreatedAt(), actor
+                        saved.getPrimaryZoneId(), saved.getRiderType(), saved.getTransportMode(), saved.getCreatedAt(), actor
                 ));
             }
             return saved;
@@ -135,8 +136,15 @@ public final class DeliveryRiderService implements DeliveryRiderUseCase {
                 throw new ConflictException("DELIVERY_ZONE_INACTIVE", "Primary delivery zone is inactive");
             }
 
-            rider.updateProfile(command.primaryZoneId(), command.secondaryZoneIds(), command.maxConcurrentDeliveries(), actor, now);
-            return riderRepository.save(rider);
+            var previousMode = rider.getTransportMode();
+            rider.updateProfile(command.primaryZoneId(), command.secondaryZoneIds(), command.maxConcurrentDeliveries(),
+                    command.transportMode(), actor, now);
+            DeliveryRider saved = riderRepository.save(rider);
+            if (eventPublisher != null && previousMode != saved.getTransportMode()) {
+                eventPublisher.publishEvent(new DeliveryRiderEvents.DeliveryRiderTransportModeChangedEvent(
+                        tenantId, saved.getId(), previousMode, saved.getTransportMode(), now, actor));
+            }
+            return saved;
         });
     }
 
@@ -148,6 +156,8 @@ public final class DeliveryRiderService implements DeliveryRiderUseCase {
         return transactions.execute(() -> {
             DeliveryRider rider = riderRepository.findByIdForUpdate(id, tenantId)
                     .orElseThrow(() -> new NotFoundException("DELIVERY_RIDER_NOT_FOUND", "Delivery rider not found: " + id));
+
+            requireTransportMode(rider);
 
             DeliveryRiderStatus prev = rider.getStatus();
             rider.activate(actor, now);
@@ -237,7 +247,7 @@ public final class DeliveryRiderService implements DeliveryRiderUseCase {
                     rider.getRiderCode(),
                     rider.getDriverId(),
                     driverSummary,
-                    rider.getRiderType(),
+                    rider.getRiderType(), rider.getTransportMode(),
                     rider.getStatus(),
                     availability,
                     rider.getPrimaryZoneId(),
@@ -490,6 +500,7 @@ public final class DeliveryRiderService implements DeliveryRiderUseCase {
                     rider.getDriverId(),
                     driverSummary,
                     rider.getRiderType(),
+                    rider.getTransportMode(),
                     rider.getStatus(),
                     availability,
                     rider.getPrimaryZoneId(),
@@ -505,6 +516,8 @@ public final class DeliveryRiderService implements DeliveryRiderUseCase {
 
     private void validateRiderEligibility(DeliveryRider rider, DeliveryOrder order, boolean isOverride, String overrideReason) {
         UUID tenantId = requireTenantId();
+
+        requireTransportMode(rider);
 
         if (rider.getStatus() != DeliveryRiderStatus.ACTIVE) {
             throw new ConflictException("DELIVERY_RIDER_INACTIVE", "Delivery rider is inactive or suspended: " + rider.getId());
@@ -540,6 +553,13 @@ public final class DeliveryRiderService implements DeliveryRiderUseCase {
             if (overrideReason == null || overrideReason.isBlank()) {
                 throw new ConflictException("DELIVERY_RIDER_OVERRIDE_REASON_REQUIRED", "Override reason is mandatory when exceeding rider capacity");
             }
+        }
+    }
+
+    private void requireTransportMode(DeliveryRider rider) {
+        if (rider.getTransportMode() == null) {
+            throw new ConflictException("DELIVERY_RIDER_TRANSPORT_MODE_REQUIRED",
+                    "Delivery rider transport mode must be configured before activation or assignment");
         }
     }
 

@@ -1,6 +1,7 @@
 import { api } from '../../../../api/client';
 
 export type DeliveryRiderType = 'FULL_TIME' | 'PART_TIME' | 'CONTRACTOR' | 'GIG';
+export type DeliveryTransportMode = 'BICYCLE' | 'MOTORBIKE' | 'VAN' | 'CAR' | 'WALKER';
 export type DeliveryRiderStatus = 'ACTIVE' | 'INACTIVE' | 'SUSPENDED';
 export type DeliveryRiderAvailability = 'AVAILABLE' | 'BUSY' | 'OFF_DUTY' | 'UNAVAILABLE';
 export type DeliveryRiderShiftStatus = 'SCHEDULED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
@@ -12,6 +13,7 @@ export interface DeliveryRider {
   riderCode: string;
   driverId: string;
   riderType: DeliveryRiderType;
+  transportMode: DeliveryTransportMode | null;
   primaryZoneId: string;
   secondaryZoneIds: string[];
   maxConcurrentDeliveries: number;
@@ -72,6 +74,7 @@ export interface DeliveryRiderSummary {
   driverId: string;
   driver?: DriverSummary;
   riderType: DeliveryRiderType;
+  transportMode: DeliveryTransportMode | null;
   status: DeliveryRiderStatus;
   availability: DeliveryRiderAvailability;
   primaryZoneId: string;
@@ -85,6 +88,7 @@ export interface OnboardRiderPayload {
   riderCode?: string;
   driverId: string;
   riderType: DeliveryRiderType;
+  transportMode: DeliveryTransportMode;
   primaryZoneId: string;
   secondaryZoneIds?: string[];
   maxConcurrentDeliveries?: number;
@@ -92,6 +96,7 @@ export interface OnboardRiderPayload {
 
 export interface UpdateRiderProfilePayload {
   riderType?: DeliveryRiderType;
+  transportMode: DeliveryTransportMode;
   primaryZoneId?: string;
   secondaryZoneIds?: string[];
   maxConcurrentDeliveries?: number;
@@ -120,77 +125,77 @@ export interface ReassignRiderPayload {
 
 export const deliveryRiderApi = {
   getRiders: (params?: { zoneId?: string; status?: DeliveryRiderStatus; search?: string }) => {
-    return api.get<DeliveryRider[]>('/api/v1/deliveries/riders', { params });
+    return api.get<DeliveryRider[]>('/api/v1/delivery-riders', { params });
   },
 
   getRider: (riderId: string) => {
-    return api.get<DeliveryRider>(`/api/v1/deliveries/riders/${riderId}`);
+    return api.get<DeliveryRider>(`/api/v1/delivery-riders/${riderId}`);
   },
 
   onboardRider: (payload: OnboardRiderPayload) => {
-    return api.post<DeliveryRider>('/api/v1/deliveries/riders', payload);
+    return api.post<DeliveryRider>('/api/v1/delivery-riders', payload);
   },
 
   updateRider: (riderId: string, payload: UpdateRiderProfilePayload) => {
-    return api.put<DeliveryRider>(`/api/v1/deliveries/riders/${riderId}`, payload);
+    return api.put<DeliveryRider>(`/api/v1/delivery-riders/${riderId}`, payload);
   },
 
   activateRider: (riderId: string) => {
-    return api.patch<void>(`/api/v1/deliveries/riders/${riderId}/activate`);
+    return api.post<void>(`/api/v1/delivery-riders/${riderId}/activate`);
   },
 
   deactivateRider: (riderId: string) => {
-    return api.patch<void>(`/api/v1/deliveries/riders/${riderId}/deactivate`);
+    return api.post<void>(`/api/v1/delivery-riders/${riderId}/deactivate`);
   },
 
   suspendRider: (riderId: string) => {
-    return api.patch<void>(`/api/v1/deliveries/riders/${riderId}/suspend`);
+    return api.post<void>(`/api/v1/delivery-riders/${riderId}/suspend`);
   },
 
   // Shifts
   getRiderShifts: (riderId: string, startDate?: string, endDate?: string) => {
-    return api.get<DeliveryRiderShift[]>(`/api/v1/deliveries/riders/${riderId}/shifts`, {
+    return api.get<DeliveryRiderShift[]>(`/api/v1/delivery-riders/${riderId}/shifts`, {
       params: { startDate, endDate },
     });
   },
 
   scheduleShift: (riderId: string, payload: ScheduleShiftPayload) => {
-    return api.post<DeliveryRiderShift>(`/api/v1/deliveries/riders/${riderId}/shifts`, payload);
+    return api.post<DeliveryRiderShift>(`/api/v1/delivery-riders/${riderId}/shifts`, payload);
   },
 
   startShift: (riderId: string, shiftId: string) => {
-    return api.patch<void>(`/api/v1/deliveries/riders/${riderId}/shifts/${shiftId}/start`);
+    return api.post<void>(`/api/v1/delivery-riders/${riderId}/duty-status`, { shiftId, action: 'START_DUTY' });
   },
 
   endShift: (riderId: string, shiftId: string) => {
-    return api.patch<void>(`/api/v1/deliveries/riders/${riderId}/shifts/${shiftId}/end`);
+    return api.post<void>(`/api/v1/delivery-riders/${riderId}/duty-status`, { shiftId, action: 'COMPLETE_DUTY' });
   },
 
   cancelShift: (riderId: string, shiftId: string) => {
-    return api.patch<void>(`/api/v1/deliveries/riders/${riderId}/shifts/${shiftId}/cancel`);
+    return api.post<void>(`/api/v1/delivery-riders/${riderId}/duty-status`, { shiftId, action: 'CANCEL_SHIFT' });
   },
 
   // Availability query
   getAvailableRiders: (zoneId?: string, date?: string, slotId?: string) => {
-    return api.get<DeliveryRiderSummary[]>('/api/v1/deliveries/riders/available', {
+    return api.get<DeliveryRiderSummary[]>('/api/v1/delivery-riders/available', {
       params: { zoneId, date, slotId },
     });
   },
 
   // Order Assignments
   getOrderAssignmentHistory: (deliveryOrderId: string) => {
-    return api.get<DeliveryOrderRiderAssignment[]>(`/api/v1/deliveries/orders/${deliveryOrderId}/rider-assignments`);
+    return api.get<DeliveryOrderRiderAssignment[]>(`/api/v1/deliveries/${deliveryOrderId}/rider-assignments`);
   },
 
   assignRiderToOrder: (deliveryOrderId: string, payload: AssignRiderPayload) => {
-    return api.post<DeliveryOrderRiderAssignment>(`/api/v1/deliveries/orders/${deliveryOrderId}/assign-rider`, payload);
+    return api.post<DeliveryOrderRiderAssignment>(`/api/v1/deliveries/${deliveryOrderId}/assign-rider`, payload);
   },
 
   reassignRiderForOrder: (deliveryOrderId: string, payload: ReassignRiderPayload) => {
-    return api.post<DeliveryOrderRiderAssignment>(`/api/v1/deliveries/orders/${deliveryOrderId}/reassign-rider`, payload);
+    return api.post<DeliveryOrderRiderAssignment>(`/api/v1/deliveries/${deliveryOrderId}/reassign-rider`, payload);
   },
 
   unassignRiderFromOrder: (deliveryOrderId: string) => {
-    return api.post<void>(`/api/v1/deliveries/orders/${deliveryOrderId}/unassign-rider`);
+    return api.post<void>(`/api/v1/deliveries/${deliveryOrderId}/unassign-rider`);
   },
 };

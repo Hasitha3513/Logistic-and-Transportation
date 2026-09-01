@@ -1,6 +1,7 @@
 package com.transportlogistics.app.delivery.adapters.inbound.web.dto.request;
 
 import com.transportlogistics.app.delivery.domain.model.DeliveryRiderType;
+import com.transportlogistics.app.delivery.domain.model.DeliveryTransportMode;
 import jakarta.validation.constraints.NotNull;
 
 import java.util.Set;
@@ -10,6 +11,7 @@ public record OnboardDeliveryRiderRequest(
         String riderCode,
         @NotNull UUID driverId,
         DeliveryRiderType riderType,
+        @NotNull DeliveryTransportMode transportMode,
         @NotNull UUID primaryZoneId,
         Set<UUID> secondaryZoneIds,
         Integer maxConcurrentDeliveries

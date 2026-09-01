@@ -18,6 +18,12 @@ public interface DeliveryOrderRiderAssignmentJpaRepository extends JpaRepository
             @Param("tenantId") UUID tenantId
     );
 
+    @Query("SELECT a FROM DeliveryOrderRiderAssignmentEntity a WHERE a.riderId = :riderId AND a.tenantId = :tenantId AND a.status = 'ACTIVE'")
+    List<DeliveryOrderRiderAssignmentEntity> findActiveAssignmentsForRider(
+            @Param("riderId") UUID riderId,
+            @Param("tenantId") UUID tenantId
+    );
+
     List<DeliveryOrderRiderAssignmentEntity> findByDeliveryOrderIdAndTenantIdOrderByAssignedAtDesc(UUID deliveryOrderId, UUID tenantId);
 
     @Query("SELECT COUNT(a) FROM DeliveryOrderRiderAssignmentEntity a WHERE a.riderId = :riderId AND a.tenantId = :tenantId AND a.status = 'ACTIVE'")

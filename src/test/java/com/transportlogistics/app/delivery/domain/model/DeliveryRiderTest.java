@@ -31,6 +31,7 @@ class DeliveryRiderTest {
                 "RDR-001",
                 driverId,
                 DeliveryRiderType.FULL_TIME,
+                DeliveryTransportMode.VAN,
                 primaryZone,
                 Set.of(primaryZone, secondaryZone1, secondaryZone2),
                 10,
@@ -51,19 +52,19 @@ class DeliveryRiderTest {
     @Test
     @DisplayName("Should validate DeliveryRider mandatory fields and capacity")
     void createDeliveryRider_invalid_throws() {
-        assertThatThrownBy(() -> DeliveryRider.create(null, tenantId, "", driverId, DeliveryRiderType.GIG, primaryZone, null, 5, "actor", now))
+        assertThatThrownBy(() -> DeliveryRider.create(null, tenantId, "", driverId, DeliveryRiderType.GIG, DeliveryTransportMode.BICYCLE, primaryZone, null, 5, "actor", now))
                 .isInstanceOf(BusinessRuleException.class)
                 .hasMessageContaining("Rider code is required");
 
-        assertThatThrownBy(() -> DeliveryRider.create(null, tenantId, "RDR-002", null, DeliveryRiderType.GIG, primaryZone, null, 5, "actor", now))
+        assertThatThrownBy(() -> DeliveryRider.create(null, tenantId, "RDR-002", null, DeliveryRiderType.GIG, DeliveryTransportMode.BICYCLE, primaryZone, null, 5, "actor", now))
                 .isInstanceOf(BusinessRuleException.class)
                 .hasMessageContaining("Driver reference is required");
 
-        assertThatThrownBy(() -> DeliveryRider.create(null, tenantId, "RDR-002", driverId, DeliveryRiderType.GIG, null, null, 5, "actor", now))
+        assertThatThrownBy(() -> DeliveryRider.create(null, tenantId, "RDR-002", driverId, DeliveryRiderType.GIG, DeliveryTransportMode.BICYCLE, null, null, 5, "actor", now))
                 .isInstanceOf(BusinessRuleException.class)
                 .hasMessageContaining("Primary zone is required");
 
-        assertThatThrownBy(() -> DeliveryRider.create(null, tenantId, "RDR-002", driverId, DeliveryRiderType.GIG, primaryZone, null, -1, "actor", now))
+        assertThatThrownBy(() -> DeliveryRider.create(null, tenantId, "RDR-002", driverId, DeliveryRiderType.GIG, DeliveryTransportMode.BICYCLE, primaryZone, null, -1, "actor", now))
                 .isInstanceOf(BusinessRuleException.class)
                 .hasMessageContaining("Max concurrent deliveries must be positive");
     }
@@ -72,7 +73,7 @@ class DeliveryRiderTest {
     @DisplayName("Should handle status transitions correctly")
     void riderStatusTransitions() {
         DeliveryRider rider = DeliveryRider.create(
-                UUID.randomUUID(), tenantId, "RDR-003", driverId, DeliveryRiderType.CONTRACTOR, primaryZone, null, 5, "actor", now
+                UUID.randomUUID(), tenantId, "RDR-003", driverId, DeliveryRiderType.CONTRACTOR, DeliveryTransportMode.CAR, primaryZone, null, 5, "actor", now
         );
 
         rider.deactivate("admin", now);
