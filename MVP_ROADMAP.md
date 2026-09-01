@@ -63,7 +63,7 @@ MVP 1.4 Band:     [████████████████████�
 
 | Batch | Scope | Status | Verification Evidence |
 | :--- | :--- | :---: | :--- |
-| `P0-01` | Enforce Spring Modulith boundaries, acyclic modules, repository/entity ownership, hexagonal direction, Reporting isolation, and approved dependency edges | ✅ `COMPLETE` | `ModulithBoundaryEnforcementTest` plus existing architecture suite (32/32 PASS) |
+| `P0-01` | Enforce Spring Modulith boundaries, acyclic modules, repository/entity ownership, hexagonal direction, Reporting isolation, and baseline dependency edges | ✅ `COMPLETE` | Architecture suite 32/32 PASS on Java 21; full suite reached 1,164 tests with one unrelated identity-bootstrap permission-count failure |
 
 ---
 
