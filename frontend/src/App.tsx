@@ -45,6 +45,7 @@ import DeliveryAnalyticsPage from './features/delivery/analytics/pages/DeliveryA
 import DeliveryZoneListPage from './features/delivery/zones/pages/DeliveryZoneListPage';
 import DeliverySlotListPage from './features/delivery/slots/pages/DeliverySlotListPage';
 import { DeliveryRiderListPage } from './features/delivery/riders/pages/DeliveryRiderListPage';
+import { DeliveryBatchListPage } from './features/delivery/batches/pages/DeliveryBatchListPage';
 
 function ProtectedRoute() {
   const { user, isLoading } = useAuth();
@@ -125,6 +126,7 @@ export default function App() {
         <Route path="deliveries/zones" element={<DeliveryZoneListPage />} />
         <Route path="deliveries/slots" element={<DeliverySlotListPage />} />
         <Route path="deliveries/riders" element={<DeliveryRiderListPage />} />
+        <Route path="deliveries/batches" element={<DeliveryBatchListPage />} />
         <Route path="deliveries/analytics" element={<DeliveryAnalyticsPage />} />
         <Route path="deliveries/new" element={<DeliveryOrderFormPage />} />
         <Route path="deliveries/:deliveryId/edit" element={<DeliveryOrderFormPage />} />

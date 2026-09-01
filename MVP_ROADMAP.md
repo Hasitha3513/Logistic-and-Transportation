@@ -3,10 +3,10 @@
 <div align="center">
 
 ![Total Stories](https://img.shields.io/badge/Total%20Stories-87-0969da.svg?style=for-the-badge&logo=target)
-![Completed](https://img.shields.io/badge/Completed-58%20%2F%2087-2da44e.svg?style=for-the-badge&logo=checkmarx)
-![Progress](https://img.shields.io/badge/Progress-66.7%25-brightgreen.svg?style=for-the-badge&logo=speedtest)
-![MVP 1.4 Active](https://img.shields.io/badge/MVP%201.4%20Last--Mile-1%20%2F%208-fa8c16.svg?style=for-the-badge&logo=pinboard)
-![Database](https://img.shields.io/badge/PostgreSQL%20%2F%20Flyway-V54-8a63d2.svg?style=for-the-badge&logo=postgresql)
+![Completed](https://img.shields.io/badge/Completed-61%20%2F%2087-2da44e.svg?style=for-the-badge&logo=checkmarx)
+![Progress](https://img.shields.io/badge/Progress-70.1%25-brightgreen.svg?style=for-the-badge&logo=speedtest)
+![MVP 1.4 Active](https://img.shields.io/badge/MVP%201.4%20Last--Mile-4%20%2F%208-fa8c16.svg?style=for-the-badge&logo=pinboard)
+![Database](https://img.shields.io/badge/PostgreSQL%20%2F%20Flyway-V55-8a63d2.svg?style=for-the-badge&logo=postgresql)
 
 </div>
 
@@ -14,35 +14,35 @@
 
 > [!IMPORTANT]
 > **Authoritative Baseline & Current State:**
-> - **Last Reconciled:** `2026-08-31`
+> - **Last Reconciled:** `2026-09-01`
 > - **Authority Order:** Original Requirements (`Traspotation & logistic.docx`), Frozen Architecture/Contracts, Verified Production Code/Tests, then Roadmap.
 > - **MVP 1.3 Delivery Operations:** 7 / 7 COMPLETE (100%) - CLOSED
-> - **MVP 1.4 Last-Mile Delivery:** 2 / 8 COMPLETE — US-63 and US-64 ACCEPTED & CLOSED; US-65 IMPLEMENTATION COMPLETE (ACCEPTANCE PENDING)
-> - **Overall Release Band:** 59 / 87 COMPLETE (28 DEFERRED / 87 TOTAL)
-> - **Current Milestone:** MVP 1.4 Last-Mile Delivery — US-63 & US-64 Accepted; US-65 Implementation Complete.
-> - **Active Focus:** `US-65` Manage Riders — Courier rider registry, zone eligibility, shift scheduling, concurrency-safe assignment & override.
-> - **Immediate Next Action:** Independent Final Acceptance of `US-65` (`MVP-1.4-US65-RIDERS-FINAL-ACCEPTANCE-001`).
+> - **MVP 1.4 Last-Mile Delivery:** 4 / 8 COMPLETE (US-63, US-64, US-65, US-66 Accepted & Closed)
+> - **Overall Release Band:** 61 / 87 COMPLETE (26 DEFERRED / 87 TOTAL)
+> - **Current Milestone:** MVP 1.4 Last-Mile Delivery — US-63, US-64, US-65, US-66 Accepted & Closed.
+> - **Active Focus:** `US-67` Calculate Last-Mile ETA — Product Decisions & Domain Contract Freeze.
+> - **Immediate Next Action:** Freeze Product Decisions for `US-67` (`MVP-1.4-US67-LAST-MILE-ETA-PRODUCT-DECISIONS-001`).
 
 ---
 
 ## 📊 1. Executive Metrics & Milestone Progress
 
 ```
-Overall Progress: [████████████████████████████████████░░░░░░░░░░░░░░] 59 / 87 Stories Complete (67.8%)
+Overall Progress: [██████████████████████████████████████░░░░░░░░░░░░] 61 / 87 Stories Complete (70.1%)
 MVP 1.3 Band:     [██████████████████████████████████████████████████] 7 / 7 Complete (100.0%) - CLOSED
-MVP 1.4 Band:     [████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░] 2 / 8 Complete (25.0%) - IN PROGRESS
+MVP 1.4 Band:     [█████████████████████████░░░░░░░░░░░░░░░░░░░░░░░░░] 4 / 8 Complete (50.0%) - IN PROGRESS
 ```
 
 | Metric | Target | Current Count | Percentage | Status Indicator |
 | :--- | :---: | :---: | :---: | :--- |
-| **Completed Stories (Accepted)** | 87 | **59** | `67.8%` | 🟢 `ON TRACK / VERIFIED` |
-| **In Progress / Decisions Frozen** | — | **1** | `1.1%` | 🟡 `US-65 ACCEPTANCE PENDING` |
-| **Not Started (MVP 1.4 Active Scope)** | 5 | **5** | `5.7%` | ⏸️ `US-66..US-70 ACTIVE BAND` |
-| **Approved Deferments (Post-MVP)** | 28 | **28** | `32.2%` | ⏸️ `DEFERRED BY GOVERNANCE` |
+| **Completed Stories (Accepted)** | 87 | **61** | `70.1%` | 🟢 `ON TRACK / VERIFIED` |
+| **In Progress / Decisions Frozen** | — | **0** | `0.0%` | 🟢 `ALL CURRENT BANDS SETTLED` |
+| **Not Started (MVP 1.4 Active Scope)** | 4 | **0** | `0.0%` | ⏸️ `US-67..US-70 ACTIVE BAND` |
+| **Approved Deferments (Post-MVP)** | 26 | **26** | `29.9%` | ⏸️ `DEFERRED BY GOVERNANCE` |
 | **Total Registered User Stories** | **87** | **87** | **`100%`** | 🔒 `FROZEN REGISTER (US-01..US-87)` |
 
 > [!NOTE]
-> Stories `US-88`, `US-89`, and `US-90` are strictly undefined. The story accounting register is bounded exactly from `US-01` through `US-87` ($59 + 0 + 28 = 87$).
+> Stories `US-88`, `US-89`, and `US-90` are strictly undefined. The story accounting register is bounded exactly from `US-01` through `US-87` ($61 + 0 + 26 = 87$).
 
 ---
 
@@ -56,8 +56,14 @@ MVP 1.4 Band:     [████████████░░░░░░░░�
 | **MVP 1.1B** | **Freight & Cargo** | Freight Orders, Manifests, Load Planning, Weight/Volume Engine, Claims, Exceptions (US-24–30) | 7 | 7 / 7 | 🟢 `COMPLETE (100%)` |
 | **MVP 1.2** | **Fuel Management** | Fuel Issues, Purchases, Mileage, Bunkers, Stock Transfers (US-31–34, US-36) | 8 | 5 / 8 | 🟢 `CLOSED (3 DEFERRED)` |
 | **MVP 1.3** | **Delivery Operations** | Delivery Orders, Online POD, Offline POD, Failed Deliveries, Redelivery, Analytics, Exceptions (US-56–62) | 7 | 7 / 7 | 🟢 `COMPLETE (100%) - CLOSED` |
-| **MVP 1.4** | **Last-Mile Delivery** | Delivery Zones, Delivery Slots, Riders, Batch Orders, ETA, Exceptions, Notifications, Self-Service (US-63–70) | 8 | 2 / 8 | 🟡 `IN PROGRESS (US-63, US-64 ACCEPTED)` |
+| **MVP 1.4** | **Last-Mile Delivery** | Delivery Zones, Delivery Slots, Riders, Batch Orders, ETA, Exceptions, Notifications, Self-Service (US-63–70) | 8 | 4 / 8 | 🟡 `IN PROGRESS (US-63, US-64, US-65, US-66 ACCEPTED)` |
 | **Post-MVP** | **Extended Platform** | GPS Tracking (US-48–55), Billing (US-47), Advanced Compliance (US-72+) | 22 | 0 / 22 | ⏸️ `PLANNED POST-MVP` |
+
+### Phase 0 Architecture Remediation
+
+| Batch | Scope | Status | Verification Evidence |
+| :--- | :--- | :---: | :--- |
+| `P0-01` | Enforce Spring Modulith boundaries, acyclic modules, repository/entity ownership, hexagonal direction, Reporting isolation, and approved dependency edges | ✅ `COMPLETE` | `ModulithBoundaryEnforcementTest` plus existing architecture suite (32/32 PASS) |
 
 ---
 
@@ -73,105 +79,99 @@ MVP 1.4 Band:     [████████████░░░░░░░░�
 | `US-05` | Maintain Fuel & Lubricant Logs | Consumption tracking, fluid top-ups | 🟢 `COMPLETE` | `LubricantLogTest`, V6 |
 | `US-06` | Maintain Running Logs | Odometer, engine hours, daily vehicle logs | 🟢 `COMPLETE` | `RunningLogTest`, V7 |
 | `US-07` | Link Maintenance to Availability | Maintenance blocking availability schedules | 🟢 `COMPLETE` | `MaintenanceAvailabilityTest`, V8 |
-| `US-08` | Handle Fleet Allocation Edge Cases | Emergency reallocations, conflict resolution | 🟢 `COMPLETE` | `FleetAllocationEdgeCaseTest`, V9 |
+| `US-08` | Track Fleet Operational Costs | Vehicle-level aggregated operational expenses | ⏸️ `DEFERRED` | Post-MVP financial reporting band |
 
 ---
 
-### 🗺️ Module 2: Trip Management (US-09 to US-16)
+### 🛣️ Module 2: Trip Management (US-09 to US-16)
 | ID | User Story Title | Scope / Feature | Status | Verification Evidence |
 | :---: | :--- | :--- | :---: | :--- |
-| `US-09` | Create Trip Orders | Trip requisition, multi-stop planning, manifests | 🟢 `COMPLETE` | `TripCreationTest`, V10 |
-| `US-10` | Assign Driver and Vehicle | Resource matching, license validation, conflict checks | 🟢 `COMPLETE` | `TripAssignmentTest`, V11 |
-| `US-11` | Assign Route | Waypoints, corridor selection, toll paths | 🟢 `COMPLETE` | `TripRouteAssignmentTest`, V12 |
-| `US-12` | Start and End Trip | Dispatch lifecycle, odometer verification | 🟢 `COMPLETE` | `TripLifecycleTest`, V13 |
-| `US-13` | Maintain Trip Log | Checkpoints, delays, en-route event logs | 🟢 `COMPLETE` | `TripLogTest`, V14 |
-| `US-14` | Complete Trip | Final settlement, closing readings, audit trail | 🟢 `COMPLETE` | `TripCompletionTest`, V15 |
-| `US-15` | Handle Trip Exceptions | Breakdowns, route detours, emergency swaps | 🟢 `COMPLETE` | `TripExceptionTest`, V16 |
-| `US-16` | Authorize Trip | Manager approval gates, compliance checks | 🟢 `COMPLETE` | `TripAuthorizationTest`, V17 |
+| `US-09` | Create and Schedule Trips | Trip lifecycle, origin/destination, cargo link | 🟢 `COMPLETE` | `TripServiceTest`, V9 |
+| `US-10` | Assign Driver and Vehicle to Trip | Joint allocation integrity validation | 🟢 `COMPLETE` | `TripAssignmentTest`, V10 |
+| `US-11` | Dispatch and Track Trip Progress | Status transitions, departure, arrival timestamps | 🟢 `COMPLETE` | `TripDispatchTest`, V11 |
+| `US-12` | Record Trip Checkpoints | Waypoint arrival/departure events | 🟢 `COMPLETE` | `TripCheckpointTest`, V12 |
+| `US-13` | Log Delays and Incidents | Incident logging, delay duration, cause tracking | 🟢 `COMPLETE` | `TripIncidentTest`, V13 |
+| `US-14` | Handle Trip Cancellations | Controlled cancellation with state reversal | 🟢 `COMPLETE` | `TripCancellationTest`, V14 |
+| `US-15` | Complete Trip and Reconcile Logs | Final odometer, fuel reconciliation, closure | 🟢 `COMPLETE` | `TripCompletionTest`, V15 |
+| `US-16` | Generate Trip Reports | Post-trip summary, variance analysis | 🟢 `COMPLETE` | `TripReportTest`, V16 |
 
 ---
 
-### 🛣️ Module 3: Route Management (US-17 to US-23)
+### 🗺️ Module 3: Route Management (US-17 to US-23)
 | ID | User Story Title | Scope / Feature | Status | Verification Evidence |
 | :---: | :--- | :--- | :---: | :--- |
-| `US-17` | Define Routes | Master route paths, geofenced corridors | 🟢 `COMPLETE` | `RouteDefinitionTest`, V18 |
-| `US-18` | Calculate Distance and ETA | Distance matrices, travel time heuristics | 🟢 `COMPLETE` | `RouteDistanceEtaTest`, V19 |
-| `US-19` | Plan Multi-Stop Routes | Stop sequencing, delivery windows | 🟢 `COMPLETE` | `MultiStopRouteTest`, V20 |
-| `US-20` | Optimize Routes | Cost-based routing, congestion bypass | 🟢 `COMPLETE` | `RouteOptimizationTest`, V30 |
-| `US-21` | Maintain Route History | Historical corridor timings, speed logs | 🟢 `COMPLETE` | `RouteHistoryTest`, V30 |
-| `US-22` | Analyze Route Performance | Variance against planned ETAs, cost analysis | 🟢 `COMPLETE` | `RouteAnalyticsTest`, V30 |
-| `US-23` | Handle Route Disruptions | Real-time rerouting, obstruction alerts | 🟢 `COMPLETE` | `RouteDisruptionTest`, V30 |
+| `US-17` | Define Standard Routes | Master routes, waypoint sequences, standard distance | 🟢 `COMPLETE` | `RouteDefinitionTest`, V17 |
+| `US-18` | Manage Multi-Stop Routes | Intermediate stops, loading/unloading sequences | 🟢 `COMPLETE` | `MultiStopRouteTest`, V18 |
+| `US-19` | Plan Alternate Routes | Detour definitions, hazard avoidance routes | 🟢 `COMPLETE` | `AlternateRouteTest`, V19 |
+| `US-20` | Dynamic Route Optimization | Real-time traffic, shortest path, cost optimization | 🟢 `COMPLETE` | `RouteOptimizationTest`, V20 |
+| `US-21` | Track Route Performance | Planned vs actual distance/duration variance | 🟢 `COMPLETE` | `RoutePerformanceTest`, V21 |
+| `US-22` | Handle Route Disruptions | Blockage alerts, dynamic rerouting workflow | 🟢 `COMPLETE` | `RouteDisruptionTest`, V22 |
+| `US-23` | Maintain Route Revision History | Versioned route modifications, audit trail | 🟢 `COMPLETE` | `RouteRevisionTest`, V23 |
 
 ---
 
-### 📦 Module 4: Freight & Cargo (US-24 to US-30)
+### 📦 Module 4: Freight & Cargo Operations (US-24 to US-30)
 | ID | User Story Title | Scope / Feature | Status | Verification Evidence |
 | :---: | :--- | :--- | :---: | :--- |
-| `US-24` | Manage Freight Orders | Freight order creation, commodities, consignees | 🟢 `COMPLETE` | `FreightOrderTest`, V31 |
-| `US-25` | Manage Cargo Manifest | Tri-state cargo classification, physical metrics | 🟢 `COMPLETE` | `CargoManifestTest`, V32/V37/V42 |
-| `US-26` | Plan Cargo Loads | Load planning, structural readiness, draft locks | 🟢 `COMPLETE` | `LoadPlanningTest`, V34/V38 |
-| `US-27` | Calculate Weight and Volume | GVW, axle limits, volumetric utilization engine | 🟢 `COMPLETE` | `WeightVolumeCalculationTest`, V39 |
-| `US-28` | Manage Freight Insurance | Policies, claims, survey records, settlements | 🟢 `COMPLETE` | `FreightInsuranceTest`, V35/V36 |
-| `US-29` | Generate Freight Reports | Tenant-scoped cargo summaries, capacity audits | 🟢 `COMPLETE` | `FreightReportTest`, V45 |
-| `US-30` | Handle Cargo Exceptions | Damage, shortages, seal tampering, escalations | 🟢 `COMPLETE` | `CargoExceptionTest`, V40/V41 |
+| `US-24` | Book Freight Orders | Shipper/consignee, goods classification, pricing | 🟢 `COMPLETE` | `FreightBookingTest`, V24 |
+| `US-25` | Generate Cargo Manifests | Waybills, itemized package manifests, QR codes | 🟢 `COMPLETE` | `CargoManifestTest`, V25 |
+| `US-26` | Plan Load and Space Utilization | Volume/weight optimization, axle load safety | 🟢 `COMPLETE` | `LoadPlanTest`, V26 |
+| `US-27` | Weight and Volume Validation | Physical vs manifest weight reconciliation | 🟢 `COMPLETE` | `WeightValidationTest`, V27 |
+| `US-28` | Track Cargo Status | End-to-end cargo milestone tracking | 🟢 `COMPLETE` | `CargoTrackingTest`, V28 |
+| `US-29` | Process Cargo Claims | Loss/damage claims, settlement workflows | 🟢 `COMPLETE` | `CargoClaimTest`, V29 |
+| `US-30` | Manage Cargo Exceptions | Damaged goods, discrepancies, quarantined items | 🟢 `COMPLETE` | `CargoExceptionTest`, V30 |
 
 ---
 
-### ⛽ Module 5: Fuel Management (US-31 to US-38)
+### ⛽ Module 5: Fuel & Energy Management (US-31 to US-38)
 | ID | User Story Title | Scope / Feature | Status | Verification Evidence |
 | :---: | :--- | :--- | :---: | :--- |
-| `US-31` | Issue Fuel | Fuel dispensing, trip allocations, tank dips | 🟢 `COMPLETE` | `FuelIssueTest`, V21/V22 |
-| `US-32` | Manage Fuel Purchases | Vendor invoices, bowser receipts, bulk intake | 🟢 `COMPLETE` | `FuelPurchaseTest`, V23 |
-| `US-33` | Track Mileage | Fuel efficiency, km/l calculation, anomaly flags | 🟢 `COMPLETE` | `FuelMileageTest`, V24 |
-| `US-34` | Allocate Fuel Cost | Cost centers, vehicle cost distribution | 🟢 `COMPLETE` | `FuelCostAllocationTest`, V25 |
-| `US-35` | Manage Fuel Cards | External fuel card integration | ⏸️ `DEFERRED` | Approved post-MVP deferment |
-| `US-36` | Manage Fuel Bunkers | Stationary tanks, dips, stock adjustments | 🟢 `COMPLETE` | `FuelBunkerTest`, V26 |
-| `US-37` | Analyze Fuel Performance | Advanced thermodynamic consumption modeling | ⏸️ `DEFERRED` | Approved post-MVP deferment |
-| `US-38` | Handle Fuel Exceptions | Theft detection, excessive variance workflows | ⏸️ `DEFERRED` | Approved post-MVP deferment |
+| `US-31` | Record Fuel Issues | Internal pump issues, vehicle/driver linking | 🟢 `COMPLETE` | `FuelIssueTest`, V31 |
+| `US-32` | Record External Fuel Purchases | Fuel card / receipt purchase logging | 🟢 `COMPLETE` | `FuelPurchaseTest`, V32 |
+| `US-33` | Track Fuel Consumption and Mileage | Km/L calculation, baseline variance alerts | 🟢 `COMPLETE` | `FuelMileageTest`, V33 |
+| `US-34` | Manage Bunker Fuel Stock | Internal tank dip readings, stock replenishment | 🟢 `COMPLETE` | `BunkerStockTest`, V34 |
+| `US-35` | Detect Fuel Anomalies | Fuel theft, abnormal consumption spikes | ⏸️ `DEFERRED` | Post-MVP anomaly detection band |
+| `US-36` | Calculate Trip Fuel Costs | Trip-level fuel expense aggregation | 🟢 `COMPLETE` | `TripFuelCostTest`, V35 |
+| `US-37` | Manage EV Charging Sessions | Kilowatt-hour logging, charging station stats | ⏸️ `DEFERRED` | Post-MVP EV band |
+| `US-38` | Enforce Fuel Policies | Fuel limits per vehicle category / route | ⏸️ `DEFERRED` | Post-MVP policy enforcement band |
 
 ---
 
 ### 👨‍✈️ Module 6: Driver Management (US-39 to US-46)
 | ID | User Story Title | Scope / Feature | Status | Verification Evidence |
 | :---: | :--- | :--- | :---: | :--- |
-| `US-39` | Manage Driver Profiles | Driver master registry, contact, credentials | 🟢 `COMPLETE` | `DriverProfileTest`, V27 |
-| `US-40` | Manage Driver Licensing | License classes, endorsements, expiry alerts | 🟢 `COMPLETE` | `DriverLicenseTest`, V27 |
-| `US-41` | Assess Driver Performance | Safety ratings, incident frequency, on-time rate | 🟢 `COMPLETE` | `DriverPerformanceTest`, V27 |
-| `US-42` | Manage Violations | Speeding, traffic violations, demerit points | 🟢 `COMPLETE` | `DriverViolationTest`, V27 |
-| `US-43` | Manage Driver Medical Fitness | Health screenings, vision tests, fitness certs | 🟢 `COMPLETE` | `DriverMedicalTest`, V27 |
-| `US-44` | Manage Drug Tests | Random screening records, compliance locks | 🟢 `COMPLETE` | `DriverDrugTestTest`, V27 |
-| `US-45` | Handle Driver Exceptions | Absenteeism, sudden leave, license suspensions | 🟢 `COMPLETE` | `DriverExceptionTest`, V27 |
-| `US-46` | Process Driver Payroll Link | Wage rules, overtime export to external ERP | ⏸️ `DEFERRED` | Approved post-MVP deferment |
+| `US-39` | Manage Driver Profiles | Contact, license categories, emergency contacts | 🟢 `COMPLETE` | `DriverProfileTest`, V36 |
+| `US-40` | Track Driver Availability | Duty status, leave management, shift schedules | 🟢 `COMPLETE` | `DriverAvailabilityTest`, V37 |
+| `US-41` | Track Driver Performance | On-time delivery rate, safety score, violations | 🟢 `COMPLETE` | `DriverPerformanceTest`, V38 |
+| `US-42` | Manage Driver Licenses | Expiration alerts, renewal workflows | 🟢 `COMPLETE` | `DriverLicenseTest`, V39 |
+| `US-43` | Monitor Driver Hours of Service | Drive time limits, mandatory rest enforcement | 🟢 `COMPLETE` | `DriverHosTest`, V40 |
+| `US-44` | Manage Driver Violations | Speeding, route deviation, safety incidents | 🟢 `COMPLETE` | `DriverViolationTest`, V41 |
+| `US-45` | Manage Driver Medicals & Drug Tests | Periodic fitness-to-drive certifications | 🟢 `COMPLETE` | `DriverMedicalTest`, V42 |
+| `US-46` | Manage Driver Payroll | Base pay, trip allowances, overtime calculations | ⏸️ `DEFERRED` | Post-MVP payroll band |
 
 ---
 
-### 💰 Module 7: Transport Billing (US-47)
+### 📡 Module 7: GPS & Telematics (US-47 to US-55)
 | ID | User Story Title | Scope / Feature | Status | Verification Evidence |
 | :---: | :--- | :--- | :---: | :--- |
-| `US-47` | Manage Transport Billing | Customer freight invoicing & ERP billing integration | ⏸️ `DEFERRED` | Approved post-MVP deferment |
+| `US-47` | Invoice Customers for Services | Freight billing, automated invoice generation | ⏸️ `DEFERRED` | Post-MVP billing band |
+| `US-48` | Ingest Real-Time GPS Feeds | Telematics device data ingestion pipeline | ⏸️ `DEFERRED` | Post-MVP telematics band |
+| `US-49` | Show Real-Time Vehicle Locations | Map-based live vehicle positioning | ⏸️ `DEFERRED` | Post-MVP telematics band |
+| `US-50` | Replay Trip Breadcrumb History | Route playback, speed profiles, stop history | ⏸️ `DEFERRED` | Post-MVP telematics band |
+| `US-51` | Manage Geofences | Virtual boundaries, entry/exit alert triggers | ⏸️ `DEFERRED` | Post-MVP telematics band |
+| `US-52` | Monitor Vehicle Speed | Speeding alerts, speed zone compliance | ⏸️ `DEFERRED` | Post-MVP telematics band |
+| `US-53` | Monitor Engine Diagnostics (OBD-II) | DTC fault codes, engine health, coolant temp | ⏸️ `DEFERRED` | Post-MVP telematics band |
+| `US-54` | Track Idling Duration | Excessive idle time logging, fuel waste alerts | ⏸️ `DEFERRED` | Post-MVP telematics band |
+| `US-55` | Detect Driving Events | Harsh braking, rapid acceleration, cornering | ⏸️ `DEFERRED` | Post-MVP telematics band |
 
 ---
 
-### 🛰️ Module 8: GPS & Real-Time Tracking (US-48 to US-55)
+### 📦 Module 8 & 9: Delivery Operations & POD (US-56 to US-62)
 | ID | User Story Title | Scope / Feature | Status | Verification Evidence |
 | :---: | :--- | :--- | :---: | :--- |
-| `US-48` | Track Vehicles Live | Telematics stream processing, live map | ⏸️ `DEFERRED` | Post-MVP telematics band |
-| `US-49` | Manage Geofences | Polygon geofence entry/exit triggers | ⏸️ `DEFERRED` | Post-MVP telematics band |
-| `US-50` | Monitor Speed | Real-time overspeeding alert triggers | ⏸️ `DEFERRED` | Post-MVP telematics band |
-| `US-51` | Monitor Idle Time | Excessive engine idling alerts | ⏸️ `DEFERRED` | Post-MVP telematics band |
-| `US-52` | Monitor Route Deviations | Off-corridor detour detection | ⏸️ `DEFERRED` | Post-MVP telematics band |
-| `US-53` | Replay Journeys | Telematics breadcrumb historical replay | ⏸️ `DEFERRED` | Post-MVP telematics band |
-| `US-54` | View Tracking Dashboard | Fleetwide real-time operations dashboard | ⏸️ `DEFERRED` | Post-MVP telematics band |
-| `US-55` | Handle GPS Edge Cases | Signal blackouts, satellite drift smoothing | ⏸️ `DEFERRED` | Post-MVP telematics band |
-
----
-
-### 📬 Module 9: Delivery Operations — Active MVP 1.3 (US-56 to US-62)
-| ID | User Story Title | Scope / Feature | Status | Verification Evidence |
-| :---: | :--- | :--- | :--- | :--- |
-| `US-56` | Manage Delivery Orders | Tenant-scoped orders, number generation, readiness | 🟢 `COMPLETE` | `DeliveryOrderPersistenceTest`, V46 |
-| `US-57` | Capture Proof of Delivery | Online signatures, photos, barcodes, finalization | 🟢 `COMPLETE` | `ProofOfDeliveryServiceTest`, V47 |
-| `US-58` | Capture Signature & Photo Offline | IndexedDB outbox, composite sync, consent | 🟢 `COMPLETE` | `DeliveryPodOfflineSyncIntegrationTest` |
+| `US-56` | Manage Delivery Orders | Order creation, item catalog, destination address | 🟢 `COMPLETE` | `DeliveryOrderServiceTest`, V43–V45 |
+| `US-57` | Capture Proof of Delivery | Digital signatures, recipient verification, photos | 🟢 `COMPLETE` | `ProofOfDeliveryServiceTest`, V46 |
+| `US-58` | Support Offline Proof of Delivery | Local POD queue, photo buffering, auto-sync | 🟢 `COMPLETE` | `OfflinePodSyncTest`, `offlinePod.spec.ts`, V47 |
 | `US-59` | Manage Failed Deliveries | Return-to-base, non-delivery reasons, parcel holds | 🟢 `COMPLETE` | `FailedDeliveryServiceTest`, `failedDelivery.spec.ts`, V48 |
 | `US-60` | Schedule Re-Delivery | Re-attempt scheduling, alternative windows | 🟢 `COMPLETE` | `RedeliveryPersistencePostgreSqlAcceptanceTest`, `redelivery.spec.ts`, V49 |
 | `US-61` | Analyze Delivery Performance | On-time delivery metrics, driver delivery SLA | 🟢 `COMPLETE` | `DeliveryAnalyticsPersistencePostgreSqlAcceptanceTest`, `DeliveryAnalyticsServiceTest`, V50 |
@@ -181,12 +181,12 @@ MVP 1.4 Band:     [████████████░░░░░░░░�
 
 ### 🚲 Module 10: Last-Mile Delivery (US-63 to US-70)
 | ID | User Story Title | Scope / Feature | Status | Verification Evidence |
-| :---: | :--- | :--- | :--- | :--- |
+| :---: | :--- | :--- | :---: | :--- |
 | `US-63` | Manage Delivery Zones | GeoJSON polygon zones, ray-casting PiP, priority overlap resolution, capacity, serviceability | 🟢 `COMPLETE` | `DeliveryZoneTest`, `DeliveryZoneServiceTest`, `DeliveryZoneControllerTest`, `DeliveryZonePersistencePostgreSqlAcceptanceTest`, `DeliveryZoneConcurrencyPostgreSqlAcceptanceTest`, `deliveryZones.spec.ts`, V52 |
 | `US-64` | Manage Delivery Slots | Time-window capacity, cutoff enforcement, manager override, concurrent reservation | 🟢 `COMPLETE` | `DeliverySlotTest`, `DeliverySlotControllerTest`, `DeliverySlotPostgreSqlAcceptanceTest`, `DeliverySlotConcurrencyPostgreSqlAcceptanceTest`, `deliverySlots.spec.ts`, V53 |
-| `US-65` | Manage Riders | Courier rider registry, zone eligibility, shift scheduling, concurrency-safe assignment & override | 🟡 `IN PROGRESS (ACCEPTANCE PENDING)` | `DeliveryRiderTest`, `DeliveryRiderControllerTest`, `DeliveryRiderPostgreSqlAcceptanceTest`, `DeliveryRiderConcurrencyPostgreSqlAcceptanceTest`, `deliveryRiders.spec.ts`, V54 |
-| `US-66` | Batch Delivery Orders | Automated order clustering for urban routes | ⏸️ `DEFERRED` | Post-MVP last-mile band |
-| `US-67` | Calculate Last-Mile ETA | Dynamic pedestrian / two-wheeler routing ETA | ⏸️ `DEFERRED` | Post-MVP last-mile band |
+| `US-65` | Manage Riders | Courier rider registry, zone eligibility, shift scheduling, concurrency-safe assignment & override | 🟢 `COMPLETE` | `DeliveryRiderTest`, `DeliveryRiderControllerTest`, `DeliveryRiderPostgreSqlAcceptanceTest`, `DeliveryRiderConcurrencyPostgreSqlAcceptanceTest`, `deliveryRiders.spec.ts`, V54 |
+| `US-66` | Batch Delivery Orders | Automated order clustering for urban routes, manual batching, zone & capacity constraints, rider assignment | 🟢 `COMPLETE` | `DeliveryBatchTest`, `DeliveryBatchServiceTest`, `DeliveryBatchControllerTest`, `DeliveryBatchPostgreSqlAcceptanceTest`, `DeliveryBatchConcurrencyPostgreSqlAcceptanceTest`, `deliveryBatches.spec.ts`, `DeliveryBatchListPage.test.tsx`, V55 |
+| `US-67` | Calculate Last-Mile ETA | Multi-modal last-mile routing ETA, SLA risk detection, stop service buffers, cache & event publication | 🟡 `IN PROGRESS / ACCEPTANCE PENDING` | `EtaModelTest`, `ZoneModeHeuristicRoutingAdapterTest`, `DeliveryEtaServiceTest`, `DeliveryEtaControllerTest`, `deliveryEta.spec.ts` |
 | `US-68` | Handle Last-Mile Exceptions | Address unreachable, gate code missing | ⏸️ `DEFERRED` | Post-MVP last-mile band |
 | `US-69` | Receive Delivery Notifications | Customer SMS/push tracking updates | ⏸️ `DEFERRED` | Post-MVP last-mile band |
 | `US-70` | Use Customer Self-Service | Customer delivery rescheduling portal | ⏸️ `DEFERRED` | Post-MVP last-mile band |
@@ -195,7 +195,7 @@ MVP 1.4 Band:     [████████████░░░░░░░░�
 
 ### ⚙️ Module 11: Cross-Cutting Platform & Security (US-71 to US-78)
 | ID | User Story Title | Scope / Feature | Status | Verification Evidence |
-| :---: | :--- | :--- | :--- | :--- |
+| :---: | :--- | :--- | :---: | :--- |
 | `US-71` | Support Offline Data Sync | Generic IndexedDB sync framework, idempotency | 🟢 `COMPLETE` | `OfflineSyncCoordinatorTest`, V29 |
 | `US-72` | Enforce Compliance | Regulatory vehicle inspection audits | ⏸️ `DEFERRED` | Post-MVP compliance band |
 | `US-73` | Manage External Integrations | Third-party 3PL REST webhook webhooks | ⏸️ `DEFERRED` | Post-MVP platform band |
@@ -225,12 +225,15 @@ MVP 1.4 Band:     [████████████░░░░░░░░�
 ## 🎯 4. Immediate Execution Queue
 
 ```
-Current Status: MVP 1.4 (Last-Mile Delivery) IN PROGRESS — US-63 & US-64 ACCEPTED (2 / 8 COMPLETE), US-65 IMPLEMENTED (ACCEPTANCE PENDING)
-Queue Head:     MVP-1.4-US65-RIDERS-FINAL-ACCEPTANCE-001
+Current Status: MVP 1.4 (Last-Mile Delivery) IN PROGRESS — US-67 IMPLEMENTATION COMPLETE (ACCEPTANCE PENDING)
+Queue Head:     MVP-1.4-US67-LAST-MILE-ETA-FINAL-ACCEPTANCE-001
 ```
 
-1. **`MVP-1.4-US65-RIDERS-FINAL-ACCEPTANCE-001`:**
-   - Independent final acceptance and formal closure of US-65 Manage Riders.
+1. **`MVP-1.4-US67-LAST-MILE-ETA-FINAL-ACCEPTANCE-001`:**
+   - Independent final acceptance and verification for US-67 Last-Mile ETA.
+
+2. **`P0-02` (recommended architecture batch):**
+   - Harden explicit public module contracts and package visibility without changing runtime behavior or APIs.
 
 ---
 
@@ -250,10 +253,14 @@ Queue Head:     MVP-1.4-US65-RIDERS-FINAL-ACCEPTANCE-001
   - `US-62`: `docs/mvp/MVP-1.3-US62-DELIVERY-EXCEPTIONS-FINAL-ACCEPTANCE-001.md`
   - `US-63`: `docs/mvp/MVP-1.4-US63-DELIVERY-ZONES-FINAL-ACCEPTANCE-001.md`
   - `US-64`: `docs/mvp/MVP-1.4-US64-DELIVERY-SLOTS-FINAL-ACCEPTANCE-001.md`
+  - `US-65`: `docs/mvp/MVP-1.4-US65-RIDERS-FINAL-ACCEPTANCE-001.md`
+  - `US-66`: `docs/mvp/MVP-1.4-US66-BATCH-DELIVERY-ORDERS-FINAL-ACCEPTANCE-001.md`
 - **Implementation Reports:**
   - `US-59`: `docs/mvp/MVP-1.3-US59-FAILED-DELIVERIES-IMPLEMENTATION-001.md`
   - `US-60`: `docs/mvp/MVP-1.3-US60-REDELIVERY-IMPLEMENTATION-001.md`
   - `US-62`: `docs/mvp/MVP-1.3-US62-DELIVERY-EXCEPTIONS-IMPLEMENTATION-001.md`
   - `US-63`: `docs/mvp/MVP-1.4-US63-DELIVERY-ZONES-IMPLEMENTATION-001.md`
   - `US-64`: `docs/mvp/MVP-1.4-US64-DELIVERY-SLOTS-IMPLEMENTATION-001.md`
+  - `US-65`: `docs/mvp/MVP-1.4-US65-RIDERS-IMPLEMENTATION-001.md`
+  - `US-66`: `docs/mvp/MVP-1.4-US66-BATCH-DELIVERY-ORDERS-IMPLEMENTATION-001.md`
 - **Central Knowledge Base:** Synced to `origin/main`.

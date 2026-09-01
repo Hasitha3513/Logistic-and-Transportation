@@ -56,6 +56,8 @@ class DeliveryPodOfflineSyncIntegrationTest {
         jdbc.update("DELETE FROM proof_of_delivery");
         jdbc.update("DELETE FROM delivery_order_rider_assignment");
         jdbc.update("DELETE FROM delivery_slot_reservation");
+        jdbc.update("DELETE FROM delivery_batch_order");
+        jdbc.update("DELETE FROM delivery_batch");
         jdbc.update("DELETE FROM delivery_order");
 
         tenantId = com.transportlogistics.app.tenancy.CanonicalTenant.ID;
