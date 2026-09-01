@@ -64,7 +64,7 @@ MVP 1.4 Band:     [████████████████████�
 | Batch | Scope | Status | Verification Evidence |
 | :--- | :--- | :---: | :--- |
 | `P0-01` | Enforce Spring Modulith boundaries, acyclic modules, repository/entity ownership, hexagonal direction, Reporting isolation, and baseline dependency edges | ✅ `COMPLETE` | Architecture suite 32/32 PASS on Java 21; full suite reached 1,164 tests with one unrelated identity-bootstrap permission-count failure |
-| `P0-02` | Establish explicit database/table ownership and prevent new cross-module repository, JPA mapping, or direct-SQL access | 🟡 `IMPLEMENTED / VERIFICATION BLOCKED` | Ownership tests 3/3, architecture/affected tests 39/39, persistence 52 executed PASS; full suite 1,167 tests with one unrelated identity permission-count failure; two legacy SQL paths reserved for P0-03 |
+| `P0-02` | Establish explicit database/table ownership and prevent new cross-module repository, JPA mapping, or direct-SQL access | ✅ `COMPLETE` | Ownership tests 3/3, architecture/bootstrap tests 36/36, full Java 21 suite 1,167 PASS with 31 existing skips; two legacy SQL paths reserved for P0-03 |
 
 ---
 
