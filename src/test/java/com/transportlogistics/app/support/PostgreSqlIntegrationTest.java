@@ -6,6 +6,9 @@ import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.DockerClientFactory;
 import org.testcontainers.containers.PostgreSQLContainer;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.junit.jupiter.api.AfterEach;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 @SpringBootTest
 @ActiveProfiles("postgres")
@@ -47,5 +50,16 @@ public abstract class PostgreSqlIntegrationTest {
         registry.add("app.dev.identity-bootstrap.enabled", () -> "false");
         registry.add("app.dev.sample-data.enabled", () -> "false");
     }
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
+
+    @AfterEach
+    void cleanDatabase() {
+        jdbcTemplate.execute("DO $$ DECLARE r RECORD; BEGIN " +
+                "FOR r IN (SELECT tablename FROM pg_tables WHERE schemaname='public' AND tablename NOT IN ('flyway_schema_history')) LOOP " +
+                "EXECUTE 'TRUNCATE TABLE ' || quote_ident(r.tablename) || ' RESTART IDENTITY CASCADE;'; " +
+                "END LOOP; END $$;");
+    }
+
 }
 
