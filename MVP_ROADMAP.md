@@ -20,8 +20,8 @@
 > - **MVP 1.4 Last-Mile Delivery:** 7 / 8 COMPLETE (US-63 through US-69 Accepted & Closed)
 > - **Overall Release Band:** 64 / 87 COMPLETE (23 DEFERRED / 87 TOTAL)
 > - **Current Milestone:** MVP 1.4 Last-Mile Delivery — US-63 through US-69 Accepted & Closed.
-> - **Active Focus:** `US-70` Use Customer Self-Service — next active story; implementation not started.
-> - **Immediate Next Action:** Begin governed US-70 product decisions before implementation.
+> - **Active Focus:** `US-70` Use Customer Self-Service — product decisions frozen; implementation not started.
+> - **Immediate Next Action:** Execute `MVP-1.4-US70-CUSTOMER-SELF-SERVICE-IMPLEMENTATION-001` against the frozen contract.
 
 ---
 
@@ -36,7 +36,7 @@ MVP 1.4 Band:     [████████████████████�
 | Metric | Target | Current Count | Percentage | Status Indicator |
 | :--- | :---: | :---: | :---: | :--- |
 | **Completed Stories (Accepted)** | 87 | **64** | `73.6%` | 🟢 `ON TRACK / VERIFIED` |
-| **Next Active / Acceptance Required** | — | **1** | `1.1%` | 🟡 `US-70 NEXT ACTIVE / NOT STARTED` |
+| **Next Active / Acceptance Required** | — | **1** | `1.1%` | 🟡 `US-70 DECISIONS FROZEN / IMPLEMENTATION NOT STARTED` |
 | **Not Started (MVP 1.4 Active Scope)** | 1 | **1** | `1.1%` | 🟡 `US-70 ACTIVE BAND` |
 | **Approved Deferments (Post-MVP)** | 23 | **23** | `26.4%` | ⏸️ `DEFERRED BY GOVERNANCE` |
 | **Total Registered User Stories** | **87** | **87** | **`100%`** | 🔒 `FROZEN REGISTER (US-01..US-87)` |
@@ -197,7 +197,7 @@ Development startup now consistently provisions the idempotent PostgreSQL sample
 | `US-67` | Calculate Last-Mile ETA | Multi-modal last-mile routing ETA, SLA risk detection, stop service buffers, cache & event publication | 🟢 `COMPLETE` | `HEURISTIC_ONLY`; V56 US-67 migration, V57 current head; final acceptance passed: Maven 1,195/0/0/15, architecture 40/40, real Chromium 6/6. |
 | `US-68` | Handle Last-Mile Exceptions | Planner orchestration of rider no-show, attempts, address/access, contactless and cash-dispute outcomes through existing Delivery capabilities | 🟢 `COMPLETE` | Final acceptance passed: read-only Planner, Maven 1,200/0/0/15, architecture 45/45, real Chromium 3/3, retained US-67 6/6; no migration or duplicate exception model. |
 | `US-69` | Receive Delivery Notifications | Delivery-event-driven customer Email/SMS with preferences, durable attempts, and operator history | 🟢 `COMPLETE` | Final acceptance rerun passed after trigger remediation: READY=0, committed DISPATCHED=one per active member, removed/rollback=0; Maven 1,223/0/0/15, architecture 42/42, Chromium 7/7, and all security/privacy/Notification gates PASS. |
-| `US-70` | Use Customer Self-Service | Customer delivery rescheduling portal | 🟡 `NEXT ACTIVE / NOT STARTED` | Product decisions and implementation remain to be governed; no US-70 capability was introduced by US-69. |
+| `US-70` | Use Customer Self-Service | Token-scoped tracking, preferences, issue/feedback submission, and non-binding redelivery requests | 🟡 `PRODUCT DECISIONS FROZEN / IMPLEMENTATION NOT STARTED` | Opaque per-Delivery magic-link access; no Customer-to-app_user association, direct scheduling, operator shell, POD evidence, Rider data, IN_APP, or OTP. Expected migration V59 if still free. |
 
 ---
 
@@ -233,12 +233,12 @@ Development startup now consistently provisions the idempotent PostgreSQL sample
 ## 🎯 4. Immediate Execution Queue
 
 ```
-Current Status: MVP 1.4 (Last-Mile Delivery) IN PROGRESS — US-69 ACCEPTED / US-70 NEXT ACTIVE
-Queue Head:     US-70 governed product decisions; implementation not started
+Current Status: MVP 1.4 (Last-Mile Delivery) IN PROGRESS — US-69 ACCEPTED / US-70 DECISIONS FROZEN
+Queue Head:     MVP-1.4-US70-CUSTOMER-SELF-SERVICE-IMPLEMENTATION-001
 ```
 
 1. **US-70 customer self-service:**
-   - Freeze product, identity, security, token/link, rescheduling, notification, and ownership decisions before implementation.
+   - Implement the frozen opaque Delivery-access-token portal contract, customer-safe projection, Notification preferences, issue/feedback submissions, and non-binding redelivery/preference requests.
 
 2. **`P1-01` (recommended architecture batch):**
    - Modernize only legacy event contracts that acquire real consumers: complete Tenant/version envelopes and approve a database outbox/inbox boundary before claiming durable external delivery.
