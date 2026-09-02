@@ -287,6 +287,8 @@ class SecurityConfig {
 
                         .requestMatchers(HttpMethod.POST, "/api/v1/deliveries/orders/*/eta/calculate")
                         .hasAuthority("DELIVERY_UPDATE")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/deliveries/*/last-mile-planner")
+                        .hasAnyAuthority("DELIVERY_FAIL_VIEW", "DELIVERY_EXCEPTION_VIEW")
 
                         // These controllers include the application context path in their explicit mapping.
                         // Their method-level @PreAuthorize contracts remain the authoritative action checks.

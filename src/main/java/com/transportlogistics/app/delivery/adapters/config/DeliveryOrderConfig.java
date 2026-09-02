@@ -3,12 +3,14 @@ package com.transportlogistics.app.delivery.adapters.config;
 import com.transportlogistics.app.delivery.application.DeliveryExceptionService;
 import com.transportlogistics.app.delivery.application.DeliveryOrderService;
 import com.transportlogistics.app.delivery.application.FailedDeliveryService;
+import com.transportlogistics.app.delivery.application.LastMilePlannerService;
 import com.transportlogistics.app.delivery.application.ProofOfDeliveryService;
 import com.transportlogistics.app.delivery.application.RedeliveryService;
 import com.transportlogistics.app.delivery.ports.inbound.DeliveryAnalyticsUseCase;
 import com.transportlogistics.app.delivery.ports.inbound.DeliveryExceptionUseCase;
 import com.transportlogistics.app.delivery.ports.inbound.DeliveryOrderUseCase;
 import com.transportlogistics.app.delivery.ports.inbound.FailedDeliveryUseCase;
+import com.transportlogistics.app.delivery.ports.inbound.LastMilePlannerUseCase;
 import com.transportlogistics.app.delivery.ports.inbound.RedeliveryUseCase;
 import com.transportlogistics.app.delivery.ports.outbound.*;
 import org.springframework.context.annotation.Bean;
@@ -84,6 +86,13 @@ class DeliveryOrderConfig {
                 orders, attempts, exceptions, storage, locations, tenantContext, transactions, clock
         );
     }
-}
 
+    @Bean
+    LastMilePlannerUseCase lastMilePlannerUseCase(
+            DeliveryOrderUseCase orders,
+            FailedDeliveryUseCase failedDeliveries,
+            DeliveryExceptionUseCase exceptions) {
+        return new LastMilePlannerService(orders, failedDeliveries, exceptions);
+    }
+}
 

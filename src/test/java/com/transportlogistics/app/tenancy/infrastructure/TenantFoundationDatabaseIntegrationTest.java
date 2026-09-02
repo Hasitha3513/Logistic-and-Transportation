@@ -23,6 +23,9 @@ class TenantFoundationDatabaseIntegrationTest {
 
     @org.junit.jupiter.api.BeforeEach
     void setUp() {
+        jdbc.update("DELETE FROM tenant_membership_role WHERE membership_id IN "
+                + "(SELECT membership_id FROM tenant_membership WHERE tenant_id != ?)", CanonicalTenant.ID);
+        jdbc.update("DELETE FROM tenant_membership WHERE tenant_id != ?", CanonicalTenant.ID);
         jdbc.update("DELETE FROM tenant WHERE tenant_id != ?", CanonicalTenant.ID);
     }
 

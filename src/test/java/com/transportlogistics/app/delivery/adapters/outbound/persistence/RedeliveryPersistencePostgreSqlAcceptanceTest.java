@@ -177,7 +177,8 @@ class RedeliveryPersistencePostgreSqlAcceptanceTest extends PostgreSqlIntegratio
 
     @Test
     void capacityLimitEnforcesMaxFiftyConcurrentDeliveriesPerWindow() {
-        OffsetDateTime base = OffsetDateTime.now().plusDays(1).withNano(0);
+        OffsetDateTime base = OffsetDateTime.now().plusDays(1)
+                .withHour(10).withMinute(0).withSecond(0).withNano(0);
         OffsetDateTime windowEnd = base.plusHours(2);
 
         contexts.within(TENANT_A_CONTEXT, () -> {

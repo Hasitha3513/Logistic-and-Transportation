@@ -19,6 +19,15 @@ import type {
   RedeliverySuggestionPayload
 } from '../types/redelivery';
 
+export interface LastMilePlannerContext {
+  deliveryOrderId: string;
+  deliveryStatus: string;
+  failedAttemptCount: number;
+  activeExceptionCount: number;
+  openEscalationCount: number;
+  availableActions: string[];
+}
+
 export const deliveryOrderApi = {
   search: async (filters: DeliveryOrderFilters) => (await api.get<DeliveryOrderPage>('/v1/deliveries', { params: filters })).data,
   get: async (id: string) => (await api.get<DeliveryOrder>(`/v1/deliveries/${id}`)).data,
@@ -57,8 +66,9 @@ export const deliveryOrderApi = {
     (await api.post<RedeliverySchedule>(`/v1/deliveries/${id}/redelivery/reschedule`, payload)).data,
   getRedeliveryHistory: async (id: string) =>
     (await api.get<RedeliverySchedule[]>(`/v1/deliveries/${id}/redelivery/history`)).data,
+  getLastMilePlannerContext: async (id: string) =>
+    (await api.get<LastMilePlannerContext>(`/v1/deliveries/${id}/last-mile-planner`)).data,
 
   customers: async () => (await api.get<OrganizationReference[]>('/customers')).data.filter((item) => item.active),
   locations: async () => (await api.get<OrganizationReference[]>('/locations')).data.filter((item) => item.active),
 };
-
