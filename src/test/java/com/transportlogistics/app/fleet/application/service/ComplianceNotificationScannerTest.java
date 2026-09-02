@@ -122,7 +122,7 @@ class ComplianceNotificationScannerTest {
     }
 
     private Vehicle vehicle() {
-        return new Vehicle(vehicleId, "WP-ABC-1234", null, null, null, null, null, null, null, null,
+        return new Vehicle(vehicleId, "WP-ABC-1234", null, null, UUID.randomUUID(), UUID.randomUUID(), null, null, null, null,
             "AVAILABLE", null, null, null, true);
     }
 

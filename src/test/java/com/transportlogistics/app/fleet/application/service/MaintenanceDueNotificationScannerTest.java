@@ -63,7 +63,7 @@ class MaintenanceDueNotificationScannerTest {
     }
 
     private Vehicle vehicle(UUID id) {
-        return new Vehicle(id, "REG-1", null, null, null, null, null, null, null, null,
+        return new Vehicle(id, "REG-1", null, null, UUID.randomUUID(), UUID.randomUUID(), null, null, null, null,
             "AVAILABLE", null, null, null, true);
     }
 }

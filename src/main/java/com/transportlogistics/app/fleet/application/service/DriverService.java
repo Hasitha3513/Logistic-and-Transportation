@@ -28,7 +28,9 @@ public final class DriverService implements DriverUseCase {
     }
 
     public Driver update(UUID id, Driver value) {
-        return repo.save(value);
+        get(id);
+        return repo.save(new Driver(id, value.employeeNumber(), value.firstName(), value.lastName(), value.phone(),
+                value.email(), value.status(), value.active()));
     }
 
     public void deactivate(UUID id) {

@@ -68,6 +68,7 @@ MVP 1.4 Band:     [████████████████████�
 | `P0-03` | Remove illegal cross-module implementation dependencies and enforce published-contract-only integration | ✅ `COMPLETE` | Freight consumes Fleet capacity through `FleetReportingQuery`; System probes sample-data readiness through `CustomerDataReadiness`; full Java 21 suite 1,168 PASS with 31 existing skips |
 | `P0-04` | Make Tenant isolation mandatory across persistence, client input, tenant-local keys, object/list/report access, updates, and deletes | ✅ `COMPLETE` | PostgreSQL V57 applied; focused tenant/security/architecture gate 24/24 PASS; full Java 21 suite 1,173 PASS with 31 existing skips |
 | `P0-05` | Harden Tenant-aware RBAC, contextual identity administration, privilege ceilings, and fail-closed HTTP authorization | ✅ `COMPLETE` | Focused authorization/architecture gate 72/72 PASS; Delivery PostgreSQL fixtures aligned with the canonical Tenant context; full Java 21 suite 1,180 PASS with 31 existing skips |
+| `P0-06` | Correct aggregate-root identity/reference invariants and prevent unreviewed JPA aggregate graphs or cascades | ✅ `COMPLETE` | Focused domain/application/architecture gate 52/52 PASS; full Java 21 suite 1,185 PASS with 31 existing skips; no API/schema/event change |
 
 ---
 
@@ -236,8 +237,8 @@ Queue Head:     MVP-1.4-US67-LAST-MILE-ETA-ACCEPTANCE-REMEDIATION-001-RERUN
 1. **`MVP-1.4-US67-LAST-MILE-ETA-ACCEPTANCE-REMEDIATION-001-RERUN`:**
    - Close the independently verified stale-write, invalidation, rider-mode/origin, concurrency/security, and real-path Chromium gaps under the approved heuristic-only provider contract.
 
-2. **`P0-06` (recommended architecture batch):**
-   - Version the remaining legacy internal events with Tenant envelopes and produce the forward-only retirement plan for legacy physical cross-module foreign keys; add supported segregation-of-duties rules only after creator/approver facts and governance are authoritative.
+2. **`P0-07` (recommended architecture batch):**
+   - Harden aggregate transaction and event publication boundaries, including Tenant-versioned internal events and explicit consistency/outbox decisions, without broadening aggregate scope.
 
 ---
 
