@@ -40,6 +40,7 @@ class SecurityConfig {
                 .authorizeHttpRequests(requests -> requests
                         .requestMatchers("/health", "/auth/login", "/auth/refresh", "/swagger-ui/**", "/swagger-ui.html",
                                 "/v3/api-docs/**", "/error").permitAll()
+                        .requestMatchers("/auth/me", "/auth/logout").authenticated()
                         .requestMatchers("/actuator/**").hasAuthority("IDENTITY_MANAGE")
                         .requestMatchers("/users/**", "/roles/**").hasAuthority("IDENTITY_MANAGE")
                         .requestMatchers(HttpMethod.POST, "/offline-sync/operations").authenticated()
@@ -371,7 +372,7 @@ class SecurityConfig {
                                 "/v1/deliveries/**",
                                 "/notification-rules/**", "/notification-rule-executions/**", "/notification-deliveries/**", "/notification-event-catalogue/**", "/notification-templates/**",
                                 "/notifications/**", "/offline-sync/**").denyAll()
-                        .anyRequest().authenticated())
+                        .anyRequest().denyAll())
                 .addFilterBefore(jwt, UsernamePasswordAuthenticationFilter.class)
                 .build();
     }

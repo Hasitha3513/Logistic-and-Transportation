@@ -52,6 +52,14 @@ class IdentityPersistenceAdapter implements IdentityRepository {
         return users.findAll().stream().map(this::user).toList();
     }
 
+    public Optional<User> findUser(UUID id, UUID tenantId) {
+        return users.findByIdAndTenantId(id, tenantId).map(this::user);
+    }
+
+    public List<User> findUsers(UUID tenantId) {
+        return users.findAllByTenantId(tenantId).stream().map(this::user).toList();
+    }
+
     @Transactional
     public Role saveRole(Role v) {
         var e = new RoleEntity();
@@ -74,6 +82,15 @@ class IdentityPersistenceAdapter implements IdentityRepository {
 
     public void deleteRole(UUID id) {
         roles.deleteById(id);
+    }
+
+    public boolean roleAssignedOutsideTenant(UUID roleId, UUID tenantId) {
+        var count = jdbc.queryForObject("""
+                SELECT COUNT(*) FROM tenant_membership_role assignment
+                JOIN tenant_membership membership ON membership.membership_id = assignment.membership_id
+                WHERE assignment.role_id = :roleId AND membership.tenant_id <> :tenantId
+                """, Map.of("roleId", roleId, "tenantId", tenantId), Integer.class);
+        return count != null && count > 0;
     }
 
     @Transactional

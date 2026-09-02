@@ -8,6 +8,7 @@ import com.transportlogistics.app.identity.application.ports.out.IdentityReposit
 import com.transportlogistics.app.identity.application.ports.out.PasswordHasher;
 import com.transportlogistics.app.identity.application.ports.out.RefreshTokenStore;
 import com.transportlogistics.app.identity.domain.AuthenticationFailedException;
+import com.transportlogistics.app.identity.domain.AuthorizationDeniedException;
 import com.transportlogistics.app.identity.domain.model.AuthTokens;
 import com.transportlogistics.app.identity.domain.model.Role;
 import com.transportlogistics.app.identity.domain.model.User;
@@ -139,6 +140,66 @@ public final class IdentityService implements IdentityUseCase {
                 .orElseThrow(() -> new AuthenticationFailedException("Authenticated user is disabled or unavailable"));
     }
 
+    @Override
+    public User createUser(AdministrationContext context, User user, String rawPassword, Set<UUID> roleIds) {
+        requirePassword(rawPassword);
+        var roles = authorizedRoles(context, roleIds);
+        var secured = new User(user.id(), user.username(), user.email(), passwords.hash(rawPassword), user.firstName(),
+                user.lastName(), user.phone(), user.active(), user.createdAt(), user.updatedAt(), roles);
+        var created = repo.saveUser(secured);
+        tenantMemberships.ensureActiveMembership(created.id(), context.tenantId(), context.actor());
+        repo.replaceUserRoles(created.id(), roleIds(roles));
+        return repo.findUser(created.id(), context.tenantId()).orElse(created);
+    }
+
+    @Override
+    public User getUser(AdministrationContext context, UUID id) {
+        return repo.findUser(id, context.tenantId()).orElseThrow(() -> new NotFoundException("User not found: " + id));
+    }
+
+    @Override
+    public List<User> listUsers(AdministrationContext context) {
+        return repo.findUsers(context.tenantId());
+    }
+
+    @Override
+    public User updateUser(AdministrationContext context, UUID id, User user, String rawPassword,
+                           Set<UUID> roleIds) {
+        var existing = getUser(context, id);
+        var roles = roleIds == null ? existing.roles() : authorizedRoles(context, roleIds);
+        var passwordHash = rawPassword == null || rawPassword.isBlank() ? existing.passwordHash() : passwords.hash(rawPassword);
+        var updated = new User(id, user.username(), user.email(), passwordHash, user.firstName(), user.lastName(),
+                user.phone(), user.active(), existing.createdAt(), user.updatedAt(), roles);
+        return repo.saveUserWithRoles(updated, roleIds(roles));
+    }
+
+    @Override
+    public void deactivateUser(AdministrationContext context, UUID id) {
+        var user = getUser(context, id);
+        repo.saveUser(new User(user.id(), user.username(), user.email(), user.passwordHash(), user.firstName(),
+                user.lastName(), user.phone(), false, user.createdAt(), now(), user.roles()));
+    }
+
+    @Override
+    public Role createRole(AdministrationContext context, Role role) {
+        requirePermissionCeiling(context, role.permissions());
+        return repo.saveRole(role);
+    }
+
+    @Override
+    public Role updateRole(AdministrationContext context, UUID id, Role role) {
+        requireTenantOwnedRole(context, id);
+        requirePermissionCeiling(context, role.permissions());
+        getRole(id);
+        return repo.saveRole(role);
+    }
+
+    @Override
+    public void deleteRole(AdministrationContext context, UUID id) {
+        requireTenantOwnedRole(context, id);
+        repo.deleteRole(id);
+    }
+
     private AuthTokens tokensFor(User user, com.transportlogistics.app.identity.domain.model.IssuedRefreshToken refresh) {
         return new AuthTokens(accessTokens.issue(user), refresh.value(), "Bearer", accessTokens.ttlSeconds());
     }
@@ -150,6 +211,29 @@ public final class IdentityService implements IdentityUseCase {
             throw new IllegalArgumentException("One or more roles are missing or inactive");
         }
         return roles;
+    }
+
+    private Set<Role> authorizedRoles(AdministrationContext context, Set<UUID> roleIds) {
+        var roles = resolveRoles(roleIds);
+        requirePermissionCeiling(context, roles.stream().flatMap(role -> role.permissions().stream())
+                .collect(java.util.stream.Collectors.toSet()));
+        return roles;
+    }
+
+    private void requirePermissionCeiling(AdministrationContext context, Set<String> requestedPermissions) {
+        if (!context.permissions().containsAll(requestedPermissions)) {
+            throw new AuthorizationDeniedException("Cannot grant permissions not held by the current actor");
+        }
+    }
+
+    private void requireTenantOwnedRole(AdministrationContext context, UUID roleId) {
+        if (repo.roleAssignedOutsideTenant(roleId, context.tenantId())) {
+            throw new AuthorizationDeniedException("Cannot modify a role assigned outside the current tenant");
+        }
+    }
+
+    private Set<UUID> roleIds(Set<Role> roles) {
+        return roles.stream().map(Role::id).collect(java.util.stream.Collectors.toSet());
     }
 
     private void requirePassword(String rawPassword) {

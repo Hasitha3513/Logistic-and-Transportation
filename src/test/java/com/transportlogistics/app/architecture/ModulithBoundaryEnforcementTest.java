@@ -90,6 +90,15 @@ class ModulithBoundaryEnforcementTest {
     }
 
     @Test
+    void identityAuthorizationDomainMustRemainFrameworkNeutral() {
+        noClasses().that().resideInAPackage("..identity.domain..")
+                .should().dependOnClassesThat().resideInAnyPackage(
+                        "org.springframework..", "jakarta.persistence..", "..infrastructure..", "..adapters..")
+                .because("authorization failures and identity rules belong to the pure domain")
+                .check(importedClasses);
+    }
+
+    @Test
     void reportingMustNotAccessOperationalPersistence() {
         noClasses().that().resideInAPackage("..reporting..")
                 .should().dependOnClassesThat().resideInAnyPackage(

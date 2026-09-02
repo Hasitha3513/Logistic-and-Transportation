@@ -7,6 +7,8 @@ import com.transportlogistics.app.identity.application.ports.out.IdentityReposit
 import com.transportlogistics.app.identity.application.ports.out.PasswordHasher;
 import com.transportlogistics.app.identity.application.ports.out.RefreshTokenStore;
 import com.transportlogistics.app.identity.domain.AuthenticationFailedException;
+import com.transportlogistics.app.identity.domain.AuthorizationDeniedException;
+import com.transportlogistics.app.identity.application.ports.in.IdentityUseCase.AdministrationContext;
 import com.transportlogistics.app.identity.domain.model.IssuedRefreshToken;
 import com.transportlogistics.app.identity.domain.model.Role;
 import com.transportlogistics.app.identity.domain.model.User;
@@ -95,6 +97,33 @@ class IdentityServiceTest {
         assertThatThrownBy(() -> service.createUser(user, "a-strong-password", Set.of(requestedRole)))
                 .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("roles");
         verify(repository, never()).saveUserWithRoles(any(), any());
+    }
+
+    @Test
+    void createsAdministeredUserInsideActorsTenant() {
+        var tenantId = UUID.randomUUID();
+        var actor = new AdministrationContext(tenantId, "tenant.admin", Set.of("IDENTITY_MANAGE"));
+        var user = user(true);
+        var role = new Role(UUID.randomUUID(), "TENANT_ADMIN", null, true, Set.of("IDENTITY_MANAGE"));
+        when(repository.findRolesByIds(Set.of(role.id()))).thenReturn(Set.of(role));
+        when(passwords.hash("a-strong-password")).thenReturn("hash");
+        when(repository.saveUser(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+        service.createUser(actor, user, "a-strong-password", Set.of(role.id()));
+
+        verify(tenantMemberships).ensureActiveMembership(user.id(), tenantId, "tenant.admin");
+        verify(repository).replaceUserRoles(user.id(), Set.of(role.id()));
+    }
+
+    @Test
+    void rejectsRoleAssignmentAboveActorsPermissionCeiling() {
+        var actor = new AdministrationContext(UUID.randomUUID(), "tenant.admin", Set.of("IDENTITY_MANAGE"));
+        var role = new Role(UUID.randomUUID(), "APPROVER", null, true, Set.of("TRIP_APPROVE"));
+        when(repository.findRolesByIds(Set.of(role.id()))).thenReturn(Set.of(role));
+
+        assertThatThrownBy(() -> service.createUser(actor, user(true), "a-strong-password", Set.of(role.id())))
+                .isInstanceOf(AuthorizationDeniedException.class);
+        verify(repository, never()).saveUser(any());
     }
 
     private User user(boolean active) {
