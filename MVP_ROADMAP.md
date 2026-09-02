@@ -3,9 +3,9 @@
 <div align="center">
 
 ![Total Stories](https://img.shields.io/badge/Total%20Stories-87-0969da.svg?style=for-the-badge&logo=target)
-![Completed](https://img.shields.io/badge/Completed-63%20%2F%2087-2da44e.svg?style=for-the-badge&logo=checkmarx)
-![Progress](https://img.shields.io/badge/Progress-72.4%25-brightgreen.svg?style=for-the-badge&logo=speedtest)
-![MVP 1.4 Active](https://img.shields.io/badge/MVP%201.4%20Last--Mile-6%20%2F%208-fa8c16.svg?style=for-the-badge&logo=pinboard)
+![Completed](https://img.shields.io/badge/Completed-64%20%2F%2087-2da44e.svg?style=for-the-badge&logo=checkmarx)
+![Progress](https://img.shields.io/badge/Progress-73.6%25-brightgreen.svg?style=for-the-badge&logo=speedtest)
+![MVP 1.4 Active](https://img.shields.io/badge/MVP%201.4%20Last--Mile-7%20%2F%208-fa8c16.svg?style=for-the-badge&logo=pinboard)
 ![Database](https://img.shields.io/badge/PostgreSQL%20%2F%20Flyway-V58-8a63d2.svg?style=for-the-badge&logo=postgresql)
 
 </div>
@@ -17,32 +17,32 @@
 > - **Last Reconciled:** `2026-09-03`
 > - **Authority Order:** Original Requirements (`Traspotation & logistic.docx`), Frozen Architecture/Contracts, Verified Production Code/Tests, then Roadmap.
 > - **MVP 1.3 Delivery Operations:** 7 / 7 COMPLETE (100%) - CLOSED
-> - **MVP 1.4 Last-Mile Delivery:** 6 / 8 COMPLETE (US-63 through US-68 Accepted & Closed)
-> - **Overall Release Band:** 63 / 87 COMPLETE (24 DEFERRED / 87 TOTAL)
-> - **Current Milestone:** MVP 1.4 Last-Mile Delivery — US-63 through US-68 Accepted & Closed.
-> - **Active Focus:** `US-69` Receive Delivery Notifications — implementation complete; trigger remediation verified and final acceptance pending.
-> - **Immediate Next Action:** Run `MVP-1.4-US69-DELIVERY-NOTIFICATIONS-FINAL-ACCEPTANCE-001-RERUN`; do not start US-70.
+> - **MVP 1.4 Last-Mile Delivery:** 7 / 8 COMPLETE (US-63 through US-69 Accepted & Closed)
+> - **Overall Release Band:** 64 / 87 COMPLETE (23 DEFERRED / 87 TOTAL)
+> - **Current Milestone:** MVP 1.4 Last-Mile Delivery — US-63 through US-69 Accepted & Closed.
+> - **Active Focus:** `US-70` Use Customer Self-Service — next active story; implementation not started.
+> - **Immediate Next Action:** Begin governed US-70 product decisions before implementation.
 
 ---
 
 ## 📊 1. Executive Metrics & Milestone Progress
 
 ```
-Overall Progress: [████████████████████████████████████████░░░░░░░░░░] 63 / 87 Stories Complete (72.4%)
+Overall Progress: [█████████████████████████████████████████░░░░░░░░░] 64 / 87 Stories Complete (73.6%)
 MVP 1.3 Band:     [██████████████████████████████████████████████████] 7 / 7 Complete (100.0%) - CLOSED
-MVP 1.4 Band:     [██████████████████████████████████████░░░░░░░░░░░░] 6 / 8 Complete (75.0%) - IN PROGRESS
+MVP 1.4 Band:     [████████████████████████████████████████████░░░░░░] 7 / 8 Complete (87.5%) - IN PROGRESS
 ```
 
 | Metric | Target | Current Count | Percentage | Status Indicator |
 | :--- | :---: | :---: | :---: | :--- |
-| **Completed Stories (Accepted)** | 87 | **63** | `72.4%` | 🟢 `ON TRACK / VERIFIED` |
-| **Next Active / Acceptance Required** | — | **1** | `1.1%` | 🟡 `US-69 IMPLEMENTATION_COMPLETE / ACCEPTANCE_PENDING` |
-| **Not Started (MVP 1.4 Active Scope)** | 2 | **0** | `0.0%` | ⏸️ `US-69..US-70 ACTIVE BAND` |
-| **Approved Deferments (Post-MVP)** | 24 | **24** | `27.6%` | ⏸️ `DEFERRED BY GOVERNANCE` |
+| **Completed Stories (Accepted)** | 87 | **64** | `73.6%` | 🟢 `ON TRACK / VERIFIED` |
+| **Next Active / Acceptance Required** | — | **1** | `1.1%` | 🟡 `US-70 NEXT ACTIVE / NOT STARTED` |
+| **Not Started (MVP 1.4 Active Scope)** | 1 | **1** | `1.1%` | 🟡 `US-70 ACTIVE BAND` |
+| **Approved Deferments (Post-MVP)** | 23 | **23** | `26.4%` | ⏸️ `DEFERRED BY GOVERNANCE` |
 | **Total Registered User Stories** | **87** | **87** | **`100%`** | 🔒 `FROZEN REGISTER (US-01..US-87)` |
 
 > [!NOTE]
-> Stories `US-88`, `US-89`, and `US-90` are strictly undefined. The story accounting register is bounded exactly from `US-01` through `US-87` (`63 COMPLETE + 24 DEFERRED = 87`).
+> Stories `US-88`, `US-89`, and `US-90` are strictly undefined. The story accounting register is bounded exactly from `US-01` through `US-87` (`64 COMPLETE + 23 DEFERRED = 87`).
 
 ---
 
@@ -56,7 +56,7 @@ MVP 1.4 Band:     [████████████████████�
 | **MVP 1.1B** | **Freight & Cargo** | Freight Orders, Manifests, Load Planning, Weight/Volume Engine, Claims, Exceptions (US-24–30) | 7 | 7 / 7 | 🟢 `COMPLETE (100%)` |
 | **MVP 1.2** | **Fuel Management** | Fuel Issues, Purchases, Mileage, Bunkers, Stock Transfers (US-31–34, US-36) | 8 | 5 / 8 | 🟢 `CLOSED (3 DEFERRED)` |
 | **MVP 1.3** | **Delivery Operations** | Delivery Orders, Online POD, Offline POD, Failed Deliveries, Redelivery, Analytics, Exceptions (US-56–62) | 7 | 7 / 7 | 🟢 `COMPLETE (100%) - CLOSED` |
-| **MVP 1.4** | **Last-Mile Delivery** | Delivery Zones, Delivery Slots, Riders, Batch Orders, ETA, Exceptions, Notifications, Self-Service (US-63–70) | 8 | 6 / 8 | 🟡 `IN PROGRESS (US-63 through US-68 ACCEPTED)` |
+| **MVP 1.4** | **Last-Mile Delivery** | Delivery Zones, Delivery Slots, Riders, Batch Orders, ETA, Exceptions, Notifications, Self-Service (US-63–70) | 8 | 7 / 8 | 🟡 `IN PROGRESS (US-63 through US-69 ACCEPTED)` |
 | **Post-MVP** | **Extended Platform** | GPS Tracking (US-48–55), Billing (US-47), Advanced Compliance (US-72+) | 22 | 0 / 22 | ⏸️ `PLANNED POST-MVP` |
 
 ### Phase 0 Architecture Remediation
@@ -196,8 +196,8 @@ Development startup now consistently provisions the idempotent PostgreSQL sample
 | `US-66` | Batch Delivery Orders | Automated order clustering for urban routes, manual batching, zone & capacity constraints, rider assignment | 🟢 `COMPLETE` | `DeliveryBatchTest`, `DeliveryBatchServiceTest`, `DeliveryBatchControllerTest`, `DeliveryBatchPostgreSqlAcceptanceTest`, `DeliveryBatchConcurrencyPostgreSqlAcceptanceTest`, `deliveryBatches.spec.ts`, `DeliveryBatchListPage.test.tsx`, V55 |
 | `US-67` | Calculate Last-Mile ETA | Multi-modal last-mile routing ETA, SLA risk detection, stop service buffers, cache & event publication | 🟢 `COMPLETE` | `HEURISTIC_ONLY`; V56 US-67 migration, V57 current head; final acceptance passed: Maven 1,195/0/0/15, architecture 40/40, real Chromium 6/6. |
 | `US-68` | Handle Last-Mile Exceptions | Planner orchestration of rider no-show, attempts, address/access, contactless and cash-dispute outcomes through existing Delivery capabilities | 🟢 `COMPLETE` | Final acceptance passed: read-only Planner, Maven 1,200/0/0/15, architecture 45/45, real Chromium 3/3, retained US-67 6/6; no migration or duplicate exception model. |
-| `US-69` | Receive Delivery Notifications | Delivery-event-driven customer Email/SMS with preferences, durable attempts, and operator history | 🟡 `IMPLEMENTATION_COMPLETE / ACCEPTANCE_PENDING` | Trigger remediation verified: READY emits 0 customer events; committed DISPATCHED emits exactly one per active member and excludes removed members; rollback emits 0. Maven 1,223/0/0/15, architecture 42/42, and real PostgreSQL-backed Chromium 7/7 PASS. Final acceptance remains separate. |
-| `US-70` | Use Customer Self-Service | Customer delivery rescheduling portal | ⏸️ `DEFERRED` | Post-MVP last-mile band |
+| `US-69` | Receive Delivery Notifications | Delivery-event-driven customer Email/SMS with preferences, durable attempts, and operator history | 🟢 `COMPLETE` | Final acceptance rerun passed after trigger remediation: READY=0, committed DISPATCHED=one per active member, removed/rollback=0; Maven 1,223/0/0/15, architecture 42/42, Chromium 7/7, and all security/privacy/Notification gates PASS. |
+| `US-70` | Use Customer Self-Service | Customer delivery rescheduling portal | 🟡 `NEXT ACTIVE / NOT STARTED` | Product decisions and implementation remain to be governed; no US-70 capability was introduced by US-69. |
 
 ---
 
@@ -233,12 +233,12 @@ Development startup now consistently provisions the idempotent PostgreSQL sample
 ## 🎯 4. Immediate Execution Queue
 
 ```
-Current Status: MVP 1.4 (Last-Mile Delivery) IN PROGRESS — US-68 ACCEPTED / US-69 ACCEPTANCE PENDING
-Queue Head:     MVP-1.4-US69-DELIVERY-NOTIFICATIONS-FINAL-ACCEPTANCE-001-RERUN; US-70 must not start
+Current Status: MVP 1.4 (Last-Mile Delivery) IN PROGRESS — US-69 ACCEPTED / US-70 NEXT ACTIVE
+Queue Head:     US-70 governed product decisions; implementation not started
 ```
 
-1. **US-69 final acceptance rerun:**
-   - Independently verify the remediated committed-dispatch trigger and all frozen US-69 notification contracts. Do not mark US-69 complete before that acceptance passes.
+1. **US-70 customer self-service:**
+   - Freeze product, identity, security, token/link, rescheduling, notification, and ownership decisions before implementation.
 
 2. **`P1-01` (recommended architecture batch):**
    - Modernize only legacy event contracts that acquire real consumers: complete Tenant/version envelopes and approve a database outbox/inbox boundary before claiming durable external delivery.
@@ -265,6 +265,7 @@ Queue Head:     MVP-1.4-US69-DELIVERY-NOTIFICATIONS-FINAL-ACCEPTANCE-001-RERUN; 
   - `US-66`: `docs/mvp/MVP-1.4-US66-BATCH-DELIVERY-ORDERS-FINAL-ACCEPTANCE-001.md`
   - `US-67`: `docs/mvp/MVP-1.4-US67-LAST-MILE-ETA-FINAL-ACCEPTANCE-001.md`
   - `US-68`: `docs/mvp/MVP-1.4-US68-LAST-MILE-EXCEPTIONS-FINAL-ACCEPTANCE-001.md`
+  - `US-69`: `docs/mvp/MVP-1.4-US69-DELIVERY-NOTIFICATIONS-FINAL-ACCEPTANCE-001.md`
 - **Implementation Reports:**
   - `US-59`: `docs/mvp/MVP-1.3-US59-FAILED-DELIVERIES-IMPLEMENTATION-001.md`
   - `US-60`: `docs/mvp/MVP-1.3-US60-REDELIVERY-IMPLEMENTATION-001.md`
@@ -277,4 +278,4 @@ Queue Head:     MVP-1.4-US69-DELIVERY-NOTIFICATIONS-FINAL-ACCEPTANCE-001-RERUN; 
   - `US-68`: `docs/mvp/MVP-1.4-US68-LAST-MILE-EXCEPTIONS-IMPLEMENTATION-001.md`
   - `US-69`: `docs/mvp/MVP-1.4-US69-DELIVERY-NOTIFICATIONS-IMPLEMENTATION-001.md`
   - `US-69 remediation`: `docs/mvp/MVP-1.4-US69-DELIVERY-NOTIFICATIONS-ACCEPTANCE-REMEDIATION-001.md`
-- **Central Knowledge Base:** US-69 trigger remediation is committed locally as `4ab58cb`; normal push to `origin/main` is blocked by unavailable HTTPS credentials in this session.
+- **Central Knowledge Base:** US-69 remediation commit `4ab58cb` is synchronized to `origin/main`; final acceptance is committed locally as `f9445c5`, with normal push blocked by unavailable HTTPS credentials in this session.
