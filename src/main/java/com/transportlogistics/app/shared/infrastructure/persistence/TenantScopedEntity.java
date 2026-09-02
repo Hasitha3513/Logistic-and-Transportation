@@ -14,5 +14,5 @@ import java.util.UUID;
 public abstract class TenantScopedEntity {
     @TenantId
     @Column(name = "tenant_id", nullable = false, updatable = false)
-    private UUID tenantId;
+    protected UUID tenantId;
 }

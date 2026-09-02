@@ -1,5 +1,7 @@
 package com.transportlogistics.app.delivery.adapters.outbound.persistence;
 
+import com.transportlogistics.app.shared.infrastructure.persistence.TenantScopedEntity;
+
 import jakarta.persistence.*;
 
 import java.time.OffsetDateTime;
@@ -7,14 +9,11 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "delivery_exception_evidence")
-public class DeliveryExceptionEvidenceEntity {
+public class DeliveryExceptionEvidenceEntity extends TenantScopedEntity {
 
     @Id
     @Column(name = "id", nullable = false)
     private UUID id;
-
-    @Column(name = "tenant_id", nullable = false)
-    private UUID tenantId;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "exception_case_id", nullable = false)

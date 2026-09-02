@@ -2,6 +2,7 @@ package com.transportlogistics.app.delivery.adapters.outbound.persistence;
 
 import com.transportlogistics.app.delivery.domain.model.DeliveryZoneStatus;
 import com.transportlogistics.app.delivery.domain.model.DeliveryZoneType;
+import com.transportlogistics.app.shared.infrastructure.persistence.TenantScopedEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -17,14 +18,11 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "delivery_zone")
-public class DeliveryZoneEntity {
+public class DeliveryZoneEntity extends TenantScopedEntity {
 
     @Id
     @Column(name = "id", nullable = false)
     private UUID id;
-
-    @Column(name = "tenant_id", nullable = false)
-    private UUID tenantId;
 
     @Column(name = "zone_code", nullable = false, length = 30)
     private String zoneCode;

@@ -2,6 +2,7 @@ package com.transportlogistics.app.delivery.adapters.outbound.persistence;
 
 import com.transportlogistics.app.delivery.domain.model.DeliverySlotReservation;
 import com.transportlogistics.app.delivery.domain.model.DeliverySlotReservationStatus;
+import com.transportlogistics.app.shared.infrastructure.persistence.TenantScopedEntity;
 import jakarta.persistence.*;
 
 import java.time.OffsetDateTime;
@@ -9,12 +10,9 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "delivery_slot_reservation")
-public class DeliverySlotReservationEntity {
+public class DeliverySlotReservationEntity extends TenantScopedEntity {
     @Id
     private UUID id;
-
-    @Column(name = "tenant_id", nullable = false)
-    private UUID tenantId;
 
     @Column(name = "delivery_slot_id", nullable = false)
     private UUID deliverySlotId;

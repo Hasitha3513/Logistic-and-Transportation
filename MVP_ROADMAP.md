@@ -66,6 +66,7 @@ MVP 1.4 Band:     [████████████████████�
 | `P0-01` | Enforce Spring Modulith boundaries, acyclic modules, repository/entity ownership, hexagonal direction, Reporting isolation, and baseline dependency edges | ✅ `COMPLETE` | Architecture suite 32/32 PASS on Java 21; full suite reached 1,164 tests with one unrelated identity-bootstrap permission-count failure |
 | `P0-02` | Establish explicit database/table ownership and prevent new cross-module repository, JPA mapping, or direct-SQL access | ✅ `COMPLETE` | Ownership tests 3/3, architecture/bootstrap tests 36/36, full Java 21 suite 1,167 PASS with 31 existing skips; two legacy SQL paths reserved for P0-03 |
 | `P0-03` | Remove illegal cross-module implementation dependencies and enforce published-contract-only integration | ✅ `COMPLETE` | Freight consumes Fleet capacity through `FleetReportingQuery`; System probes sample-data readiness through `CustomerDataReadiness`; full Java 21 suite 1,168 PASS with 31 existing skips |
+| `P0-04` | Make Tenant isolation mandatory across persistence, client input, tenant-local keys, object/list/report access, updates, and deletes | ✅ `COMPLETE` | PostgreSQL V57 applied; focused tenant/security/architecture gate 24/24 PASS; full Java 21 suite 1,173 PASS with 31 existing skips |
 
 ---
 
@@ -234,8 +235,8 @@ Queue Head:     MVP-1.4-US67-LAST-MILE-ETA-ACCEPTANCE-REMEDIATION-001-RERUN
 1. **`MVP-1.4-US67-LAST-MILE-ETA-ACCEPTANCE-REMEDIATION-001-RERUN`:**
    - Close the independently verified stale-write, invalidation, rider-mode/origin, concurrency/security, and real-path Chromium gaps under the approved heuristic-only provider contract.
 
-2. **`P0-04` (recommended architecture batch):**
-   - Isolate cross-owner test fixture SQL and produce a forward-only retirement plan for legacy physical cross-module foreign keys without changing the current schema.
+2. **`P0-05` (recommended architecture batch):**
+   - Harden authorization so every Tenant-scoped use case combines membership, active-Tenant validation, required permission, and object ownership; version the remaining legacy internal events with Tenant envelopes and produce the forward-only retirement plan for legacy physical cross-module foreign keys.
 
 ---
 

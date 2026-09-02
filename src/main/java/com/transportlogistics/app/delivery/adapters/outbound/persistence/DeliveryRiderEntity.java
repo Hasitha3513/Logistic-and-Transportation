@@ -4,6 +4,7 @@ import com.transportlogistics.app.delivery.domain.model.DeliveryRider;
 import com.transportlogistics.app.delivery.domain.model.DeliveryRiderStatus;
 import com.transportlogistics.app.delivery.domain.model.DeliveryRiderType;
 import com.transportlogistics.app.delivery.domain.model.DeliveryTransportMode;
+import com.transportlogistics.app.shared.infrastructure.persistence.TenantScopedEntity;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
@@ -23,13 +24,10 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "delivery_rider")
-public class DeliveryRiderEntity {
+public class DeliveryRiderEntity extends TenantScopedEntity {
 
     @Id
     private UUID id;
-
-    @Column(name = "tenant_id", nullable = false)
-    private UUID tenantId;
 
     @Column(name = "rider_code", nullable = false, length = 40)
     private String riderCode;

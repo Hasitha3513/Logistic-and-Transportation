@@ -5,6 +5,7 @@ import com.transportlogistics.app.delivery.domain.model.DeliveryExceptionSeverit
 import com.transportlogistics.app.delivery.domain.model.DeliveryExceptionStatus;
 import com.transportlogistics.app.delivery.domain.model.DeliveryExceptionType;
 import com.transportlogistics.app.delivery.domain.model.DeliveryFailureDisposition;
+import com.transportlogistics.app.shared.infrastructure.persistence.TenantScopedEntity;
 import jakarta.persistence.*;
 
 import java.math.BigDecimal;
@@ -15,14 +16,11 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "delivery_exception_case")
-public class DeliveryExceptionCaseEntity {
+public class DeliveryExceptionCaseEntity extends TenantScopedEntity {
 
     @Id
     @Column(name = "id", nullable = false)
     private UUID id;
-
-    @Column(name = "tenant_id", nullable = false)
-    private UUID tenantId;
 
     @Column(name = "delivery_order_id", nullable = false)
     private UUID deliveryOrderId;

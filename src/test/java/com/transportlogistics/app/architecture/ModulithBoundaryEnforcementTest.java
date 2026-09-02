@@ -9,6 +9,7 @@ import com.tngtech.archunit.lang.ArchCondition;
 import com.tngtech.archunit.lang.ConditionEvents;
 import com.tngtech.archunit.lang.SimpleConditionEvent;
 import com.transportlogistics.app.TransportLogisticsApplication;
+import com.transportlogistics.app.shared.infrastructure.persistence.TenantScopedEntity;
 import jakarta.persistence.Entity;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -107,6 +108,36 @@ class ModulithBoundaryEnforcementTest {
     @Test
     void crossModuleDependenciesMustTargetPublishedContracts() {
         classes().should(targetOnlyPublishedModuleContracts()).check(importedClasses);
+    }
+
+    @Test
+    void tenantOwnedJpaEntitiesMustUseTheCentralTenantDiscriminator() {
+        classes().that().areAnnotatedWith(Entity.class)
+                .and().resideOutsideOfPackages("..identity..", "..tenancy..")
+                .and().doNotHaveSimpleName("NotificationTemplateEntity")
+                .should().beAssignableTo(TenantScopedEntity.class)
+                .because("tenant-owned persistence must be protected from unscoped inherited repository operations")
+                .check(importedClasses);
+    }
+
+    @Test
+    void inboundRequestDtosMustNotAcceptTenantAuthority() {
+        noClasses().that().resideInAnyPackage("..web.dto.request..", "..web.request..")
+                .should(declareFieldNamed("tenantId"))
+                .because("client-supplied tenant identifiers are never authorization evidence")
+                .check(importedClasses);
+    }
+
+    private static ArchCondition<JavaClass> declareFieldNamed(String fieldName) {
+        return new ArchCondition<>("declare field named " + fieldName) {
+            @Override
+            public void check(JavaClass item, ConditionEvents events) {
+                if (item.getFields().stream().anyMatch(field -> field.getName().equals(fieldName))) {
+                    events.add(SimpleConditionEvent.satisfied(item,
+                            item.getName() + " declares client-controlled field " + fieldName));
+                }
+            }
+        };
     }
 
     private static ArchCondition<JavaClass> notDependOnForeignTypeAssignableTo(

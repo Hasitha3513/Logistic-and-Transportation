@@ -3,6 +3,7 @@ package com.transportlogistics.app.delivery.adapters.outbound.persistence;
 import com.transportlogistics.app.delivery.domain.model.DeliverySlot;
 import com.transportlogistics.app.delivery.domain.model.DeliverySlotStatus;
 import com.transportlogistics.app.delivery.domain.model.DeliverySlotType;
+import com.transportlogistics.app.shared.infrastructure.persistence.TenantScopedEntity;
 import jakarta.persistence.*;
 
 import java.time.LocalDate;
@@ -12,12 +13,9 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "delivery_slot")
-public class DeliverySlotEntity {
+public class DeliverySlotEntity extends TenantScopedEntity {
     @Id
     private UUID id;
-
-    @Column(name = "tenant_id", nullable = false)
-    private UUID tenantId;
 
     @Column(name = "delivery_zone_id", nullable = false)
     private UUID deliveryZoneId;

@@ -1,5 +1,7 @@
 package com.transportlogistics.app.delivery.adapters.outbound.persistence;
 
+import com.transportlogistics.app.shared.infrastructure.persistence.TenantScopedEntity;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -17,13 +19,10 @@ import java.util.UUID;
 @Getter
 @Setter
 @NoArgsConstructor
-public class DeliveryBatchEntity {
+public class DeliveryBatchEntity extends TenantScopedEntity {
 
     @Id
     private UUID id;
-
-    @Column(name = "tenant_id", nullable = false)
-    private UUID tenantId;
 
     @Column(name = "batch_code", nullable = false, length = 40)
     private String batchCode;

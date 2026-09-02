@@ -1,5 +1,7 @@
 package com.transportlogistics.app.delivery.adapters.outbound.persistence;
 
+import com.transportlogistics.app.shared.infrastructure.persistence.TenantScopedEntity;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -10,13 +12,10 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "delivery_contact_attempt")
-public class DeliveryContactAttemptEntity {
+public class DeliveryContactAttemptEntity extends TenantScopedEntity {
     @Id
     @Column(nullable = false)
     private UUID id;
-
-    @Column(name = "tenant_id", nullable = false)
-    private UUID tenantId;
 
     @Column(name = "delivery_attempt_id", nullable = false)
     private UUID deliveryAttemptId;

@@ -2,6 +2,7 @@ package com.transportlogistics.app.delivery.adapters.outbound.persistence;
 
 import com.transportlogistics.app.delivery.domain.model.DeliveryRiderShift;
 import com.transportlogistics.app.delivery.domain.model.DeliveryRiderShiftStatus;
+import com.transportlogistics.app.shared.infrastructure.persistence.TenantScopedEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -17,13 +18,10 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "delivery_rider_shift")
-public class DeliveryRiderShiftEntity {
+public class DeliveryRiderShiftEntity extends TenantScopedEntity {
 
     @Id
     private UUID id;
-
-    @Column(name = "tenant_id", nullable = false)
-    private UUID tenantId;
 
     @Column(name = "rider_id", nullable = false)
     private UUID riderId;

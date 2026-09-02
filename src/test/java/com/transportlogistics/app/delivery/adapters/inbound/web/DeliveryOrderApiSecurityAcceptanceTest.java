@@ -20,6 +20,7 @@ import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -66,6 +67,19 @@ class DeliveryOrderApiSecurityAcceptanceTest {
                 .andExpect(jsonPath("$.deliveryNumber").value("DEL-2026-000001"));
         mvc.perform(post("/v1/deliveries").contentType(MediaType.APPLICATION_JSON).content("{}"))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @WithMockUser(authorities = "DELIVERY_CREATE")
+    void clientSuppliedTenantIdCannotBecomeTenantAuthority() throws Exception {
+        when(orders.create(any(), eq("user"))).thenReturn(order(DeliveryStatus.DRAFT, 0));
+        var body = (com.fasterxml.jackson.databind.node.ObjectNode) json.readTree(createBody());
+        body.put("tenantId", UUID.randomUUID().toString());
+
+        mvc.perform(post("/v1/deliveries").contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsString(body)))
+                .andExpect(status().isCreated());
+
+        verify(orders).create(any(DeliveryOrderUseCase.CreateCommand.class), eq("user"));
     }
 
     @Test
