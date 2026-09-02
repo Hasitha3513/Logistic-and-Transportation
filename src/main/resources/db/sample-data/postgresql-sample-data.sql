@@ -15,11 +15,16 @@ INSERT INTO app_role (id, name, description, active) VALUES
   ('20000000-0000-0000-0000-000000000008', 'AUDITOR', 'Role for Auditor', TRUE),
   ('20000000-0000-0000-0000-000000000009', 'OPERATIONS_CLERK', 'Role for Operations Clerk', TRUE),
   ('20000000-0000-0000-0000-000000000010', 'SAFETY_OFFICER', 'Role for Safety Officer', TRUE)
-ON CONFLICT DO NOTHING;
+ON CONFLICT (name) DO UPDATE
+SET description = EXCLUDED.description,
+    active = EXCLUDED.active;
 
 -- 2. app_role_permission
 INSERT INTO app_role_permission (role_id, permission_code)
-SELECT '20000000-0000-0000-0000-000000000001', code FROM app_permission
+SELECT role.id, permission.code
+FROM app_role role
+CROSS JOIN app_permission permission
+WHERE role.name = 'ADMIN'
 ON CONFLICT DO NOTHING;
 
 -- 3. app_user
@@ -41,18 +46,18 @@ UPDATE app_user SET password_hash = '$2a$10$lgPvpk4ZpSW3WYNsJtIcteupI7PK1Ar0JASn
 INSERT INTO app_user_role (user_id, role_id) SELECT u.id, r.id FROM app_user u, app_role r WHERE u.username = 'admin' AND r.name = 'LOCAL_MVP_ADMIN' ON CONFLICT DO NOTHING;
 INSERT INTO tenant_membership_role (membership_id, role_id) SELECT tm.membership_id, r.id FROM tenant_membership tm JOIN app_user u ON tm.user_id = u.id JOIN app_role r ON r.name = 'LOCAL_MVP_ADMIN' WHERE u.username = 'admin' ON CONFLICT DO NOTHING;
 
--- 4. app_user_role
-INSERT INTO app_user_role (user_id, role_id) VALUES
-  ('10000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000001'),
-  ('10000000-0000-0000-0000-000000000002', '20000000-0000-0000-0000-000000000002'),
-  ('10000000-0000-0000-0000-000000000003', '20000000-0000-0000-0000-000000000003'),
-  ('10000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000004'),
-  ('10000000-0000-0000-0000-000000000005', '20000000-0000-0000-0000-000000000005'),
-  ('10000000-0000-0000-0000-000000000006', '20000000-0000-0000-0000-000000000006'),
-  ('10000000-0000-0000-0000-000000000007', '20000000-0000-0000-0000-000000000007'),
-  ('10000000-0000-0000-0000-000000000008', '20000000-0000-0000-0000-000000000008'),
-  ('10000000-0000-0000-0000-000000000009', '20000000-0000-0000-0000-000000000009'),
-  ('10000000-0000-0000-0000-000000000010', '20000000-0000-0000-0000-000000000010')
+-- 4. app_user_role (resolve persisted user and role IDs by their business keys)
+INSERT INTO app_user_role (user_id, role_id)
+SELECT user_row.id, role.id
+FROM (VALUES
+  ('user.kasun', 'ADMIN'), ('user.saman', 'DISPATCHER'), ('user.nimal', 'DRIVER'),
+  ('user.sunil', 'FUEL_OFFICER'), ('user.kamal', 'DELIVERY_MANAGER'),
+  ('user.anura', 'FLEET_SUPERVISOR'), ('user.ruwan', 'MAINTENANCE_TECH'),
+  ('user.chaminda', 'AUDITOR'), ('user.malik', 'OPERATIONS_CLERK'),
+  ('user.dinesh', 'SAFETY_OFFICER')
+) AS seed(username, role_name)
+JOIN app_user user_row ON user_row.username = seed.username
+JOIN app_role role ON role.name = seed.role_name
 ON CONFLICT DO NOTHING;
 
 -- 5. tenant_membership
@@ -69,18 +74,20 @@ INSERT INTO tenant_membership (membership_id, tenant_id, user_id, status, create
   ('60000000-0000-0000-0000-000000000010', '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a', '10000000-0000-0000-0000-000000000010', 'ACTIVE', CURRENT_TIMESTAMP, 'SYSTEM', CURRENT_TIMESTAMP, 'SYSTEM', 0)
 ON CONFLICT DO NOTHING;
 
--- 6. tenant_membership_role
-INSERT INTO tenant_membership_role (membership_id, role_id) VALUES
-  ('60000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000001'),
-  ('60000000-0000-0000-0000-000000000002', '20000000-0000-0000-0000-000000000002'),
-  ('60000000-0000-0000-0000-000000000003', '20000000-0000-0000-0000-000000000003'),
-  ('60000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000004'),
-  ('60000000-0000-0000-0000-000000000005', '20000000-0000-0000-0000-000000000005'),
-  ('60000000-0000-0000-0000-000000000006', '20000000-0000-0000-0000-000000000006'),
-  ('60000000-0000-0000-0000-000000000007', '20000000-0000-0000-0000-000000000007'),
-  ('60000000-0000-0000-0000-000000000008', '20000000-0000-0000-0000-000000000008'),
-  ('60000000-0000-0000-0000-000000000009', '20000000-0000-0000-0000-000000000009'),
-  ('60000000-0000-0000-0000-000000000010', '20000000-0000-0000-0000-000000000010')
+-- 6. tenant_membership_role (resolve membership and role IDs by persisted keys)
+INSERT INTO tenant_membership_role (membership_id, role_id)
+SELECT membership.membership_id, role.id
+FROM (VALUES
+  ('user.kasun', 'ADMIN'), ('user.saman', 'DISPATCHER'), ('user.nimal', 'DRIVER'),
+  ('user.sunil', 'FUEL_OFFICER'), ('user.kamal', 'DELIVERY_MANAGER'),
+  ('user.anura', 'FLEET_SUPERVISOR'), ('user.ruwan', 'MAINTENANCE_TECH'),
+  ('user.chaminda', 'AUDITOR'), ('user.malik', 'OPERATIONS_CLERK'),
+  ('user.dinesh', 'SAFETY_OFFICER')
+) AS seed(username, role_name)
+JOIN app_user user_row ON user_row.username = seed.username
+JOIN tenant_membership membership ON membership.user_id = user_row.id
+    AND membership.tenant_id = '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a'
+JOIN app_role role ON role.name = seed.role_name
 ON CONFLICT DO NOTHING;
 
 -- 7. refresh_token

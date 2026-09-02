@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.api.condition.EnabledIf;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
-import org.testcontainers.DockerClientFactory;
+import com.transportlogistics.app.support.PostgreSqlIntegrationTest;
 
 import java.time.Year;
 import java.util.HashSet;
@@ -22,21 +22,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @Tag("postgres")
 @EnabledIf("postgresAvailable")
-class DeliveryNumberPostgreSqlAcceptanceTest {
+class DeliveryNumberPostgreSqlAcceptanceTest extends PostgreSqlIntegrationTest {
     private static JdbcTemplate jdbc;
     private static PostgresDeliveryNumberGenerator numbers;
 
     private static boolean postgresAvailable() {
-        try {
-            if (DockerClientFactory.instance().isDockerAvailable()) {
-                return true;
-            }
-        } catch (Throwable ignored) {
-        }
-        String url = System.getProperty("DB_URL", "jdbc:postgresql://localhost:5432/transport_integration");
-        String user = System.getProperty("DB_USERNAME", "transport_app");
-        String pass = System.getProperty("DB_PASSWORD", "LocalDb-Transport-2026");
-        try (var conn = java.sql.DriverManager.getConnection(url, user, pass)) {
+        try (var conn = java.sql.DriverManager.getConnection(
+                configuredJdbcUrl(), configuredDatabaseUsername(), configuredDatabasePassword())) {
             return true;
         } catch (Exception ignored) {
             return false;
@@ -48,10 +40,8 @@ class DeliveryNumberPostgreSqlAcceptanceTest {
         if (!postgresAvailable()) {
             return;
         }
-        String url = System.getProperty("DB_URL", "jdbc:postgresql://localhost:5432/transport_integration");
-        String username = System.getProperty("DB_USERNAME", "transport_app");
-        String password = System.getProperty("DB_PASSWORD", "LocalDb-Transport-2026");
-        var dataSource = new DriverManagerDataSource(url, username, password);
+        var dataSource = new DriverManagerDataSource(
+                configuredJdbcUrl(), configuredDatabaseUsername(), configuredDatabasePassword());
         Flyway.configure().dataSource(dataSource).cleanDisabled(false).load().migrate();
         jdbc = new JdbcTemplate(dataSource);
         numbers = new PostgresDeliveryNumberGenerator(jdbc);

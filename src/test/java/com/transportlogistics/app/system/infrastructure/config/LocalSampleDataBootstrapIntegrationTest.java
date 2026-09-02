@@ -1,6 +1,7 @@
 package com.transportlogistics.app.system.infrastructure.config;
 
 import com.transportlogistics.app.routing.application.ports.in.RouteUseCase;
+import com.transportlogistics.app.support.PostgreSqlIntegrationTest;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -12,7 +13,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @SpringBootTest(properties = "app.dev.sample-data.enabled=true")
 @DirtiesContext
-class LocalSampleDataBootstrapIntegrationTest {
+class LocalSampleDataBootstrapIntegrationTest extends PostgreSqlIntegrationTest {
     @Autowired JdbcTemplate jdbc;
     @Autowired RouteUseCase routes;
     @Autowired javax.sql.DataSource dataSource;
@@ -32,6 +33,8 @@ class LocalSampleDataBootstrapIntegrationTest {
         jdbc.update("DELETE FROM freight_insurance_settlement");
         jdbc.update("DELETE FROM freight_insurance_claim");
         jdbc.update("DELETE FROM freight_insurance_policy");
+        jdbc.update("DELETE FROM cargo_exception_history");
+        jdbc.update("DELETE FROM cargo_exception");
         jdbc.update("DELETE FROM load_plan_item_placement");
         jdbc.update("DELETE FROM load_plan");
         jdbc.update("DELETE FROM cargo_manifest_item");

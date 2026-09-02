@@ -99,6 +99,17 @@ class BusinessAuthorizationIntegrationTest {
     void seedActors() {
         jdbc.update("DELETE FROM vehicle_meter_reset");
         jdbc.update("DELETE FROM vehicle_reading");
+        jdbc.update("DELETE FROM bunker_stock_adjustment");
+        jdbc.update("DELETE FROM bunker_dip_reading");
+        jdbc.update("DELETE FROM bunker_stock_movement");
+        if (jdbc.queryForObject("SELECT to_regclass('public.offline_sync_test_mutation')", String.class) != null) {
+            jdbc.update("DELETE FROM offline_sync_test_mutation");
+        }
+        jdbc.update("DELETE FROM offline_sync_operation");
+        jdbc.update("DELETE FROM fuel_issue_history");
+        jdbc.update("DELETE FROM fuel_issue");
+        jdbc.update("DELETE FROM fuel_purchase_history");
+        jdbc.update("DELETE FROM fuel_purchase");
         jdbc.update("DELETE FROM refresh_token");
         jdbc.update("DELETE FROM app_user_role");
         jdbc.update("DELETE FROM app_role_permission");

@@ -28,10 +28,8 @@ class RedeliveryPersistencePostgreSqlAcceptanceTest extends PostgreSqlIntegratio
         if (POSTGRES != null && POSTGRES.isRunning()) {
             return true;
         }
-        String url = System.getProperty("DB_URL", "jdbc:postgresql://localhost:5432/transport_integration");
-        String user = System.getProperty("DB_USERNAME", "transport_app");
-        String pass = System.getProperty("DB_PASSWORD", "LocalDb-Transport-2026");
-        try (var conn = java.sql.DriverManager.getConnection(url, user, pass)) {
+        try (var conn = java.sql.DriverManager.getConnection(
+                configuredJdbcUrl(), configuredDatabaseUsername(), configuredDatabasePassword())) {
             return true;
         } catch (Exception ignored) {
             return false;
@@ -179,7 +177,7 @@ class RedeliveryPersistencePostgreSqlAcceptanceTest extends PostgreSqlIntegratio
 
     @Test
     void capacityLimitEnforcesMaxFiftyConcurrentDeliveriesPerWindow() {
-        OffsetDateTime base = OffsetDateTime.parse("2026-09-02T10:00:00+05:30");
+        OffsetDateTime base = OffsetDateTime.now().plusDays(1).withNano(0);
         OffsetDateTime windowEnd = base.plusHours(2);
 
         contexts.within(TENANT_A_CONTEXT, () -> {

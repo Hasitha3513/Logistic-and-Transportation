@@ -63,6 +63,7 @@ class TripFuelCostApiIntegrationTest {
         jdbc.update("DELETE FROM fuel_issue");
         jdbc.update("DELETE FROM vehicle_meter_reset");
         jdbc.update("DELETE FROM vehicle_reading");
+        jdbc.update("DELETE FROM trip_operational_event");
         jdbc.update("DELETE FROM trip_status_history");
         jdbc.update("DELETE FROM trip_dispatch");
         jdbc.update("DELETE FROM trip");
@@ -134,6 +135,7 @@ class TripFuelCostApiIntegrationTest {
             jdbc.update("INSERT INTO location (id, code, name, active) VALUES (?, 'LOC-D', 'Dest', true)", locDestId);
         }
 
+        jdbc.update("DELETE FROM trip_operational_event WHERE trip_id IN (SELECT id FROM trip WHERE trip_number = 'TRIP-COST-01')");
         jdbc.update("DELETE FROM trip WHERE trip_number = 'TRIP-COST-01'");
         jdbc.update("""
                 INSERT INTO trip (id, trip_number, priority, status, origin_location_id, destination_location_id, vehicle_id, requested_start_time, requested_end_time, created_at, updated_at)
