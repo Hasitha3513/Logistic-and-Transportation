@@ -20,8 +20,8 @@
 > - **MVP 1.4 Last-Mile Delivery:** 6 / 8 COMPLETE (US-63 through US-68 Accepted & Closed)
 > - **Overall Release Band:** 63 / 87 COMPLETE (24 DEFERRED / 87 TOTAL)
 > - **Current Milestone:** MVP 1.4 Last-Mile Delivery — US-63 through US-68 Accepted & Closed.
-> - **Active Focus:** `US-69` Receive Delivery Notifications — product decisions required.
-> - **Immediate Next Action:** `MVP-1.4-US69-DELIVERY-NOTIFICATIONS-PRODUCT-DECISIONS-001`.
+> - **Active Focus:** `US-69` Receive Delivery Notifications — product decisions frozen; implementation not started.
+> - **Immediate Next Action:** `MVP-1.4-US69-DELIVERY-NOTIFICATIONS-IMPLEMENTATION-001`.
 
 ---
 
@@ -36,7 +36,7 @@ MVP 1.4 Band:     [████████████████████�
 | Metric | Target | Current Count | Percentage | Status Indicator |
 | :--- | :---: | :---: | :---: | :--- |
 | **Completed Stories (Accepted)** | 87 | **63** | `72.4%` | 🟢 `ON TRACK / VERIFIED` |
-| **Next Active / Decisions Required** | — | **1** | `1.1%` | 🟡 `US-69 PRODUCT DECISIONS REQUIRED` |
+| **Next Active / Implementation Required** | — | **1** | `1.1%` | 🟡 `US-69 PRODUCT DECISIONS FROZEN / IMPLEMENTATION NOT_STARTED` |
 | **Not Started (MVP 1.4 Active Scope)** | 2 | **0** | `0.0%` | ⏸️ `US-69..US-70 ACTIVE BAND` |
 | **Approved Deferments (Post-MVP)** | 24 | **24** | `27.6%` | ⏸️ `DEFERRED BY GOVERNANCE` |
 | **Total Registered User Stories** | **87** | **87** | **`100%`** | 🔒 `FROZEN REGISTER (US-01..US-87)` |
@@ -196,7 +196,7 @@ Development startup now consistently provisions the idempotent PostgreSQL sample
 | `US-66` | Batch Delivery Orders | Automated order clustering for urban routes, manual batching, zone & capacity constraints, rider assignment | 🟢 `COMPLETE` | `DeliveryBatchTest`, `DeliveryBatchServiceTest`, `DeliveryBatchControllerTest`, `DeliveryBatchPostgreSqlAcceptanceTest`, `DeliveryBatchConcurrencyPostgreSqlAcceptanceTest`, `deliveryBatches.spec.ts`, `DeliveryBatchListPage.test.tsx`, V55 |
 | `US-67` | Calculate Last-Mile ETA | Multi-modal last-mile routing ETA, SLA risk detection, stop service buffers, cache & event publication | 🟢 `COMPLETE` | `HEURISTIC_ONLY`; V56 US-67 migration, V57 current head; final acceptance passed: Maven 1,195/0/0/15, architecture 40/40, real Chromium 6/6. |
 | `US-68` | Handle Last-Mile Exceptions | Planner orchestration of rider no-show, attempts, address/access, contactless and cash-dispute outcomes through existing Delivery capabilities | 🟢 `COMPLETE` | Final acceptance passed: read-only Planner, Maven 1,200/0/0/15, architecture 45/45, real Chromium 3/3, retained US-67 6/6; no migration or duplicate exception model. |
-| `US-69` | Receive Delivery Notifications | Customer SMS/push tracking updates | 🟡 `PRODUCT DECISIONS REQUIRED / NOT STARTED` | Next active story; implementation scope and ownership must be frozen before code changes. |
+| `US-69` | Receive Delivery Notifications | Delivery-event-driven customer Email/SMS with preferences, durable attempts, and operator history | 🟡 `PRODUCT DECISIONS FROZEN / IMPLEMENTATION NOT_STARTED` | US-77 rules/templates/retry reused; customer IN_APP and OTP transport explicitly deferred; expected next migration V58 only if still free. |
 | `US-70` | Use Customer Self-Service | Customer delivery rescheduling portal | ⏸️ `DEFERRED` | Post-MVP last-mile band |
 
 ---
@@ -233,12 +233,12 @@ Development startup now consistently provisions the idempotent PostgreSQL sample
 ## 🎯 4. Immediate Execution Queue
 
 ```
-Current Status: MVP 1.4 (Last-Mile Delivery) IN PROGRESS — US-68 ACCEPTED / US-69 DECISIONS REQUIRED
-Queue Head:     MVP-1.4-US69-DELIVERY-NOTIFICATIONS-PRODUCT-DECISIONS-001
+Current Status: MVP 1.4 (Last-Mile Delivery) IN PROGRESS — US-68 ACCEPTED / US-69 DECISIONS FROZEN
+Queue Head:     MVP-1.4-US69-DELIVERY-NOTIFICATIONS-IMPLEMENTATION-001
 ```
 
-1. **`MVP-1.4-US69-DELIVERY-NOTIFICATIONS-PRODUCT-DECISIONS-001`:**
-   - Freeze Delivery notification ownership, recipients, channel/provider boundaries, consent/privacy, event triggers, retry/idempotency, Tenant isolation, RBAC, and MVP deferments before implementation.
+1. **`MVP-1.4-US69-DELIVERY-NOTIFICATIONS-IMPLEMENTATION-001`:**
+   - Implement the frozen Delivery events, customer recipient/preferences boundary, Email/SMS rules/templates/provider ports, retry/history, Tenant/RBAC controls, and Delivery-detail timeline without reopening US-69 product decisions.
 
 2. **`P1-01` (recommended architecture batch):**
    - Modernize only legacy event contracts that acquire real consumers: complete Tenant/version envelopes and approve a database outbox/inbox boundary before claiming durable external delivery.
