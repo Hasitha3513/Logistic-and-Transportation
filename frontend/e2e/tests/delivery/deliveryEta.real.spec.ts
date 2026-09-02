@@ -174,7 +174,7 @@ test.describe.serial('US-67 real PostgreSQL Rider ETA acceptance', () => {
     await expect(page.getByText('SLA Status')).toBeVisible();
     await expect(page.getByText('Calculated At')).toBeVisible();
     await expect(page.getByText('Fresh/Stale')).toBeVisible();
-    await page.getByRole('button', { name: 'Recalculate' }).click();
+    await page.locator('#delivery-eta').getByRole('button', { name: 'Recalculate' }).click();
     await expect(page.getByText('Source: HEURISTIC', { exact: true })).toBeVisible();
   });
 

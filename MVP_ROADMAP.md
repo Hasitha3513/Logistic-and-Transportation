@@ -14,14 +14,14 @@
 
 > [!IMPORTANT]
 > **Authoritative Baseline & Current State:**
-> - **Last Reconciled:** `2026-09-01`
+> - **Last Reconciled:** `2026-09-02`
 > - **Authority Order:** Original Requirements (`Traspotation & logistic.docx`), Frozen Architecture/Contracts, Verified Production Code/Tests, then Roadmap.
 > - **MVP 1.3 Delivery Operations:** 7 / 7 COMPLETE (100%) - CLOSED
 > - **MVP 1.4 Last-Mile Delivery:** 5 / 8 COMPLETE (US-63 through US-67 Accepted & Closed)
 > - **Overall Release Band:** 62 / 87 COMPLETE (25 DEFERRED / 87 TOTAL)
-> - **Current Milestone:** MVP 1.4 Last-Mile Delivery — US-63, US-64, US-65, US-66 Accepted & Closed.
-> - **Active Focus:** `US-68` Handle Last-Mile Exceptions — product decisions frozen; implementation not started.
-> - **Immediate Next Action:** `MVP-1.4-US68-LAST-MILE-EXCEPTIONS-IMPLEMENTATION-001`.
+> - **Current Milestone:** MVP 1.4 Last-Mile Delivery — US-63 through US-67 Accepted & Closed.
+> - **Active Focus:** `US-68` Handle Last-Mile Exceptions — implementation complete; final acceptance pending.
+> - **Immediate Next Action:** `MVP-1.4-US68-LAST-MILE-EXCEPTIONS-FINAL-ACCEPTANCE-001`.
 
 ---
 
@@ -36,7 +36,7 @@ MVP 1.4 Band:     [████████████████████�
 | Metric | Target | Current Count | Percentage | Status Indicator |
 | :--- | :---: | :---: | :---: | :--- |
 | **Completed Stories (Accepted)** | 87 | **62** | `71.3%` | 🟢 `ON TRACK / VERIFIED` |
-| **In Progress / Decisions Frozen** | — | **1** | `1.1%` | 🟡 `US-68 IMPLEMENTATION NOT STARTED` |
+| **In Progress / Acceptance Pending** | — | **1** | `1.1%` | 🟡 `US-68 IMPLEMENTATION COMPLETE / ACCEPTANCE PENDING` |
 | **Not Started (MVP 1.4 Active Scope)** | 3 | **0** | `0.0%` | ⏸️ `US-68..US-70 ACTIVE BAND` |
 | **Approved Deferments (Post-MVP)** | 25 | **25** | `28.7%` | ⏸️ `DEFERRED BY GOVERNANCE` |
 | **Total Registered User Stories** | **87** | **87** | **`100%`** | 🔒 `FROZEN REGISTER (US-01..US-87)` |
@@ -195,7 +195,7 @@ Development startup now consistently provisions the idempotent PostgreSQL sample
 | `US-65` | Manage Riders | Courier rider registry, zone eligibility, shift scheduling, concurrency-safe assignment & override | 🟢 `COMPLETE` | `DeliveryRiderTest`, `DeliveryRiderControllerTest`, `DeliveryRiderPostgreSqlAcceptanceTest`, `DeliveryRiderConcurrencyPostgreSqlAcceptanceTest`, `deliveryRiders.spec.ts`, V54 |
 | `US-66` | Batch Delivery Orders | Automated order clustering for urban routes, manual batching, zone & capacity constraints, rider assignment | 🟢 `COMPLETE` | `DeliveryBatchTest`, `DeliveryBatchServiceTest`, `DeliveryBatchControllerTest`, `DeliveryBatchPostgreSqlAcceptanceTest`, `DeliveryBatchConcurrencyPostgreSqlAcceptanceTest`, `deliveryBatches.spec.ts`, `DeliveryBatchListPage.test.tsx`, V55 |
 | `US-67` | Calculate Last-Mile ETA | Multi-modal last-mile routing ETA, SLA risk detection, stop service buffers, cache & event publication | 🟢 `COMPLETE` | `HEURISTIC_ONLY`; V56 US-67 migration, V57 current head; final acceptance passed: Maven 1,195/0/0/15, architecture 40/40, real Chromium 6/6. |
-| `US-68` | Handle Last-Mile Exceptions | Planner orchestration of rider no-show, attempts, address/access, contactless and cash-dispute outcomes through existing Delivery capabilities | 🟡 `PRODUCT DECISIONS FROZEN / IMPLEMENTATION NOT STARTED` | Reuses US-59/US-60/US-62/US-57 boundaries; no duplicate exception engine or migration approved. |
+| `US-68` | Handle Last-Mile Exceptions | Planner orchestration of rider no-show, attempts, address/access, contactless and cash-dispute outcomes through existing Delivery capabilities | 🟡 `IMPLEMENTATION COMPLETE / ACCEPTANCE PENDING` | Read-only Planner projection reuses US-59/US-60/US-62/US-57 and existing Rider/Batch/ETA workflows; Maven 1,200/0/0/15, architecture 45/45, US-68 Chromium 3/3, US-67 regression 6/6; no migration. |
 | `US-69` | Receive Delivery Notifications | Customer SMS/push tracking updates | ⏸️ `DEFERRED` | Post-MVP last-mile band |
 | `US-70` | Use Customer Self-Service | Customer delivery rescheduling portal | ⏸️ `DEFERRED` | Post-MVP last-mile band |
 
@@ -233,12 +233,12 @@ Development startup now consistently provisions the idempotent PostgreSQL sample
 ## 🎯 4. Immediate Execution Queue
 
 ```
-Current Status: MVP 1.4 (Last-Mile Delivery) IN PROGRESS — US-68 PRODUCT DECISIONS FROZEN
-Queue Head:     MVP-1.4-US68-LAST-MILE-EXCEPTIONS-IMPLEMENTATION-001
+Current Status: MVP 1.4 (Last-Mile Delivery) IN PROGRESS — US-68 ACCEPTANCE PENDING
+Queue Head:     MVP-1.4-US68-LAST-MILE-EXCEPTIONS-FINAL-ACCEPTANCE-001
 ```
 
-1. **`MVP-1.4-US68-LAST-MILE-EXCEPTIONS-IMPLEMENTATION-001`:**
-   - Implement only the frozen planner orchestration over existing US-57, US-59, US-60, US-62, US-65, US-66, and US-67 capabilities; do not create a duplicate exception engine.
+1. **`MVP-1.4-US68-LAST-MILE-EXCEPTIONS-FINAL-ACCEPTANCE-001`:**
+   - Hostile final acceptance of the completed read-only Planner orchestration, permission contract, tenant isolation, scope containment, and retained Delivery regressions.
 
 2. **`P1-01` (recommended architecture batch):**
    - Modernize only legacy event contracts that acquire real consumers: complete Tenant/version envelopes and approve a database outbox/inbox boundary before claiming durable external delivery.

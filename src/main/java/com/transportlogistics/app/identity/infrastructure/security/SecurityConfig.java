@@ -220,6 +220,10 @@ class SecurityConfig {
                         .requestMatchers(HttpMethod.PATCH, "/v1/freight/orders/*")
                         .hasAuthority("FREIGHT_ORDER_MANAGE")
 
+                        // Servlet security matching excludes the /api context path at runtime; retain the
+                        // literal variant below for controller-level regression and match the effective path here.
+                        .requestMatchers(HttpMethod.GET, "/v1/deliveries/*/last-mile-planner")
+                        .hasAnyAuthority("DELIVERY_FAIL_VIEW", "DELIVERY_EXCEPTION_VIEW")
                         .requestMatchers(HttpMethod.GET, "/v1/deliveries", "/v1/deliveries/*")
                         .hasAuthority("DELIVERY_VIEW")
                         .requestMatchers(HttpMethod.POST, "/v1/deliveries")
