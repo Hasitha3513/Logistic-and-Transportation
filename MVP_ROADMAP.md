@@ -20,8 +20,8 @@
 > - **MVP 1.4 Last-Mile Delivery:** 4 / 8 COMPLETE (US-63, US-64, US-65, US-66 Accepted & Closed)
 > - **Overall Release Band:** 61 / 87 COMPLETE (26 DEFERRED / 87 TOTAL)
 > - **Current Milestone:** MVP 1.4 Last-Mile Delivery — US-63, US-64, US-65, US-66 Accepted & Closed.
-> - **Active Focus:** `US-67` Calculate Last-Mile ETA — implementation complete, independent acceptance blocked.
-> - **Immediate Next Action:** Rerun US-67 remediation under the approved heuristic-only provider contract (`MVP-1.4-US67-LAST-MILE-ETA-ACCEPTANCE-REMEDIATION-001-RERUN`).
+> - **Active Focus:** `US-67` Calculate Last-Mile ETA — implementation complete, technical closure verified, final acceptance pending.
+> - **Immediate Next Action:** Execute final acceptance rerun (`MVP-1.4-US67-LAST-MILE-ETA-FINAL-ACCEPTANCE-001-RERUN`).
 
 ---
 
@@ -194,7 +194,7 @@ Development startup now consistently provisions the idempotent PostgreSQL sample
 | `US-64` | Manage Delivery Slots | Time-window capacity, cutoff enforcement, manager override, concurrent reservation | 🟢 `COMPLETE` | `DeliverySlotTest`, `DeliverySlotControllerTest`, `DeliverySlotPostgreSqlAcceptanceTest`, `DeliverySlotConcurrencyPostgreSqlAcceptanceTest`, `deliverySlots.spec.ts`, V53 |
 | `US-65` | Manage Riders | Courier rider registry, zone eligibility, shift scheduling, concurrency-safe assignment & override | 🟢 `COMPLETE` | `DeliveryRiderTest`, `DeliveryRiderControllerTest`, `DeliveryRiderPostgreSqlAcceptanceTest`, `DeliveryRiderConcurrencyPostgreSqlAcceptanceTest`, `deliveryRiders.spec.ts`, V54 |
 | `US-66` | Batch Delivery Orders | Automated order clustering for urban routes, manual batching, zone & capacity constraints, rider assignment | 🟢 `COMPLETE` | `DeliveryBatchTest`, `DeliveryBatchServiceTest`, `DeliveryBatchControllerTest`, `DeliveryBatchPostgreSqlAcceptanceTest`, `DeliveryBatchConcurrencyPostgreSqlAcceptanceTest`, `deliveryBatches.spec.ts`, `DeliveryBatchListPage.test.tsx`, V55 |
-| `US-67` | Calculate Last-Mile ETA | Multi-modal last-mile routing ETA, SLA risk detection, stop service buffers, cache & event publication | 🔴 `IMPLEMENTATION COMPLETE / ACCEPTANCE BLOCKED` | Provider strategy reconciled to `HEURISTIC_ONLY`; remaining failures are stale-write, invalidation, rider-mode/origin, concurrency/security, and real-path Chromium gates; see `MVP-1.4-US67-LAST-MILE-ETA-FINAL-ACCEPTANCE-001.md` |
+| `US-67` | Calculate Last-Mile ETA | Multi-modal last-mile routing ETA, SLA risk detection, stop service buffers, cache & event publication | 🟡 `IMPLEMENTATION COMPLETE / ACCEPTANCE PENDING` | `HEURISTIC_ONLY`; V56 US-67 migration, V57 current head; full Maven 1,195/0/0/15, architecture 40/40, and real Chromium 6/6 passed; final acceptance remains required. |
 | `US-68` | Handle Last-Mile Exceptions | Address unreachable, gate code missing | ⏸️ `DEFERRED` | Post-MVP last-mile band |
 | `US-69` | Receive Delivery Notifications | Customer SMS/push tracking updates | ⏸️ `DEFERRED` | Post-MVP last-mile band |
 | `US-70` | Use Customer Self-Service | Customer delivery rescheduling portal | ⏸️ `DEFERRED` | Post-MVP last-mile band |
@@ -233,8 +233,8 @@ Development startup now consistently provisions the idempotent PostgreSQL sample
 ## 🎯 4. Immediate Execution Queue
 
 ```
-Current Status: MVP 1.4 (Last-Mile Delivery) IN PROGRESS — US-67 IMPLEMENTATION COMPLETE (ACCEPTANCE BLOCKED)
-Queue Head:     MVP-1.4-US67-LAST-MILE-ETA-ACCEPTANCE-REMEDIATION-001-RERUN
+Current Status: MVP 1.4 (Last-Mile Delivery) IN PROGRESS — US-67 IMPLEMENTATION COMPLETE (ACCEPTANCE PENDING)
+Queue Head:     MVP-1.4-US67-LAST-MILE-ETA-FINAL-ACCEPTANCE-001-RERUN
 ```
 
 1. **`MVP-1.4-US67-LAST-MILE-ETA-ACCEPTANCE-REMEDIATION-001-RERUN`:**

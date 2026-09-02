@@ -1,100 +1,78 @@
-# US-67 Last-Mile ETA Acceptance Remediation Report
+# US-67 Last-Mile ETA Technical Closure Evidence
 
-**Task ID:** `MVP-1.4-US67-ACCEPTANCE-EVIDENCE-CLOSURE-002`  
-**User Story:** `US-67` — Calculate Last-Mile ETA  
-**Date:** 2026-09-01  
-**Author:** Senior Principal QA / Release Engineer, Multi-Tenancy Security & Test Infrastructure Review Board  
-**Status:** `IMPLEMENTATION_COMPLETE / ACCEPTANCE_PENDING`  
-**Accepted Flyway Head:** `V56` (`V56__delivery_rider_transport_mode_us67.sql`)  
+**Task ID:** `MVP-1.4-US67-FULL-TECHNICAL-CLOSURE-001`
+**User Story:** `US-67` — Calculate Last-Mile ETA
+**Date:** 2026-09-02
+**Status:** `IMPLEMENTATION_COMPLETE / ACCEPTANCE_PENDING`
+**US-67 migration:** `V56__delivery_rider_transport_mode_us67.sql`
+**Current repository/runtime Flyway head:** `V57__tenant_local_business_keys.sql`
 
----
+## Scope and implementation confirmation
 
-## 1. Executive Summary & Verification Matrix
+US-67 remains intentionally limited to `HEURISTIC_ONLY` routing; no external routing provider was introduced. ETA calculation obtains Rider mode through the Delivery-owned `RiderEtaContextPort`, uses the Delivery Zone depot-origin fallback, and never fabricates Rider GPS coordinates.
 
-All technical and security acceptance gates for US-67 (Calculate Last-Mile ETA) have been executed and verified against real Spring Boot, PostgreSQL, and Chromium runtime environments:
+`DeliveryRider.transportMode` supports `BICYCLE`, `MOTORBIKE`, `VAN`, `CAR`, and `WALKER`. The tenant-qualified ETA cache uses a generation token to reject stale writes. Cache keys include tenant identity; order, batch membership, Rider assignment/reassignment, Rider mode change, dispatch, and destination-change events invalidate affected entries. Generation entries are bounded and pruned when their cached subject disappears; no global cache clear is used by business invalidation.
 
-| Gate | Target / Requirement | Verification Outcome | Evidence Summary |
-| :--- | :--- | :---: | :--- |
-| **A. Tenant-B IDOR Protection** | Cross-tenant Order & Batch ETA access denied safely (404) without metadata leakage | **PASS** | `deliveryEta.real.spec.ts` (test 5): foreign Order & Batch IDs return `404 Not Found`. |
-| **B. Tenant Spoofing Prevention** | Spoofed `X-Tenant-Id` header ignored; authenticated session remains authoritative | **PASS** | `deliveryEta.real.spec.ts` (test 5): caller receives own tenant data regardless of header. |
-| **C. Limited-User RBAC (UI & Backend)** | User with `DELIVERY_VIEW` but lacking `DELIVERY_UPDATE` cannot recalculate; direct POST returns `401`/`403` | **PASS** | `deliveryEta.real.spec.ts` (test 6): UI hides recalculate button; unauthorized API POST rejected. |
-| **D. Missing Coordinates Handling** | Destination without coordinates returns safe UI alert state and API error code | **PASS** | `deliveryEta.real.spec.ts` (test 4): UI renders info banner; direct API returns 400 `DELIVERY_ETA_COORDINATES_MISSING`. |
-| **E. Real Chromium E2E Suite** | Full real suite covering Batch ETA, Single-Order ETA, Recalculate, Reload, Mode change invalidation | **PASS** | `deliveryEta.real.spec.ts`: **6/6 PASS** (19.8s) on Chromium against real backend/PostgreSQL. |
-| **F. Full Maven Verify (`./mvnw verify`)** | Clean build reaching terminal conclusion with 0 failures and 0 errors | **PASS** | **BUILD SUCCESS** (02:39 min) — **1,167 Tests run**, 0 Failures, 0 Errors, 31 Skipped. |
-| **G. Notification Regression** | Clean foreign-key deletion order and policy execution | **PASS** | `*Notification*Test`: **148/148 PASS**, 0 Failures, 0 Errors. |
-| **H. Architecture Compliance** | Modulith boundaries, hexagonal isolation, pure domain | **PASS** | **32/32 Architecture Tests PASS** (ModulithBoundaryEnforcement, HexagonalLayer, ModuleBoundary, ApplicationModules). |
-| **I. Backend Static Analysis** | Checkstyle, PMD 7.17, SpotBugs 4.8.6 under Java 21 | **PASS** | **0 Checkstyle violations, 0 PMD violations, 0 SpotBugs bugs.** |
-| **J. Frontend TypeScript & Build** | Clean production build without compilation errors | **PASS** | `tsc -b && vite build`: **PASS** in 5.17s. |
-| **K. Frontend Vitest Suite** | Complete unit and component test suite | **PASS** | **56 test files passed, 252 tests passed**, 0 failures (42.52s). |
-| **L. Frontend ESLint Classification** | Zero US-67 introduced errors; baseline classified | **PASS** | US-67 files: **0 errors**. Global: 71 pre-existing baseline debt. |
-| **M. Git Workspace & Diff Cleanliness** | No stray files, no formatting errors | **PASS** | `git diff --check`: **PASS**. |
+Security is enforced twice: `SecurityConfig` explicitly protects the literal `/api/v1/deliveries/orders/*/eta/calculate` path with `DELIVERY_UPDATE`, and controller methods use `@PreAuthorize`. Single-order reads require `DELIVERY_VIEW`; single-order recalculation requires `DELIVERY_UPDATE`; Batch and Rider actions retain their declared `DELIVERY_BATCH_*` and `DELIVERY_RIDER_*` authorities. The profile-restricted `/e2e/tenant-fixtures` controller is annotated `@Profile("e2e")`.
 
----
+## PostgreSQL acceptance safety and remediation
 
-## 2. Real Chromium E2E Verification Details
+All destructive direct PostgreSQL acceptance paths resolve through `PostgreSqlIntegrationTest`. Local mode requires all of `TRANSPORT_TEST_DB_MODE=local`, `TRANSPORT_TEST_DB_URL`, `TRANSPORT_TEST_DB_USERNAME`, and `TRANSPORT_TEST_DB_PASSWORD`; it rejects non-test database names unless an explicit destructive acknowledgement is supplied. The executed datasource was exclusively `transport_logistics_acceptance` at port 5433. The development database `transport_logistics` was not used.
 
-**Test Suite:** `frontend/e2e/tests/delivery/deliveryEta.real.spec.ts`  
-**Configuration:** `frontend/playwright.config.ts` (`--project=chromium`)  
-**Backend:** Real Spring Boot 3.2.12 on PostgreSQL 16 (Port 8088 / 5433)  
+| PostgreSQL-capable destructive test path classification | Count |
+| :--- | ---: |
+| `SAFE_SHARED` — guarded shared local/Testcontainers resolver | 9 |
+| `SAFE_EXPLICIT` | 0 |
+| `TESTCONTAINERS_ONLY_EXCLUDED_IN_LOCAL_MODE` | 0 |
+| `UNSAFE_DEVELOPMENT_DATASOURCE` | 0 |
+| `UNKNOWN` | 0 |
 
-```
-Running 6 tests using 1 worker
+The nine shared paths are the delivery analytics, number, order, and redelivery acceptance tests; bunker concurrency; offline-sync invariant; production invariant; local sample-data bootstrap; and sample-data RBAC idempotency tests. Testcontainers remains available when local mode is not selected; Docker Desktop API compatibility is an external-runtime concern, not a product fallback.
 
-  ✓ 1 US-67 real PostgreSQL Rider ETA acceptance › calculates MOTORBIKE ETA through the real UI and backend (3.4s)
-  ✓ 2 US-67 real PostgreSQL Rider ETA acceptance › shows and recalculates the single-order ETA through the real UI (1.4s)
-  ✓ 3 US-67 real PostgreSQL Rider ETA acceptance › changes Rider mode through the real API and receives a different BICYCLE ETA (42ms)
-  ✓ 4 US-67 real PostgreSQL Rider ETA acceptance › handles missing coordinates gracefully in browser and backend (1.1s)
-  ✓ 5 US-67 real PostgreSQL Rider ETA acceptance › enforces Tenant IDOR protection and rejects cross-tenant ETA access and tenant spoofing (58ms)
-  ✓ 6 US-67 real PostgreSQL Rider ETA acceptance › enforces RBAC on ETA recalculation: limited user without DELIVERY_UPDATE receives 403 on direct POST (856ms)
+The PostgreSQL fixture remediation retained business-key role upserts and actual persisted role IDs, including the alternate ADMIN UUID/repeated-fixture regression. It retained safe Flyway baseline restoration instead of shared truncation and the corrected cargo, notification, trip fuel-cost, business-authorization, bunker, and offline-sync cleanup dependency ordering.
 
-6 passed (19.8s)
-```
+The full-suite root cause was accumulation of Hikari connections across many Spring contexts. The final, test-only fix keeps the required pool size at two and sets a 10-second idle timeout in `src/test/resources/application.yml`, allowing inactive test-context pools to release connections. A Spring context-cache eviction experiment was rejected because it conflicted with shared Flyway schema restoration. Production pool configuration is unchanged.
 
----
+## Executed verification
 
-## 3. Full Backend Verification Evidence (`./mvnw verify`)
+| Gate | Actual result |
+| :--- | :--- |
+| Focused PostgreSQL regression | 162 tests, 0 failures, 0 errors — PASS |
+| Complete `./mvnw verify` | 1,195 tests, 0 failures, 0 errors, 15 skipped; 4m24s — BUILD SUCCESS |
+| Flyway acceptance runtime | V1 through V57 — PASS; V56 recorded as the US-67 migration |
+| Architecture | 40/40 — PASS (`ModulithBoundaryEnforcement`, Hexagonal Layer, Table Ownership, Module Boundary, Application Modules) |
+| Checkstyle | PASS; 0 violations |
+| PMD | PASS |
+| SpotBugs | PASS |
+| TypeScript | `tsc -b` — PASS (bundled Node v24.19.0) |
+| Vitest | 56 files, 252 tests passed, 0 failed — PASS |
+| Production build | Vite production build — PASS; existing chunk-size advisory only |
+| Changed-file ESLint | No changed frontend or E2E files; US-67 introduced errors: 0; E2E introduced errors: 0 |
+| Global ESLint | `BASELINE_DEBT`: 71 pre-existing errors in seven unrelated Delivery analytics/zones/slots/riders/batches/exceptions files; no US-67/E2E introduced error |
+| `git diff --check` | PASS |
 
-- **Java Runtime:** OpenJDK 21.0.12 LTS
-- **Build Outcome:** `BUILD SUCCESS` (Total time: 02:39 min)
-- **Surefire Totals:** Tests run: 1,167, Failures: 0, Errors: 0, Skipped: 31
-- **Notification Suite:** Tests run: 148, Failures: 0, Errors: 0
-- **Architecture Suite:** Tests run: 32, Failures: 0, Errors: 0
-- **Static Analysis:**
-  - Checkstyle: 0 violations
-  - PMD: 0 violations
-  - SpotBugs: 0 bugs
+## Real Chromium acceptance evidence
 
----
+`frontend/e2e/tests/delivery/deliveryEta.real.spec.ts` was run with one Chromium worker, fresh Playwright-managed backend/frontend sessions, E2E profile fixture support, and the isolated PostgreSQL acceptance database. It uses real authentication, Rider, Delivery Zone, Delivery Order, Delivery Batch, order ETA, batch ETA, and recalculation APIs; those core flows are not mocked.
 
-## 4. Frontend Verification & Lint Classification
+**Result: 6/6 PASS (21.5 seconds).**
 
-- **TypeScript Compilation & Production Build:** `PASS` (`tsc -b && vite build` completed in 5.17s)
-- **Vitest Unit & Component Suite:** `PASS` (56/56 test files, 252/252 tests passed)
-- **ESLint Verification:**
-  - `US67_INTRODUCED_LINT_ERRORS`: `0`
-  - `NEW_E2E_INTRODUCED_LINT_ERRORS`: `0`
-  - `GLOBAL_FRONTEND_LINT`: `BASELINE_DEBT` (71 pre-existing errors in legacy pages, 0 introduced in US-67 code)
+1. Real UI/backend MOTORBIKE Batch ETA and browser reload.
+2. Real single-order ETA view and recalculation.
+3. `MOTORBIKE -> BICYCLE` change and cache invalidation; recalculated duration increases.
+4. Missing destination coordinates: safe UI state and `400 DELIVERY_ETA_COORDINATES_MISSING`.
+5. Tenant-B Order and Batch ETA read/calculate IDOR attempts: `404`; spoofed `X-Tenant-Id` header is ineffective.
+6. A fresh limited user with `DELIVERY_VIEW` but without `DELIVERY_UPDATE`: recalculate hidden and literal direct order-calculate POST returns `403`.
 
----
+## Security and performance conclusion
 
-## 5. Security & Multi-Tenancy Evaluation Matrix
+Tenant context is server-authoritative, client tenant spoofing is ineffective, and cross-tenant IDs cannot disclose or calculate ETA. The cache lifecycle is tenant-scoped, generation-aware, bounded, and event-invalidated. Rider context lookup is a focused port lookup and batch calculation works from tenant-qualified membership; no evident global cache clearing, unbounded generation map, N+1 path, or connection-pool accumulation remains.
 
-| Vector | Evaluated Rule | Result |
-| :--- | :--- | :---: |
-| **Tenant Isolation** | Tenant A actor cannot view or calculate Tenant B Order/Batch ETAs | **PASS** (`404 Not Found`) |
-| **Header Spoofing** | Injected `X-Tenant-Id` header is ignored; server-side token identity rules | **PASS** (`INEFFECTIVE`) |
-| **Single-Order RBAC** | `DELIVERY_VIEW` required for read; `DELIVERY_UPDATE` required for recalculation | **PASS** (`401`/`403` on direct unauthorized call) |
-| **Batch RBAC** | `DELIVERY_BATCH_VIEW` required for read; `DELIVERY_BATCH_UPDATE` for recalculation | **PASS** |
-| **Transport Mode Authority** | Transport mode is mastered server-side on `DeliveryRiderEntity` | **PASS** |
-| **Cache Scoping** | In-memory cache composite key includes `tenantId:subjectId:fingerprint` | **PASS** |
+## Status and next task
 
----
+Technical closure is complete. US-67 is **not accepted complete** and remains `IMPLEMENTATION_COMPLETE / ACCEPTANCE_PENDING` pending final acceptance.
 
-## 6. Story Accounting & Status
-
-- **US-67 Status:** `IMPLEMENTATION_COMPLETE / ACCEPTANCE_PENDING`
-- **MVP 1.4 Progress:** `4 / 8 COMPLETE` (US-63, US-64, US-65, US-66 Accepted & Closed)
-- **Overall Release Band:** `61 / 87 COMPLETE`
-- **Approved Deferments:** `26 / 87`
-- **Accepted Flyway Head:** `V56`
-- **Next Queue Item:** `MVP-1.4-US67-LAST-MILE-ETA-FINAL-ACCEPTANCE-001-RERUN`
+- MVP 1.4: **4 / 8 COMPLETE**
+- Overall: **61 / 87 COMPLETE**
+- Deferred: **26 / 87**
+- Next task: `MVP-1.4-US67-LAST-MILE-ETA-FINAL-ACCEPTANCE-001-RERUN`

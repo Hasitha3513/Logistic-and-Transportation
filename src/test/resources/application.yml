@@ -16,6 +16,7 @@ spring:
     hikari:
       maximum-pool-size: 2
       minimum-idle: 0
+      idle-timeout: 10000
   jpa:
     open-in-view: false
     database: postgresql
