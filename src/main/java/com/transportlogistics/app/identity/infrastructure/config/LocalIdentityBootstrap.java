@@ -86,8 +86,8 @@ class LocalIdentityBootstrap implements ApplicationRunner {
                         "Opt-in local administrator with all implemented business permissions", true,
                         MVP_PERMISSIONS)));
         if (existingUser.isPresent()) {
-            identities.updateUser(existingUser.get().id(), existingUser.get(), password, Set.of(role.id()));
             memberships.ensureActiveMembership(existingUser.get().id(), CanonicalTenant.ID, username);
+            identities.updateUser(existingUser.get().id(), existingUser.get(), password, Set.of(role.id()));
             return;
         }
         var now = OffsetDateTime.now();

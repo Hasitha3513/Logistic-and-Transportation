@@ -1,11 +1,12 @@
 package com.transportlogistics.app.system.infrastructure.config;
 
-import com.transportlogistics.app.organization.CustomerDataReadiness;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Profile;
+import org.springframework.core.env.Environment;
+import org.springframework.core.env.Profiles;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.jdbc.datasource.init.DatabasePopulatorUtils;
@@ -21,17 +22,21 @@ import javax.sql.DataSource;
 @RequiredArgsConstructor
 class LocalSampleDataBootstrap implements ApplicationRunner {
     private final DataSource dataSource;
-    private final CustomerDataReadiness customers;
+    private final Environment environment;
 
     @Override
     public void run(ApplicationArguments args) {
-        if (customers.anyCustomerExists()) {
-            return;
-        }
-        var script = new ClassPathResource("db/sample-data/h2-phase1.sql");
+        var script = sampleDataScript();
         var populator = new ResourceDatabasePopulator(script);
         populator.setSeparator(";");
-        populator.setContinueOnError(true);
+        populator.setContinueOnError(false);
         DatabasePopulatorUtils.execute(populator, dataSource);
+    }
+
+    ClassPathResource sampleDataScript() {
+        var database = environment.acceptsProfiles(Profiles.of("postgres", "docker"))
+                ? "postgresql-sample-data.sql"
+                : "h2-phase1.sql";
+        return new ClassPathResource("db/sample-data/" + database);
     }
 }

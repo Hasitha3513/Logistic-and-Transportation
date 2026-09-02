@@ -71,6 +71,8 @@ MVP 1.4 Band:     [████████████████████�
 | `P0-06` | Correct aggregate-root identity/reference invariants and prevent unreviewed JPA aggregate graphs or cascades | ✅ `COMPLETE` | Focused domain/application/architecture gate 52/52 PASS; full Java 21 suite 1,185 PASS with 31 existing skips; no API/schema/event change |
 | `P0-07` | Harden owning-module ACID transactions, after-commit local events, consumer failure isolation, Tenant event identity, and durable-integration decisions | ✅ `COMPLETE` | Focused consistency tests 46/46 and architecture/Modulith tests 42/42 PASS; full Java 21 suite 1,191 PASS with 31 existing conditional skips; no REST/schema/broker change |
 
+Development startup now consistently provisions the idempotent PostgreSQL sample fixture after Flyway when `run.sh` launches either the Docker stack or local PostgreSQL mode. H2 test startup continues to use the H2-specific fixture; this operational correction does not add a remediation batch or alter story accounting.
+
 ---
 
 ## 📋 3. Complete User Story Register (US-01 through US-87)

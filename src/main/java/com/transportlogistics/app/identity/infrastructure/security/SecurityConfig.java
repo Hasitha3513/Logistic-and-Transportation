@@ -285,6 +285,14 @@ class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/v1/delivery-slots/*/reservations", "/api/v1/delivery-slots/*/reservations/*/release", "/v1/delivery-slots/*/reservations", "/v1/delivery-slots/*/reservations/*/release")
                         .hasAnyAuthority("DELIVERY_SLOT_ASSIGN", "DELIVERY_SLOT_OVERRIDE")
 
+                        .requestMatchers(HttpMethod.POST, "/api/v1/deliveries/orders/*/eta/calculate")
+                        .hasAuthority("DELIVERY_UPDATE")
+
+                        // These controllers include the application context path in their explicit mapping.
+                        // Their method-level @PreAuthorize contracts remain the authoritative action checks.
+                        .requestMatchers("/api/v1/delivery-riders/**", "/api/v1/deliveries/batches/**", "/api/v1/deliveries/orders/**")
+                        .authenticated()
+
                         .requestMatchers(HttpMethod.GET, "/bunker-tanks/*/movements").hasAuthority("BUNKER_LEDGER_VIEW")
                         .requestMatchers(HttpMethod.GET, "/bunker-tanks", "/bunker-tanks/*", "/bunker-tanks/*/balance", "/bunker-tanks/*/dip-readings")
                         .hasAuthority("BUNKER_VIEW")

@@ -15,7 +15,7 @@ INSERT INTO app_role (id, name, description, active) VALUES
   ('20000000-0000-0000-0000-000000000008', 'AUDITOR', 'Role for Auditor', TRUE),
   ('20000000-0000-0000-0000-000000000009', 'OPERATIONS_CLERK', 'Role for Operations Clerk', TRUE),
   ('20000000-0000-0000-0000-000000000010', 'SAFETY_OFFICER', 'Role for Safety Officer', TRUE)
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT DO NOTHING;
 
 -- 2. app_role_permission
 INSERT INTO app_role_permission (role_id, permission_code)
@@ -34,7 +34,7 @@ INSERT INTO app_user (id, username, email, password_hash, first_name, last_name,
   ('10000000-0000-0000-0000-000000000008', 'user.chaminda', 'chaminda@transport.local', '$2a$10$lgPvpk4ZpSW3WYNsJtIcteupI7PK1Ar0JASn0nLYYXRMMG5mmdGYS', 'Chaminda', 'Vaas', '+94771000007', TRUE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
   ('10000000-0000-0000-0000-000000000009', 'user.malik', 'malik@transport.local', '$2a$10$lgPvpk4ZpSW3WYNsJtIcteupI7PK1Ar0JASn0nLYYXRMMG5mmdGYS', 'Malik', 'Jayawardena', '+94771000008', TRUE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
   ('10000000-0000-0000-0000-000000000010', 'user.dinesh', 'dinesh@transport.local', '$2a$10$lgPvpk4ZpSW3WYNsJtIcteupI7PK1Ar0JASn0nLYYXRMMG5mmdGYS', 'Dinesh', 'Weerasinghe', '+94771000009', TRUE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT DO NOTHING;
 
 -- Ensure admin user has password and LOCAL_MVP_ADMIN role
 UPDATE app_user SET password_hash = '$2a$10$lgPvpk4ZpSW3WYNsJtIcteupI7PK1Ar0JASn0nLYYXRMMG5mmdGYS' WHERE username = 'admin';
@@ -67,7 +67,7 @@ INSERT INTO tenant_membership (membership_id, tenant_id, user_id, status, create
   ('60000000-0000-0000-0000-000000000008', '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a', '10000000-0000-0000-0000-000000000008', 'ACTIVE', CURRENT_TIMESTAMP, 'SYSTEM', CURRENT_TIMESTAMP, 'SYSTEM', 0),
   ('60000000-0000-0000-0000-000000000009', '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a', '10000000-0000-0000-0000-000000000009', 'ACTIVE', CURRENT_TIMESTAMP, 'SYSTEM', CURRENT_TIMESTAMP, 'SYSTEM', 0),
   ('60000000-0000-0000-0000-000000000010', '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a', '10000000-0000-0000-0000-000000000010', 'ACTIVE', CURRENT_TIMESTAMP, 'SYSTEM', CURRENT_TIMESTAMP, 'SYSTEM', 0)
-ON CONFLICT (user_id) DO NOTHING;
+ON CONFLICT DO NOTHING;
 
 -- 6. tenant_membership_role
 INSERT INTO tenant_membership_role (membership_id, role_id) VALUES
@@ -109,7 +109,7 @@ INSERT INTO department (id, code, name, description, active, tenant_id) VALUES
   ('30000000-0000-0000-0000-000000000008', 'DEP-008', 'Fuel & Energy Management', 'Department for Fuel & Energy Management', TRUE, '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a'),
   ('30000000-0000-0000-0000-000000000009', 'DEP-009', 'Customer Support', 'Department for Customer Support', TRUE, '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a'),
   ('30000000-0000-0000-0000-000000000010', 'DEP-010', 'Procurement & Logistics', 'Department for Procurement & Logistics', TRUE, '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a')
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT DO NOTHING;
 
 -- 9. project
 INSERT INTO project (id, code, name, department_id, active, tenant_id) VALUES
@@ -123,7 +123,7 @@ INSERT INTO project (id, code, name, department_id, active, tenant_id) VALUES
   ('31000000-0000-0000-0000-000000000008', 'PRJ-008', 'Northern Logistics Corridors', '30000000-0000-0000-0000-000000000008', TRUE, '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a'),
   ('31000000-0000-0000-0000-000000000009', 'PRJ-009', 'Export Garments Express', '30000000-0000-0000-0000-000000000009', TRUE, '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a'),
   ('31000000-0000-0000-0000-000000000010', 'PRJ-010', 'Pharma Temperature Transport', '30000000-0000-0000-0000-000000000010', TRUE, '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a')
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT DO NOTHING;
 
 -- 10. customer
 INSERT INTO customer (id, code, name, contact_person, phone, email, active, tenant_id) VALUES
@@ -137,7 +137,7 @@ INSERT INTO customer (id, code, name, contact_person, phone, email, active, tena
   ('32000000-0000-0000-0000-000000000008', 'CUST-008', 'Hemas Holdings', 'Chaminda Vaas', '+94112000007', 'info@cust8.lk', TRUE, '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a'),
   ('32000000-0000-0000-0000-000000000009', 'CUST-009', 'Dialog Axiata Logistics', 'Malik Jayawardena', '+94112000008', 'info@cust9.lk', TRUE, '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a'),
   ('32000000-0000-0000-0000-000000000010', 'CUST-010', 'John Keells Logistics', 'Dinesh Weerasinghe', '+94112000009', 'info@cust10.lk', TRUE, '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a')
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT DO NOTHING;
 
 -- 11. location
 INSERT INTO location (id, code, name, address, latitude, longitude, active, tenant_id) VALUES
@@ -151,7 +151,7 @@ INSERT INTO location (id, code, name, address, latitude, longitude, active, tena
   ('33000000-0000-0000-0000-000000000008', 'LOC-008', 'Kurunegala Transit Hub', '15 Negombo Road, Kurunegala', 7.4863, 80.3623, TRUE, '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a'),
   ('33000000-0000-0000-0000-000000000009', 'LOC-009', 'Anuradhapura DC', '88 Maithripala Senanayake Mw, Anuradhapura', 8.3114, 80.4037, TRUE, '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a'),
   ('33000000-0000-0000-0000-000000000010', 'LOC-010', 'Ratnapura Depot', '22 Main Street, Ratnapura', 6.6828, 80.4036, TRUE, '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a')
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT DO NOTHING;
 
 -- 12. vendor
 INSERT INTO vendor (id, code, name, contact_person, phone, email, active, tenant_id) VALUES
@@ -165,7 +165,7 @@ INSERT INTO vendor (id, code, name, contact_person, phone, email, active, tenant
   ('34000000-0000-0000-0000-000000000008', 'VEND-008', 'David Pieris Motor Company', 'Vendor Contact 8', '+94113000007', 'sales@vendor8.lk', TRUE, '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a'),
   ('34000000-0000-0000-0000-000000000009', 'VEND-009', 'McLarens Lubricants', 'Vendor Contact 9', '+94113000008', 'sales@vendor9.lk', TRUE, '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a'),
   ('34000000-0000-0000-0000-000000000010', 'VEND-010', 'Chevron Lubricants Lanka', 'Vendor Contact 10', '+94113000009', 'sales@vendor10.lk', TRUE, '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a')
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT DO NOTHING;
 
 -- 13. driver
 INSERT INTO driver (id, employee_number, first_name, last_name, phone, email, status, active, tenant_id) VALUES
@@ -179,7 +179,7 @@ INSERT INTO driver (id, employee_number, first_name, last_name, phone, email, st
   ('40000000-0000-0000-0000-000000000008', 'DRV-008', 'Chaminda', 'Vaas', '+94773000007', 'chaminda.driver@transport.local', 'ACTIVE', TRUE, '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a'),
   ('40000000-0000-0000-0000-000000000009', 'DRV-009', 'Malik', 'Jayawardena', '+94773000008', 'malik.driver@transport.local', 'ACTIVE', TRUE, '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a'),
   ('40000000-0000-0000-0000-000000000010', 'DRV-010', 'Dinesh', 'Weerasinghe', '+94773000009', 'dinesh.driver@transport.local', 'ACTIVE', TRUE, '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a')
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT DO NOTHING;
 
 -- 14. driver_license
 INSERT INTO driver_license (id, driver_id, license_number, license_class, issue_date, expiry_date, status, active, created_at, updated_at, created_by, updated_by, tenant_id) VALUES
@@ -193,7 +193,7 @@ INSERT INTO driver_license (id, driver_id, license_number, license_class, issue_
   ('41000000-0000-0000-0000-000000000008', '40000000-0000-0000-0000-000000000008', 'LIC-B0000008', 'HEAVY_VEHICLE', '2020-01-01', '2028-01-01', 'ACTIVE', TRUE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'SYSTEM', 'SYSTEM', '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a'),
   ('41000000-0000-0000-0000-000000000009', '40000000-0000-0000-0000-000000000009', 'LIC-B0000009', 'HEAVY_VEHICLE', '2020-01-01', '2028-01-01', 'ACTIVE', TRUE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'SYSTEM', 'SYSTEM', '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a'),
   ('41000000-0000-0000-0000-000000000010', '40000000-0000-0000-0000-000000000010', 'LIC-B0000010', 'HEAVY_VEHICLE', '2020-01-01', '2028-01-01', 'ACTIVE', TRUE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'SYSTEM', 'SYSTEM', '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a')
-ON CONFLICT (license_number) DO NOTHING;
+ON CONFLICT DO NOTHING;
 
 -- 15. driver_exception
 INSERT INTO driver_exception (id, driver_id, exception_type, start_time, end_time, status, reason, remarks, created_at, updated_at, created_by, updated_by, tenant_id) VALUES
@@ -207,7 +207,7 @@ INSERT INTO driver_exception (id, driver_id, exception_type, start_time, end_tim
   ('42000000-0000-0000-0000-000000000008', '40000000-0000-0000-0000-000000000008', 'ANNUAL_LEAVE', CURRENT_TIMESTAMP - INTERVAL '16 days', CURRENT_TIMESTAMP - INTERVAL '15 days', 'COMPLETED', 'Scheduled Leave #8', 'Approved by HR', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'SYSTEM', 'SYSTEM', '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a'),
   ('42000000-0000-0000-0000-000000000009', '40000000-0000-0000-0000-000000000009', 'ANNUAL_LEAVE', CURRENT_TIMESTAMP - INTERVAL '18 days', CURRENT_TIMESTAMP - INTERVAL '17 days', 'COMPLETED', 'Scheduled Leave #9', 'Approved by HR', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'SYSTEM', 'SYSTEM', '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a'),
   ('42000000-0000-0000-0000-000000000010', '40000000-0000-0000-0000-000000000010', 'ANNUAL_LEAVE', CURRENT_TIMESTAMP - INTERVAL '20 days', CURRENT_TIMESTAMP - INTERVAL '19 days', 'COMPLETED', 'Scheduled Leave #10', 'Approved by HR', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'SYSTEM', 'SYSTEM', '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a')
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT DO NOTHING;
 
 -- 16. driver_violation
 INSERT INTO driver_violation (id, driver_id, trip_id, violation_type, severity, violation_date, penalty_points, fine_amount, payment_status, paid_at, payment_reference, location, description, created_at, updated_at, created_by, updated_by, tenant_id) VALUES
@@ -221,7 +221,7 @@ INSERT INTO driver_violation (id, driver_id, trip_id, violation_type, severity, 
   ('43000000-0000-0000-0000-000000000008', '40000000-0000-0000-0000-000000000008', NULL, 'SPEEDING', 'MEDIUM', CURRENT_TIMESTAMP - INTERVAL '24 days', 2, 2500.00, 'PAID', CURRENT_TIMESTAMP - INTERVAL '23 days', 'POL-REC-00008', 'Corridor Location #8', 'Speed violation in 50km/h zone', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'SYSTEM', 'SYSTEM', '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a'),
   ('43000000-0000-0000-0000-000000000009', '40000000-0000-0000-0000-000000000009', NULL, 'SPEEDING', 'MEDIUM', CURRENT_TIMESTAMP - INTERVAL '27 days', 2, 2500.00, 'PAID', CURRENT_TIMESTAMP - INTERVAL '26 days', 'POL-REC-00009', 'Corridor Location #9', 'Speed violation in 50km/h zone', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'SYSTEM', 'SYSTEM', '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a'),
   ('43000000-0000-0000-0000-000000000010', '40000000-0000-0000-0000-000000000010', NULL, 'SPEEDING', 'MEDIUM', CURRENT_TIMESTAMP - INTERVAL '30 days', 2, 2500.00, 'PAID', CURRENT_TIMESTAMP - INTERVAL '29 days', 'POL-REC-00010', 'Corridor Location #10', 'Speed violation in 50km/h zone', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'SYSTEM', 'SYSTEM', '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a')
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT DO NOTHING;
 
 -- 17. driver_medical_record
 INSERT INTO driver_medical_record (id, driver_id, assessment_date, valid_from, valid_until, fitness_status, vision_test_status, restrictions, examiner_or_provider, certificate_reference, remarks, active, created_at, updated_at, created_by, updated_by, tenant_id) VALUES
@@ -235,7 +235,7 @@ INSERT INTO driver_medical_record (id, driver_id, assessment_date, valid_from, v
   ('44000000-0000-0000-0000-000000000008', '40000000-0000-0000-0000-000000000008', CURRENT_DATE - 30, CURRENT_DATE - 30, CURRENT_DATE + 335, 'FIT', 'PASSED', 'None', 'Asiri Central Hospital', 'MED-CERT-00008', 'Routine annual fitness cleared', TRUE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'SYSTEM', 'SYSTEM', '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a'),
   ('44000000-0000-0000-0000-000000000009', '40000000-0000-0000-0000-000000000009', CURRENT_DATE - 30, CURRENT_DATE - 30, CURRENT_DATE + 335, 'FIT', 'PASSED', 'None', 'Asiri Central Hospital', 'MED-CERT-00009', 'Routine annual fitness cleared', TRUE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'SYSTEM', 'SYSTEM', '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a'),
   ('44000000-0000-0000-0000-000000000010', '40000000-0000-0000-0000-000000000010', CURRENT_DATE - 30, CURRENT_DATE - 30, CURRENT_DATE + 335, 'FIT', 'PASSED', 'None', 'Asiri Central Hospital', 'MED-CERT-00010', 'Routine annual fitness cleared', TRUE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'SYSTEM', 'SYSTEM', '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a')
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT DO NOTHING;
 
 -- 18. driver_drug_test
 INSERT INTO driver_drug_test (id, driver_id, test_type, scheduled_date, sample_collected_at, result_date, result, status, laboratory_or_provider, reference_number, remarks, return_to_duty_required, return_to_duty_cleared_at, active, created_at, updated_at, created_by, updated_by, tenant_id) VALUES
@@ -249,7 +249,7 @@ INSERT INTO driver_drug_test (id, driver_id, test_type, scheduled_date, sample_c
   ('45000000-0000-0000-0000-000000000008', '40000000-0000-0000-0000-000000000008', 'RANDOM_SCREENING', CURRENT_DATE - 60, CURRENT_TIMESTAMP - INTERVAL '60 days', CURRENT_DATE - 59, 'NEGATIVE', 'COMPLETED', 'Durdans Laboratory Colombo', 'DRG-REF-00008', 'Clean pre-shift screening', FALSE, NULL, TRUE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'SYSTEM', 'SYSTEM', '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a'),
   ('45000000-0000-0000-0000-000000000009', '40000000-0000-0000-0000-000000000009', 'RANDOM_SCREENING', CURRENT_DATE - 60, CURRENT_TIMESTAMP - INTERVAL '60 days', CURRENT_DATE - 59, 'NEGATIVE', 'COMPLETED', 'Durdans Laboratory Colombo', 'DRG-REF-00009', 'Clean pre-shift screening', FALSE, NULL, TRUE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'SYSTEM', 'SYSTEM', '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a'),
   ('45000000-0000-0000-0000-000000000010', '40000000-0000-0000-0000-000000000010', 'RANDOM_SCREENING', CURRENT_DATE - 60, CURRENT_TIMESTAMP - INTERVAL '60 days', CURRENT_DATE - 59, 'NEGATIVE', 'COMPLETED', 'Durdans Laboratory Colombo', 'DRG-REF-00010', 'Clean pre-shift screening', FALSE, NULL, TRUE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'SYSTEM', 'SYSTEM', '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a')
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT DO NOTHING;
 
 -- 19. vehicle_category
 INSERT INTO vehicle_category (id, code, name, description, active, tenant_id) VALUES
@@ -263,7 +263,7 @@ INSERT INTO vehicle_category (id, code, name, description, active, tenant_id) VA
   ('50000000-0000-0000-0000-000000000008', 'CAT-008', 'Specialized Tankers', 'Category for Specialized Tankers', TRUE, '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a'),
   ('50000000-0000-0000-0000-000000000009', 'CAT-009', 'Urban Cargo Couriers', 'Category for Urban Cargo Couriers', TRUE, '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a'),
   ('50000000-0000-0000-0000-000000000010', 'CAT-010', 'Emergency Fleet Support', 'Category for Emergency Fleet Support', TRUE, '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a')
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT DO NOTHING;
 
 -- 20. vehicle_type
 INSERT INTO vehicle_type (id, category_id, code, name, description, active, tenant_id) VALUES
@@ -277,7 +277,7 @@ INSERT INTO vehicle_type (id, category_id, code, name, description, active, tena
   ('51000000-0000-0000-0000-000000000008', '50000000-0000-0000-0000-000000000008', 'TYP-008', 'Flatbed 3-Axle Hauler', 'Specification for Flatbed 3-Axle Hauler', TRUE, '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a'),
   ('51000000-0000-0000-0000-000000000009', '50000000-0000-0000-0000-000000000009', 'TYP-009', 'Bulk Fuel Tanker 20kL', 'Specification for Bulk Fuel Tanker 20kL', TRUE, '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a'),
   ('51000000-0000-0000-0000-000000000010', '50000000-0000-0000-0000-000000000010', 'TYP-010', 'Curtain-side Cargo Truck', 'Specification for Curtain-side Cargo Truck', TRUE, '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a')
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT DO NOTHING;
 
 -- 21. vehicle
 INSERT INTO vehicle (id, registration_number, chassis_number, engine_number, category_id, type_id, manufacturer, model, manufacture_year, ownership_type, operational_status, current_odometer_km, engine_hours, capacity_kg, active, tenant_id, tare_weight_kg, gross_vehicle_weight_kg, cargo_volume_capacity_m3, axle_count, max_axle_load_kg) VALUES
@@ -291,7 +291,7 @@ INSERT INTO vehicle (id, registration_number, chassis_number, engine_number, cat
   ('52000000-0000-0000-0000-000000000008', 'WP-PX-9918', 'CHS-LK-000008', 'ENG-LK-000008', '50000000-0000-0000-0000-000000000008', '51000000-0000-0000-0000-000000000008', 'Isuzu/Toyota', 'Commercial Model 8', 2022, 'COMPANY_OWNED', 'ACTIVE', 155000.0, 3600.0, 23000.0, TRUE, '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a', 3000.0, 15000.0, 30.0, 2, 8000.0),
   ('52000000-0000-0000-0000-000000000009', 'EP-GA-4419', 'CHS-LK-000009', 'ENG-LK-000009', '50000000-0000-0000-0000-000000000009', '51000000-0000-0000-0000-000000000009', 'Isuzu/Toyota', 'Commercial Model 9', 2022, 'COMPANY_OWNED', 'ACTIVE', 170000.0, 3900.0, 26000.0, TRUE, '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a', 3000.0, 15000.0, 30.0, 2, 8000.0),
   ('52000000-0000-0000-0000-000000000010', 'WP-LF-2220', 'CHS-LK-000010', 'ENG-LK-000010', '50000000-0000-0000-0000-000000000010', '51000000-0000-0000-0000-000000000010', 'Isuzu/Toyota', 'Commercial Model 10', 2022, 'COMPANY_OWNED', 'ACTIVE', 185000.0, 4200.0, 29000.0, TRUE, '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a', 3000.0, 15000.0, 30.0, 2, 8000.0)
-ON CONFLICT (registration_number) DO NOTHING;
+ON CONFLICT DO NOTHING;
 
 -- 22. vehicle_document
 INSERT INTO vehicle_document (id, vehicle_id, document_type, document_number, issue_date, expiry_date, file_reference, mandatory_for_dispatch, status, active, created_at, updated_at, created_by, updated_by, tenant_id) VALUES
@@ -305,7 +305,7 @@ INSERT INTO vehicle_document (id, vehicle_id, document_type, document_number, is
   ('53000000-0000-0000-0000-000000000008', '52000000-0000-0000-0000-000000000008', 'REVENUE_LICENSE', 'RL-WP-2026-0008', '2026-01-01', '2026-12-31', '/docs/v_8.pdf', TRUE, 'ACTIVE', TRUE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'SYSTEM', 'SYSTEM', '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a'),
   ('53000000-0000-0000-0000-000000000009', '52000000-0000-0000-0000-000000000009', 'REVENUE_LICENSE', 'RL-WP-2026-0009', '2026-01-01', '2026-12-31', '/docs/v_9.pdf', TRUE, 'ACTIVE', TRUE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'SYSTEM', 'SYSTEM', '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a'),
   ('53000000-0000-0000-0000-000000000010', '52000000-0000-0000-0000-000000000010', 'REVENUE_LICENSE', 'RL-WP-2026-0010', '2026-01-01', '2026-12-31', '/docs/v_10.pdf', TRUE, 'ACTIVE', TRUE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'SYSTEM', 'SYSTEM', '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a')
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT DO NOTHING;
 
 -- 23. vehicle_reading
 INSERT INTO vehicle_reading (reading_id, vehicle_id, reading_type, value, unit, meter_epoch, source_type, source_reference_id, recorded_at, received_at, created_by, correction_of_reading_id, correction_reason, idempotency_key, notes, created_at, tenant_id) VALUES
@@ -319,7 +319,7 @@ INSERT INTO vehicle_reading (reading_id, vehicle_id, reading_type, value, unit, 
   ('54000000-0000-0000-0000-000000000008', '52000000-0000-0000-0000-000000000008', 'ODOMETER', 155000.0, 'KILOMETER', 0, 'MANUAL', NULL, CURRENT_TIMESTAMP - INTERVAL '8 days', CURRENT_TIMESTAMP - INTERVAL '8 days', '10000000-0000-0000-0000-000000000001', NULL, NULL, 'idemp-veh-reading-008', 'Baseline reading', CURRENT_TIMESTAMP, '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a'),
   ('54000000-0000-0000-0000-000000000009', '52000000-0000-0000-0000-000000000009', 'ODOMETER', 170000.0, 'KILOMETER', 0, 'MANUAL', NULL, CURRENT_TIMESTAMP - INTERVAL '9 days', CURRENT_TIMESTAMP - INTERVAL '9 days', '10000000-0000-0000-0000-000000000001', NULL, NULL, 'idemp-veh-reading-009', 'Baseline reading', CURRENT_TIMESTAMP, '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a'),
   ('54000000-0000-0000-0000-000000000010', '52000000-0000-0000-0000-000000000010', 'ODOMETER', 185000.0, 'KILOMETER', 0, 'MANUAL', NULL, CURRENT_TIMESTAMP - INTERVAL '10 days', CURRENT_TIMESTAMP - INTERVAL '10 days', '10000000-0000-0000-0000-000000000001', NULL, NULL, 'idemp-veh-reading-010', 'Baseline reading', CURRENT_TIMESTAMP, '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a')
-ON CONFLICT (idempotency_key) DO NOTHING;
+ON CONFLICT DO NOTHING;
 
 -- 24. vehicle_meter_reset
 INSERT INTO vehicle_meter_reset (reset_id, vehicle_id, reading_type, from_epoch, to_epoch, last_reading_value, new_meter_value, effective_at, reason, created_by, created_at, tenant_id) VALUES
@@ -333,7 +333,7 @@ INSERT INTO vehicle_meter_reset (reset_id, vehicle_id, reading_type, from_epoch,
   ('55000000-0000-0000-0000-000000000008', '52000000-0000-0000-0000-000000000008', 'ODOMETER', 0, 1, 999999.0, 0.0, CURRENT_TIMESTAMP - INTERVAL '80 days', 'Meter replacement #8', '10000000-0000-0000-0000-000000000001', CURRENT_TIMESTAMP, '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a'),
   ('55000000-0000-0000-0000-000000000009', '52000000-0000-0000-0000-000000000009', 'ODOMETER', 0, 1, 999999.0, 0.0, CURRENT_TIMESTAMP - INTERVAL '90 days', 'Meter replacement #9', '10000000-0000-0000-0000-000000000001', CURRENT_TIMESTAMP, '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a'),
   ('55000000-0000-0000-0000-000000000010', '52000000-0000-0000-0000-000000000010', 'ODOMETER', 0, 1, 999999.0, 0.0, CURRENT_TIMESTAMP - INTERVAL '100 days', 'Meter replacement #10', '10000000-0000-0000-0000-000000000001', CURRENT_TIMESTAMP, '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a')
-ON CONFLICT (reset_id) DO NOTHING;
+ON CONFLICT DO NOTHING;
 
 -- 25. maintenance_schedule
 INSERT INTO maintenance_schedule (id, vehicle_id, maintenance_type, scheduled_start, scheduled_end, status, description, service_provider, cost, created_at, updated_at, created_by, updated_by, tenant_id) VALUES
@@ -347,7 +347,7 @@ INSERT INTO maintenance_schedule (id, vehicle_id, maintenance_type, scheduled_st
   ('56000000-0000-0000-0000-000000000008', '52000000-0000-0000-0000-000000000008', 'PERIODIC_10K_SERVICE', CURRENT_TIMESTAMP + INTERVAL '24 days', CURRENT_TIMESTAMP + INTERVAL '25 days', 'SCHEDULED', 'Routine scheduled service #8', 'United Motors Lanka', 45000.00, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'SYSTEM', 'SYSTEM', '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a'),
   ('56000000-0000-0000-0000-000000000009', '52000000-0000-0000-0000-000000000009', 'PERIODIC_10K_SERVICE', CURRENT_TIMESTAMP + INTERVAL '27 days', CURRENT_TIMESTAMP + INTERVAL '28 days', 'SCHEDULED', 'Routine scheduled service #9', 'United Motors Lanka', 45000.00, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'SYSTEM', 'SYSTEM', '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a'),
   ('56000000-0000-0000-0000-000000000010', '52000000-0000-0000-0000-000000000010', 'PERIODIC_10K_SERVICE', CURRENT_TIMESTAMP + INTERVAL '30 days', CURRENT_TIMESTAMP + INTERVAL '31 days', 'SCHEDULED', 'Routine scheduled service #10', 'United Motors Lanka', 45000.00, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'SYSTEM', 'SYSTEM', '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a')
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT DO NOTHING;
 
 -- 26. lubricant_log
 INSERT INTO lubricant_log (id, vehicle_id, fluid_type, quantity, unit, recorded_at, odometer_km, engine_hours, vendor_id, supplier_name, reference_number, remarks, active, created_at, updated_at, created_by, updated_by, tenant_id) VALUES
@@ -361,7 +361,7 @@ INSERT INTO lubricant_log (id, vehicle_id, fluid_type, quantity, unit, recorded_
   ('57000000-0000-0000-0000-000000000008', '52000000-0000-0000-0000-000000000008', 'ENGINE_OIL', 15.00, 'LITERS', CURRENT_TIMESTAMP - INTERVAL '16 days', 50000.0, 1500.0, '34000000-0000-0000-0000-000000000001', 'Ceypetco Lubricants', 'LUB-INV-00008', 'Top up #8', TRUE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'SYSTEM', 'SYSTEM', '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a'),
   ('57000000-0000-0000-0000-000000000009', '52000000-0000-0000-0000-000000000009', 'ENGINE_OIL', 15.00, 'LITERS', CURRENT_TIMESTAMP - INTERVAL '18 days', 50000.0, 1500.0, '34000000-0000-0000-0000-000000000001', 'Ceypetco Lubricants', 'LUB-INV-00009', 'Top up #9', TRUE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'SYSTEM', 'SYSTEM', '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a'),
   ('57000000-0000-0000-0000-000000000010', '52000000-0000-0000-0000-000000000010', 'ENGINE_OIL', 15.00, 'LITERS', CURRENT_TIMESTAMP - INTERVAL '20 days', 50000.0, 1500.0, '34000000-0000-0000-0000-000000000001', 'Ceypetco Lubricants', 'LUB-INV-00010', 'Top up #10', TRUE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'SYSTEM', 'SYSTEM', '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a')
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT DO NOTHING;
 
 -- 27. route
 INSERT INTO route (id, code, name, origin_location_id, destination_location_id, planned_distance_km, estimated_duration_minutes, active, tenant_id) VALUES
@@ -375,7 +375,7 @@ INSERT INTO route (id, code, name, origin_location_id, destination_location_id, 
   ('60000000-0000-0000-0000-000000000008', 'RTE-CMB-008', 'Route from Colombo to Loc 9', '33000000-0000-0000-0000-000000000001', '33000000-0000-0000-0000-000000000009', 310.0, 400, TRUE, '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a'),
   ('60000000-0000-0000-0000-000000000009', 'RTE-CMB-009', 'Route from Colombo to Loc 10', '33000000-0000-0000-0000-000000000001', '33000000-0000-0000-0000-000000000010', 340.0, 440, TRUE, '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a'),
   ('60000000-0000-0000-0000-000000000010', 'RTE-CMB-010', 'Route from Colombo to Loc 2', '33000000-0000-0000-0000-000000000001', '33000000-0000-0000-0000-000000000002', 370.0, 480, TRUE, '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a')
-ON CONFLICT (code) DO NOTHING;
+ON CONFLICT DO NOTHING;
 
 -- 28. route_stop
 INSERT INTO route_stop (route_id, stop_order, location_id, tenant_id) VALUES
@@ -389,7 +389,7 @@ INSERT INTO route_stop (route_id, stop_order, location_id, tenant_id) VALUES
   ('60000000-0000-0000-0000-000000000008', 0, '33000000-0000-0000-0000-000000000002', '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a'),
   ('60000000-0000-0000-0000-000000000009', 0, '33000000-0000-0000-0000-000000000003', '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a'),
   ('60000000-0000-0000-0000-000000000010', 0, '33000000-0000-0000-0000-000000000004', '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a')
-ON CONFLICT (route_id, stop_order) DO NOTHING;
+ON CONFLICT DO NOTHING;
 
 -- 29. route_revision
 INSERT INTO route_revision (id, route_id, revision_number, code, name, origin_location_id, destination_location_id, planned_distance_km, estimated_duration_minutes, active, changed_at, changed_by, tenant_id) VALUES
@@ -403,7 +403,7 @@ INSERT INTO route_revision (id, route_id, revision_number, code, name, origin_lo
   ('61000000-0000-0000-0000-000000000008', '60000000-0000-0000-0000-000000000008', 1, 'RTE-CMB-008', 'Route Colombo Rev 1 #8', '33000000-0000-0000-0000-000000000001', '33000000-0000-0000-0000-000000000009', 310.0, 400, TRUE, CURRENT_TIMESTAMP - INTERVAL '35 days', 'SYSTEM', '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a'),
   ('61000000-0000-0000-0000-000000000009', '60000000-0000-0000-0000-000000000009', 1, 'RTE-CMB-009', 'Route Colombo Rev 1 #9', '33000000-0000-0000-0000-000000000001', '33000000-0000-0000-0000-000000000010', 340.0, 440, TRUE, CURRENT_TIMESTAMP - INTERVAL '40 days', 'SYSTEM', '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a'),
   ('61000000-0000-0000-0000-000000000010', '60000000-0000-0000-0000-000000000010', 1, 'RTE-CMB-010', 'Route Colombo Rev 1 #10', '33000000-0000-0000-0000-000000000001', '33000000-0000-0000-0000-000000000002', 370.0, 480, TRUE, CURRENT_TIMESTAMP - INTERVAL '45 days', 'SYSTEM', '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a')
-ON CONFLICT (route_id, revision_number) DO NOTHING;
+ON CONFLICT DO NOTHING;
 
 -- 30. route_revision_stop
 INSERT INTO route_revision_stop (route_revision_id, location_id, stop_order, tenant_id) VALUES
@@ -417,7 +417,7 @@ INSERT INTO route_revision_stop (route_revision_id, location_id, stop_order, ten
   ('61000000-0000-0000-0000-000000000008', '33000000-0000-0000-0000-000000000002', 0, '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a'),
   ('61000000-0000-0000-0000-000000000009', '33000000-0000-0000-0000-000000000003', 0, '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a'),
   ('61000000-0000-0000-0000-000000000010', '33000000-0000-0000-0000-000000000004', 0, '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a')
-ON CONFLICT (route_revision_id, stop_order) DO NOTHING;
+ON CONFLICT DO NOTHING;
 
 -- 31. route_disruption
 INSERT INTO route_disruption (id, route_id, disruption_type, severity, description, effective_from, effective_until, detour_route_id, status, created_at, created_by, resolved_at, resolved_by, tenant_id) VALUES
@@ -431,7 +431,7 @@ INSERT INTO route_disruption (id, route_id, disruption_type, severity, descripti
   ('62000000-0000-0000-0000-000000000008', '60000000-0000-0000-0000-000000000008', 'ROAD_CLOSURE', 'MEDIUM', 'Road repair advisory #8', CURRENT_TIMESTAMP - INTERVAL '8 days', CURRENT_TIMESTAMP + INTERVAL '10 days', NULL, 'ACTIVE', CURRENT_TIMESTAMP, 'SYSTEM', NULL, NULL, '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a'),
   ('62000000-0000-0000-0000-000000000009', '60000000-0000-0000-0000-000000000009', 'ROAD_CLOSURE', 'MEDIUM', 'Road repair advisory #9', CURRENT_TIMESTAMP - INTERVAL '9 days', CURRENT_TIMESTAMP + INTERVAL '11 days', NULL, 'ACTIVE', CURRENT_TIMESTAMP, 'SYSTEM', NULL, NULL, '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a'),
   ('62000000-0000-0000-0000-000000000010', '60000000-0000-0000-0000-000000000010', 'ROAD_CLOSURE', 'MEDIUM', 'Road repair advisory #10', CURRENT_TIMESTAMP - INTERVAL '10 days', CURRENT_TIMESTAMP + INTERVAL '12 days', NULL, 'ACTIVE', CURRENT_TIMESTAMP, 'SYSTEM', NULL, NULL, '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a')
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT DO NOTHING;
 
 -- 32. trip
 INSERT INTO trip (id, trip_number, customer_id, department_id, project_id, route_id, priority, status, origin_location_id, destination_location_id, requested_start_time, requested_end_time, required_vehicle_type_id, required_capacity_kg, cargo_description, passenger_count, customer_instructions, notes, vehicle_id, driver_id, actual_start_time, actual_end_time, start_odometer_km, end_odometer_km, completion_remarks, created_at, updated_at, tenant_id) VALUES
@@ -445,7 +445,7 @@ INSERT INTO trip (id, trip_number, customer_id, department_id, project_id, route
   ('70000000-0000-0000-0000-000000000008', 'TRIP-2026-0008', '32000000-0000-0000-0000-000000000008', '30000000-0000-0000-0000-000000000008', '31000000-0000-0000-0000-000000000008', '60000000-0000-0000-0000-000000000008', 'NORMAL', 'DISPATCHED', '33000000-0000-0000-0000-000000000001', '33000000-0000-0000-0000-000000000009', CURRENT_TIMESTAMP - INTERVAL '8 days', CURRENT_TIMESTAMP - INTERVAL '8 days' + INTERVAL '6 hours', '51000000-0000-0000-0000-000000000008', 5000.0, 'General Cargo Batch #8', 0, 'Standard handling', 'Trip notes #8', '52000000-0000-0000-0000-000000000008', '40000000-0000-0000-0000-000000000008', CURRENT_TIMESTAMP - INTERVAL '8 days', CURRENT_TIMESTAMP - INTERVAL '8 days' + INTERVAL '5 hours', 50000.0, 50150.0, 'Completed without incidents', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a'),
   ('70000000-0000-0000-0000-000000000009', 'TRIP-2026-0009', '32000000-0000-0000-0000-000000000009', '30000000-0000-0000-0000-000000000009', '31000000-0000-0000-0000-000000000009', '60000000-0000-0000-0000-000000000009', 'NORMAL', 'COMPLETED', '33000000-0000-0000-0000-000000000001', '33000000-0000-0000-0000-000000000010', CURRENT_TIMESTAMP - INTERVAL '9 days', CURRENT_TIMESTAMP - INTERVAL '9 days' + INTERVAL '6 hours', '51000000-0000-0000-0000-000000000009', 5000.0, 'General Cargo Batch #9', 0, 'Standard handling', 'Trip notes #9', '52000000-0000-0000-0000-000000000009', '40000000-0000-0000-0000-000000000009', CURRENT_TIMESTAMP - INTERVAL '9 days', CURRENT_TIMESTAMP - INTERVAL '9 days' + INTERVAL '5 hours', 50000.0, 50150.0, 'Completed without incidents', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a'),
   ('70000000-0000-0000-0000-000000000010', 'TRIP-2026-0010', '32000000-0000-0000-0000-000000000010', '30000000-0000-0000-0000-000000000010', '31000000-0000-0000-0000-000000000010', '60000000-0000-0000-0000-000000000010', 'NORMAL', 'COMPLETED', '33000000-0000-0000-0000-000000000001', '33000000-0000-0000-0000-000000000002', CURRENT_TIMESTAMP - INTERVAL '10 days', CURRENT_TIMESTAMP - INTERVAL '10 days' + INTERVAL '6 hours', '51000000-0000-0000-0000-000000000010', 5000.0, 'General Cargo Batch #10', 0, 'Standard handling', 'Trip notes #10', '52000000-0000-0000-0000-000000000010', '40000000-0000-0000-0000-000000000010', CURRENT_TIMESTAMP - INTERVAL '10 days', CURRENT_TIMESTAMP - INTERVAL '10 days' + INTERVAL '5 hours', 50000.0, 50150.0, 'Completed without incidents', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a')
-ON CONFLICT (trip_number) DO NOTHING;
+ON CONFLICT DO NOTHING;
 
 -- 33. trip_dispatch
 INSERT INTO trip_dispatch (trip_id, dispatched_at, dispatched_by, remarks, tenant_id) VALUES
@@ -459,7 +459,7 @@ INSERT INTO trip_dispatch (trip_id, dispatched_at, dispatched_by, remarks, tenan
   ('70000000-0000-0000-0000-000000000008', CURRENT_TIMESTAMP - INTERVAL '8 days', 'dispatcher@transport.local', 'Dispatched with security seal #8', '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a'),
   ('70000000-0000-0000-0000-000000000009', CURRENT_TIMESTAMP - INTERVAL '9 days', 'dispatcher@transport.local', 'Dispatched with security seal #9', '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a'),
   ('70000000-0000-0000-0000-000000000010', CURRENT_TIMESTAMP - INTERVAL '10 days', 'dispatcher@transport.local', 'Dispatched with security seal #10', '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a')
-ON CONFLICT (trip_id) DO NOTHING;
+ON CONFLICT DO NOTHING;
 
 -- 34. trip_status_history
 INSERT INTO trip_status_history (id, trip_id, from_status, to_status, action, vehicle_id, actor, details, occurred_at, tenant_id) VALUES
@@ -473,7 +473,7 @@ INSERT INTO trip_status_history (id, trip_id, from_status, to_status, action, ve
   ('72000000-0000-0000-0000-000000000008', '70000000-0000-0000-0000-000000000008', 'APPROVED', 'DISPATCHED', 'DISPATCH', '52000000-0000-0000-0000-000000000008', 'dispatcher@transport.local', 'Vehicle and driver assigned', CURRENT_TIMESTAMP - INTERVAL '8 days', '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a'),
   ('72000000-0000-0000-0000-000000000009', '70000000-0000-0000-0000-000000000009', 'APPROVED', 'DISPATCHED', 'DISPATCH', '52000000-0000-0000-0000-000000000009', 'dispatcher@transport.local', 'Vehicle and driver assigned', CURRENT_TIMESTAMP - INTERVAL '9 days', '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a'),
   ('72000000-0000-0000-0000-000000000010', '70000000-0000-0000-0000-000000000010', 'APPROVED', 'DISPATCHED', 'DISPATCH', '52000000-0000-0000-0000-000000000010', 'dispatcher@transport.local', 'Vehicle and driver assigned', CURRENT_TIMESTAMP - INTERVAL '10 days', '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a')
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT DO NOTHING;
 
 -- 35. trip_operational_event
 INSERT INTO trip_operational_event (id, trip_id, event_type, occurred_at, location_id, location_description, checkpoint_type, delay_minutes, reason, incident_severity, remarks, recorded_by, created_at, updated_at, tenant_id) VALUES
@@ -487,7 +487,7 @@ INSERT INTO trip_operational_event (id, trip_id, event_type, occurred_at, locati
   ('73000000-0000-0000-0000-000000000008', '70000000-0000-0000-0000-000000000008', 'CHECKPOINT', CURRENT_TIMESTAMP - INTERVAL '8 days', '33000000-0000-0000-0000-000000000008', 'Checkpoint #8', 'SECURITY_CHECK', NULL, NULL, NULL, 'Passed checkpoint smoothly', 'driver@transport.local', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a'),
   ('73000000-0000-0000-0000-000000000009', '70000000-0000-0000-0000-000000000009', 'CHECKPOINT', CURRENT_TIMESTAMP - INTERVAL '9 days', '33000000-0000-0000-0000-000000000009', 'Checkpoint #9', 'SECURITY_CHECK', NULL, NULL, NULL, 'Passed checkpoint smoothly', 'driver@transport.local', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a'),
   ('73000000-0000-0000-0000-000000000010', '70000000-0000-0000-0000-000000000010', 'CHECKPOINT', CURRENT_TIMESTAMP - INTERVAL '10 days', '33000000-0000-0000-0000-000000000010', 'Checkpoint #10', 'SECURITY_CHECK', NULL, NULL, NULL, 'Passed checkpoint smoothly', 'driver@transport.local', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a')
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT DO NOTHING;
 
 -- 36. fuel_station
 INSERT INTO fuel_station (id, code, name, station_type, active, vendor_id, location_id, tenant_id) VALUES
@@ -501,7 +501,7 @@ INSERT INTO fuel_station (id, code, name, station_type, active, vendor_id, locat
   ('80000000-0000-0000-0000-000000000008', 'STN-008', 'Filling Station #8', 'EXTERNAL', TRUE, '34000000-0000-0000-0000-000000000002', '33000000-0000-0000-0000-000000000008', '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a'),
   ('80000000-0000-0000-0000-000000000009', 'STN-009', 'Filling Station #9', 'EXTERNAL', TRUE, '34000000-0000-0000-0000-000000000003', '33000000-0000-0000-0000-000000000009', '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a'),
   ('80000000-0000-0000-0000-000000000010', 'STN-010', 'Filling Station #10', 'EXTERNAL', TRUE, '34000000-0000-0000-0000-000000000001', '33000000-0000-0000-0000-000000000010', '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a')
-ON CONFLICT (code) DO NOTHING;
+ON CONFLICT DO NOTHING;
 
 -- 37. bunker_tank
 INSERT INTO bunker_tank (id, fuel_station_id, tank_code, tank_name, fuel_type, capacity_liters, current_stock_liters, minimum_stock_liters, status, commissioned_at, active, created_at, updated_at, tenant_id) VALUES
@@ -515,7 +515,7 @@ INSERT INTO bunker_tank (id, fuel_station_id, tank_code, tank_name, fuel_type, c
   ('81000000-0000-0000-0000-000000000008', '80000000-0000-0000-0000-000000000003', 'TNK-008', 'Underground Tank #8', 'AUTO_DIESEL', 40000.0, 25000.0, 5000.0, 'ACTIVE', CURRENT_TIMESTAMP - INTERVAL '300 days', TRUE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a'),
   ('81000000-0000-0000-0000-000000000009', '80000000-0000-0000-0000-000000000004', 'TNK-009', 'Underground Tank #9', 'AUTO_DIESEL', 40000.0, 25000.0, 5000.0, 'ACTIVE', CURRENT_TIMESTAMP - INTERVAL '300 days', TRUE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a'),
   ('81000000-0000-0000-0000-000000000010', '80000000-0000-0000-0000-000000000005', 'TNK-010', 'Underground Tank #10', 'AUTO_DIESEL', 40000.0, 25000.0, 5000.0, 'ACTIVE', CURRENT_TIMESTAMP - INTERVAL '300 days', TRUE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a')
-ON CONFLICT (tank_code) DO NOTHING;
+ON CONFLICT DO NOTHING;
 
 -- 38. fuel_price
 INSERT INTO fuel_price (id, vendor_id, fuel_type, effective_from, effective_to, unit_price, currency_code, active, created_at, updated_at, tenant_id) VALUES
@@ -529,7 +529,7 @@ INSERT INTO fuel_price (id, vendor_id, fuel_type, effective_from, effective_to, 
   ('84000000-0000-0000-0000-000000000008', '34000000-0000-0000-0000-000000000008', 'AUTO_DIESEL', CURRENT_DATE - 30, NULL, 326.0, 'LKR', TRUE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a'),
   ('84000000-0000-0000-0000-000000000009', '34000000-0000-0000-0000-000000000009', 'AUTO_DIESEL', CURRENT_DATE - 30, NULL, 328.0, 'LKR', TRUE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a'),
   ('84000000-0000-0000-0000-000000000010', '34000000-0000-0000-0000-000000000010', 'AUTO_DIESEL', CURRENT_DATE - 30, NULL, 330.0, 'LKR', TRUE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a')
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT DO NOTHING;
 
 -- 39. fuel_limit_policy
 INSERT INTO fuel_limit_policy (id, vehicle_id, maximum_quantity_per_issue, active, tenant_id) VALUES
@@ -543,7 +543,7 @@ INSERT INTO fuel_limit_policy (id, vehicle_id, maximum_quantity_per_issue, activ
   ('85000000-0000-0000-0000-000000000008', '52000000-0000-0000-0000-000000000008', 260.0, TRUE, '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a'),
   ('85000000-0000-0000-0000-000000000009', '52000000-0000-0000-0000-000000000009', 280.0, TRUE, '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a'),
   ('85000000-0000-0000-0000-000000000010', '52000000-0000-0000-0000-000000000010', 300.0, TRUE, '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a')
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT DO NOTHING;
 
 -- 40. fuel_purchase
 INSERT INTO fuel_purchase (id, purchase_number, vendor_id, fuel_station_id, fuel_type, purchase_date, invoice_number, invoice_date, quantity, unit_price, subtotal, tax_rate, tax_amount, other_charges, total_amount, currency_code, status, reconciliation_status, received_quantity, quantity_variance, expected_unit_price, price_variance, destination_fuel_station_id, delivery_note_number, received_at, approved_by, approved_at, reconciled_by, reconciled_at, reconciliation_notes, reconciliation_reference, notes, created_by, created_at, updated_at, tenant_id) VALUES
@@ -557,7 +557,7 @@ INSERT INTO fuel_purchase (id, purchase_number, vendor_id, fuel_station_id, fuel
   ('82000000-0000-0000-0000-000000000008', 'FP-2026-0008', '34000000-0000-0000-0000-000000000002', '80000000-0000-0000-0000-000000000003', 'AUTO_DIESEL', CURRENT_DATE - 17, 'INV-FP-0008', CURRENT_DATE - 17, 10000.0, 317.0, 3170000.0, 0.0, 0.0, 0.0, 3170000.0, 'LKR', 'RECONCILED', 'RECONCILED', 10000.0, 0.0, 317.0, 0.0, '80000000-0000-0000-0000-000000000003', 'DN-0008', CURRENT_TIMESTAMP - INTERVAL '17 days', '10000000-0000-0000-0000-000000000006', CURRENT_TIMESTAMP - INTERVAL '17 days', '10000000-0000-0000-0000-000000000001', CURRENT_TIMESTAMP - INTERVAL '16 days', 'Reconciled successfully', 'REC-REF-008', 'Bulk order #8', '10000000-0000-0000-0000-000000000001', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a'),
   ('82000000-0000-0000-0000-000000000009', 'FP-2026-0009', '34000000-0000-0000-0000-000000000003', '80000000-0000-0000-0000-000000000004', 'AUTO_DIESEL', CURRENT_DATE - 18, 'INV-FP-0009', CURRENT_DATE - 18, 10000.0, 317.0, 3170000.0, 0.0, 0.0, 0.0, 3170000.0, 'LKR', 'RECONCILED', 'RECONCILED', 10000.0, 0.0, 317.0, 0.0, '80000000-0000-0000-0000-000000000004', 'DN-0009', CURRENT_TIMESTAMP - INTERVAL '18 days', '10000000-0000-0000-0000-000000000006', CURRENT_TIMESTAMP - INTERVAL '18 days', '10000000-0000-0000-0000-000000000001', CURRENT_TIMESTAMP - INTERVAL '17 days', 'Reconciled successfully', 'REC-REF-009', 'Bulk order #9', '10000000-0000-0000-0000-000000000001', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a'),
   ('82000000-0000-0000-0000-000000000010', 'FP-2026-0010', '34000000-0000-0000-0000-000000000001', '80000000-0000-0000-0000-000000000005', 'AUTO_DIESEL', CURRENT_DATE - 19, 'INV-FP-0010', CURRENT_DATE - 19, 10000.0, 317.0, 3170000.0, 0.0, 0.0, 0.0, 3170000.0, 'LKR', 'RECONCILED', 'RECONCILED', 10000.0, 0.0, 317.0, 0.0, '80000000-0000-0000-0000-000000000005', 'DN-0010', CURRENT_TIMESTAMP - INTERVAL '19 days', '10000000-0000-0000-0000-000000000006', CURRENT_TIMESTAMP - INTERVAL '19 days', '10000000-0000-0000-0000-000000000001', CURRENT_TIMESTAMP - INTERVAL '18 days', 'Reconciled successfully', 'REC-REF-010', 'Bulk order #10', '10000000-0000-0000-0000-000000000001', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a')
-ON CONFLICT (purchase_number) DO NOTHING;
+ON CONFLICT DO NOTHING;
 
 -- 41. fuel_purchase_history
 INSERT INTO fuel_purchase_history (id, fuel_purchase_id, from_status, to_status, action, actor_id, actor, comment, quantity_variance, price_variance, occurred_at, tenant_id) VALUES
@@ -571,7 +571,7 @@ INSERT INTO fuel_purchase_history (id, fuel_purchase_id, from_status, to_status,
   ('86000000-0000-0000-0000-000000000008', '82000000-0000-0000-0000-000000000008', 'APPROVED', 'RECONCILED', 'RECONCILE', '10000000-0000-0000-0000-000000000001', 'admin', 'Reconciled purchase batch #8', 0.0, 0.0, CURRENT_TIMESTAMP - INTERVAL '16 days', '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a'),
   ('86000000-0000-0000-0000-000000000009', '82000000-0000-0000-0000-000000000009', 'APPROVED', 'RECONCILED', 'RECONCILE', '10000000-0000-0000-0000-000000000001', 'admin', 'Reconciled purchase batch #9', 0.0, 0.0, CURRENT_TIMESTAMP - INTERVAL '17 days', '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a'),
   ('86000000-0000-0000-0000-000000000010', '82000000-0000-0000-0000-000000000010', 'APPROVED', 'RECONCILED', 'RECONCILE', '10000000-0000-0000-0000-000000000001', 'admin', 'Reconciled purchase batch #10', 0.0, 0.0, CURRENT_TIMESTAMP - INTERVAL '18 days', '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a')
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT DO NOTHING;
 
 -- 42. fuel_issue
 INSERT INTO fuel_issue (id, voucher_number, vehicle_id, trip_id, driver_id, fuel_type, quantity, unit_price, total_amount, station_id, odometer, engine_hours, issue_date_time, status, requested_by, authorized_by, authorization_date_time, notes, created_at, updated_at, tenant_id) VALUES
@@ -585,7 +585,7 @@ INSERT INTO fuel_issue (id, voucher_number, vehicle_id, trip_id, driver_id, fuel
   ('83000000-0000-0000-0000-000000000008', 'FV-2026-0008', '52000000-0000-0000-0000-000000000008', '70000000-0000-0000-0000-000000000008', '40000000-0000-0000-0000-000000000008', 'AUTO_DIESEL', 80.0, 317.0, 25360.0, '80000000-0000-0000-0000-000000000003', 50000.0, 1500.0, CURRENT_TIMESTAMP - INTERVAL '8 days', 'ISSUED', '10000000-0000-0000-0000-000000000002', '10000000-0000-0000-0000-000000000005', CURRENT_TIMESTAMP - INTERVAL '8 days', 'Fuel voucher #8', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a'),
   ('83000000-0000-0000-0000-000000000009', 'FV-2026-0009', '52000000-0000-0000-0000-000000000009', '70000000-0000-0000-0000-000000000009', '40000000-0000-0000-0000-000000000009', 'AUTO_DIESEL', 80.0, 317.0, 25360.0, '80000000-0000-0000-0000-000000000004', 50000.0, 1500.0, CURRENT_TIMESTAMP - INTERVAL '9 days', 'ISSUED', '10000000-0000-0000-0000-000000000002', '10000000-0000-0000-0000-000000000005', CURRENT_TIMESTAMP - INTERVAL '9 days', 'Fuel voucher #9', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a'),
   ('83000000-0000-0000-0000-000000000010', 'FV-2026-0010', '52000000-0000-0000-0000-000000000010', '70000000-0000-0000-0000-000000000010', '40000000-0000-0000-0000-000000000010', 'AUTO_DIESEL', 80.0, 317.0, 25360.0, '80000000-0000-0000-0000-000000000005', 50000.0, 1500.0, CURRENT_TIMESTAMP - INTERVAL '10 days', 'ISSUED', '10000000-0000-0000-0000-000000000002', '10000000-0000-0000-0000-000000000005', CURRENT_TIMESTAMP - INTERVAL '10 days', 'Fuel voucher #10', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a')
-ON CONFLICT (voucher_number) DO NOTHING;
+ON CONFLICT DO NOTHING;
 
 -- 43. fuel_issue_history
 INSERT INTO fuel_issue_history (id, fuel_issue_id, from_status, to_status, action, actor_id, actor, comment, occurred_at, tenant_id) VALUES
@@ -599,7 +599,7 @@ INSERT INTO fuel_issue_history (id, fuel_issue_id, from_status, to_status, actio
   ('87000000-0000-0000-0000-000000000008', '83000000-0000-0000-0000-000000000008', 'AUTHORIZED', 'ISSUED', 'ISSUE', '10000000-0000-0000-0000-000000000005', 'fuel.kamal', 'Dispensed fuel voucher #8', CURRENT_TIMESTAMP - INTERVAL '8 days', '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a'),
   ('87000000-0000-0000-0000-000000000009', '83000000-0000-0000-0000-000000000009', 'AUTHORIZED', 'ISSUED', 'ISSUE', '10000000-0000-0000-0000-000000000005', 'fuel.kamal', 'Dispensed fuel voucher #9', CURRENT_TIMESTAMP - INTERVAL '9 days', '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a'),
   ('87000000-0000-0000-0000-000000000010', '83000000-0000-0000-0000-000000000010', 'AUTHORIZED', 'ISSUED', 'ISSUE', '10000000-0000-0000-0000-000000000005', 'fuel.kamal', 'Dispensed fuel voucher #10', CURRENT_TIMESTAMP - INTERVAL '10 days', '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a')
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT DO NOTHING;
 
 -- 44. bunker_stock_movement
 INSERT INTO bunker_stock_movement (id, tank_id, movement_type, quantity_liters, resulting_balance_liters, reference_type, reference_id, occurred_at, created_by, reason, created_at, tenant_id) VALUES
@@ -627,7 +627,7 @@ INSERT INTO bunker_dip_reading (id, tank_id, physical_quantity_liters, book_quan
   ('89000000-0000-0000-0000-000000000008', '81000000-0000-0000-0000-000000000008', 24915.0, 24920.0, -5.0, CURRENT_TIMESTAMP - INTERVAL '8 days', '10000000-0000-0000-0000-000000000005', 'Daily dip reading #8', CURRENT_TIMESTAMP, '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a'),
   ('89000000-0000-0000-0000-000000000009', '81000000-0000-0000-0000-000000000009', 24915.0, 24920.0, -5.0, CURRENT_TIMESTAMP - INTERVAL '9 days', '10000000-0000-0000-0000-000000000005', 'Daily dip reading #9', CURRENT_TIMESTAMP, '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a'),
   ('89000000-0000-0000-0000-000000000010', '81000000-0000-0000-0000-000000000010', 24915.0, 24920.0, -5.0, CURRENT_TIMESTAMP - INTERVAL '10 days', '10000000-0000-0000-0000-000000000005', 'Daily dip reading #10', CURRENT_TIMESTAMP, '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a')
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT DO NOTHING;
 
 -- 46. bunker_stock_adjustment
 INSERT INTO bunker_stock_adjustment (id, tank_id, quantity_delta_liters, reason, approved_by, source_dip_reading_id, occurred_at, created_at, tenant_id) VALUES
@@ -641,7 +641,7 @@ INSERT INTO bunker_stock_adjustment (id, tank_id, quantity_delta_liters, reason,
   ('8a000000-0000-0000-0000-000000000008', '81000000-0000-0000-0000-000000000008', 0.0, 'Reconciled within tolerance #8', '10000000-0000-0000-0000-000000000006', NULL, CURRENT_TIMESTAMP - INTERVAL '8 days', CURRENT_TIMESTAMP, '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a'),
   ('8a000000-0000-0000-0000-000000000009', '81000000-0000-0000-0000-000000000009', 0.0, 'Reconciled within tolerance #9', '10000000-0000-0000-0000-000000000006', NULL, CURRENT_TIMESTAMP - INTERVAL '9 days', CURRENT_TIMESTAMP, '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a'),
   ('8a000000-0000-0000-0000-000000000010', '81000000-0000-0000-0000-000000000010', 0.0, 'Reconciled within tolerance #10', '10000000-0000-0000-0000-000000000006', NULL, CURRENT_TIMESTAMP - INTERVAL '10 days', CURRENT_TIMESTAMP, '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a')
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT DO NOTHING;
 
 -- 47. freight_order
 INSERT INTO freight_order (id, order_number, customer_id, origin_location_id, destination_location_id, requested_pickup_at, requested_delivery_at, service_level, priority, special_handling_instructions, version, created_at, updated_at, created_by, updated_by, tenant_id) VALUES
@@ -655,7 +655,7 @@ INSERT INTO freight_order (id, order_number, customer_id, origin_location_id, de
   ('90000000-0000-0000-0000-000000000008', 'FO-2026-0008', '32000000-0000-0000-0000-000000000008', '33000000-0000-0000-0000-000000000001', '33000000-0000-0000-0000-000000000009', CURRENT_TIMESTAMP - INTERVAL '9 days', CURRENT_TIMESTAMP + INTERVAL '9 days', 'STANDARD_FREIGHT', 'NORMAL', 'Handle with care #8', 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'SYSTEM', 'SYSTEM', '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a'),
   ('90000000-0000-0000-0000-000000000009', 'FO-2026-0009', '32000000-0000-0000-0000-000000000009', '33000000-0000-0000-0000-000000000001', '33000000-0000-0000-0000-000000000010', CURRENT_TIMESTAMP - INTERVAL '10 days', CURRENT_TIMESTAMP + INTERVAL '10 days', 'STANDARD_FREIGHT', 'NORMAL', 'Handle with care #9', 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'SYSTEM', 'SYSTEM', '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a'),
   ('90000000-0000-0000-0000-000000000010', 'FO-2026-0010', '32000000-0000-0000-0000-000000000010', '33000000-0000-0000-0000-000000000001', '33000000-0000-0000-0000-000000000002', CURRENT_TIMESTAMP - INTERVAL '11 days', CURRENT_TIMESTAMP + INTERVAL '11 days', 'STANDARD_FREIGHT', 'NORMAL', 'Handle with care #10', 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'SYSTEM', 'SYSTEM', '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a')
-ON CONFLICT (order_number) DO NOTHING;
+ON CONFLICT DO NOTHING;
 
 -- 48. freight_order_line
 INSERT INTO freight_order_line (id, freight_order_id, description, quantity, line_order, tenant_id) VALUES
@@ -669,7 +669,7 @@ INSERT INTO freight_order_line (id, freight_order_id, description, quantity, lin
   ('91000000-0000-0000-0000-000000000008', '90000000-0000-0000-0000-000000000008', 'Cargo pallet shipment batch #8', 550.0, 0, '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a'),
   ('91000000-0000-0000-0000-000000000009', '90000000-0000-0000-0000-000000000009', 'Cargo pallet shipment batch #9', 600.0, 0, '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a'),
   ('91000000-0000-0000-0000-000000000010', '90000000-0000-0000-0000-000000000010', 'Cargo pallet shipment batch #10', 650.0, 0, '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a')
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT DO NOTHING;
 
 -- 49. cargo_manifest
 INSERT INTO cargo_manifest (id, manifest_number, freight_order_id, freight_order_number, version, created_at, updated_at, created_by, updated_by, finalized_at, finalized_by, tenant_id) VALUES
@@ -683,7 +683,7 @@ INSERT INTO cargo_manifest (id, manifest_number, freight_order_id, freight_order
   ('92000000-0000-0000-0000-000000000008', 'CM-2026-0008', '90000000-0000-0000-0000-000000000008', 'FO-2026-0008', 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'SYSTEM', 'SYSTEM', CURRENT_TIMESTAMP, 'dispatcher@transport.local', '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a'),
   ('92000000-0000-0000-0000-000000000009', 'CM-2026-0009', '90000000-0000-0000-0000-000000000009', 'FO-2026-0009', 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'SYSTEM', 'SYSTEM', CURRENT_TIMESTAMP, 'dispatcher@transport.local', '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a'),
   ('92000000-0000-0000-0000-000000000010', 'CM-2026-0010', '90000000-0000-0000-0000-000000000010', 'FO-2026-0010', 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'SYSTEM', 'SYSTEM', CURRENT_TIMESTAMP, 'dispatcher@transport.local', '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a')
-ON CONFLICT (manifest_number) DO NOTHING;
+ON CONFLICT DO NOTHING;
 
 -- 50. cargo_manifest_item
 INSERT INTO cargo_manifest_item (id, cargo_manifest_id, freight_order_line_id, description, quantity, packing_information, commodity_classification, customs_applicable, customs_information, hazardous, hazardous_classification, hazardous_details, item_order, fragile, temperature_sensitive, unit_weight, weight_unit, length, width, height, dimension_unit, tenant_id) VALUES
@@ -697,7 +697,7 @@ INSERT INTO cargo_manifest_item (id, cargo_manifest_id, freight_order_line_id, d
   ('93000000-0000-0000-0000-000000000008', '92000000-0000-0000-0000-000000000008', '91000000-0000-0000-0000-000000000008', 'Apparel / FMCG Pack #8', 550.0, 'Carton Boxes', 'GENERAL_MERCHANDISE', TRUE, 'HS-Code: 6205.20.00', FALSE, NULL, NULL, 0, FALSE, FALSE, 15.0, 'KG', 0.5, 0.4, 0.4, 'M', '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a'),
   ('93000000-0000-0000-0000-000000000009', '92000000-0000-0000-0000-000000000009', '91000000-0000-0000-0000-000000000009', 'Apparel / FMCG Pack #9', 600.0, 'Carton Boxes', 'GENERAL_MERCHANDISE', TRUE, 'HS-Code: 6205.20.00', FALSE, NULL, NULL, 0, FALSE, FALSE, 15.0, 'KG', 0.5, 0.4, 0.4, 'M', '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a'),
   ('93000000-0000-0000-0000-000000000010', '92000000-0000-0000-0000-000000000010', '91000000-0000-0000-0000-000000000010', 'Apparel / FMCG Pack #10', 650.0, 'Carton Boxes', 'GENERAL_MERCHANDISE', TRUE, 'HS-Code: 6205.20.00', FALSE, NULL, NULL, 0, FALSE, FALSE, 15.0, 'KG', 0.5, 0.4, 0.4, 'M', '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a')
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT DO NOTHING;
 
 -- 51. load_plan
 INSERT INTO load_plan (id, load_plan_number, cargo_manifest_id, vehicle_id, notes, version, created_at, updated_at, created_by, updated_by, readiness_status, ready_at, ready_by, tenant_id) VALUES
@@ -711,7 +711,7 @@ INSERT INTO load_plan (id, load_plan_number, cargo_manifest_id, vehicle_id, note
   ('94000000-0000-0000-0000-000000000008', 'LP-2026-0008', '92000000-0000-0000-0000-000000000008', '52000000-0000-0000-0000-000000000008', 'Load Plan details #8', 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'SYSTEM', 'SYSTEM', 'STRUCTURALLY_READY', CURRENT_TIMESTAMP, 'dispatcher@transport.local', '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a'),
   ('94000000-0000-0000-0000-000000000009', 'LP-2026-0009', '92000000-0000-0000-0000-000000000009', '52000000-0000-0000-0000-000000000009', 'Load Plan details #9', 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'SYSTEM', 'SYSTEM', 'STRUCTURALLY_READY', CURRENT_TIMESTAMP, 'dispatcher@transport.local', '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a'),
   ('94000000-0000-0000-0000-000000000010', 'LP-2026-0010', '92000000-0000-0000-0000-000000000010', '52000000-0000-0000-0000-000000000010', 'Load Plan details #10', 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'SYSTEM', 'SYSTEM', 'STRUCTURALLY_READY', CURRENT_TIMESTAMP, 'dispatcher@transport.local', '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a')
-ON CONFLICT (load_plan_number) DO NOTHING;
+ON CONFLICT DO NOTHING;
 
 -- 52. load_plan_item_placement
 INSERT INTO load_plan_item_placement (id, load_plan_id, manifest_item_id, placement_order, zone_reference, stack_group, container_reference, loading_sequence, special_handling_notes, tenant_id) VALUES
@@ -739,7 +739,7 @@ INSERT INTO freight_insurance_policy (id, policy_number, freight_order_id, cargo
   ('95000000-0000-0000-0000-000000000008', 'POL-SLIC-2026-0008', '90000000-0000-0000-0000-000000000008', '92000000-0000-0000-0000-000000000008', 'Sri Lanka Insurance Corp', 'ALL_RISKS_CARGO', 10000000.0, 35000.0, 'LKR', CURRENT_TIMESTAMP - INTERVAL '5 days', CURRENT_TIMESTAMP + INTERVAL '30 days', 'ACTIVE', 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'SYSTEM', 'SYSTEM', '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a'),
   ('95000000-0000-0000-0000-000000000009', 'POL-SLIC-2026-0009', '90000000-0000-0000-0000-000000000009', '92000000-0000-0000-0000-000000000009', 'Sri Lanka Insurance Corp', 'ALL_RISKS_CARGO', 10000000.0, 35000.0, 'LKR', CURRENT_TIMESTAMP - INTERVAL '5 days', CURRENT_TIMESTAMP + INTERVAL '30 days', 'ACTIVE', 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'SYSTEM', 'SYSTEM', '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a'),
   ('95000000-0000-0000-0000-000000000010', 'POL-SLIC-2026-0010', '90000000-0000-0000-0000-000000000010', '92000000-0000-0000-0000-000000000010', 'Sri Lanka Insurance Corp', 'ALL_RISKS_CARGO', 10000000.0, 35000.0, 'LKR', CURRENT_TIMESTAMP - INTERVAL '5 days', CURRENT_TIMESTAMP + INTERVAL '30 days', 'ACTIVE', 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'SYSTEM', 'SYSTEM', '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a')
-ON CONFLICT (policy_number) DO NOTHING;
+ON CONFLICT DO NOTHING;
 
 -- 54. freight_insurance_claim
 INSERT INTO freight_insurance_claim (id, claim_number, policy_id, freight_order_id, incident_reference, damage_description, claimed_amount, assessed_amount, assessment_notes, assessed_by, assessed_at, status, resolution_reason, version, created_at, updated_at, created_by, updated_by, tenant_id) VALUES
@@ -753,7 +753,7 @@ INSERT INTO freight_insurance_claim (id, claim_number, policy_id, freight_order_
   ('96000000-0000-0000-0000-000000000008', 'CLM-2026-0008', '95000000-0000-0000-0000-000000000008', '90000000-0000-0000-0000-000000000008', 'INC-2026-008', 'Minor carton denting #8', 25000.0, 20000.0, 'Surveyor assessed', 'surveyor.slic', CURRENT_TIMESTAMP - INTERVAL '2 days', 'SETTLED', 'Settled via EFT', 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'SYSTEM', 'SYSTEM', '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a'),
   ('96000000-0000-0000-0000-000000000009', 'CLM-2026-0009', '95000000-0000-0000-0000-000000000009', '90000000-0000-0000-0000-000000000009', 'INC-2026-009', 'Minor carton denting #9', 25000.0, 20000.0, 'Surveyor assessed', 'surveyor.slic', CURRENT_TIMESTAMP - INTERVAL '2 days', 'SETTLED', 'Settled via EFT', 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'SYSTEM', 'SYSTEM', '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a'),
   ('96000000-0000-0000-0000-000000000010', 'CLM-2026-0010', '95000000-0000-0000-0000-000000000010', '90000000-0000-0000-0000-000000000010', 'INC-2026-010', 'Minor carton denting #10', 25000.0, 20000.0, 'Surveyor assessed', 'surveyor.slic', CURRENT_TIMESTAMP - INTERVAL '2 days', 'SETTLED', 'Settled via EFT', 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'SYSTEM', 'SYSTEM', '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a')
-ON CONFLICT (claim_number) DO NOTHING;
+ON CONFLICT DO NOTHING;
 
 -- 55. freight_insurance_settlement
 INSERT INTO freight_insurance_settlement (id, claim_id, settlement_reference, amount, currency, notes, settled_by, settled_at, tenant_id) VALUES
@@ -767,7 +767,7 @@ INSERT INTO freight_insurance_settlement (id, claim_id, settlement_reference, am
   ('99000000-0000-0000-0000-000000000008', '96000000-0000-0000-0000-000000000008', 'SETTLE-REF-0008', 20000.0, 'LKR', 'Bank wire settlement', 'adjuster@slic.lk', CURRENT_TIMESTAMP - INTERVAL '1 day', '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a'),
   ('99000000-0000-0000-0000-000000000009', '96000000-0000-0000-0000-000000000009', 'SETTLE-REF-0009', 20000.0, 'LKR', 'Bank wire settlement', 'adjuster@slic.lk', CURRENT_TIMESTAMP - INTERVAL '1 day', '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a'),
   ('99000000-0000-0000-0000-000000000010', '96000000-0000-0000-0000-000000000010', 'SETTLE-REF-0010', 20000.0, 'LKR', 'Bank wire settlement', 'adjuster@slic.lk', CURRENT_TIMESTAMP - INTERVAL '1 day', '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a')
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT DO NOTHING;
 
 -- 56. cargo_exception
 INSERT INTO cargo_exception (id, exception_number, exception_type, status, severity, freight_order_id, manifest_id, manifest_item_id, description, impact, restriction, corrective_action, resolution, resolved_at, resolved_by, version, created_at, updated_at, created_by, updated_by, tenant_id) VALUES
@@ -781,7 +781,7 @@ INSERT INTO cargo_exception (id, exception_number, exception_type, status, sever
   ('97000000-0000-0000-0000-000000000008', 'EXC-2026-0008', 'WEIGHT_DISCREPANCY', 'RESOLVED', 'LOW', '90000000-0000-0000-0000-000000000008', '92000000-0000-0000-0000-000000000008', '93000000-0000-0000-0000-000000000008', 'Minor weight tolerance #8', 'Low impact', 'None', 'Re-weighed', 'Resolved within margin', CURRENT_TIMESTAMP, 'manager@transport.local', 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'SYSTEM', 'SYSTEM', '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a'),
   ('97000000-0000-0000-0000-000000000009', 'EXC-2026-0009', 'WEIGHT_DISCREPANCY', 'RESOLVED', 'LOW', '90000000-0000-0000-0000-000000000009', '92000000-0000-0000-0000-000000000009', '93000000-0000-0000-0000-000000000009', 'Minor weight tolerance #9', 'Low impact', 'None', 'Re-weighed', 'Resolved within margin', CURRENT_TIMESTAMP, 'manager@transport.local', 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'SYSTEM', 'SYSTEM', '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a'),
   ('97000000-0000-0000-0000-000000000010', 'EXC-2026-0010', 'WEIGHT_DISCREPANCY', 'RESOLVED', 'LOW', '90000000-0000-0000-0000-000000000010', '92000000-0000-0000-0000-000000000010', '93000000-0000-0000-0000-000000000010', 'Minor weight tolerance #10', 'Low impact', 'None', 'Re-weighed', 'Resolved within margin', CURRENT_TIMESTAMP, 'manager@transport.local', 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'SYSTEM', 'SYSTEM', '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a')
-ON CONFLICT (exception_number) DO NOTHING;
+ON CONFLICT DO NOTHING;
 
 -- 57. cargo_exception_history
 INSERT INTO cargo_exception_history (id, exception_id, action, actor, occurred_at, reason, details, tenant_id) VALUES
@@ -795,7 +795,7 @@ INSERT INTO cargo_exception_history (id, exception_id, action, actor, occurred_a
   ('9a000000-0000-0000-0000-000000000008', '97000000-0000-0000-0000-000000000008', 'RESOLVE', 'manager@transport.local', CURRENT_TIMESTAMP, 'Calibrated check', 'Actioned', '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a'),
   ('9a000000-0000-0000-0000-000000000009', '97000000-0000-0000-0000-000000000009', 'RESOLVE', 'manager@transport.local', CURRENT_TIMESTAMP, 'Calibrated check', 'Actioned', '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a'),
   ('9a000000-0000-0000-0000-000000000010', '97000000-0000-0000-0000-000000000010', 'RESOLVE', 'manager@transport.local', CURRENT_TIMESTAMP, 'Calibrated check', 'Actioned', '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a')
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT DO NOTHING;
 
 -- 58. delivery_order
 INSERT INTO delivery_order (id, tenant_id, delivery_number, customer_id, origin_location_id, destination_location_id, priority, service_type, window_start, window_end, instructions, status, version, created_at, updated_at, created_by, updated_by) VALUES
@@ -809,7 +809,7 @@ INSERT INTO delivery_order (id, tenant_id, delivery_number, customer_id, origin_
   ('a0000000-0000-0000-0000-000000000008', '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a', 'DEL-2026-0008', '32000000-0000-0000-0000-000000000008', '33000000-0000-0000-0000-000000000001', '33000000-0000-0000-0000-000000000009', 'NORMAL', 'STANDARD', CURRENT_TIMESTAMP - INTERVAL '8 days', CURRENT_TIMESTAMP - INTERVAL '8 days' + INTERVAL '4 hours', 'Deliver to dock #8', 'DELIVERED', 0, CURRENT_TIMESTAMP - INTERVAL '9 days', CURRENT_TIMESTAMP - INTERVAL '8 days', 'SYSTEM', 'SYSTEM'),
   ('a0000000-0000-0000-0000-000000000009', '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a', 'DEL-2026-0009', '32000000-0000-0000-0000-000000000009', '33000000-0000-0000-0000-000000000001', '33000000-0000-0000-0000-000000000010', 'NORMAL', 'STANDARD', CURRENT_TIMESTAMP - INTERVAL '9 days', CURRENT_TIMESTAMP - INTERVAL '9 days' + INTERVAL '4 hours', 'Deliver to dock #9', 'FAILED_ATTEMPT', 0, CURRENT_TIMESTAMP - INTERVAL '10 days', CURRENT_TIMESTAMP - INTERVAL '9 days', 'SYSTEM', 'SYSTEM'),
   ('a0000000-0000-0000-0000-000000000010', '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a', 'DEL-2026-0010', '32000000-0000-0000-0000-000000000010', '33000000-0000-0000-0000-000000000001', '33000000-0000-0000-0000-000000000002', 'NORMAL', 'STANDARD', CURRENT_TIMESTAMP - INTERVAL '10 days', CURRENT_TIMESTAMP - INTERVAL '10 days' + INTERVAL '4 hours', 'Deliver to dock #10', 'ESCALATED', 0, CURRENT_TIMESTAMP - INTERVAL '11 days', CURRENT_TIMESTAMP - INTERVAL '10 days', 'SYSTEM', 'SYSTEM')
-ON CONFLICT (tenant_id, delivery_number) DO NOTHING;
+ON CONFLICT DO NOTHING;
 
 -- 59. proof_of_delivery
 INSERT INTO proof_of_delivery (id, tenant_id, delivery_order_id, status, device_captured_at, latitude, longitude, accuracy_meters, signer_name, signer_relationship, accepted_at, accepted_by, version, created_at, updated_at, created_by, updated_by) VALUES
@@ -823,7 +823,7 @@ INSERT INTO proof_of_delivery (id, tenant_id, delivery_order_id, status, device_
   ('a1000000-0000-0000-0000-000000000008', '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a', 'a0000000-0000-0000-0000-000000000008', 'FINALIZED', CURRENT_TIMESTAMP - INTERVAL '8 days' + INTERVAL '3 hours', 7.4863, 80.3623, 4.5, 'Chaminda Recipient', 'Receiving Manager', CURRENT_TIMESTAMP - INTERVAL '8 days' + INTERVAL '3 hours', 'chaminda.driver', 0, CURRENT_TIMESTAMP - INTERVAL '8 days', CURRENT_TIMESTAMP - INTERVAL '8 days', 'driver', 'driver'),
   ('a1000000-0000-0000-0000-000000000009', '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a', 'a0000000-0000-0000-0000-000000000009', 'FINALIZED', CURRENT_TIMESTAMP - INTERVAL '9 days' + INTERVAL '3 hours', 8.3114, 80.4037, 4.5, 'Malik Recipient', 'Receiving Manager', CURRENT_TIMESTAMP - INTERVAL '9 days' + INTERVAL '3 hours', 'malik.driver', 0, CURRENT_TIMESTAMP - INTERVAL '9 days', CURRENT_TIMESTAMP - INTERVAL '9 days', 'driver', 'driver'),
   ('a1000000-0000-0000-0000-000000000010', '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a', 'a0000000-0000-0000-0000-000000000010', 'FINALIZED', CURRENT_TIMESTAMP - INTERVAL '10 days' + INTERVAL '3 hours', 6.6828, 80.4036, 4.5, 'Dinesh Recipient', 'Receiving Manager', CURRENT_TIMESTAMP - INTERVAL '10 days' + INTERVAL '3 hours', 'dinesh.driver', 0, CURRENT_TIMESTAMP - INTERVAL '10 days', CURRENT_TIMESTAMP - INTERVAL '10 days', 'driver', 'driver')
-ON CONFLICT (tenant_id, delivery_order_id) DO NOTHING;
+ON CONFLICT DO NOTHING;
 
 -- 60. pod_evidence
 INSERT INTO pod_evidence (id, tenant_id, proof_of_delivery_id, evidence_type, storage_reference, barcode_value, detected_content_type, content_length, sha256_checksum, original_filename, capture_source, created_by, created_at) VALUES
@@ -837,7 +837,7 @@ INSERT INTO pod_evidence (id, tenant_id, proof_of_delivery_id, evidence_type, st
   ('a3000000-0000-0000-0000-000000000008', '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a', 'a1000000-0000-0000-0000-000000000008', 'SIGNATURE', '/evidence/sig_8.png', NULL, 'image/png', 20000, 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855', 'sig_8.png', 'CAMERA', 'driver', CURRENT_TIMESTAMP - INTERVAL '8 days'),
   ('a3000000-0000-0000-0000-000000000009', '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a', 'a1000000-0000-0000-0000-000000000009', 'SIGNATURE', '/evidence/sig_9.png', NULL, 'image/png', 20000, 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855', 'sig_9.png', 'CAMERA', 'driver', CURRENT_TIMESTAMP - INTERVAL '9 days'),
   ('a3000000-0000-0000-0000-000000000010', '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a', 'a1000000-0000-0000-0000-000000000010', 'SIGNATURE', '/evidence/sig_10.png', NULL, 'image/png', 20000, 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855', 'sig_10.png', 'CAMERA', 'driver', CURRENT_TIMESTAMP - INTERVAL '10 days')
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT DO NOTHING;
 
 -- 61. delivery_attempt
 INSERT INTO delivery_attempt (id, tenant_id, delivery_id, attempt_number, attempt_timestamp, failure_reason, notes, disposition, recorded_by, recorded_at) VALUES
@@ -851,7 +851,7 @@ INSERT INTO delivery_attempt (id, tenant_id, delivery_id, attempt_number, attemp
   ('a2000000-0000-0000-0000-000000000008', '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a', 'a0000000-0000-0000-0000-000000000008', 1, CURRENT_TIMESTAMP - INTERVAL '8 days', 'CUSTOMER_UNAVAILABLE', 'Gate closed attempt #8', 'REDELIVERY_SCHEDULED', 'driver', CURRENT_TIMESTAMP - INTERVAL '8 days'),
   ('a2000000-0000-0000-0000-000000000009', '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a', 'a0000000-0000-0000-0000-000000000009', 1, CURRENT_TIMESTAMP - INTERVAL '9 days', 'CUSTOMER_UNAVAILABLE', 'Gate closed attempt #9', 'REDELIVERY_SCHEDULED', 'driver', CURRENT_TIMESTAMP - INTERVAL '9 days'),
   ('a2000000-0000-0000-0000-000000000010', '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a', 'a0000000-0000-0000-0000-000000000010', 1, CURRENT_TIMESTAMP - INTERVAL '10 days', 'CUSTOMER_UNAVAILABLE', 'Gate closed attempt #10', 'REDELIVERY_SCHEDULED', 'driver', CURRENT_TIMESTAMP - INTERVAL '10 days')
-ON CONFLICT (tenant_id, delivery_id, attempt_number) DO NOTHING;
+ON CONFLICT DO NOTHING;
 
 -- 62. delivery_contact_attempt
 INSERT INTO delivery_contact_attempt (id, tenant_id, delivery_attempt_id, channel, contact_timestamp, outcome, notes, recorded_by, recorded_at) VALUES
@@ -865,7 +865,7 @@ INSERT INTO delivery_contact_attempt (id, tenant_id, delivery_attempt_id, channe
   ('a4000000-0000-0000-0000-000000000008', '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a', 'a2000000-0000-0000-0000-000000000008', 'PHONE_CALL', CURRENT_TIMESTAMP - INTERVAL '8 days', 'NO_ANSWER', 'Phone ring out #8', 'driver', CURRENT_TIMESTAMP - INTERVAL '8 days'),
   ('a4000000-0000-0000-0000-000000000009', '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a', 'a2000000-0000-0000-0000-000000000009', 'PHONE_CALL', CURRENT_TIMESTAMP - INTERVAL '9 days', 'NO_ANSWER', 'Phone ring out #9', 'driver', CURRENT_TIMESTAMP - INTERVAL '9 days'),
   ('a4000000-0000-0000-0000-000000000010', '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a', 'a2000000-0000-0000-0000-000000000010', 'PHONE_CALL', CURRENT_TIMESTAMP - INTERVAL '10 days', 'NO_ANSWER', 'Phone ring out #10', 'driver', CURRENT_TIMESTAMP - INTERVAL '10 days')
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT DO NOTHING;
 
 -- 63. delivery_escalation
 INSERT INTO delivery_escalation (id, tenant_id, delivery_id, delivery_attempt_id, reason, status, resolution_notes, escalated_by, escalated_at, resolved_by, resolved_at) VALUES
@@ -879,7 +879,7 @@ INSERT INTO delivery_escalation (id, tenant_id, delivery_id, delivery_attempt_id
   ('a5000000-0000-0000-0000-000000000008', '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a', 'a0000000-0000-0000-0000-000000000008', 'a2000000-0000-0000-0000-000000000008', 'Failed delivery escalation #8', 'OPEN', NULL, 'driver', CURRENT_TIMESTAMP - INTERVAL '8 days', NULL, NULL),
   ('a5000000-0000-0000-0000-000000000009', '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a', 'a0000000-0000-0000-0000-000000000009', 'a2000000-0000-0000-0000-000000000009', 'Failed delivery escalation #9', 'OPEN', NULL, 'driver', CURRENT_TIMESTAMP - INTERVAL '9 days', NULL, NULL),
   ('a5000000-0000-0000-0000-000000000010', '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a', 'a0000000-0000-0000-0000-000000000010', 'a2000000-0000-0000-0000-000000000010', 'Failed delivery escalation #10', 'OPEN', NULL, 'driver', CURRENT_TIMESTAMP - INTERVAL '10 days', NULL, NULL)
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT DO NOTHING;
 
 -- 64. delivery_redelivery_schedule
 INSERT INTO delivery_redelivery_schedule (id, tenant_id, delivery_order_id, delivery_attempt_id, scheduling_method, preferred_start_time, preferred_end_time, customer_preference_notes, scheduled_start_time, scheduled_end_time, status, scheduled_by, scheduled_at, created_at, updated_at) VALUES
@@ -893,7 +893,7 @@ INSERT INTO delivery_redelivery_schedule (id, tenant_id, delivery_order_id, deli
   ('a6000000-0000-0000-0000-000000000008', '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a', 'a0000000-0000-0000-0000-000000000008', 'a2000000-0000-0000-0000-000000000008', 'AGENT_ASSISTED', CURRENT_TIMESTAMP + INTERVAL '8 days', CURRENT_TIMESTAMP + INTERVAL '8 days' + INTERVAL '4 hours', 'Next day slot #8', CURRENT_TIMESTAMP + INTERVAL '8 days', CURRENT_TIMESTAMP + INTERVAL '8 days' + INTERVAL '4 hours', 'CONFIRMED', 'dispatcher', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
   ('a6000000-0000-0000-0000-000000000009', '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a', 'a0000000-0000-0000-0000-000000000009', 'a2000000-0000-0000-0000-000000000009', 'AGENT_ASSISTED', CURRENT_TIMESTAMP + INTERVAL '9 days', CURRENT_TIMESTAMP + INTERVAL '9 days' + INTERVAL '4 hours', 'Next day slot #9', CURRENT_TIMESTAMP + INTERVAL '9 days', CURRENT_TIMESTAMP + INTERVAL '9 days' + INTERVAL '4 hours', 'CONFIRMED', 'dispatcher', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
   ('a6000000-0000-0000-0000-000000000010', '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a', 'a0000000-0000-0000-0000-000000000010', 'a2000000-0000-0000-0000-000000000010', 'AGENT_ASSISTED', CURRENT_TIMESTAMP + INTERVAL '10 days', CURRENT_TIMESTAMP + INTERVAL '10 days' + INTERVAL '4 hours', 'Next day slot #10', CURRENT_TIMESTAMP + INTERVAL '10 days', CURRENT_TIMESTAMP + INTERVAL '10 days' + INTERVAL '4 hours', 'CONFIRMED', 'dispatcher', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT DO NOTHING;
 
 -- 65. notification_rule
 INSERT INTO notification_rule (id, name, description, event_type, channel, recipient_type, recipient_value, enabled, severity_threshold, created_at, updated_at, tenant_id) VALUES
@@ -907,7 +907,7 @@ INSERT INTO notification_rule (id, name, description, event_type, channel, recip
   ('b0000000-0000-0000-0000-000000000008', 'Rule for INSURANCE_CLAIM_SUBMITTED', 'Automatic trigger for INSURANCE_CLAIM_SUBMITTED', 'INSURANCE_CLAIM_SUBMITTED', 'IN_APP', 'ROLE', 'DISPATCHER', TRUE, 'WARNING', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a'),
   ('b0000000-0000-0000-0000-000000000009', 'Rule for TRIP_DISPATCHED', 'Automatic trigger for TRIP_DISPATCHED', 'TRIP_DISPATCHED', 'IN_APP', 'ROLE', 'DISPATCHER', TRUE, 'WARNING', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a'),
   ('b0000000-0000-0000-0000-000000000010', 'Rule for REDELIVERY_SCHEDULED', 'Automatic trigger for REDELIVERY_SCHEDULED', 'REDELIVERY_SCHEDULED', 'IN_APP', 'ROLE', 'DISPATCHER', TRUE, 'WARNING', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a')
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT DO NOTHING;
 
 -- 66. notification_rule_policy
 INSERT INTO notification_rule_policy (rule_id, quiet_hours_enabled, quiet_start_time, quiet_end_time, suppression_window_minutes, escalation_enabled, escalation_after_minutes, escalation_recipient_type, escalation_recipient_value, created_at, updated_at, version, tenant_id) VALUES
@@ -921,7 +921,7 @@ INSERT INTO notification_rule_policy (rule_id, quiet_hours_enabled, quiet_start_
   ('b0000000-0000-0000-0000-000000000008', FALSE, NULL, NULL, 15, FALSE, NULL, NULL, NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0, '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a'),
   ('b0000000-0000-0000-0000-000000000009', FALSE, NULL, NULL, 15, FALSE, NULL, NULL, NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0, '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a'),
   ('b0000000-0000-0000-0000-000000000010', FALSE, NULL, NULL, 15, FALSE, NULL, NULL, NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0, '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a')
-ON CONFLICT (rule_id) DO NOTHING;
+ON CONFLICT DO NOTHING;
 
 -- 67. notification_rule_quiet_day
 INSERT INTO notification_rule_quiet_day (rule_id, day_of_week, tenant_id) VALUES
@@ -949,7 +949,7 @@ INSERT INTO notification (id, rule_id, event_id, event_type, channel, recipient,
   ('b1000000-0000-0000-0000-000000000008', 'b0000000-0000-0000-0000-000000000008', 'b2000000-0000-0000-0000-000000000008', 'INSURANCE_CLAIM_SUBMITTED', 'IN_APP', 'dispatcher@transport.local', 'WARNING', 'Alert: INSURANCE_CLAIM_SUBMITTED', 'Operational notification message #8', 'READ', CURRENT_TIMESTAMP - INTERVAL '8 days', CURRENT_TIMESTAMP - INTERVAL '8 days', CURRENT_TIMESTAMP - INTERVAL '8 days' + INTERVAL '5 mins', NULL, 'RTE-CMB-008', '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a'),
   ('b1000000-0000-0000-0000-000000000009', 'b0000000-0000-0000-0000-000000000009', 'b2000000-0000-0000-0000-000000000009', 'TRIP_DISPATCHED', 'IN_APP', 'dispatcher@transport.local', 'WARNING', 'Alert: TRIP_DISPATCHED', 'Operational notification message #9', 'READ', CURRENT_TIMESTAMP - INTERVAL '9 days', CURRENT_TIMESTAMP - INTERVAL '9 days', CURRENT_TIMESTAMP - INTERVAL '9 days' + INTERVAL '5 mins', NULL, 'RTE-CMB-009', '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a'),
   ('b1000000-0000-0000-0000-000000000010', 'b0000000-0000-0000-0000-000000000010', 'b2000000-0000-0000-0000-000000000010', 'REDELIVERY_SCHEDULED', 'IN_APP', 'dispatcher@transport.local', 'WARNING', 'Alert: REDELIVERY_SCHEDULED', 'Operational notification message #10', 'READ', CURRENT_TIMESTAMP - INTERVAL '10 days', CURRENT_TIMESTAMP - INTERVAL '10 days', CURRENT_TIMESTAMP - INTERVAL '10 days' + INTERVAL '5 mins', NULL, 'RTE-CMB-010', '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a')
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT DO NOTHING;
 
 -- 69. notification_rule_execution
 INSERT INTO notification_rule_execution (id, execution_key, event_id, event_type, aggregate_type, aggregate_id, rule_id, resolved_recipient, channel, outcome, suppression_key, controlling_notification_id, failure_code, failure_message, created_at, completed_at, tenant_id) VALUES
@@ -963,7 +963,7 @@ INSERT INTO notification_rule_execution (id, execution_key, event_id, event_type
   ('b3000000-0000-0000-0000-000000000008', 'exec-key-0008', 'b2000000-0000-0000-0000-000000000008', 'INSURANCE_CLAIM_SUBMITTED', 'TRIP', '70000000-0000-0000-0000-000000000008', 'b0000000-0000-0000-0000-000000000008', 'dispatcher@transport.local', 'IN_APP', 'ACCEPTED', NULL, 'b1000000-0000-0000-0000-000000000008', NULL, NULL, CURRENT_TIMESTAMP - INTERVAL '8 days', CURRENT_TIMESTAMP - INTERVAL '8 days', '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a'),
   ('b3000000-0000-0000-0000-000000000009', 'exec-key-0009', 'b2000000-0000-0000-0000-000000000009', 'TRIP_DISPATCHED', 'TRIP', '70000000-0000-0000-0000-000000000009', 'b0000000-0000-0000-0000-000000000009', 'dispatcher@transport.local', 'IN_APP', 'ACCEPTED', NULL, 'b1000000-0000-0000-0000-000000000009', NULL, NULL, CURRENT_TIMESTAMP - INTERVAL '9 days', CURRENT_TIMESTAMP - INTERVAL '9 days', '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a'),
   ('b3000000-0000-0000-0000-000000000010', 'exec-key-0010', 'b2000000-0000-0000-0000-000000000010', 'REDELIVERY_SCHEDULED', 'TRIP', '70000000-0000-0000-0000-000000000010', 'b0000000-0000-0000-0000-000000000010', 'dispatcher@transport.local', 'IN_APP', 'ACCEPTED', NULL, 'b1000000-0000-0000-0000-000000000010', NULL, NULL, CURRENT_TIMESTAMP - INTERVAL '10 days', CURRENT_TIMESTAMP - INTERVAL '10 days', '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a')
-ON CONFLICT (execution_key) DO NOTHING;
+ON CONFLICT DO NOTHING;
 
 -- 70. notification_delivery_attempt
 INSERT INTO notification_delivery_attempt (id, notification_id, attempt_number, state, due_at, started_at, completed_at, error_category, error_code, error_message, provider_message_id, created_at, tenant_id) VALUES
@@ -977,7 +977,7 @@ INSERT INTO notification_delivery_attempt (id, notification_id, attempt_number, 
   ('b4000000-0000-0000-0000-000000000008', 'b1000000-0000-0000-0000-000000000008', 1, 'SUCCEEDED', CURRENT_TIMESTAMP - INTERVAL '8 days', CURRENT_TIMESTAMP - INTERVAL '8 days', CURRENT_TIMESTAMP - INTERVAL '8 days', NULL, NULL, NULL, 'prov-msg-0008', CURRENT_TIMESTAMP - INTERVAL '8 days', '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a'),
   ('b4000000-0000-0000-0000-000000000009', 'b1000000-0000-0000-0000-000000000009', 1, 'SUCCEEDED', CURRENT_TIMESTAMP - INTERVAL '9 days', CURRENT_TIMESTAMP - INTERVAL '9 days', CURRENT_TIMESTAMP - INTERVAL '9 days', NULL, NULL, NULL, 'prov-msg-0009', CURRENT_TIMESTAMP - INTERVAL '9 days', '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a'),
   ('b4000000-0000-0000-0000-000000000010', 'b1000000-0000-0000-0000-000000000010', 1, 'SUCCEEDED', CURRENT_TIMESTAMP - INTERVAL '10 days', CURRENT_TIMESTAMP - INTERVAL '10 days', CURRENT_TIMESTAMP - INTERVAL '10 days', NULL, NULL, NULL, 'prov-msg-0010', CURRENT_TIMESTAMP - INTERVAL '10 days', '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a')
-ON CONFLICT (notification_id, attempt_number) DO NOTHING;
+ON CONFLICT DO NOTHING;
 
 -- 71. offline_sync_operation
 INSERT INTO offline_sync_operation (operation_id, operation_type, operation_version, actor_id, client_instance_id, aggregate_type, aggregate_id, request_hash, result_status, result_code, result_version, processed_at, created_at, tenant_id) VALUES
@@ -991,6 +991,6 @@ INSERT INTO offline_sync_operation (operation_id, operation_type, operation_vers
   ('b5000000-0000-0000-0000-000000000008', 'RECORD_PROOF_OF_DELIVERY', 1, '10000000-0000-0000-0000-000000000008', 'b6000000-0000-0000-0000-000000000008', 'DELIVERY_ORDER', 'a0000000-0000-0000-0000-000000000008', 'sha256_hash_mock_0008', 'APPLIED', '200_OK', 1, CURRENT_TIMESTAMP - INTERVAL '8 days', CURRENT_TIMESTAMP - INTERVAL '8 days', '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a'),
   ('b5000000-0000-0000-0000-000000000009', 'RECORD_PROOF_OF_DELIVERY', 1, '10000000-0000-0000-0000-000000000009', 'b6000000-0000-0000-0000-000000000009', 'DELIVERY_ORDER', 'a0000000-0000-0000-0000-000000000009', 'sha256_hash_mock_0009', 'APPLIED', '200_OK', 1, CURRENT_TIMESTAMP - INTERVAL '9 days', CURRENT_TIMESTAMP - INTERVAL '9 days', '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a'),
   ('b5000000-0000-0000-0000-000000000010', 'RECORD_PROOF_OF_DELIVERY', 1, '10000000-0000-0000-0000-000000000010', 'b6000000-0000-0000-0000-000000000010', 'DELIVERY_ORDER', 'a0000000-0000-0000-0000-000000000010', 'sha256_hash_mock_0010', 'APPLIED', '200_OK', 1, CURRENT_TIMESTAMP - INTERVAL '10 days', CURRENT_TIMESTAMP - INTERVAL '10 days', '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a')
-ON CONFLICT (operation_id) DO NOTHING;
+ON CONFLICT DO NOTHING;
 
 COMMIT;
