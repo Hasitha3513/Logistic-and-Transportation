@@ -156,7 +156,7 @@ class DatabaseTableOwnershipArchitectureTest {
                 "delivery_order_rider_assignment", "delivery_batch", "delivery_batch_order", "delivery_batch_counter");
         own(ownership, "notification", "notification", "notification_template", "notification_rule",
                 "notification_rule_policy", "notification_rule_quiet_day", "notification_rule_execution",
-                "notification_delivery_attempt");
+                "notification_delivery_attempt", "customer_notification_preference");
         own(ownership, "offlinesync", "offline_sync_operation");
         return Map.copyOf(ownership);
     }

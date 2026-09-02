@@ -1,6 +1,6 @@
-export type NotificationChannel = 'IN_APP' | 'EMAIL';
+export type NotificationChannel = 'IN_APP' | 'EMAIL' | 'SMS';
 export type NotificationSeverity = 'INFO' | 'WARNING' | 'CRITICAL';
-export type RecipientType = 'USER' | 'ROLE' | 'EMAIL_ADDRESS';
+export type RecipientType = 'USER' | 'ROLE' | 'EMAIL_ADDRESS' | 'EVENT_CUSTOMER';
 export type NotificationStatus = 'PENDING' | 'SENT' | 'FAILED' | 'READ';
 export type DayOfWeek = 'MONDAY' | 'TUESDAY' | 'WEDNESDAY' | 'THURSDAY' | 'FRIDAY' | 'SATURDAY' | 'SUNDAY';
 export type DeliveryAttemptState = 'PENDING' | 'IN_PROGRESS' | 'SUCCEEDED' | 'FAILED';
@@ -133,6 +133,7 @@ export interface NotificationDelivery {
   createdAt: string;
   sentAt?: string;
   recipient?: string;
+  failureCategory?: string;
 }
 
 export interface NotificationDeliveryAttempt {
@@ -154,4 +155,6 @@ export interface DeliveryFilters {
   from?: string;
   to?: string;
   limit?: number;
+  aggregateType?: string;
+  aggregateId?: string;
 }

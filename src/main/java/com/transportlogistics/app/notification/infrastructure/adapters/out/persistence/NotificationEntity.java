@@ -34,7 +34,7 @@ public class NotificationEntity extends com.transportlogistics.app.shared.infras
     @Column(nullable = false, length = 32)
     private NotificationChannel channel;
 
-    @Column(nullable = false, length = 128)
+    @Column(nullable = false, length = 320)
     private String recipient;
 
     @Enumerated(EnumType.STRING)

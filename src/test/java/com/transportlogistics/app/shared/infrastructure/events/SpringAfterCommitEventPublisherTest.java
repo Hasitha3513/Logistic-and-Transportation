@@ -7,6 +7,7 @@ import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -58,6 +59,23 @@ class SpringAfterCommitEventPublisherTest {
         assertDoesNotThrow(() -> TransactionSynchronizationManager.getSynchronizations()
                 .forEach(TransactionSynchronization::afterCommit));
         verify(delegate).publishEvent(event);
+    }
+
+    @Test
+    void nestedEventPublishesDuringAfterCommitInsteadOfBeingQueuedTooLate() {
+        Object sourceEvent = new Object();
+        Object nestedEvent = new Object();
+        beginTransactionSynchronization();
+        doAnswer(invocation -> {
+            publisher.publish(nestedEvent);
+            return null;
+        }).when(delegate).publishEvent(sourceEvent);
+        publisher.publish(sourceEvent);
+
+        TransactionSynchronizationManager.getSynchronizations().forEach(TransactionSynchronization::afterCommit);
+
+        verify(delegate).publishEvent(sourceEvent);
+        verify(delegate).publishEvent(nestedEvent);
     }
 
     @Test

@@ -1,5 +1,6 @@
 package com.transportlogistics.app.delivery.application;
 
+import com.transportlogistics.app.delivery.DeliveryCustomerNotificationEvent;
 import com.transportlogistics.app.delivery.domain.model.*;
 import com.transportlogistics.app.delivery.ports.inbound.RedeliveryUseCase;
 import com.transportlogistics.app.delivery.ports.outbound.*;
@@ -24,6 +25,7 @@ public final class RedeliveryService implements RedeliveryUseCase {
     private final DeliveryRedeliveryScheduleRepository schedules;
     private final DeliveryTenantContextPort tenantContext;
     private final DeliveryOrderTransaction transactions;
+    private final DeliveryOrderEventPublisherPort eventPublisher;
     private final Clock clock;
 
     public RedeliveryService(
@@ -35,12 +37,26 @@ public final class RedeliveryService implements RedeliveryUseCase {
             DeliveryOrderTransaction transactions,
             Clock clock
     ) {
+        this(orders, proofs, attempts, schedules, tenantContext, transactions, null, clock);
+    }
+
+    public RedeliveryService(
+            DeliveryOrderRepository orders,
+            ProofOfDeliveryRepository proofs,
+            DeliveryAttemptRepository attempts,
+            DeliveryRedeliveryScheduleRepository schedules,
+            DeliveryTenantContextPort tenantContext,
+            DeliveryOrderTransaction transactions,
+            DeliveryOrderEventPublisherPort eventPublisher,
+            Clock clock
+    ) {
         this.orders = orders;
         this.proofs = proofs;
         this.attempts = attempts;
         this.schedules = schedules;
         this.tenantContext = tenantContext;
         this.transactions = transactions;
+        this.eventPublisher = eventPublisher;
         this.clock = clock;
     }
 
@@ -187,6 +203,7 @@ public final class RedeliveryService implements RedeliveryUseCase {
                     actor
             );
             orders.save(updatedOrder);
+            publishScheduled(tenant.tenantId(), delivery, savedSchedule, now, actor);
 
             return savedSchedule;
         });
@@ -263,9 +280,24 @@ public final class RedeliveryService implements RedeliveryUseCase {
                     actor
             );
             orders.save(updatedOrder);
+            publishScheduled(tenant.tenantId(), delivery, savedSchedule, now, actor);
 
             return savedSchedule;
         });
+    }
+
+    private void publishScheduled(UUID tenantId, DeliveryOrder delivery,
+                                  DeliveryRedeliverySchedule schedule, OffsetDateTime occurredAt, String actor) {
+        if (eventPublisher == null) return;
+        eventPublisher.publishEvent(DeliveryCustomerNotificationEvent.create("DELIVERY_REDELIVERY_SCHEDULED",
+            tenantId, delivery.id().value(), occurredAt, java.util.Map.of(
+                "deliveryNumber", delivery.deliveryNumber().value(),
+                "customerId", delivery.customerId().toString(),
+                "status", schedule.status().name(),
+                "scheduleId", schedule.id().toString(),
+                "scheduledWindowStart", schedule.scheduledStartTime().toString(),
+                "scheduledWindowEnd", schedule.scheduledEndTime().toString(),
+                "actor", actor)));
     }
 
     @Override

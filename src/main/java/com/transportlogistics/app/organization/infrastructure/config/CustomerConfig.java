@@ -2,6 +2,7 @@ package com.transportlogistics.app.organization.infrastructure.config;
 
 import com.transportlogistics.app.organization.CustomerDataReadiness;
 import com.transportlogistics.app.organization.CustomerLookup;
+import com.transportlogistics.app.organization.CustomerNotificationContactLookup;
 import com.transportlogistics.app.organization.application.ports.in.CustomerUseCase;
 import com.transportlogistics.app.organization.application.ports.out.CustomerRepository;
 import com.transportlogistics.app.organization.application.service.CustomerService;
@@ -25,6 +26,20 @@ class CustomerConfig {
                 var customer = customers.get(id);
                 return Optional.of(new CustomerLookup.CustomerReference(
                         customer.id(), customer.code(), customer.name(), customer.active()
+                ));
+            } catch (com.transportlogistics.app.shared.domain.NotFoundException ignored) {
+                return Optional.empty();
+            }
+        };
+    }
+
+    @Bean
+    CustomerNotificationContactLookup customerNotificationContactLookup(CustomerUseCase customers) {
+        return id -> {
+            try {
+                var customer = customers.get(id);
+                return Optional.of(new CustomerNotificationContactLookup.CustomerNotificationContact(
+                        customer.id(), customer.active(), customer.name(), customer.phone(), customer.email()
                 ));
             } catch (com.transportlogistics.app.shared.domain.NotFoundException ignored) {
                 return Optional.empty();

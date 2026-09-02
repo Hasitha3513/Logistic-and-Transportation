@@ -20,6 +20,9 @@ public interface NotificationRepository {
     List<Notification> findDuePendingEmails(OffsetDateTime now, int limit);
     List<Notification> findFailedEmails(int limit);
     List<Notification> findDeliveries(NotificationStatus status, String eventType,
+                                      OffsetDateTime from, OffsetDateTime to, String aggregateType,
+                                      UUID aggregateId, int limit);
+    List<Notification> findDeliveries(NotificationStatus status, String eventType,
                                       OffsetDateTime from, OffsetDateTime to, int limit);
     boolean existsByParentNotificationIdAndRecipient(UUID parentNotificationId, String recipient);
 }

@@ -1,5 +1,6 @@
 package com.transportlogistics.app.delivery.application;
 
+import com.transportlogistics.app.delivery.DeliveryCustomerNotificationEvent;
 import com.transportlogistics.app.delivery.domain.events.DeliveryEtaCalculatedEvent;
 import com.transportlogistics.app.delivery.domain.model.BatchEtaEstimate;
 import com.transportlogistics.app.delivery.domain.model.BatchEtaStopEstimate;
@@ -93,7 +94,8 @@ public class DeliveryEtaService implements DeliveryEtaUseCase {
         }
 
         long generation = cachePort.beginOrderCalculation(tenantId, orderId);
-        return doCalculateOrderEta(tenantId, order, fingerprint, generation, "system");
+        return doCalculateOrderEta(tenantId, order, fingerprint, generation, "system",
+            cached.map(SingleOrderEtaEstimate::slaStatus).orElse(null));
     }
 
     @Override
@@ -103,8 +105,10 @@ public class DeliveryEtaService implements DeliveryEtaUseCase {
                 .orElseThrow(() -> new NotFoundException("DELIVERY_ETA_SUBJECT_NOT_FOUND", "Delivery order not found: " + orderId));
 
         String fingerprint = buildOrderFingerprint(tenantId, order);
+        EtaStatus previousStatus = cachePort.getOrderEta(tenantId, orderId, fingerprint)
+            .map(SingleOrderEtaEstimate::slaStatus).orElse(null);
         long generation = cachePort.beginOrderCalculation(tenantId, orderId);
-        return doCalculateOrderEta(tenantId, order, fingerprint, generation, actor);
+        return doCalculateOrderEta(tenantId, order, fingerprint, generation, actor, previousStatus);
     }
 
     @Override
@@ -142,7 +146,8 @@ public class DeliveryEtaService implements DeliveryEtaUseCase {
             DeliveryOrder order,
             String fingerprint,
             long generation,
-            String actor
+            String actor,
+            EtaStatus previousStatus
     ) {
         OffsetDateTime now = OffsetDateTime.now(ZoneOffset.UTC);
 
@@ -193,6 +198,18 @@ public class DeliveryEtaService implements DeliveryEtaUseCase {
                 now,
                 actor
         ));
+
+        if ((slaStatus == EtaStatus.AT_RISK || slaStatus == EtaStatus.LATE) && slaStatus != previousStatus) {
+            var payload = new java.util.HashMap<String, String>();
+            payload.put("deliveryNumber", order.deliveryNumber().value());
+            payload.put("customerId", order.customerId().toString());
+            payload.put("actor", actor);
+            payload.put("slaStatus", slaStatus.name());
+            payload.put("estimatedArrivalAt", estimatedArrivalAt.toString());
+            eventPublisherPort.publishCustomerNotification(DeliveryCustomerNotificationEvent.create(
+                "DELIVERY_ETA_RISK_CHANGED",
+                tenantId, order.id().value(), now, payload));
+        }
 
         return result;
     }

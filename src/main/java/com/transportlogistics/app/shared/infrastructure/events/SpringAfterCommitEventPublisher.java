@@ -16,6 +16,8 @@ import java.util.Objects;
 @Component
 public final class SpringAfterCommitEventPublisher implements AfterCommitEventPublisher {
     private static final Logger log = LoggerFactory.getLogger(SpringAfterCommitEventPublisher.class);
+    private static final ThreadLocal<Boolean> PUBLISHING_AFTER_COMMIT =
+        ThreadLocal.withInitial(() -> Boolean.FALSE);
 
     private final ApplicationEventPublisher publisher;
 
@@ -26,6 +28,10 @@ public final class SpringAfterCommitEventPublisher implements AfterCommitEventPu
     @Override
     public void publish(Object event) {
         Objects.requireNonNull(event, "Event cannot be null");
+        if (Boolean.TRUE.equals(PUBLISHING_AFTER_COMMIT.get())) {
+            publisher.publishEvent(event);
+            return;
+        }
         if (TransactionSynchronizationManager.isActualTransactionActive()
                 && TransactionSynchronizationManager.isSynchronizationActive()) {
             TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
@@ -40,11 +46,14 @@ public final class SpringAfterCommitEventPublisher implements AfterCommitEventPu
     }
 
     private void publishWithoutAffectingCommittedState(Object event) {
+        PUBLISHING_AFTER_COMMIT.set(Boolean.TRUE);
         try {
             publisher.publishEvent(event);
         } catch (RuntimeException exception) {
             log.error("After-commit event consumer failed for {} without affecting committed state",
                     event.getClass().getName(), exception);
+        } finally {
+            PUBLISHING_AFTER_COMMIT.remove();
         }
     }
 }

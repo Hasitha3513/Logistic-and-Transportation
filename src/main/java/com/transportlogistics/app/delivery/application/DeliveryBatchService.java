@@ -1,5 +1,6 @@
 package com.transportlogistics.app.delivery.application;
 
+import com.transportlogistics.app.delivery.DeliveryCustomerNotificationEvent;
 import com.transportlogistics.app.delivery.domain.events.DeliveryBatchCreatedEvent;
 import com.transportlogistics.app.delivery.domain.events.DeliveryBatchOrderMembershipEvent;
 import com.transportlogistics.app.delivery.domain.events.DeliveryBatchRiderAssignedEvent;
@@ -314,6 +315,16 @@ public class DeliveryBatchService implements DeliveryBatchUseCase {
                         now,
                         actor
                 ));
+                for (DeliveryBatchOrder member
+                        : batchRepository.findActiveOrderMembershipsByBatchId(tenantId, saved.id())) {
+                    orderRepository.findById(member.deliveryOrderId()).ifPresent(order -> eventPublisher.publish(
+                        DeliveryCustomerNotificationEvent.create("DELIVERY_OUT_FOR_DELIVERY", tenantId,
+                            order.id().value(), now, java.util.Map.of(
+                                "deliveryNumber", order.deliveryNumber().value(),
+                                "customerId", order.customerId().toString(),
+                                "status", "OUT_FOR_DELIVERY",
+                                "actor", actor))));
+                }
             }
 
             return saved;

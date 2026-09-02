@@ -8,6 +8,7 @@ import { RedeliverySection } from '../components/RedeliverySection';
 import { DeliveryExceptionsSection } from '../components/DeliveryExceptionsSection';
 import { DeliveryOrderEtaSection } from '../components/DeliveryOrderEtaSection';
 import { LastMilePlannerSection } from '../components/LastMilePlannerSection';
+import { DeliveryNotificationTimeline } from '../components/DeliveryNotificationTimeline';
 
 interface ErrorBody { message?: string }
 export default function DeliveryOrderDetailsPage() {
@@ -31,5 +32,8 @@ export default function DeliveryOrderDetailsPage() {
     <section id="failed-delivery"><FailedDeliverySection delivery={data} /></section>
     <section id="redelivery"><RedeliverySection delivery={data} /></section>
     <section id="delivery-exceptions"><DeliveryExceptionsSection delivery={data} /></section>
+    {hasPermission('NOTIFICATION_RULE_VIEW') && <section id="delivery-notifications">
+      <DeliveryNotificationTimeline deliveryId={data.id} />
+    </section>}
   </Flex>;
 }

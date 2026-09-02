@@ -6,6 +6,7 @@ import com.transportlogistics.app.notification.application.ports.in.Notification
 import com.transportlogistics.app.notification.application.ports.in.NotificationUseCase;
 import com.transportlogistics.app.notification.application.ports.in.NotificationRuleExecutionUseCase;
 import com.transportlogistics.app.notification.application.ports.in.NotificationDeliveryDiagnosticsUseCase;
+import com.transportlogistics.app.notification.application.ports.in.CustomerNotificationPreferenceUseCase;
 import com.transportlogistics.app.notification.domain.model.NotificationChannel;
 import com.transportlogistics.app.notification.domain.model.NotificationRule;
 import com.transportlogistics.app.notification.domain.model.NotificationSeverity;
@@ -29,6 +30,7 @@ import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
@@ -43,6 +45,7 @@ class NotificationSecurityIntegrationTest {
     @MockBean private NotificationConfigurationUseCase configurationUseCase;
     @MockBean private NotificationRuleExecutionUseCase executionUseCase;
     @MockBean private NotificationDeliveryDiagnosticsUseCase deliveryDiagnosticsUseCase;
+    @MockBean private CustomerNotificationPreferenceUseCase preferenceUseCase;
 
     @Test
     void shouldDenyUnauthenticatedAccessToRules() throws Exception {
@@ -169,6 +172,39 @@ class NotificationSecurityIntegrationTest {
     void shouldAllowDeliveryDiagnosticsWithViewPermission() throws Exception {
         when(deliveryDiagnosticsUseCase.find(any(), any(), any(), any(), anyInt())).thenReturn(List.of());
         mvc.perform(get("/notification-deliveries")).andExpect(status().isOk());
+    }
+
+    @Test
+    @WithMockUser(authorities = "RANDOM_AUTHORITY")
+    void literalApiHistoryAndAttemptUrlsRequireViewPermission() throws Exception {
+        mvc.perform(get("/api/v1/notification-deliveries").contextPath("/api"))
+            .andExpect(status().isForbidden());
+        mvc.perform(get("/api/v1/notification-deliveries/{id}/attempts", UUID.randomUUID())
+                .contextPath("/api"))
+            .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(authorities = "NOTIFICATION_RULE_VIEW")
+    void literalApiV1HistoryUrlAllowsAuthorizedViewer() throws Exception {
+        when(deliveryDiagnosticsUseCase.find(any(), any(), any(), any(), any(), any(), anyInt()))
+            .thenReturn(List.of());
+        mvc.perform(get("/api/v1/notification-deliveries").contextPath("/api"))
+            .andExpect(status().isOk());
+    }
+
+    @Test
+    @WithMockUser(authorities = "RANDOM_AUTHORITY")
+    void literalApiPreferenceUrlsEnforceViewAndManagePermissions() throws Exception {
+        UUID customerId = UUID.randomUUID();
+        mvc.perform(get("/api/v1/notification-customer-preferences/{id}", customerId)
+                .contextPath("/api"))
+            .andExpect(status().isForbidden());
+        mvc.perform(put("/api/v1/notification-customer-preferences/{id}", customerId)
+                .contextPath("/api")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"emailEnabled\":true,\"smsEnabled\":false,\"version\":null}"))
+            .andExpect(status().isForbidden());
     }
 
     @Test

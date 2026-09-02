@@ -247,8 +247,9 @@ public record Notification(
     }
 
     public Notification scheduleRetry(OffsetDateTime nextDeliveryAt) {
-        if (status != NotificationStatus.PENDING || channel != NotificationChannel.EMAIL) {
-            throw new IllegalStateException("Only pending EMAIL notifications may be retried");
+        if (status != NotificationStatus.PENDING
+            || (channel != NotificationChannel.EMAIL && channel != NotificationChannel.SMS)) {
+            throw new IllegalStateException("Only pending EMAIL or SMS notifications may be retried");
         }
         return new Notification(id, ruleId, eventId, eventType, channel, recipient, severity, title, message,
             templateId, templateVersion, status, Objects.requireNonNull(nextDeliveryAt), createdAt, sentAt,

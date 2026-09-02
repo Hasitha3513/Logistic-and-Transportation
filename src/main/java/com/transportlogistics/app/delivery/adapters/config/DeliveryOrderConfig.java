@@ -31,8 +31,9 @@ class DeliveryOrderConfig {
     ProofOfDeliveryService proofOfDeliveryUseCase(
             DeliveryOrderRepository orders, ProofOfDeliveryRepository proofs, DeliveryEvidenceStoragePort storage,
             DeliveryTenantContextPort tenantContext, DeliveryExceptionRepository exceptions,
-            DeliveryOrderTransaction transactions, Clock clock) {
-        return new ProofOfDeliveryService(orders, proofs, storage, tenantContext, exceptions, transactions, clock);
+            DeliveryOrderTransaction transactions, DeliveryOrderEventPublisherPort eventPublisher, Clock clock) {
+        return new ProofOfDeliveryService(orders, proofs, storage, tenantContext, exceptions, transactions,
+            eventPublisher, clock);
     }
 
     @Bean
@@ -44,8 +45,10 @@ class DeliveryOrderConfig {
             DeliveryEscalationRepository escalations,
             DeliveryTenantContextPort tenantContext,
             DeliveryOrderTransaction transactions,
+            DeliveryOrderEventPublisherPort eventPublisher,
             Clock clock) {
-        return new FailedDeliveryService(orders, proofs, attempts, contactAttempts, escalations, tenantContext, transactions, clock);
+        return new FailedDeliveryService(orders, proofs, attempts, contactAttempts, escalations, tenantContext,
+            transactions, eventPublisher, clock);
     }
 
     @Bean
@@ -56,9 +59,10 @@ class DeliveryOrderConfig {
             DeliveryRedeliveryScheduleRepository schedules,
             DeliveryTenantContextPort tenantContext,
             DeliveryOrderTransaction transactions,
+            DeliveryOrderEventPublisherPort eventPublisher,
             Clock clock) {
         return new RedeliveryService(
-                orders, proofs, attempts, schedules, tenantContext, transactions, clock
+                orders, proofs, attempts, schedules, tenantContext, transactions, eventPublisher, clock
         );
     }
 
@@ -95,4 +99,3 @@ class DeliveryOrderConfig {
         return new LastMilePlannerService(orders, failedDeliveries, exceptions);
     }
 }
-

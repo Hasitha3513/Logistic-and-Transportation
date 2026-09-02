@@ -1,5 +1,6 @@
 package com.transportlogistics.app.delivery.application;
 
+import com.transportlogistics.app.delivery.DeliveryCustomerNotificationEvent;
 import com.transportlogistics.app.delivery.domain.model.*;
 import com.transportlogistics.app.delivery.ports.inbound.ProofOfDeliveryUseCase;
 import com.transportlogistics.app.delivery.ports.outbound.*;
@@ -19,14 +20,22 @@ public final class ProofOfDeliveryService implements ProofOfDeliveryUseCase, com
     private final DeliveryEvidenceStoragePort storage; private final DeliveryTenantContextPort tenants;
     private final DeliveryExceptionRepository exceptions;
     private final DeliveryOrderTransaction transactions; private final Clock clock;
+    private final DeliveryOrderEventPublisherPort eventPublisher;
 
     public ProofOfDeliveryService(DeliveryOrderRepository orders, ProofOfDeliveryRepository proofs,
                                   DeliveryEvidenceStoragePort storage, DeliveryTenantContextPort tenants,
                                   DeliveryExceptionRepository exceptions,
                                   DeliveryOrderTransaction transactions, Clock clock) {
+        this(orders, proofs, storage, tenants, exceptions, transactions, null, clock);
+    }
+
+    public ProofOfDeliveryService(DeliveryOrderRepository orders, ProofOfDeliveryRepository proofs,
+                                  DeliveryEvidenceStoragePort storage, DeliveryTenantContextPort tenants,
+                                  DeliveryExceptionRepository exceptions, DeliveryOrderTransaction transactions,
+                                  DeliveryOrderEventPublisherPort eventPublisher, Clock clock) {
         this.orders = orders; this.proofs = proofs; this.storage = storage; this.tenants = tenants;
         this.exceptions = exceptions;
-        this.transactions = transactions; this.clock = clock;
+        this.transactions = transactions; this.eventPublisher = eventPublisher; this.clock = clock;
     }
     @Override public ProofOfDelivery create(UUID deliveryId, CreateCommand command, String actor) {
         return transactions.execute(() -> {
@@ -87,6 +96,7 @@ public final class ProofOfDeliveryService implements ProofOfDeliveryUseCase, com
             OffsetDateTime accepted = now();
             ProofOfDelivery finalized = proofs.save(proof.finalizeAt(delivery.deliveryNumber().value(), accepted, actor));
             DeliveryOrder completed = orders.save(delivery.markDelivered(accepted, actor));
+            publishCompleted(tenantId, completed, accepted, actor);
             return new FinalizationResult(finalized, completed);
         });
     }
@@ -184,6 +194,7 @@ public final class ProofOfDeliveryService implements ProofOfDeliveryUseCase, com
             OffsetDateTime accepted = now();
             ProofOfDelivery finalized = proofs.save(withEvidence.finalizeAt(delivery.deliveryNumber().value(), accepted, command.actorUsername()));
             DeliveryOrder completed = orders.save(delivery.markDelivered(accepted, command.actorUsername()));
+            publishCompleted(tenantId, completed, accepted, command.actorUsername());
 
             return new com.transportlogistics.app.delivery.OfflineProofOfDeliveryRecorder.Result(
                     finalized.id(), completed.id().value(), finalized.status().name(), accepted, command.actorUsername());
@@ -194,6 +205,16 @@ public final class ProofOfDeliveryService implements ProofOfDeliveryUseCase, com
     private DeliveryOrder delivery(UUID id) { return orders.findById(id).orElseThrow(() -> missing("DELIVERY_NOT_FOUND", "Delivery Order was not found")); }
     private ProofOfDelivery proof(UUID id) { return proofs.findByDeliveryOrderId(id).orElseThrow(() -> missing("POD_NOT_FOUND", "Proof of Delivery was not found")); }
     private OffsetDateTime now() { return OffsetDateTime.now(clock); }
+    private void publishCompleted(UUID tenantId, DeliveryOrder delivery, OffsetDateTime completedAt, String actor) {
+        if (eventPublisher == null) return;
+        eventPublisher.publishEvent(DeliveryCustomerNotificationEvent.create("DELIVERY_COMPLETED", tenantId,
+            delivery.id().value(), completedAt, java.util.Map.of(
+                "deliveryNumber", delivery.deliveryNumber().value(),
+                "customerId", delivery.customerId().toString(),
+                "status", "DELIVERED",
+                "completedAt", completedAt.toString(),
+                "actor", actor)));
+    }
     private String normalizeBarcode(String value) { if (value == null || value.isBlank() || value.trim().length() > 64 || value.chars().anyMatch(Character::isISOControl)) invalid("POD_EVIDENCE_INVALID", "Barcode is invalid"); return value.trim().toUpperCase(Locale.ROOT); }
     private String source(String value, String fallback) { return value == null || value.isBlank() ? fallback : value.trim().toUpperCase(Locale.ROOT); }
     private void requireVersion(long supplied, long current, String code) { if (supplied != current) conflict(code, "The resource changed; reload and retry"); }

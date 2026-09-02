@@ -1,5 +1,6 @@
 package com.transportlogistics.app.delivery.application;
 
+import com.transportlogistics.app.delivery.DeliveryCustomerNotificationEvent;
 import com.transportlogistics.app.delivery.domain.model.*;
 import com.transportlogistics.app.delivery.ports.inbound.FailedDeliveryUseCase;
 import com.transportlogistics.app.delivery.ports.outbound.*;
@@ -21,6 +22,7 @@ public final class FailedDeliveryService implements FailedDeliveryUseCase {
     private final DeliveryEscalationRepository escalations;
     private final DeliveryTenantContextPort tenantContext;
     private final DeliveryOrderTransaction transactions;
+    private final DeliveryOrderEventPublisherPort eventPublisher;
     private final Clock clock;
 
     public FailedDeliveryService(DeliveryOrderRepository orders,
@@ -31,6 +33,18 @@ public final class FailedDeliveryService implements FailedDeliveryUseCase {
                                  DeliveryTenantContextPort tenantContext,
                                  DeliveryOrderTransaction transactions,
                                  Clock clock) {
+        this(orders, proofs, attempts, contactAttempts, escalations, tenantContext, transactions, null, clock);
+    }
+
+    public FailedDeliveryService(DeliveryOrderRepository orders,
+                                 ProofOfDeliveryRepository proofs,
+                                 DeliveryAttemptRepository attempts,
+                                 DeliveryContactAttemptRepository contactAttempts,
+                                 DeliveryEscalationRepository escalations,
+                                 DeliveryTenantContextPort tenantContext,
+                                 DeliveryOrderTransaction transactions,
+                                 DeliveryOrderEventPublisherPort eventPublisher,
+                                 Clock clock) {
         this.orders = orders;
         this.proofs = proofs;
         this.attempts = attempts;
@@ -38,13 +52,14 @@ public final class FailedDeliveryService implements FailedDeliveryUseCase {
         this.escalations = escalations;
         this.tenantContext = tenantContext;
         this.transactions = transactions;
+        this.eventPublisher = eventPublisher;
         this.clock = clock;
     }
 
     @Override
     public DeliveryAttempt recordFailedAttempt(UUID deliveryId, RecordFailedAttemptCommand command, String actor) {
         return transactions.execute(() -> {
-            requiredTenant();
+            UUID tenantId = requiredTenant();
             OffsetDateTime now = OffsetDateTime.now(clock);
             DeliveryOrder delivery = loadEligibleDelivery(deliveryId, command.expectedVersion());
 
@@ -89,6 +104,17 @@ public final class FailedDeliveryService implements FailedDeliveryUseCase {
                 DeliveryEscalation escalation = DeliveryEscalation.create(
                         UUID.randomUUID(), delivery.id(), attemptId, escReason, actor, now);
                 escalations.save(escalation);
+            }
+
+            if (eventPublisher != null) {
+                eventPublisher.publishEvent(DeliveryCustomerNotificationEvent.create(
+                    "DELIVERY_FAILED_ATTEMPT_RECORDED", tenantId, delivery.id().value(), now,
+                    java.util.Map.of(
+                        "deliveryNumber", delivery.deliveryNumber().value(),
+                        "customerId", delivery.customerId().toString(),
+                        "status", updatedOrder.status().name(),
+                        "failureDisposition", disposition.name(),
+                        "actor", actor)));
             }
 
             return savedAttempt;
@@ -223,8 +249,9 @@ public final class FailedDeliveryService implements FailedDeliveryUseCase {
         return delivery;
     }
 
-    private void requiredTenant() {
-        tenantContext.currentTenant()
-                .orElseThrow(() -> new BusinessRuleException("TENANT_CONTEXT_MISSING", "Tenant context is required"));
+    private UUID requiredTenant() {
+        return tenantContext.currentTenant()
+                .orElseThrow(() -> new BusinessRuleException("TENANT_CONTEXT_MISSING", "Tenant context is required"))
+                .tenantId();
     }
 }

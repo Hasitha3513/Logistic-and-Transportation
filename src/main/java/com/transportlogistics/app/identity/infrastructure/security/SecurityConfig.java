@@ -345,8 +345,15 @@ class SecurityConfig {
                         .hasAuthority("NOTIFICATION_RULE_VIEW")
                         .requestMatchers(HttpMethod.GET, "/notification-rule-executions")
                         .hasAuthority("NOTIFICATION_RULE_VIEW")
-                        .requestMatchers(HttpMethod.GET, "/notification-deliveries", "/notification-deliveries/*/attempts")
+                        .requestMatchers(HttpMethod.GET, "/notification-deliveries", "/notification-deliveries/*/attempts",
+                                "/v1/notification-deliveries", "/v1/notification-deliveries/*/attempts")
                         .hasAuthority("NOTIFICATION_RULE_VIEW")
+                        .requestMatchers(HttpMethod.GET, "/notification-customer-preferences/*",
+                                "/v1/notification-customer-preferences/*")
+                        .hasAuthority("NOTIFICATION_RULE_VIEW")
+                        .requestMatchers(HttpMethod.PUT, "/notification-customer-preferences/*",
+                                "/v1/notification-customer-preferences/*")
+                        .hasAuthority("NOTIFICATION_RULE_MANAGE")
                         .requestMatchers(HttpMethod.GET, "/notification-event-catalogue", "/notification-templates", "/notification-templates/*")
                         .hasAuthority("NOTIFICATION_RULE_VIEW")
                         .requestMatchers(HttpMethod.POST, "/notification-rules")
@@ -384,7 +391,7 @@ class SecurityConfig {
                                 "/bunker-tanks/**", "/bunker-transfers/**",
                                 "/dashboard/**", "/reports/**",
                                 "/v1/deliveries/**",
-                                "/notification-rules/**", "/notification-rule-executions/**", "/notification-deliveries/**", "/notification-event-catalogue/**", "/notification-templates/**",
+                                "/notification-rules/**", "/notification-rule-executions/**", "/notification-deliveries/**", "/notification-customer-preferences/**", "/notification-event-catalogue/**", "/notification-templates/**",
                                 "/notifications/**", "/offline-sync/**").denyAll()
                         .anyRequest().denyAll())
                 .addFilterBefore(jwt, UsernamePasswordAuthenticationFilter.class)

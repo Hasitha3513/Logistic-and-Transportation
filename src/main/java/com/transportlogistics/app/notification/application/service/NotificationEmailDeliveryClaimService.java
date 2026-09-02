@@ -28,7 +28,8 @@ public class NotificationEmailDeliveryClaimService implements NotificationEmailD
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public Optional<ClaimedDelivery> claim(UUID notificationId, OffsetDateTime now) {
         Notification notification = notifications.findByIdForUpdate(notificationId).orElse(null);
-        if (notification == null || notification.channel() != NotificationChannel.EMAIL
+        if (notification == null
+            || (notification.channel() != NotificationChannel.EMAIL && notification.channel() != NotificationChannel.SMS)
             || notification.status() != NotificationStatus.PENDING
             || (notification.nextDeliveryAt() != null && notification.nextDeliveryAt().isAfter(now))) {
             return Optional.empty();

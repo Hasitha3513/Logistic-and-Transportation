@@ -5,6 +5,7 @@ import com.transportlogistics.app.notification.application.ports.out.*;
 import com.transportlogistics.app.notification.domain.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,18 +28,21 @@ public class NotificationRuleEngine {
     private final NotificationRepository notificationRepository;
     private final NotificationTemplateRepository templateRepository;
     private final NotificationRecipientResolver recipientResolver;
+    private final EventCustomerRecipientResolver eventCustomerRecipientResolver;
     private final NotificationTemplateRenderer templateRenderer;
     private final NotificationQuietHoursEvaluator quietHoursEvaluator;
     private final NotificationSuppressionEvaluator suppressionEvaluator;
     private final Map<NotificationChannel, NotificationDeliveryPort> deliveryPorts;
     private final Clock clock;
 
+    @Autowired
     public NotificationRuleEngine(NotificationRuleRepository ruleRepository,
                                   NotificationRulePolicyRepository policyRepository,
                                   NotificationRuleExecutionRepository executionRepository,
                                   NotificationRepository notificationRepository,
                                   NotificationTemplateRepository templateRepository,
                                   NotificationRecipientResolver recipientResolver,
+                                  EventCustomerRecipientResolver eventCustomerRecipientResolver,
                                   NotificationTemplateRenderer templateRenderer,
                                   NotificationQuietHoursEvaluator quietHoursEvaluator,
                                   NotificationSuppressionEvaluator suppressionEvaluator,
@@ -50,6 +54,32 @@ public class NotificationRuleEngine {
         this.notificationRepository = Objects.requireNonNull(notificationRepository);
         this.templateRepository = Objects.requireNonNull(templateRepository);
         this.recipientResolver = Objects.requireNonNull(recipientResolver);
+        this.eventCustomerRecipientResolver = Objects.requireNonNull(eventCustomerRecipientResolver);
+        this.templateRenderer = Objects.requireNonNull(templateRenderer);
+        this.quietHoursEvaluator = Objects.requireNonNull(quietHoursEvaluator);
+        this.suppressionEvaluator = Objects.requireNonNull(suppressionEvaluator);
+        this.deliveryPorts = Objects.requireNonNull(deliveryPorts);
+        this.clock = Objects.requireNonNull(clock);
+    }
+
+    NotificationRuleEngine(NotificationRuleRepository ruleRepository,
+                           NotificationRulePolicyRepository policyRepository,
+                           NotificationRuleExecutionRepository executionRepository,
+                           NotificationRepository notificationRepository,
+                           NotificationTemplateRepository templateRepository,
+                           NotificationRecipientResolver recipientResolver,
+                           NotificationTemplateRenderer templateRenderer,
+                           NotificationQuietHoursEvaluator quietHoursEvaluator,
+                           NotificationSuppressionEvaluator suppressionEvaluator,
+                           Map<NotificationChannel, NotificationDeliveryPort> deliveryPorts,
+                           Clock clock) {
+        this.ruleRepository = Objects.requireNonNull(ruleRepository);
+        this.policyRepository = Objects.requireNonNull(policyRepository);
+        this.executionRepository = Objects.requireNonNull(executionRepository);
+        this.notificationRepository = Objects.requireNonNull(notificationRepository);
+        this.templateRepository = Objects.requireNonNull(templateRepository);
+        this.recipientResolver = Objects.requireNonNull(recipientResolver);
+        this.eventCustomerRecipientResolver = null;
         this.templateRenderer = Objects.requireNonNull(templateRenderer);
         this.quietHoursEvaluator = Objects.requireNonNull(quietHoursEvaluator);
         this.suppressionEvaluator = Objects.requireNonNull(suppressionEvaluator);
@@ -86,7 +116,29 @@ public class NotificationRuleEngine {
                 "TEMPLATE_DATA_MISSING", "No active compatible template", now);
             return;
         }
-        List<String> recipients = recipientResolver.resolve(rule.recipientType(), rule.channel(), rule.recipientValue());
+        Map<String, String> variables = new HashMap<>(event.metadata());
+        String eventCustomerRecipient = null;
+        if (rule.recipientType() == RecipientType.EVENT_CUSTOMER) {
+            if (eventCustomerRecipientResolver == null) {
+                throw new IllegalStateException("EVENT_CUSTOMER recipient resolver is unavailable");
+            }
+            var resolution = eventCustomerRecipientResolver.resolve(event, rule.channel());
+            if (resolution.state() == EventCustomerRecipientResolver.State.SUPPRESSED) {
+                record(event, rule, null, NotificationRuleExecutionOutcome.SUPPRESSED, null, null,
+                    "CUSTOMER_CHANNEL_DISABLED", "Customer disabled this notification channel", now);
+                return;
+            }
+            if (resolution.state() == EventCustomerRecipientResolver.State.NO_RECIPIENT) {
+                record(event, rule, null, NotificationRuleExecutionOutcome.NO_RECIPIENT, null, null,
+                    "NO_RECIPIENT", "No active customer destination resolved", now);
+                return;
+            }
+            variables.putAll(resolution.variables());
+            eventCustomerRecipient = resolution.recipient();
+        }
+        List<String> recipients = rule.recipientType() == RecipientType.EVENT_CUSTOMER
+            ? List.of(eventCustomerRecipient)
+            : recipientResolver.resolve(rule.recipientType(), rule.channel(), rule.recipientValue());
         if (recipients.isEmpty()) {
             record(event, rule, null, NotificationRuleExecutionOutcome.NO_RECIPIENT, null, null,
                 "NO_RECIPIENT", "No active recipient resolved", now);
@@ -95,7 +147,6 @@ public class NotificationRuleEngine {
 
         NotificationTemplateRenderer.RenderedNotification rendered;
         try {
-            Map<String, String> variables = new HashMap<>(event.metadata());
             variables.put("eventTime", event.occurredAt().toString());
             variables.put("severity", event.severity().name());
             rendered = templateRenderer.render(template, variables);

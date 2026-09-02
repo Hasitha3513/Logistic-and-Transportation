@@ -106,7 +106,7 @@ class NotificationPersistenceIntegrationTest {
 
         assertThat(template).isPresent();
         assertThat(template.orElseThrow().version()).isEqualTo(1);
-        assertThat(templateAdapter.findActive(null, null)).hasSize(16);
+        assertThat(templateAdapter.findActive(null, null)).hasSize(26);
     }
 
     @Test
@@ -165,6 +165,31 @@ class NotificationPersistenceIntegrationTest {
         assertThat(executionAdapter.findLatestAccepted(execution.suppressionKey(), now.minusMinutes(15)))
             .contains(execution);
         assertThat(executionAdapter.findLatestAccepted(execution.suppressionKey(), now)).isEmpty();
+    }
+
+    @Test
+    void deliveryHistory_filtersByAggregateOnPostgreSqlWhenOptionalFiltersAreAbsent() {
+        NotificationRule rule = ruleAdapter.save(NotificationRule.create("Delivery history", null,
+            "DELIVERY_COMPLETED", NotificationChannel.EMAIL, RecipientType.EMAIL_ADDRESS,
+            "customer@example.test", true, NotificationSeverity.INFO));
+        UUID orderId = UUID.randomUUID();
+        UUID otherOrderId = UUID.randomUUID();
+        OffsetDateTime now = OffsetDateTime.parse("2026-09-02T12:00:00Z");
+        Notification matching = notificationAdapter.save(Notification.createPending(rule.id(), UUID.randomUUID(),
+            rule.eventType(), rule.channel(), "customer@example.test", NotificationSeverity.INFO,
+            "Delivered", "Complete", null, null, null, now, null));
+        Notification other = notificationAdapter.save(Notification.createPending(rule.id(), UUID.randomUUID(),
+            rule.eventType(), rule.channel(), "other@example.test", NotificationSeverity.INFO,
+            "Delivered", "Complete", null, null, null, now.minusMinutes(1), null));
+        executionAdapter.save(NotificationRuleExecution.completed(matching.eventId(), rule.eventType(),
+            "DELIVERY_ORDER", orderId, rule.id(), matching.recipient(), rule.channel(),
+            NotificationRuleExecutionOutcome.ACCEPTED, null, matching.id(), null, null, now));
+        executionAdapter.save(NotificationRuleExecution.completed(other.eventId(), rule.eventType(),
+            "DELIVERY_ORDER", otherOrderId, rule.id(), other.recipient(), rule.channel(),
+            NotificationRuleExecutionOutcome.ACCEPTED, null, other.id(), null, null, now));
+
+        assertThat(notificationAdapter.findDeliveries(null, null, null, null,
+            "DELIVERY_ORDER", orderId, 10)).extracting(Notification::id).containsExactly(matching.id());
     }
 
     @Test

@@ -10,6 +10,8 @@ import java.util.Set;
 public final class NotificationEventCatalogue {
     public static final String MILESTONE_METADATA_KEY = "catalogueMilestone";
     private static final Set<NotificationChannel> MVP_CHANNELS = Set.of(NotificationChannel.IN_APP, NotificationChannel.EMAIL);
+    private static final Set<NotificationChannel> CUSTOMER_CHANNELS =
+        Set.of(NotificationChannel.EMAIL, NotificationChannel.SMS);
     private static final Set<String> COMMON_REQUIRED = Set.of("eventTime", "severity");
     private static final Map<String, NotificationEventDefinition> EVENTS = definitions();
 
@@ -53,6 +55,18 @@ public final class NotificationEventCatalogue {
         add(definitions, "DRIVER_LICENSE_EXPIRING", "fleet", NotificationSeverity.WARNING, "DRIVER_LICENSE_EXPIRING",
             required("driverId", "driverName", "licenseId", "licenseNumber", "licenseClass", "expiryDate"), Set.of(),
             1440, MILESTONE_METADATA_KEY);
+        addCustomer(definitions, "DELIVERY_OUT_FOR_DELIVERY", NotificationSeverity.INFO,
+            required("deliveryNumber", "status", "customerDisplayName"), Set.of(), 0, null);
+        addCustomer(definitions, "DELIVERY_ETA_RISK_CHANGED", NotificationSeverity.WARNING,
+            required("deliveryNumber", "slaStatus", "estimatedArrivalAt", "customerDisplayName"),
+            Set.of("previousSlaStatus"), 1440, "slaStatus");
+        addCustomer(definitions, "DELIVERY_COMPLETED", NotificationSeverity.INFO,
+            required("deliveryNumber", "status", "completedAt", "customerDisplayName"), Set.of(), 0, null);
+        addCustomer(definitions, "DELIVERY_FAILED_ATTEMPT_RECORDED", NotificationSeverity.WARNING,
+            required("deliveryNumber", "status", "failureDisposition", "customerDisplayName"), Set.of(), 0, null);
+        addCustomer(definitions, "DELIVERY_REDELIVERY_SCHEDULED", NotificationSeverity.INFO,
+            required("deliveryNumber", "status", "scheduledWindowStart", "scheduledWindowEnd",
+                "customerDisplayName"), Set.of(), 1440, "scheduleId");
         return Collections.unmodifiableMap(new LinkedHashMap<>(definitions));
     }
 
@@ -68,5 +82,12 @@ public final class NotificationEventCatalogue {
                             String milestoneMetadataKey) {
         definitions.put(eventType, new NotificationEventDefinition(eventType, owningModule, severity,
             MVP_CHANNELS, templateCode, required, optional, suppressionMinutes, milestoneMetadataKey));
+    }
+
+    private static void addCustomer(Map<String, NotificationEventDefinition> definitions, String eventType,
+                                    NotificationSeverity severity, Set<String> required, Set<String> optional,
+                                    int suppressionMinutes, String milestoneMetadataKey) {
+        definitions.put(eventType, new NotificationEventDefinition(eventType, "delivery", severity,
+            CUSTOMER_CHANNELS, eventType, required, optional, suppressionMinutes, milestoneMetadataKey));
     }
 }

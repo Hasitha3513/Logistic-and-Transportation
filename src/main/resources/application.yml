@@ -76,6 +76,10 @@ app:
     sample-data:
       enabled: ${APP_DEV_SAMPLE_DATA_ENABLED:${DEV_SAMPLE_DATA_ENABLED:true}}
   notification:
+    sms:
+      enabled: ${NOTIFICATION_SMS_ENABLED:false}
+      mode: ${NOTIFICATION_SMS_MODE:disabled}
+      read-timeout: ${NOTIFICATION_SMS_READ_TIMEOUT:PT30S}
     email:
       enabled: ${NOTIFICATION_EMAIL_ENABLED:false}
       mode: ${NOTIFICATION_EMAIL_MODE:production}

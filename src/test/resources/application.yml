@@ -66,6 +66,10 @@ app:
     sample-data:
       enabled: false
   notification:
+    sms:
+      enabled: false
+      mode: disabled
+      read-timeout: PT30S
     email:
       enabled: false
       mode: test

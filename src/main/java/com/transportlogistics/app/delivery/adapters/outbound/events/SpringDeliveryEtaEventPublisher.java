@@ -1,6 +1,7 @@
 package com.transportlogistics.app.delivery.adapters.outbound.events;
 
 import com.transportlogistics.app.delivery.domain.events.DeliveryEtaCalculatedEvent;
+import com.transportlogistics.app.delivery.DeliveryCustomerNotificationEvent;
 import com.transportlogistics.app.delivery.ports.outbound.DeliveryEtaEventPublisherPort;
 import com.transportlogistics.app.shared.AfterCommitEventPublisher;
 import org.springframework.stereotype.Component;
@@ -19,5 +20,10 @@ public class SpringDeliveryEtaEventPublisher implements DeliveryEtaEventPublishe
         if (event != null) {
             publisher.publish(event);
         }
+    }
+
+    @Override
+    public void publishCustomerNotification(DeliveryCustomerNotificationEvent event) {
+        if (event != null) publisher.publish(event);
     }
 }
