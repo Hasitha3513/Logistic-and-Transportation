@@ -69,6 +69,7 @@ MVP 1.4 Band:     [████████████████████�
 | `P0-04` | Make Tenant isolation mandatory across persistence, client input, tenant-local keys, object/list/report access, updates, and deletes | ✅ `COMPLETE` | PostgreSQL V57 applied; focused tenant/security/architecture gate 24/24 PASS; full Java 21 suite 1,173 PASS with 31 existing skips |
 | `P0-05` | Harden Tenant-aware RBAC, contextual identity administration, privilege ceilings, and fail-closed HTTP authorization | ✅ `COMPLETE` | Focused authorization/architecture gate 72/72 PASS; Delivery PostgreSQL fixtures aligned with the canonical Tenant context; full Java 21 suite 1,180 PASS with 31 existing skips |
 | `P0-06` | Correct aggregate-root identity/reference invariants and prevent unreviewed JPA aggregate graphs or cascades | ✅ `COMPLETE` | Focused domain/application/architecture gate 52/52 PASS; full Java 21 suite 1,185 PASS with 31 existing skips; no API/schema/event change |
+| `P0-07` | Harden owning-module ACID transactions, after-commit local events, consumer failure isolation, Tenant event identity, and durable-integration decisions | ✅ `COMPLETE` | Focused consistency tests 46/46 and architecture/Modulith tests 42/42 PASS; full Java 21 suite 1,191 PASS with 31 existing conditional skips; no REST/schema/broker change |
 
 ---
 
@@ -237,8 +238,8 @@ Queue Head:     MVP-1.4-US67-LAST-MILE-ETA-ACCEPTANCE-REMEDIATION-001-RERUN
 1. **`MVP-1.4-US67-LAST-MILE-ETA-ACCEPTANCE-REMEDIATION-001-RERUN`:**
    - Close the independently verified stale-write, invalidation, rider-mode/origin, concurrency/security, and real-path Chromium gaps under the approved heuristic-only provider contract.
 
-2. **`P0-07` (recommended architecture batch):**
-   - Harden aggregate transaction and event publication boundaries, including Tenant-versioned internal events and explicit consistency/outbox decisions, without broadening aggregate scope.
+2. **`P1-01` (recommended architecture batch):**
+   - Modernize only legacy event contracts that acquire real consumers: complete Tenant/version envelopes and approve a database outbox/inbox boundary before claiming durable external delivery.
 
 ---
 

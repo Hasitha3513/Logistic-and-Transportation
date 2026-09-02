@@ -1,15 +1,15 @@
-package com.transportlogistics.app.fleet.infrastructure.adapters.out.events;
+package com.transportlogistics.app.trip.infrastructure.adapters.out.events;
 
-import com.transportlogistics.app.fleet.application.ports.out.FleetOperationalNotificationPublisher;
 import com.transportlogistics.app.notification.OperationalNotificationEvent;
 import com.transportlogistics.app.notification.OperationalNotificationPublisher;
+import com.transportlogistics.app.trip.application.ports.out.TripOperationalNotificationPublisher;
 import org.springframework.stereotype.Component;
 
 @Component
-public class SpringFleetOperationalNotificationPublisher implements FleetOperationalNotificationPublisher {
+public final class SpringTripOperationalNotificationPublisher implements TripOperationalNotificationPublisher {
     private final OperationalNotificationPublisher publisher;
 
-    public SpringFleetOperationalNotificationPublisher(OperationalNotificationPublisher publisher) {
+    public SpringTripOperationalNotificationPublisher(OperationalNotificationPublisher publisher) {
         this.publisher = publisher;
     }
 

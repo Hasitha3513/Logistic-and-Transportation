@@ -137,6 +137,15 @@ class ModulithBoundaryEnforcementTest {
                 .check(importedClasses);
     }
 
+    @Test
+    void moduleCodeMustUseTransactionAwareEventPublicationContract() {
+        noClasses().that().resideOutsideOfPackage("..shared.infrastructure.events..")
+                .should().dependOnClassesThat().haveFullyQualifiedName(
+                        "org.springframework.context.ApplicationEventPublisher")
+                .because("local secondary reactions must be deferred until the owning transaction commits")
+                .check(importedClasses);
+    }
+
     private static ArchCondition<JavaClass> declareFieldNamed(String fieldName) {
         return new ArchCondition<>("declare field named " + fieldName) {
             @Override

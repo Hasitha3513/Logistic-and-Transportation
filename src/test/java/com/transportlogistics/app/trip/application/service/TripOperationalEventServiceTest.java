@@ -6,6 +6,7 @@ import com.transportlogistics.app.trip.application.ports.in.TripOperationalEvent
 import com.transportlogistics.app.trip.application.ports.out.TripHistoryRepository;
 import com.transportlogistics.app.trip.application.ports.out.TripOperationalEventRepository;
 import com.transportlogistics.app.trip.application.ports.out.TripRepository;
+import com.transportlogistics.app.trip.application.ports.out.TripOperationalNotificationPublisher;
 import com.transportlogistics.app.trip.domain.model.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -32,14 +33,14 @@ class TripOperationalEventServiceTest {
     private final Clock clock = Clock.fixed(Instant.parse("2026-08-19T10:00:00Z"), ZoneOffset.UTC);
     private final UUID tripId = UUID.randomUUID();
     private Trip activeTrip;
-    private org.springframework.context.ApplicationEventPublisher publisher;
+    private TripOperationalNotificationPublisher publisher;
 
     @BeforeEach
     void setUp() {
         tripRepo = mock(TripRepository.class);
         eventRepo = mock(TripOperationalEventRepository.class);
         historyRepo = mock(TripHistoryRepository.class);
-        publisher = mock(org.springframework.context.ApplicationEventPublisher.class);
+        publisher = mock(TripOperationalNotificationPublisher.class);
         service = new TripOperationalEventService(tripRepo, eventRepo, historyRepo, clock, publisher);
 
         activeTrip = new Trip(
@@ -102,7 +103,7 @@ class TripOperationalEventServiceTest {
         // Verify that a notification event was published
         org.mockito.ArgumentCaptor<com.transportlogistics.app.notification.OperationalNotificationEvent> captor =
                 org.mockito.ArgumentCaptor.forClass(com.transportlogistics.app.notification.OperationalNotificationEvent.class);
-        verify(publisher).publishEvent(captor.capture());
+        verify(publisher).publish(captor.capture());
         com.transportlogistics.app.notification.OperationalNotificationEvent published = captor.getValue();
         assertEquals("TRIP_DELAY_RECORDED", published.eventType());
         assertEquals(result.id(), published.eventId());
@@ -141,7 +142,7 @@ class TripOperationalEventServiceTest {
         verify(eventRepo).save(any());
         var captor = org.mockito.ArgumentCaptor.forClass(
                 com.transportlogistics.app.notification.OperationalNotificationEvent.class);
-        verify(publisher).publishEvent(captor.capture());
+        verify(publisher).publish(captor.capture());
         var published = captor.getValue();
         assertEquals(result.id(), published.eventId());
         assertEquals("TRIP_INCIDENT_RECORDED", published.eventType());
@@ -170,7 +171,7 @@ class TripOperationalEventServiceTest {
 
         var captor = org.mockito.ArgumentCaptor.forClass(
                 com.transportlogistics.app.notification.OperationalNotificationEvent.class);
-        verify(publisher, times(4)).publishEvent(captor.capture());
+        verify(publisher, times(4)).publish(captor.capture());
         assertEquals(expected, captor.getAllValues().stream().map(
                 com.transportlogistics.app.notification.OperationalNotificationEvent::severity).toList());
         assertEquals(savedIds, captor.getAllValues().stream().map(
@@ -181,7 +182,7 @@ class TripOperationalEventServiceTest {
     void notificationFailureDoesNotRollBackAcceptedIncident() {
         when(tripRepo.findById(tripId)).thenReturn(Optional.of(activeTrip));
         when(eventRepo.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
-        doThrow(new IllegalStateException("listener failed")).when(publisher).publishEvent(any());
+        doThrow(new IllegalStateException("listener failed")).when(publisher).publish(any());
 
         var result = service.recordIncident(tripId, new TripOperationalEventUseCase.RecordIncidentCommand(
                 TripIncidentSeverity.HIGH, "Road closure", OffsetDateTime.now(clock), null, null, null), "driver");

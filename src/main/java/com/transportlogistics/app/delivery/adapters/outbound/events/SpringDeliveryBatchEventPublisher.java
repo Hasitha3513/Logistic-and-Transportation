@@ -1,21 +1,21 @@
 package com.transportlogistics.app.delivery.adapters.outbound.events;
 
 import com.transportlogistics.app.delivery.ports.outbound.DeliveryBatchEventPublisherPort;
-import org.springframework.context.ApplicationEventPublisher;
+import com.transportlogistics.app.shared.AfterCommitEventPublisher;
 import org.springframework.stereotype.Component;
 
 @Component
 public class SpringDeliveryBatchEventPublisher implements DeliveryBatchEventPublisherPort {
-    private final ApplicationEventPublisher publisher;
+    private final AfterCommitEventPublisher publisher;
 
-    public SpringDeliveryBatchEventPublisher(ApplicationEventPublisher publisher) {
+    public SpringDeliveryBatchEventPublisher(AfterCommitEventPublisher publisher) {
         this.publisher = publisher;
     }
 
     @Override
     public void publish(Object event) {
         if (event != null) {
-            publisher.publishEvent(event);
+            publisher.publish(event);
         }
     }
 }
