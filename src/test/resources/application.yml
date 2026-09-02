@@ -14,8 +14,8 @@ spring:
     password: ${DB_PASSWORD:${POSTGRES_PASSWORD:transport_app_secret}}
     driver-class-name: org.postgresql.Driver
     hikari:
-      maximum-pool-size: 5
-      minimum-idle: 1
+      maximum-pool-size: 2
+      minimum-idle: 0
   jpa:
     open-in-view: false
     database: postgresql

@@ -67,7 +67,7 @@ MVP 1.4 Band:     [████████████████████�
 | `P0-02` | Establish explicit database/table ownership and prevent new cross-module repository, JPA mapping, or direct-SQL access | ✅ `COMPLETE` | Ownership tests 3/3, architecture/bootstrap tests 36/36, full Java 21 suite 1,167 PASS with 31 existing skips; two legacy SQL paths reserved for P0-03 |
 | `P0-03` | Remove illegal cross-module implementation dependencies and enforce published-contract-only integration | ✅ `COMPLETE` | Freight consumes Fleet capacity through `FleetReportingQuery`; System probes sample-data readiness through `CustomerDataReadiness`; full Java 21 suite 1,168 PASS with 31 existing skips |
 | `P0-04` | Make Tenant isolation mandatory across persistence, client input, tenant-local keys, object/list/report access, updates, and deletes | ✅ `COMPLETE` | PostgreSQL V57 applied; focused tenant/security/architecture gate 24/24 PASS; full Java 21 suite 1,173 PASS with 31 existing skips |
-| `P0-05` | Harden Tenant-aware RBAC, contextual identity administration, privilege ceilings, and fail-closed HTTP authorization | 🟡 `IMPLEMENTED / ACCEPTANCE PENDING` | Focused authorization/architecture gate 72/72 PASS; full suite ran 1,180 tests but retains 8 deterministic, out-of-scope Delivery PostgreSQL Tenant-context acceptance failures and 31 skips |
+| `P0-05` | Harden Tenant-aware RBAC, contextual identity administration, privilege ceilings, and fail-closed HTTP authorization | ✅ `COMPLETE` | Focused authorization/architecture gate 72/72 PASS; Delivery PostgreSQL fixtures aligned with the canonical Tenant context; full Java 21 suite 1,180 PASS with 31 existing skips |
 
 ---
 

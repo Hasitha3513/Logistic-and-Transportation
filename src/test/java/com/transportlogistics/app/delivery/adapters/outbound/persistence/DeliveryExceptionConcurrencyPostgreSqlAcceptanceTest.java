@@ -2,6 +2,7 @@ package com.transportlogistics.app.delivery.adapters.outbound.persistence;
 
 import com.transportlogistics.app.delivery.domain.model.*;
 import com.transportlogistics.app.delivery.ports.outbound.DeliveryTenantContextPort;
+import com.transportlogistics.app.tenancy.CanonicalTenant;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -29,7 +30,7 @@ import static org.mockito.Mockito.when;
 @Import({DeliveryExceptionPersistenceAdapter.class})
 class DeliveryExceptionConcurrencyPostgreSqlAcceptanceTest {
 
-    private static final UUID TENANT_A = UUID.fromString("00000000-0000-0000-0000-000000000001");
+    private static final UUID TENANT_A = CanonicalTenant.ID;
 
     @Autowired
     private DeliveryExceptionPersistenceAdapter adapter;
