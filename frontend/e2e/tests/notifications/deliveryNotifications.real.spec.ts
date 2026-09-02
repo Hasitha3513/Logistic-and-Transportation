@@ -7,6 +7,7 @@ type Auth = { accessToken: string; refreshToken: string };
 type TenantFixture = { username: string; password: string };
 type Order = { id: string; deliveryNumber: string; version: number };
 type Proof = { version: number };
+type Batch = { id: string; status: string };
 type Notification = { notificationId: string; eventType: string; channel: string; status: string; recipient?: string };
 
 async function login(username = 'admin', password = 'AdminPass!2026') {
@@ -25,6 +26,9 @@ test.describe.serial('US-69 real PostgreSQL Delivery notifications acceptance', 
   let customerId: string;
   let defaultOrder: Order;
   let smsOrder: Order;
+  let dispatchOrder: Order;
+  let dispatchBatch: Batch;
+  let dispatchRiderId: string;
 
   test.beforeAll(async () => {
     admin = await login();
@@ -47,6 +51,37 @@ test.describe.serial('US-69 real PostgreSQL Delivery notifications acceptance', 
     const destinationId = (await destination.json() as { id: string }).id;
     defaultOrder = await createReadyOrder(adminApi, originId, destinationId);
     smsOrder = await createReadyOrder(adminApi, originId, destinationId);
+    dispatchOrder = await createReadyOrder(adminApi, originId, destinationId);
+
+    const zone = await adminApi.post('/api/v1/delivery-zones', { data: {
+      zoneCode: `US69-${suffix}`.toUpperCase().slice(0, 30), zoneName: 'US69 dispatch zone',
+      description: 'US69 readiness versus dispatch acceptance fixture', zoneType: 'URBAN_DENSE',
+      serviceable: true, dailyCapacity: 10, depotLocationId: originId,
+      coordinates: [
+        { longitude: 79.80, latitude: 6.85 }, { longitude: 79.90, latitude: 6.85 },
+        { longitude: 79.90, latitude: 6.98 }, { longitude: 79.80, latitude: 6.85 },
+      ], priority: 1,
+    } });
+    expect(zone.status(), await zone.text()).toBe(201);
+    const zoneId = (await zone.json() as { id: string }).id;
+    const driver = await adminApi.post('/api/drivers', { data: {
+      employeeNumber: `US69-${suffix}`.toUpperCase().slice(0, 60), firstName: 'US69', lastName: 'Dispatch',
+      email: `dispatch-${suffix}@example.test`, status: 'AVAILABLE', active: true,
+    } });
+    expect(driver.status(), await driver.text()).toBe(201);
+    const rider = await adminApi.post('/api/api/v1/delivery-riders', { data: {
+      riderCode: `US69-${suffix}`.toUpperCase().slice(0, 40),
+      driverId: (await driver.json() as { id: string }).id, riderType: 'FULL_TIME', transportMode: 'MOTORBIKE',
+      primaryZoneId: zoneId, secondaryZoneIds: [], maxConcurrentDeliveries: 5,
+    } });
+    expect(rider.status(), await rider.text()).toBe(201);
+    dispatchRiderId = (await rider.json() as { id: string }).id;
+    const batch = await adminApi.post('/api/api/v1/deliveries/batches', { data: {
+      deliveryZoneId: zoneId, maxBatchSize: 5, deliveryOrderIds: [dispatchOrder.id],
+    } });
+    expect(batch.status(), await batch.text()).toBe(201);
+    dispatchBatch = await batch.json() as Batch;
+    expect(dispatchBatch.status).toBe('DRAFT');
 
     const role = await adminApi.post('/api/roles', { data: {
       name: `US69 limited ${suffix}`, active: true, permissions: ['DELIVERY_VIEW'],
@@ -63,6 +98,41 @@ test.describe.serial('US-69 real PostgreSQL Delivery notifications acceptance', 
     const fixture = await tenantResponse.json() as TenantFixture;
     tenantB = await login(fixture.username, fixture.password);
     await adminApi.dispose();
+  });
+
+  test('READY emits no customer notice and committed DISPATCHED emits exactly one masked notice', async ({ page }) => {
+    const api = await authorized(admin);
+    const ready = await api.post(`/api/api/v1/deliveries/batches/${dispatchBatch.id}/ready`);
+    expect(ready.status(), await ready.text()).toBe(200);
+    expect((await ready.json() as Batch).status).toBe('READY');
+    expect((await deliveryHistory(api, dispatchOrder.id))
+      .filter(item => item.eventType === 'DELIVERY_OUT_FOR_DELIVERY')).toHaveLength(0);
+
+    const assigned = await api.post(`/api/api/v1/deliveries/batches/${dispatchBatch.id}/assign-rider`, { data: {
+      riderId: dispatchRiderId, isOverride: false, overrideReason: null,
+    } });
+    expect(assigned.status(), await assigned.text()).toBe(200);
+    expect((await assigned.json() as Batch).status).toBe('ASSIGNED');
+    const dispatched = await api.post(`/api/api/v1/deliveries/batches/${dispatchBatch.id}/dispatch`);
+    expect(dispatched.status(), await dispatched.text()).toBe(200);
+    expect((await dispatched.json() as Batch).status).toBe('DISPATCHED');
+
+    await expect.poll(async () => (await deliveryHistory(api, dispatchOrder.id))
+      .filter(item => item.eventType === 'DELIVERY_OUT_FOR_DELIVERY').length).toBe(1);
+    const [notice] = (await deliveryHistory(api, dispatchOrder.id))
+      .filter(item => item.eventType === 'DELIVERY_OUT_FOR_DELIVERY');
+    expect(notice.channel).toBe('EMAIL');
+    expect(notice.recipient).toContain('***');
+
+    await page.addInitScript((auth) => {
+      localStorage.setItem('transport.accessToken', auth.accessToken);
+      localStorage.setItem('transport.refreshToken', auth.refreshToken);
+    }, admin);
+    await page.goto(`/deliveries/${dispatchOrder.id}`);
+    await expect(page.getByText('Customer notification timeline')).toBeVisible();
+    await expect(page.getByText('OUT FOR DELIVERY', { exact: true })).toBeVisible();
+    await expect(page.getByText('Destination:', { exact: false })).toContainText('***');
+    await api.dispose();
   });
 
   test('completion emits and consumes the frozen event while SMS defaults off', async () => {

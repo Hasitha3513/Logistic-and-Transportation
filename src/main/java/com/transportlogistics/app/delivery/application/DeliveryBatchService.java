@@ -315,16 +315,6 @@ public class DeliveryBatchService implements DeliveryBatchUseCase {
                         now,
                         actor
                 ));
-                for (DeliveryBatchOrder member
-                        : batchRepository.findActiveOrderMembershipsByBatchId(tenantId, saved.id())) {
-                    orderRepository.findById(member.deliveryOrderId()).ifPresent(order -> eventPublisher.publish(
-                        DeliveryCustomerNotificationEvent.create("DELIVERY_OUT_FOR_DELIVERY", tenantId,
-                            order.id().value(), now, java.util.Map.of(
-                                "deliveryNumber", order.deliveryNumber().value(),
-                                "customerId", order.customerId().toString(),
-                                "status", "OUT_FOR_DELIVERY",
-                                "actor", actor))));
-                }
             }
 
             return saved;
@@ -440,6 +430,16 @@ public class DeliveryBatchService implements DeliveryBatchUseCase {
                         now,
                         actor
                 ));
+                for (DeliveryBatchOrder member
+                        : batchRepository.findActiveOrderMembershipsByBatchId(tenantId, saved.id())) {
+                    orderRepository.findById(member.deliveryOrderId()).ifPresent(order -> eventPublisher.publish(
+                        DeliveryCustomerNotificationEvent.create("DELIVERY_OUT_FOR_DELIVERY", tenantId,
+                            order.id().value(), now, java.util.Map.of(
+                                "deliveryNumber", order.deliveryNumber().value(),
+                                "customerId", order.customerId().toString(),
+                                "status", "OUT_FOR_DELIVERY",
+                                "actor", actor))));
+                }
             }
 
             return saved;

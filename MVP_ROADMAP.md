@@ -20,8 +20,8 @@
 > - **MVP 1.4 Last-Mile Delivery:** 6 / 8 COMPLETE (US-63 through US-68 Accepted & Closed)
 > - **Overall Release Band:** 63 / 87 COMPLETE (24 DEFERRED / 87 TOTAL)
 > - **Current Milestone:** MVP 1.4 Last-Mile Delivery — US-63 through US-68 Accepted & Closed.
-> - **Active Focus:** `US-69` Receive Delivery Notifications — implementation complete; acceptance blocked because `DELIVERY_OUT_FOR_DELIVERY` is emitted at Batch `READY`, not committed `DISPATCHED`.
-> - **Immediate Next Action:** Remediate the US-69 out-for-delivery trigger and add dispatch/readiness regression coverage; do not start US-70.
+> - **Active Focus:** `US-69` Receive Delivery Notifications — implementation complete; trigger remediation verified and final acceptance pending.
+> - **Immediate Next Action:** Run `MVP-1.4-US69-DELIVERY-NOTIFICATIONS-FINAL-ACCEPTANCE-001-RERUN`; do not start US-70.
 
 ---
 
@@ -36,7 +36,7 @@ MVP 1.4 Band:     [████████████████████�
 | Metric | Target | Current Count | Percentage | Status Indicator |
 | :--- | :---: | :---: | :---: | :--- |
 | **Completed Stories (Accepted)** | 87 | **63** | `72.4%` | 🟢 `ON TRACK / VERIFIED` |
-| **Next Active / Acceptance Required** | — | **1** | `1.1%` | 🔴 `US-69 IMPLEMENTATION_COMPLETE / ACCEPTANCE_BLOCKED` |
+| **Next Active / Acceptance Required** | — | **1** | `1.1%` | 🟡 `US-69 IMPLEMENTATION_COMPLETE / ACCEPTANCE_PENDING` |
 | **Not Started (MVP 1.4 Active Scope)** | 2 | **0** | `0.0%` | ⏸️ `US-69..US-70 ACTIVE BAND` |
 | **Approved Deferments (Post-MVP)** | 24 | **24** | `27.6%` | ⏸️ `DEFERRED BY GOVERNANCE` |
 | **Total Registered User Stories** | **87** | **87** | **`100%`** | 🔒 `FROZEN REGISTER (US-01..US-87)` |
@@ -196,7 +196,7 @@ Development startup now consistently provisions the idempotent PostgreSQL sample
 | `US-66` | Batch Delivery Orders | Automated order clustering for urban routes, manual batching, zone & capacity constraints, rider assignment | 🟢 `COMPLETE` | `DeliveryBatchTest`, `DeliveryBatchServiceTest`, `DeliveryBatchControllerTest`, `DeliveryBatchPostgreSqlAcceptanceTest`, `DeliveryBatchConcurrencyPostgreSqlAcceptanceTest`, `deliveryBatches.spec.ts`, `DeliveryBatchListPage.test.tsx`, V55 |
 | `US-67` | Calculate Last-Mile ETA | Multi-modal last-mile routing ETA, SLA risk detection, stop service buffers, cache & event publication | 🟢 `COMPLETE` | `HEURISTIC_ONLY`; V56 US-67 migration, V57 current head; final acceptance passed: Maven 1,195/0/0/15, architecture 40/40, real Chromium 6/6. |
 | `US-68` | Handle Last-Mile Exceptions | Planner orchestration of rider no-show, attempts, address/access, contactless and cash-dispute outcomes through existing Delivery capabilities | 🟢 `COMPLETE` | Final acceptance passed: read-only Planner, Maven 1,200/0/0/15, architecture 45/45, real Chromium 3/3, retained US-67 6/6; no migration or duplicate exception model. |
-| `US-69` | Receive Delivery Notifications | Delivery-event-driven customer Email/SMS with preferences, durable attempts, and operator history | 🔴 `IMPLEMENTATION_COMPLETE / ACCEPTANCE_BLOCKED` | Acceptance found `DELIVERY_OUT_FOR_DELIVERY` emitted by Batch `markReady` (`READY`) while the actual `dispatchBatch` (`DISPATCHED`) path emits no customer event. Prior technical evidence remains valid but did not cover this frozen trigger contract. |
+| `US-69` | Receive Delivery Notifications | Delivery-event-driven customer Email/SMS with preferences, durable attempts, and operator history | 🟡 `IMPLEMENTATION_COMPLETE / ACCEPTANCE_PENDING` | Trigger remediation verified: READY emits 0 customer events; committed DISPATCHED emits exactly one per active member and excludes removed members; rollback emits 0. Maven 1,223/0/0/15, architecture 42/42, and real PostgreSQL-backed Chromium 7/7 PASS. Final acceptance remains separate. |
 | `US-70` | Use Customer Self-Service | Customer delivery rescheduling portal | ⏸️ `DEFERRED` | Post-MVP last-mile band |
 
 ---
@@ -233,12 +233,12 @@ Development startup now consistently provisions the idempotent PostgreSQL sample
 ## 🎯 4. Immediate Execution Queue
 
 ```
-Current Status: MVP 1.4 (Last-Mile Delivery) IN PROGRESS — US-68 ACCEPTED / US-69 ACCEPTANCE BLOCKED
-Queue Head:     US-69 out-for-delivery trigger remediation; US-70 must not start
+Current Status: MVP 1.4 (Last-Mile Delivery) IN PROGRESS — US-68 ACCEPTED / US-69 ACCEPTANCE PENDING
+Queue Head:     MVP-1.4-US69-DELIVERY-NOTIFICATIONS-FINAL-ACCEPTANCE-001-RERUN; US-70 must not start
 ```
 
-1. **US-69 acceptance remediation:**
-   - Move `DELIVERY_OUT_FOR_DELIVERY` publication from Batch readiness to the committed dispatch path, retain one event per active member order, and add negative readiness plus positive dispatch regression coverage before rerunning final acceptance.
+1. **US-69 final acceptance rerun:**
+   - Independently verify the remediated committed-dispatch trigger and all frozen US-69 notification contracts. Do not mark US-69 complete before that acceptance passes.
 
 2. **`P1-01` (recommended architecture batch):**
    - Modernize only legacy event contracts that acquire real consumers: complete Tenant/version envelopes and approve a database outbox/inbox boundary before claiming durable external delivery.
@@ -275,4 +275,6 @@ Queue Head:     US-69 out-for-delivery trigger remediation; US-70 must not start
   - `US-66`: `docs/mvp/MVP-1.4-US66-BATCH-DELIVERY-ORDERS-IMPLEMENTATION-001.md`
   - `US-67`: `docs/mvp/MVP-1.4-US67-LAST-MILE-ETA-IMPLEMENTATION-001.md`
   - `US-68`: `docs/mvp/MVP-1.4-US68-LAST-MILE-EXCEPTIONS-IMPLEMENTATION-001.md`
-- **Central Knowledge Base:** Local task-scoped decision commits are pending authenticated push to `origin/main`.
+  - `US-69`: `docs/mvp/MVP-1.4-US69-DELIVERY-NOTIFICATIONS-IMPLEMENTATION-001.md`
+  - `US-69 remediation`: `docs/mvp/MVP-1.4-US69-DELIVERY-NOTIFICATIONS-ACCEPTANCE-REMEDIATION-001.md`
+- **Central Knowledge Base:** US-69 trigger remediation is committed locally as `4ab58cb`; normal push to `origin/main` is blocked by unavailable HTTPS credentials in this session.
