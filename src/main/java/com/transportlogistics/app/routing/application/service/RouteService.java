@@ -5,6 +5,7 @@ import com.transportlogistics.app.routing.application.ports.in.RouteUseCase;
 import com.transportlogistics.app.routing.application.ports.out.RouteDistancePort;
 import com.transportlogistics.app.routing.application.ports.out.RouteDisruptionRepository;
 import com.transportlogistics.app.routing.application.ports.out.RouteEventPublisher;
+import com.transportlogistics.app.routing.application.ports.out.RouteOperationalExceptionPublisher;
 import com.transportlogistics.app.routing.application.ports.out.RouteRepository;
 import com.transportlogistics.app.routing.application.ports.out.RouteRevisionRepository;
 import com.transportlogistics.app.routing.application.ports.out.RouteTransaction;
@@ -28,6 +29,7 @@ public final class RouteService implements RouteUseCase {
     private final RouteRevisionRepository revisionRepo;
     private final RouteDisruptionRepository disruptionRepo;
     private final RouteEventPublisher eventPublisher;
+    private final RouteOperationalExceptionPublisher operationalExceptions;
     private final RouteDistancePort distancePort;
     private final RoutePerformanceTripLookupPort performanceTripLookup;
     private final RouteTransaction transaction;
@@ -41,10 +43,25 @@ public final class RouteService implements RouteUseCase {
                         RoutePerformanceTripLookupPort performanceTripLookup,
                         RouteTransaction transaction,
                         Clock clock) {
+        this(repo, revisionRepo, disruptionRepo, eventPublisher, RouteOperationalExceptionPublisher.noop(),
+            distancePort, performanceTripLookup, transaction, clock);
+    }
+
+    public RouteService(RouteRepository repo,
+                        RouteRevisionRepository revisionRepo,
+                        RouteDisruptionRepository disruptionRepo,
+                        RouteEventPublisher eventPublisher,
+                        RouteOperationalExceptionPublisher operationalExceptions,
+                        RouteDistancePort distancePort,
+                        RoutePerformanceTripLookupPort performanceTripLookup,
+                        RouteTransaction transaction,
+                        Clock clock) {
         this.repo = Objects.requireNonNull(repo, "RouteRepository is required");
         this.revisionRepo = Objects.requireNonNull(revisionRepo, "RouteRevisionRepository is required");
         this.disruptionRepo = Objects.requireNonNull(disruptionRepo, "RouteDisruptionRepository is required");
         this.eventPublisher = Objects.requireNonNull(eventPublisher, "RouteEventPublisher is required");
+        this.operationalExceptions = Objects.requireNonNull(operationalExceptions,
+            "RouteOperationalExceptionPublisher is required");
         this.distancePort = Objects.requireNonNull(distancePort, "RouteDistancePort is required");
         this.performanceTripLookup = Objects.requireNonNull(performanceTripLookup, "RoutePerformanceTripLookupPort is required");
         this.transaction = Objects.requireNonNull(transaction, "RouteTransaction is required");
@@ -119,6 +136,13 @@ public final class RouteService implements RouteUseCase {
     public RouteDisruption createDisruption(UUID routeId, RouteDisruptionType type, DisruptionSeverity severity,
                                             String description, OffsetDateTime effectiveFrom, OffsetDateTime effectiveUntil,
                                             UUID detourRouteId, String actor) {
+        return transaction.execute(() -> createDisruptionAtomically(routeId, type, severity, description,
+            effectiveFrom, effectiveUntil, detourRouteId, actor));
+    }
+
+    private RouteDisruption createDisruptionAtomically(UUID routeId, RouteDisruptionType type,
+            DisruptionSeverity severity, String description, OffsetDateTime effectiveFrom,
+            OffsetDateTime effectiveUntil, UUID detourRouteId, String actor) {
         get(routeId);
         if (detourRouteId != null) {
             if (detourRouteId.equals(routeId)) {
@@ -132,6 +156,7 @@ public final class RouteService implements RouteUseCase {
         var disruption = RouteDisruption.create(routeId, type, severity, description, effectiveFrom, effectiveUntil, detourRouteId, OffsetDateTime.now(clock), actor);
         var saved = disruptionRepo.save(disruption);
         eventPublisher.publish(new RouteDisruptionCreatedEvent(saved.id(), saved.routeId(), saved.disruptionType(), saved.severity(), saved.detourRouteId(), saved.effectiveFrom(), saved.effectiveUntil()));
+        operationalExceptions.publish(saved);
         return saved;
     }
 

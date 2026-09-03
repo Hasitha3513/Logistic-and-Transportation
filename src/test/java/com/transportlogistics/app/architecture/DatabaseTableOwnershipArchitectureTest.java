@@ -161,6 +161,8 @@ class DatabaseTableOwnershipArchitectureTest {
         own(ownership, "offlinesync", "offline_sync_operation");
         own(ownership, "integration", "integration_configuration", "integration_mapping", "integration_exchange",
                 "integration_exchange_attempt", "integration_audit_event");
+        own(ownership, "operations", "operational_exception_case", "operational_exception_assignment_history",
+                "operational_exception_corrective_action", "operational_exception_rca", "operational_exception_history");
         own(ownership, "shared", "integration_outbox_event");
         return Map.copyOf(ownership);
     }

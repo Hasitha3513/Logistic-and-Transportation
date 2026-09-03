@@ -394,6 +394,47 @@ class SecurityConfig {
                                 "/api/v1/integrations/*/disable")
                         .hasAuthority("INTEGRATION_ACTIVATE")
 
+                        .requestMatchers(HttpMethod.GET, "/v1/operational-exceptions/*/history",
+                                "/api/v1/operational-exceptions/*/history")
+                        .hasAuthority("OPERATIONAL_EXCEPTION_AUDIT_VIEW")
+                        .requestMatchers(HttpMethod.GET, "/v1/operational-exceptions",
+                                "/v1/operational-exceptions/*", "/api/v1/operational-exceptions",
+                                "/api/v1/operational-exceptions/*")
+                        .hasAuthority("OPERATIONAL_EXCEPTION_VIEW")
+                        .requestMatchers(HttpMethod.POST, "/v1/operational-exceptions/*/assign",
+                                "/api/v1/operational-exceptions/*/assign")
+                        .hasAnyAuthority("OPERATIONAL_EXCEPTION_ASSIGN", "OPERATIONAL_EXCEPTION_MANAGE")
+                        .requestMatchers(HttpMethod.POST, "/v1/operational-exceptions/*/escalate",
+                                "/api/v1/operational-exceptions/*/escalate")
+                        .hasAuthority("OPERATIONAL_EXCEPTION_ESCALATE")
+                        .requestMatchers(HttpMethod.POST, "/v1/operational-exceptions/*/rca",
+                                "/v1/operational-exceptions/*/rca/approve",
+                                "/api/v1/operational-exceptions/*/rca",
+                                "/api/v1/operational-exceptions/*/rca/approve")
+                        .hasAuthority("OPERATIONAL_EXCEPTION_RCA")
+                        .requestMatchers(HttpMethod.POST, "/v1/operational-exceptions/*/close",
+                                "/v1/operational-exceptions/*/reject-resolution",
+                                "/v1/operational-exceptions/*/reopen",
+                                "/api/v1/operational-exceptions/*/close",
+                                "/api/v1/operational-exceptions/*/reject-resolution",
+                                "/api/v1/operational-exceptions/*/reopen")
+                        .hasAuthority("OPERATIONAL_EXCEPTION_CLOSE")
+                        .requestMatchers(HttpMethod.POST, "/v1/operational-exceptions/*/classify",
+                                "/v1/operational-exceptions/*/acknowledge",
+                                "/v1/operational-exceptions/*/start",
+                                "/v1/operational-exceptions/*/resolve",
+                                "/v1/operational-exceptions/*/corrective-actions",
+                                "/v1/operational-exceptions/*/corrective-actions/*/start",
+                                "/v1/operational-exceptions/*/corrective-actions/*/complete",
+                                "/api/v1/operational-exceptions/*/classify",
+                                "/api/v1/operational-exceptions/*/acknowledge",
+                                "/api/v1/operational-exceptions/*/start",
+                                "/api/v1/operational-exceptions/*/resolve",
+                                "/api/v1/operational-exceptions/*/corrective-actions",
+                                "/api/v1/operational-exceptions/*/corrective-actions/*/start",
+                                "/api/v1/operational-exceptions/*/corrective-actions/*/complete")
+                        .hasAuthority("OPERATIONAL_EXCEPTION_MANAGE")
+
                         .requestMatchers(HttpMethod.GET, "/v1/freight/exceptions", "/v1/freight/exceptions/*")
                         .hasAuthority("CARGO_EXCEPTION_VIEW")
                         .requestMatchers(HttpMethod.POST, "/v1/freight/exceptions")
@@ -415,7 +456,8 @@ class SecurityConfig {
                                 "/v1/deliveries/**",
                                 "/notification-rules/**", "/notification-rule-executions/**", "/notification-deliveries/**", "/notification-customer-preferences/**", "/notification-event-catalogue/**", "/notification-templates/**",
                                 "/notifications/**", "/offline-sync/**", "/v1/integrations/**",
-                                "/api/v1/integrations/**").denyAll()
+                                "/api/v1/integrations/**", "/v1/operational-exceptions/**",
+                                "/api/v1/operational-exceptions/**").denyAll()
                         .anyRequest().denyAll())
                 .addFilterBefore(jwt, UsernamePasswordAuthenticationFilter.class)
                 .build();

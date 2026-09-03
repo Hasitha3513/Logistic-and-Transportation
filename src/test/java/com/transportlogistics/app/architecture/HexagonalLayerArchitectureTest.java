@@ -222,4 +222,23 @@ public class HexagonalLayerArchitectureTest {
                 .check(importedClasses);
     }
 
+    @Test
+    void operationsDomainPortsAndApplicationMustRemainFrameworkFree() {
+        noClasses().that().resideInAnyPackage("..operations..domain..", "..operations..ports..",
+                        "..operations..application..")
+                .should().dependOnClassesThat().resideInAnyPackage(
+                        "org.springframework..", "jakarta.persistence..", "com.fasterxml.jackson..",
+                        "..operations..adapters..")
+                .because("Operations core code must remain provider-neutral and depend inward")
+                .check(importedClasses);
+    }
+
+    @Test
+    void operationsWebMustNotAccessPersistenceAdapters() {
+        noClasses().that().resideInAPackage("..operations..adapters.inbound.web..")
+                .should().dependOnClassesThat().resideInAPackage("..operations..adapters.outbound.persistence..")
+                .because("Operations web adapters must invoke inbound ports")
+                .check(importedClasses);
+    }
+
 }

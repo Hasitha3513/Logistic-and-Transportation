@@ -22,6 +22,7 @@ public final class DeliveryExceptionService implements DeliveryExceptionUseCase 
     private final DeliveryLocationLookupPort locations;
     private final DeliveryTenantContextPort tenantContext;
     private final DeliveryOrderTransaction transactions;
+    private final DeliveryOperationalExceptionPublisher operationalExceptions;
     private final Clock clock;
 
     public DeliveryExceptionService(
@@ -34,6 +35,21 @@ public final class DeliveryExceptionService implements DeliveryExceptionUseCase 
             DeliveryOrderTransaction transactions,
             Clock clock
     ) {
+        this(orders, attempts, exceptions, storage, locations, tenantContext, transactions,
+            DeliveryOperationalExceptionPublisher.noop(), clock);
+    }
+
+    public DeliveryExceptionService(
+            DeliveryOrderRepository orders,
+            DeliveryAttemptRepository attempts,
+            DeliveryExceptionRepository exceptions,
+            DeliveryEvidenceStoragePort storage,
+            DeliveryLocationLookupPort locations,
+            DeliveryTenantContextPort tenantContext,
+            DeliveryOrderTransaction transactions,
+            DeliveryOperationalExceptionPublisher operationalExceptions,
+            Clock clock
+    ) {
         this.orders = orders;
         this.attempts = attempts;
         this.exceptions = exceptions;
@@ -41,6 +57,7 @@ public final class DeliveryExceptionService implements DeliveryExceptionUseCase 
         this.locations = locations;
         this.tenantContext = tenantContext;
         this.transactions = transactions;
+        this.operationalExceptions = operationalExceptions;
         this.clock = clock;
     }
 
@@ -115,7 +132,9 @@ public final class DeliveryExceptionService implements DeliveryExceptionUseCase 
                     now
             );
 
-            return exceptions.save(newCase);
+            DeliveryExceptionCase saved = exceptions.save(newCase);
+            operationalExceptions.publish(saved);
+            return saved;
         });
     }
 

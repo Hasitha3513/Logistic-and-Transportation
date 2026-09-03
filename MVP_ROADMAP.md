@@ -6,7 +6,7 @@
 ![Completed](https://img.shields.io/badge/Completed-66%20%2F%2087-2da44e.svg?style=for-the-badge&logo=checkmarx)
 ![Progress](https://img.shields.io/badge/Progress-75.9%25-brightgreen.svg?style=for-the-badge&logo=speedtest)
 ![MVP 1.4 Closed](https://img.shields.io/badge/MVP%201.4%20Last--Mile-8%20%2F%208-2da44e.svg?style=for-the-badge&logo=pinboard)
-![Database](https://img.shields.io/badge/PostgreSQL%20%2F%20Flyway-V61-8a63d2.svg?style=for-the-badge&logo=postgresql)
+![Database](https://img.shields.io/badge/PostgreSQL%20%2F%20Flyway-V62-8a63d2.svg?style=for-the-badge&logo=postgresql)
 
 </div>
 
@@ -14,14 +14,14 @@
 
 > [!IMPORTANT]
 > **Authoritative Baseline & Current State:**
-> - **Last Reconciled:** `2026-09-03`
+> - **Last Reconciled:** `2026-09-04`
 > - **Authority Order:** Original Requirements (`Traspotation & logistic.docx`), Frozen Architecture/Contracts, Verified Production Code/Tests, then Roadmap.
 > - **MVP 1.3 Delivery Operations:** 7 / 7 COMPLETE (100%) - CLOSED
 > - **MVP 1.4 Last-Mile Delivery:** 8 / 8 COMPLETE (US-63 through US-70 Accepted & Closed)
 > - **Overall Release Band:** 66 / 87 COMPLETE (21 REPRIORITIZED / 87 TOTAL)
 > - **Current Milestone:** MVP 1.4 Last-Mile Delivery — 8 / 8 COMPLETE, 100%, CLOSED.
-> - **Active Focus:** US-73 external integrations are independently accepted and COMPLETE; US-78 product decisions are frozen and implementation has not started.
-> - **Immediate Next Action:** Execute `US-78-OPERATIONAL-EXCEPTIONS-IMPLEMENTATION-001`.
+> - **Active Focus:** US-78 frozen implementation is technically complete and awaiting independent technical closure and final acceptance.
+> - **Immediate Next Action:** Execute `US-78-OPERATIONAL-EXCEPTIONS-TECHNICAL-CLOSURE-001`.
 
 ---
 
@@ -212,7 +212,7 @@ Development startup now consistently provisions the idempotent PostgreSQL sample
 | `US-75` | Maintain Audit and Reports | Comprehensive audit log trail, CSV exports | 🟢 `COMPLETE` | `AuditLogTest`, `AuditReportTest` |
 | `US-76` | Support Mobile Operations | Driver, dispatcher and delivery mobile workflows with offline, camera/signature, push and device health | 🟡 `WAVE D / BLOCKED_BY_DEPENDENCY` | PWA/native and device/provider decisions required |
 | `US-77` | Manage Notification Rules | Rule-based alerts, multi-channel dispatch | 🟢 `COMPLETE` | `NotificationRuleTest`, V28 |
-| `US-78` | Manage Operational Exceptions | Cross-domain classification, assignment, severity, SLA, escalation, corrective action, RCA and closure | 🟡 `WAVE A / PRODUCT_DECISIONS_FROZEN / IMPLEMENTATION_NOT_STARTED` | `docs/full-product/US-78-OPERATIONAL-EXCEPTIONS-PRODUCT-DECISIONS-001.md`; Operations owns lifecycle, domains retain detection/meaning |
+| `US-78` | Manage Operational Exceptions | Cross-domain classification, assignment, severity, SLA, escalation, corrective action, RCA and closure | 🟡 `WAVE A / IMPLEMENTATION_COMPLETE / ACCEPTANCE_PENDING` | V62; Maven 1,296/0/0/15; architecture 49/49; Chromium 6/6; `docs/full-product/US-78-OPERATIONAL-EXCEPTIONS-IMPLEMENTATION-001.md` |
 
 ---
 
@@ -235,10 +235,10 @@ Development startup now consistently provisions the idempotent PostgreSQL sample
 
 ```
 Current Status: 66 / 87 COMPLETE; 21 stories remain across Waves A–E
-Queue Head:     US-78-OPERATIONAL-EXCEPTIONS-IMPLEMENTATION-001
+Queue Head:     US-78-OPERATIONAL-EXCEPTIONS-TECHNICAL-CLOSURE-001
 ```
 
-1. **Wave A — Integration and exception-control foundations:** US-73 COMPLETE; US-78 product decisions FROZEN, implementation next.
+1. **Wave A — Integration and exception-control foundations:** US-73 COMPLETE; US-78 implementation complete and acceptance pending.
 2. **Wave B — Fuel control and financial links:** US-37, US-35, US-38, US-46, US-47.
 3. **Wave C — GPS and telematics:** US-48, then US-49/50/51/52/55, then US-53, then US-54.
 4. **Wave D — Compliance and field mobility:** US-72, US-76.

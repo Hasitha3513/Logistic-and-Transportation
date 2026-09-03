@@ -12,6 +12,7 @@ import {
   ThunderboltOutlined,
   ContainerOutlined,
   SendOutlined,
+  WarningOutlined,
 } from '@ant-design/icons';
 
 export interface NavigationItem {
@@ -113,6 +114,14 @@ export const navigation: NavigationItem[] = [
       { key: 'delivery-riders', label: 'Delivery Riders', route: '/deliveries/riders', requiredPermission: 'DELIVERY_RIDER_VIEW' },
       { key: 'delivery-batches', label: 'Delivery Batches', route: '/deliveries/batches', requiredPermission: 'DELIVERY_BATCH_VIEW' },
       { key: 'delivery-analytics', label: 'Delivery Analytics', route: '/deliveries/analytics', requiredPermission: 'DELIVERY_ANALYTICS_VIEW' },
+    ],
+  },
+  {
+    key: 'operations',
+    label: 'Operations',
+    icon: <WarningOutlined />,
+    children: [
+      { key: 'operational-exceptions', label: 'Operational Exceptions', route: '/operations/exceptions', requiredPermission: 'OPERATIONAL_EXCEPTION_VIEW' },
     ],
   },
   {

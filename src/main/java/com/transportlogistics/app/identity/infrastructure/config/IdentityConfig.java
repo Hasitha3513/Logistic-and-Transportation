@@ -2,6 +2,7 @@ package com.transportlogistics.app.identity.infrastructure.config;
 
 import com.transportlogistics.app.identity.AuthenticatedUserLookup;
 import com.transportlogistics.app.identity.NotificationRecipientDirectory;
+import com.transportlogistics.app.identity.OperationalAssignmentDirectory;
 import com.transportlogistics.app.identity.TenantAccessResolver;
 import com.transportlogistics.app.identity.TenantMembershipManager;
 import com.transportlogistics.app.identity.application.ports.in.IdentityUseCase;
@@ -68,6 +69,28 @@ class IdentityConfig {
                     .filter(user -> user.hasRole(roleName.trim()))
                     .map(user -> new RecipientUser(user.username(), user.email()))
                     .toList();
+            }
+        };
+    }
+
+    @Bean
+    OperationalAssignmentDirectory operationalAssignmentDirectory(IdentityUseCase identities) {
+        return new OperationalAssignmentDirectory() {
+            @Override
+            public boolean eligibleUser(java.util.UUID tenantId, java.util.UUID userId, String permission) {
+                try {
+                    var context = new IdentityUseCase.AdministrationContext(tenantId, "operations-assignment", java.util.Set.of());
+                    var user = identities.getUser(context, userId);
+                    return user.active() && user.hasPermission(permission);
+                } catch (com.transportlogistics.app.shared.domain.NotFoundException exception) {
+                    return false;
+                }
+            }
+
+            @Override
+            public boolean activeRole(String roleCode) {
+                return roleCode != null && identities.listRoles().stream()
+                    .anyMatch(role -> role.active() && role.name().equalsIgnoreCase(roleCode.trim()));
             }
         };
     }

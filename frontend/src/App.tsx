@@ -49,6 +49,7 @@ import { DeliveryBatchListPage } from './features/delivery/batches/pages/Deliver
 import DeliverySelfServicePage from './features/delivery/selfService/pages/DeliverySelfServicePage';
 import IntegrationListPage from './features/integrations/pages/IntegrationListPage';
 import IntegrationDetailPage from './features/integrations/pages/IntegrationDetailPage';
+import OperationalExceptionQueuePage from './features/operations/operationalExceptions/pages/OperationalExceptionQueuePage';
 
 function ProtectedRoute() {
   const { user, isLoading } = useAuth();
@@ -74,6 +75,7 @@ function HomePage() {
   if (hasPermission('CARGO_EXCEPTION_VIEW')) return <Navigate to="/freight/exceptions" replace />;
   if (hasPermission('FREIGHT_REPORT_VIEW')) return <Navigate to="/freight/reports" replace />;
   if (hasPermission('DELIVERY_VIEW')) return <Navigate to="/deliveries" replace />;
+  if (hasPermission('OPERATIONAL_EXCEPTION_VIEW')) return <Navigate to="/operations/exceptions" replace />;
   if (hasPermission('IDENTITY_MANAGE')) return <Navigate to="/administration/users" replace />;
   return <Navigate to="/workspace" replace />;
 }
@@ -141,6 +143,7 @@ export default function App() {
         <Route path="integrations" element={<IntegrationListPage />} />
         <Route path="integrations/new" element={<IntegrationDetailPage />} />
         <Route path="integrations/:id" element={<IntegrationDetailPage />} />
+        <Route path="operations/exceptions" element={<OperationalExceptionQueuePage />} />
         <Route path="workspace" element={<WorkspacePage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>

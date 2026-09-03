@@ -19,6 +19,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 class DeliveryExceptionServiceTest {
 
@@ -31,6 +32,7 @@ class DeliveryExceptionServiceTest {
     private InMemoryExceptionRepo exceptionRepo;
     private DummyStorage storage;
     private DummyLocationLookup locationLookup;
+    private DeliveryOperationalExceptionPublisher operationalExceptions;
     private DeliveryExceptionService service;
 
     @BeforeEach
@@ -40,13 +42,15 @@ class DeliveryExceptionServiceTest {
         exceptionRepo = new InMemoryExceptionRepo();
         storage = new DummyStorage();
         locationLookup = new DummyLocationLookup();
+        operationalExceptions = mock(DeliveryOperationalExceptionPublisher.class);
         DeliveryTenantContextPort tenantContext = () -> Optional.of(new DeliveryTenantContextPort.TenantContext(TENANT_A, "UTC"));
         DeliveryOrderTransaction tx = new DeliveryOrderTransaction() {
             @Override public <T> T execute(Supplier<T> operation) { return operation.get(); }
         };
 
         service = new DeliveryExceptionService(
-                orderRepo, attemptRepo, exceptionRepo, storage, locationLookup, tenantContext, tx, clock
+                orderRepo, attemptRepo, exceptionRepo, storage, locationLookup, tenantContext, tx,
+                operationalExceptions, clock
         );
     }
 
@@ -97,6 +101,7 @@ class DeliveryExceptionServiceTest {
         assertThat(result.status()).isEqualTo(DeliveryExceptionStatus.OPEN);
         assertThat(result.evidence()).hasSize(1);
         assertThat(result.evidence().get(0).detectedContentType()).isEqualTo("image/png");
+        verify(operationalExceptions).publish(result);
     }
 
     @Test
