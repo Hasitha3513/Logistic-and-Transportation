@@ -67,6 +67,11 @@ security:
     refresh-token-ttl: P30D
     secret: ${JWT_SECRET:super_secret_jwt_key_that_is_at_least_32_bytes_long_for_security_2026}
 app:
+  delivery:
+    self-service:
+      customer-origin: ${DELIVERY_SELF_SERVICE_CUSTOMER_ORIGIN:http://localhost:5173}
+      contact-hmac-secret: ${DELIVERY_SELF_SERVICE_HMAC_SECRET:local_only_self_service_hmac_secret_change_me_2026}
+      contact-hash-key-version: ${DELIVERY_SELF_SERVICE_HMAC_KEY_VERSION:v1}
   dev:
     identity-bootstrap:
       enabled: ${APP_DEV_IDENTITY_BOOTSTRAP_ENABLED:${DEV_IDENTITY_BOOTSTRAP_ENABLED:true}}

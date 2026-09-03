@@ -6,7 +6,7 @@
 ![Completed](https://img.shields.io/badge/Completed-64%20%2F%2087-2da44e.svg?style=for-the-badge&logo=checkmarx)
 ![Progress](https://img.shields.io/badge/Progress-73.6%25-brightgreen.svg?style=for-the-badge&logo=speedtest)
 ![MVP 1.4 Active](https://img.shields.io/badge/MVP%201.4%20Last--Mile-7%20%2F%208-fa8c16.svg?style=for-the-badge&logo=pinboard)
-![Database](https://img.shields.io/badge/PostgreSQL%20%2F%20Flyway-V58-8a63d2.svg?style=for-the-badge&logo=postgresql)
+![Database](https://img.shields.io/badge/PostgreSQL%20%2F%20Flyway-V59-8a63d2.svg?style=for-the-badge&logo=postgresql)
 
 </div>
 
@@ -20,8 +20,8 @@
 > - **MVP 1.4 Last-Mile Delivery:** 7 / 8 COMPLETE (US-63 through US-69 Accepted & Closed)
 > - **Overall Release Band:** 64 / 87 COMPLETE (23 DEFERRED / 87 TOTAL)
 > - **Current Milestone:** MVP 1.4 Last-Mile Delivery — US-63 through US-69 Accepted & Closed.
-> - **Active Focus:** `US-70` Use Customer Self-Service — product decisions frozen; implementation not started.
-> - **Immediate Next Action:** Execute `MVP-1.4-US70-CUSTOMER-SELF-SERVICE-IMPLEMENTATION-001` against the frozen contract.
+> - **Active Focus:** `US-70` Use Customer Self-Service — implementation complete; independent acceptance pending.
+> - **Immediate Next Action:** Execute `MVP-1.4-US70-CUSTOMER-SELF-SERVICE-FINAL-ACCEPTANCE-001`.
 
 ---
 
@@ -36,8 +36,8 @@ MVP 1.4 Band:     [████████████████████�
 | Metric | Target | Current Count | Percentage | Status Indicator |
 | :--- | :---: | :---: | :---: | :--- |
 | **Completed Stories (Accepted)** | 87 | **64** | `73.6%` | 🟢 `ON TRACK / VERIFIED` |
-| **Next Active / Acceptance Required** | — | **1** | `1.1%` | 🟡 `US-70 DECISIONS FROZEN / IMPLEMENTATION NOT STARTED` |
-| **Not Started (MVP 1.4 Active Scope)** | 1 | **1** | `1.1%` | 🟡 `US-70 ACTIVE BAND` |
+| **Next Active / Acceptance Required** | — | **1** | `1.1%` | 🟡 `US-70 IMPLEMENTATION COMPLETE / ACCEPTANCE PENDING` |
+| **Not Started (MVP 1.4 Active Scope)** | 1 | **0** | `0.0%` | 🟢 `NONE` |
 | **Approved Deferments (Post-MVP)** | 23 | **23** | `26.4%` | ⏸️ `DEFERRED BY GOVERNANCE` |
 | **Total Registered User Stories** | **87** | **87** | **`100%`** | 🔒 `FROZEN REGISTER (US-01..US-87)` |
 
@@ -56,7 +56,7 @@ MVP 1.4 Band:     [████████████████████�
 | **MVP 1.1B** | **Freight & Cargo** | Freight Orders, Manifests, Load Planning, Weight/Volume Engine, Claims, Exceptions (US-24–30) | 7 | 7 / 7 | 🟢 `COMPLETE (100%)` |
 | **MVP 1.2** | **Fuel Management** | Fuel Issues, Purchases, Mileage, Bunkers, Stock Transfers (US-31–34, US-36) | 8 | 5 / 8 | 🟢 `CLOSED (3 DEFERRED)` |
 | **MVP 1.3** | **Delivery Operations** | Delivery Orders, Online POD, Offline POD, Failed Deliveries, Redelivery, Analytics, Exceptions (US-56–62) | 7 | 7 / 7 | 🟢 `COMPLETE (100%) - CLOSED` |
-| **MVP 1.4** | **Last-Mile Delivery** | Delivery Zones, Delivery Slots, Riders, Batch Orders, ETA, Exceptions, Notifications, Self-Service (US-63–70) | 8 | 7 / 8 | 🟡 `IN PROGRESS (US-63 through US-69 ACCEPTED)` |
+| **MVP 1.4** | **Last-Mile Delivery** | Delivery Zones, Delivery Slots, Riders, Batch Orders, ETA, Exceptions, Notifications, Self-Service (US-63–70) | 8 | 7 / 8 | 🟡 `IN PROGRESS (US-70 ACCEPTANCE PENDING)` |
 | **Post-MVP** | **Extended Platform** | GPS Tracking (US-48–55), Billing (US-47), Advanced Compliance (US-72+) | 22 | 0 / 22 | ⏸️ `PLANNED POST-MVP` |
 
 ### Phase 0 Architecture Remediation
@@ -197,7 +197,7 @@ Development startup now consistently provisions the idempotent PostgreSQL sample
 | `US-67` | Calculate Last-Mile ETA | Multi-modal last-mile routing ETA, SLA risk detection, stop service buffers, cache & event publication | 🟢 `COMPLETE` | `HEURISTIC_ONLY`; V56 US-67 migration, V57 current head; final acceptance passed: Maven 1,195/0/0/15, architecture 40/40, real Chromium 6/6. |
 | `US-68` | Handle Last-Mile Exceptions | Planner orchestration of rider no-show, attempts, address/access, contactless and cash-dispute outcomes through existing Delivery capabilities | 🟢 `COMPLETE` | Final acceptance passed: read-only Planner, Maven 1,200/0/0/15, architecture 45/45, real Chromium 3/3, retained US-67 6/6; no migration or duplicate exception model. |
 | `US-69` | Receive Delivery Notifications | Delivery-event-driven customer Email/SMS with preferences, durable attempts, and operator history | 🟢 `COMPLETE` | Final acceptance rerun passed after trigger remediation: READY=0, committed DISPATCHED=one per active member, removed/rollback=0; Maven 1,223/0/0/15, architecture 42/42, Chromium 7/7, and all security/privacy/Notification gates PASS. |
-| `US-70` | Use Customer Self-Service | Token-scoped tracking, preferences, issue/feedback submission, and non-binding redelivery requests | 🟡 `PRODUCT DECISIONS FROZEN / IMPLEMENTATION NOT STARTED` | Opaque per-Delivery magic-link access; no Customer-to-app_user association, direct scheduling, operator shell, POD evidence, Rider data, IN_APP, or OTP. Expected migration V59 if still free. |
+| `US-70` | Use Customer Self-Service | Token-scoped tracking, preferences, issue/feedback submission, and non-binding redelivery requests | 🟡 `IMPLEMENTATION_COMPLETE / ACCEPTANCE_PENDING` | V59; Maven 1,233/0/0/15; architecture/security focused 48/48; frontend Vitest 257/257; real PostgreSQL-backed Chromium 6/6; introduced lint errors 0. No direct scheduling, slot booking, operator shell, raw-token persistence, Rider data, or POD evidence exposure. |
 
 ---
 
@@ -233,12 +233,12 @@ Development startup now consistently provisions the idempotent PostgreSQL sample
 ## 🎯 4. Immediate Execution Queue
 
 ```
-Current Status: MVP 1.4 (Last-Mile Delivery) IN PROGRESS — US-69 ACCEPTED / US-70 DECISIONS FROZEN
-Queue Head:     MVP-1.4-US70-CUSTOMER-SELF-SERVICE-IMPLEMENTATION-001
+Current Status: MVP 1.4 (Last-Mile Delivery) IN PROGRESS — US-70 IMPLEMENTATION COMPLETE / ACCEPTANCE PENDING
+Queue Head:     MVP-1.4-US70-CUSTOMER-SELF-SERVICE-FINAL-ACCEPTANCE-001
 ```
 
-1. **US-70 customer self-service:**
-   - Implement the frozen opaque Delivery-access-token portal contract, customer-safe projection, Notification preferences, issue/feedback submissions, and non-binding redelivery/preference requests.
+1. **US-70 customer self-service final acceptance:**
+   - Independently verify the V59 opaque Delivery-access-token portal, privacy/security boundaries, Notification final-send link integration, and real PostgreSQL-backed customer journeys.
 
 2. **`P1-01` (recommended architecture batch):**
    - Modernize only legacy event contracts that acquire real consumers: complete Tenant/version envelopes and approve a database outbox/inbox boundary before claiming durable external delivery.

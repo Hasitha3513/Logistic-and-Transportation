@@ -153,7 +153,8 @@ class DatabaseTableOwnershipArchitectureTest {
                 "delivery_attempt", "delivery_contact_attempt", "delivery_escalation", "delivery_redelivery_schedule",
                 "delivery_exception_case", "delivery_exception_evidence", "delivery_zone", "delivery_slot",
                 "delivery_slot_reservation", "delivery_rider", "delivery_rider_zone", "delivery_rider_shift",
-                "delivery_order_rider_assignment", "delivery_batch", "delivery_batch_order", "delivery_batch_counter");
+                "delivery_order_rider_assignment", "delivery_batch", "delivery_batch_order", "delivery_batch_counter",
+                "delivery_self_service_access", "delivery_customer_submission");
         own(ownership, "notification", "notification", "notification_template", "notification_rule",
                 "notification_rule_policy", "notification_rule_quiet_day", "notification_rule_execution",
                 "notification_delivery_attempt", "customer_notification_preference");

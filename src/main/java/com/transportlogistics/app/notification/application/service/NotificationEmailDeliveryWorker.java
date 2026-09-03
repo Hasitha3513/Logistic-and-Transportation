@@ -3,6 +3,8 @@ package com.transportlogistics.app.notification.application.service;
 import com.transportlogistics.app.notification.application.ports.out.EmailNotificationSenderPort;
 import com.transportlogistics.app.notification.application.ports.out.SmsNotificationSenderPort;
 import com.transportlogistics.app.notification.application.ports.out.NotificationRepository;
+import com.transportlogistics.app.notification.application.ports.out.NotificationRuleExecutionRepository;
+import com.transportlogistics.app.notification.FinalSendCustomerLinkIssuer;
 import com.transportlogistics.app.notification.application.ports.in.NotificationEmailDeliveryClaimUseCase;
 import com.transportlogistics.app.notification.application.ports.in.NotificationEscalationUseCase;
 import com.transportlogistics.app.notification.domain.model.EmailDeliveryErrorCategory;
@@ -30,6 +32,8 @@ public class NotificationEmailDeliveryWorker {
     private final Clock clock;
     private final String from;
     private final Duration timeout;
+    private final NotificationRuleExecutionRepository executions;
+    private final FinalSendCustomerLinkIssuer links;
 
     @Autowired
     public NotificationEmailDeliveryWorker(NotificationRepository notifications,
@@ -37,11 +41,14 @@ public class NotificationEmailDeliveryWorker {
                                            NotificationEscalationUseCase escalations,
                                            EmailNotificationSenderPort sender,
                                            SmsNotificationSenderPort smsSender,
+                                           NotificationRuleExecutionRepository executions,
+                                           FinalSendCustomerLinkIssuer links,
                                            Clock clock,
                                            @Value("${app.notification.email.from}") String from,
                                            @Value("${app.notification.email.read-timeout}") Duration timeout) {
         this.notifications = notifications; this.claims = claims; this.escalations = escalations;
-        this.sender = sender; this.smsSender = smsSender; this.clock = clock; this.from = from; this.timeout = timeout;
+        this.sender = sender; this.smsSender = smsSender; this.executions = executions; this.links = links;
+        this.clock = clock; this.from = from; this.timeout = timeout;
     }
 
     public NotificationEmailDeliveryWorker(NotificationRepository notifications,
@@ -54,6 +61,8 @@ public class NotificationEmailDeliveryWorker {
         this.escalations = escalations;
         this.sender = sender;
         this.smsSender = null;
+        this.executions = null;
+        this.links = null;
         this.clock = clock;
         this.from = from;
         this.timeout = timeout;
@@ -94,7 +103,7 @@ public class NotificationEmailDeliveryWorker {
         throws InterruptedException {
         var result = sender.send(new EmailNotificationSenderPort.SendRequest(notification.id(),
             attempt.idempotencyKey(), from, notification.recipient(), notification.title(),
-            notification.message(), timeout));
+            messageFor(notification, attempt), timeout));
         complete(notification.id(), attempt.id(), result.accepted(), result.providerMessageId(),
             result.errorCategory(), result.errorCode(), result.errorMessage());
     }
@@ -108,7 +117,7 @@ public class NotificationEmailDeliveryWorker {
             return;
         }
         var result = smsSender.send(new SmsNotificationSenderPort.SendRequest(notification.id(),
-            attempt.idempotencyKey(), notification.recipient(), notification.message(), timeout));
+            attempt.idempotencyKey(), notification.recipient(), messageFor(notification, attempt), timeout));
         complete(notification.id(), attempt.id(), result.accepted(), result.providerMessageId(),
             result.errorCategory(), result.errorCode(), result.errorMessage());
     }
@@ -122,4 +131,15 @@ public class NotificationEmailDeliveryWorker {
     }
 
     private OffsetDateTime now() { return OffsetDateTime.ofInstant(clock.instant(), ZoneOffset.UTC); }
+
+    private String messageFor(com.transportlogistics.app.notification.domain.model.Notification notification,
+                              com.transportlogistics.app.notification.domain.model.NotificationDeliveryAttempt attempt) {
+        if (!notification.message().contains("[[SELF_SERVICE_LINK]]")) return notification.message();
+        if (executions == null || links == null) throw new IllegalStateException("Self-service link issuer unavailable");
+        var execution = executions.findByControllingNotificationId(notification.id())
+                .orElseThrow(() -> new IllegalStateException("Accepted notification execution unavailable"));
+        var issued = links.issue(new FinalSendCustomerLinkIssuer.IssueRequest(execution.aggregateId(),
+                notification.recipient(), java.util.Set.of(), attempt.idempotencyKey()));
+        return notification.message().replace("[[SELF_SERVICE_LINK]]", issued.url());
+    }
 }

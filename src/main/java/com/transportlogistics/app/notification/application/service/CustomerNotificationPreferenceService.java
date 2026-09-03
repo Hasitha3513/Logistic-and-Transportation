@@ -69,6 +69,7 @@ public class CustomerNotificationPreferenceService implements CustomerNotificati
         }
     }
 
+
     private CustomerNotificationContactPort.CustomerContact activeContact(UUID customerId) {
         var contact = contacts.find(customerId).filter(CustomerNotificationContactPort.CustomerContact::active)
                 .orElseThrow(() -> new NotFoundException("CUSTOMER_NOT_FOUND", "Customer was not found"));

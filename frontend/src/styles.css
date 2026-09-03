@@ -18,6 +18,18 @@
 html, body, #root { min-height: 100%; margin: 0; }
 body { min-width: 320px; }
 
+.track-page { min-height: 100vh; background: linear-gradient(145deg, #edf7f8, #f7f9fc); }
+.track-header { display: flex; align-items: center; gap: 12px; padding: 20px clamp(20px, 6vw, 72px); color: #fff; background: #123b50; }
+.track-header span { display: block; color: #b9d3dc; font-size: 12px; }
+.track-brand { display: grid; place-items: center; width: 42px; height: 42px; border-radius: 12px; background: #21a0b8; font-weight: 800; }
+.track-content { width: min(900px, calc(100% - 32px)); margin: 28px auto; }
+.track-page footer { padding: 12px 20px 28px; color: #5d6b7e; text-align: center; font-size: 12px; }
+.track-facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin: 20px 0 0; }
+.track-facts div { min-width: 0; }
+.track-facts dt { color: #5d6b7e; font-size: 12px; }
+.track-facts dd { margin: 4px 0 0; overflow-wrap: anywhere; }
+@media (max-width: 640px) { .track-facts { grid-template-columns: 1fr; } .track-content { margin-top: 16px; } }
+
 .login-page { min-height: 100vh; padding: 24px; background: linear-gradient(145deg, #edf5f7, var(--app-color-layout)); }
 .login-card { width: min(100%, 430px); border: 1px solid var(--app-color-border); box-shadow: var(--app-shadow-card); }
 .login-card__heading { margin-bottom: 24px; text-align: center; }

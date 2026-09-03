@@ -31,4 +31,7 @@ public class NotificationRuleExecutionPersistenceAdapter implements Notification
         return repository.findRecent(ruleId, eventId, PageRequest.of(0, Math.max(1, Math.min(limit, 200))))
             .stream().map(NotificationRuleExecutionEntity::toDomain).toList();
     }
+    @Override public Optional<NotificationRuleExecution> findByControllingNotificationId(UUID notificationId) {
+        return repository.findByControllingNotificationId(notificationId).map(NotificationRuleExecutionEntity::toDomain);
+    }
 }

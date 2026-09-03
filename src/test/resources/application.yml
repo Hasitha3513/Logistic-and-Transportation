@@ -60,6 +60,11 @@ security:
     secret: ${JWT_SECRET:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef}
 
 app:
+  delivery:
+    self-service:
+      customer-origin: http://localhost:5173
+      contact-hmac-secret: test_only_self_service_hmac_secret_2026
+      contact-hash-key-version: v1
   dev:
     identity-bootstrap:
       enabled: false

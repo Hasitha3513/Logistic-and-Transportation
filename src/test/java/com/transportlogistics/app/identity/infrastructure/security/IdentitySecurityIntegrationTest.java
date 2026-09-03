@@ -153,6 +153,18 @@ class IdentitySecurityIntegrationTest {
     void publicAndProtectedRoutesUseExpectedSecurityPolicy() throws Exception {
         mvc.perform(get("/health")).andExpect(status().isOk());
         mvc.perform(get("/v3/api-docs")).andExpect(status().isOk());
+        mvc.perform(get("/public/v1/delivery-self-service"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("SELF_SERVICE_ACCESS_INVALID"));
+        mvc.perform(get("/api/public/v1/delivery-self-service").contextPath("/api"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("SELF_SERVICE_ACCESS_INVALID"));
+        mvc.perform(put("/api/public/v1/delivery-self-service/notification-preferences").contextPath("/api")
+                        .header("Authorization", "DeliveryAccess AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"emailEnabled\":true,\"smsEnabled\":false,\"version\":null}"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("SELF_SERVICE_ACCESS_INVALID"));
         mvc.perform(get("/auth/me")).andExpect(status().isUnauthorized());
         mvc.perform(get("/users")).andExpect(status().isUnauthorized());
     }

@@ -2,6 +2,8 @@ package com.transportlogistics.app.notification.application.service;
 
 import com.transportlogistics.app.notification.application.ports.out.NotificationRepository;
 import com.transportlogistics.app.notification.application.ports.out.EmailNotificationSenderPort;
+import com.transportlogistics.app.notification.application.ports.out.NotificationRuleExecutionRepository;
+import com.transportlogistics.app.notification.FinalSendCustomerLinkIssuer;
 import com.transportlogistics.app.notification.application.ports.in.NotificationEmailDeliveryClaimUseCase;
 import com.transportlogistics.app.notification.application.ports.in.NotificationEscalationUseCase;
 import com.transportlogistics.app.notification.domain.model.*;
@@ -69,6 +71,39 @@ class NotificationEmailDeliveryWorkerTest {
         } finally {
             Thread.interrupted();
         }
+    }
+
+    @Test void selfServiceLinkExistsOnlyInTransientProviderRequest() {
+        NotificationRepository notifications = mock(NotificationRepository.class);
+        NotificationEmailDeliveryClaimUseCase claims = mock(NotificationEmailDeliveryClaimUseCase.class);
+        NotificationEscalationUseCase escalations = mock(NotificationEscalationUseCase.class);
+        NotificationRuleExecutionRepository executions = mock(NotificationRuleExecutionRepository.class);
+        FinalSendCustomerLinkIssuer links = mock(FinalSendCustomerLinkIssuer.class);
+        Notification persisted = Notification.createPending(null, UUID.randomUUID(), "DELIVERY_OUT_FOR_DELIVERY",
+                NotificationChannel.EMAIL, "customer@example.test", NotificationSeverity.INFO, "Delivery update",
+                "Track here: [[SELF_SERVICE_LINK]]", null, null, null, now.minusMinutes(1), null);
+        var attempt = NotificationDeliveryAttempt.start(persisted.id(), 1, now, now);
+        var execution = NotificationRuleExecution.completed(persisted.eventId(), persisted.eventType(),
+                "DELIVERY_ORDER", UUID.randomUUID(), UUID.randomUUID(), persisted.recipient(), persisted.channel(),
+                NotificationRuleExecutionOutcome.ACCEPTED, null, persisted.id(), null, null, now);
+        when(notifications.findDuePendingEmails(any(), anyInt())).thenReturn(List.of(persisted));
+        when(notifications.findFailedEmails(anyInt())).thenReturn(List.of());
+        when(claims.claim(eq(persisted.id()), any())).thenReturn(Optional.of(
+                new NotificationEmailDeliveryClaimUseCase.ClaimedDelivery(persisted, attempt)));
+        when(executions.findByControllingNotificationId(persisted.id())).thenReturn(Optional.of(execution));
+        when(links.issue(any())).thenReturn(new FinalSendCustomerLinkIssuer.IssuedLink(
+                "https://track.example.test/track#access_token=transient-token"));
+        java.util.concurrent.atomic.AtomicReference<EmailNotificationSenderPort.SendRequest> sent = new java.util.concurrent.atomic.AtomicReference<>();
+        EmailNotificationSenderPort sender = request -> { sent.set(request); return EmailNotificationSenderPort.SendResult.accepted("provider-1"); };
+        var worker = new NotificationEmailDeliveryWorker(notifications, claims, escalations, sender, null,
+                executions, links, Clock.fixed(now.toInstant(), ZoneOffset.UTC), "noreply@example.test", Duration.ofSeconds(30));
+
+        worker.processDue();
+
+        org.assertj.core.api.Assertions.assertThat(persisted.message()).doesNotContain("transient-token");
+        org.assertj.core.api.Assertions.assertThat(sent.get().plainTextBody()).contains("transient-token")
+                .doesNotContain("[[SELF_SERVICE_LINK]]");
+        verify(links).issue(argThat(request -> request.issuanceIdempotencyKey().equals(attempt.idempotencyKey())));
     }
 
     private void verifyFailure(DeterministicEmailNotificationSender.Scenario scenario,

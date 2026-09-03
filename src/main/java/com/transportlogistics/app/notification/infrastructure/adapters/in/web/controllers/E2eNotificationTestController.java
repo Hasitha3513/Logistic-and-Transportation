@@ -2,6 +2,7 @@ package com.transportlogistics.app.notification.infrastructure.adapters.in.web.c
 
 import com.transportlogistics.app.notification.application.service.NotificationEmailDeliveryWorker;
 import com.transportlogistics.app.notification.infrastructure.testing.E2eAdjustableClock;
+import com.transportlogistics.app.notification.infrastructure.testing.E2eDeterministicEmailSender;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,10 +20,13 @@ import java.time.Instant;
 public class E2eNotificationTestController {
     private final E2eAdjustableClock clock;
     private final NotificationEmailDeliveryWorker worker;
+    private final E2eDeterministicEmailSender sender;
 
-    public E2eNotificationTestController(E2eAdjustableClock clock, NotificationEmailDeliveryWorker worker) {
+    public E2eNotificationTestController(E2eAdjustableClock clock, NotificationEmailDeliveryWorker worker,
+                                         E2eDeterministicEmailSender sender) {
         this.clock = clock;
         this.worker = worker;
+        this.sender = sender;
     }
 
     @GetMapping("/now")
@@ -48,5 +52,13 @@ public class E2eNotificationTestController {
         return ResponseEntity.noContent().build();
     }
 
+    @GetMapping("/latest-accepted-email")
+    EmailResponse latestAcceptedEmail() {
+        var request = sender.latestAccepted().orElseThrow(() -> new org.springframework.web.server.ResponseStatusException(
+                org.springframework.http.HttpStatus.NOT_FOUND));
+        return new EmailResponse(request.to(), request.subject(), request.plainTextBody());
+    }
+
     record TimeResponse(Instant now) {}
+    record EmailResponse(String recipient, String subject, String body) {}
 }

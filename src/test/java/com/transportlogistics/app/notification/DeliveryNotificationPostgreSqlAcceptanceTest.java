@@ -15,10 +15,12 @@ class DeliveryNotificationPostgreSqlAcceptanceTest extends PostgreSqlIntegration
     @Autowired private JdbcTemplate jdbc;
 
     @Test
-    void v58CreatesPreferenceConstraintsTemplatesRulesAndHistoryIndex() {
+    void v58AssetsRemainValidAtCurrentV59Head() {
         assertThat(jdbc.queryForObject("select max(version::integer) from flyway_schema_history where success",
             Integer.class))
-            .isEqualTo(58);
+            .isEqualTo(59);
+        assertThat(jdbc.queryForObject("select count(*) from flyway_schema_history where version='58' and success",
+            Integer.class)).isEqualTo(1);
         assertThat(jdbc.queryForObject("select count(*) from notification_template "
             + "where event_type like 'DELIVERY_%' and channel in ('EMAIL','SMS')", Integer.class)).isEqualTo(10);
         assertThat(jdbc.queryForObject("select count(*) from notification_rule "

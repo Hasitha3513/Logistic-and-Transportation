@@ -46,6 +46,7 @@ import DeliveryZoneListPage from './features/delivery/zones/pages/DeliveryZoneLi
 import DeliverySlotListPage from './features/delivery/slots/pages/DeliverySlotListPage';
 import { DeliveryRiderListPage } from './features/delivery/riders/pages/DeliveryRiderListPage';
 import { DeliveryBatchListPage } from './features/delivery/batches/pages/DeliveryBatchListPage';
+import DeliverySelfServicePage from './features/delivery/selfService/pages/DeliverySelfServicePage';
 
 function ProtectedRoute() {
   const { user, isLoading } = useAuth();
@@ -79,6 +80,7 @@ export default function App() {
   return (
     <Routes>
       <Route path="login" element={<LoginPage />} />
+      <Route path="track" element={<DeliverySelfServicePage />} />
       <Route element={<ProtectedRoute />}>
         <Route index element={<HomePage />} />
         <Route path="fleet/vehicles" element={<VehicleListPage />} />

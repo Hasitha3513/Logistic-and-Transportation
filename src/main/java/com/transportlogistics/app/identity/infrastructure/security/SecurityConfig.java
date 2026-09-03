@@ -40,6 +40,8 @@ class SecurityConfig {
                 .authorizeHttpRequests(requests -> requests
                         .requestMatchers("/health", "/auth/login", "/auth/refresh", "/swagger-ui/**", "/swagger-ui.html",
                                 "/v3/api-docs/**", "/error").permitAll()
+                        .requestMatchers("/public/v1/delivery-self-service/**",
+                                "/api/public/v1/delivery-self-service/**").permitAll()
                         .requestMatchers("/auth/me", "/auth/logout").authenticated()
                         .requestMatchers("/actuator/**").hasAuthority("IDENTITY_MANAGE")
                         .requestMatchers("/users/**", "/roles/**").hasAuthority("IDENTITY_MANAGE")

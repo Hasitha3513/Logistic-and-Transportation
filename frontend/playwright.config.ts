@@ -60,6 +60,7 @@ export default defineConfig({
         DEV_IDENTITY_PASSWORD: e2eAdminPassword,
         DEV_IDENTITY_EMAIL: 'e2e.admin@example.test',
         DEV_SAMPLE_DATA_ENABLED: 'true',
+        DELIVERY_SELF_SERVICE_CUSTOMER_ORIGIN: process.env.DELIVERY_SELF_SERVICE_CUSTOMER_ORIGIN || 'http://localhost:5174',
         JAVA_HOME: process.env.E2E_JAVA_HOME || process.env.JAVA_HOME || '/usr/lib/jvm/java-1.21.0-openjdk-amd64',
         PATH: `${process.env.E2E_JAVA_HOME || process.env.JAVA_HOME || '/usr/lib/jvm/java-1.21.0-openjdk-amd64'}/bin:${process.env.PATH || ''}`,
       },
