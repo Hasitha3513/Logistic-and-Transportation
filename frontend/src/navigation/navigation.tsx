@@ -135,6 +135,13 @@ export const navigation: NavigationItem[] = [
         requiredPermission: 'NOTIFICATION_RULE_VIEW',
         icon: <BellOutlined />,
       },
+      {
+        key: 'integrations',
+        label: 'Integrations',
+        route: '/integrations',
+        requiredPermission: 'INTEGRATION_VIEW',
+        icon: <SettingOutlined />,
+      },
     ],
   },
 ];

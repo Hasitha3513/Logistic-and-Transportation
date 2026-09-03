@@ -374,6 +374,26 @@ class SecurityConfig {
 
                         .requestMatchers("/e2e/**").hasAuthority("NOTIFICATION_RULE_MANAGE")
 
+                        // Runtime matching excludes the /api context path. Literal variants are retained so
+                        // security tests exercise the externally visible contract as well as the servlet path.
+                        .requestMatchers(HttpMethod.GET, "/v1/integrations/*/exchanges",
+                                "/api/v1/integrations/*/exchanges")
+                        .hasAuthority("INTEGRATION_AUDIT_VIEW")
+                        .requestMatchers(HttpMethod.GET, "/v1/integrations", "/v1/integrations/*",
+                                "/api/v1/integrations", "/api/v1/integrations/*")
+                        .hasAuthority("INTEGRATION_VIEW")
+                        .requestMatchers(HttpMethod.POST, "/v1/integrations", "/api/v1/integrations")
+                        .hasAuthority("INTEGRATION_MANAGE")
+                        .requestMatchers(HttpMethod.PUT, "/v1/integrations/*", "/api/v1/integrations/*")
+                        .hasAuthority("INTEGRATION_MANAGE")
+                        .requestMatchers(HttpMethod.POST, "/v1/integrations/*/test",
+                                "/api/v1/integrations/*/test")
+                        .hasAuthority("INTEGRATION_TEST")
+                        .requestMatchers(HttpMethod.POST, "/v1/integrations/*/enable",
+                                "/v1/integrations/*/disable", "/api/v1/integrations/*/enable",
+                                "/api/v1/integrations/*/disable")
+                        .hasAuthority("INTEGRATION_ACTIVATE")
+
                         .requestMatchers(HttpMethod.GET, "/v1/freight/exceptions", "/v1/freight/exceptions/*")
                         .hasAuthority("CARGO_EXCEPTION_VIEW")
                         .requestMatchers(HttpMethod.POST, "/v1/freight/exceptions")
@@ -394,7 +414,8 @@ class SecurityConfig {
                                 "/dashboard/**", "/reports/**",
                                 "/v1/deliveries/**",
                                 "/notification-rules/**", "/notification-rule-executions/**", "/notification-deliveries/**", "/notification-customer-preferences/**", "/notification-event-catalogue/**", "/notification-templates/**",
-                                "/notifications/**", "/offline-sync/**").denyAll()
+                                "/notifications/**", "/offline-sync/**", "/v1/integrations/**",
+                                "/api/v1/integrations/**").denyAll()
                         .anyRequest().denyAll())
                 .addFilterBefore(jwt, UsernamePasswordAuthenticationFilter.class)
                 .build();

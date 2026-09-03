@@ -49,8 +49,10 @@ services:
       DB_POOL_MIN: 1
       DB_POOL_MAX: 10
       DELIVERY_EVIDENCE_STORAGE_PATH: /app/data/delivery-evidence
+      INTEGRATION_CONTROLLED_SANDBOX_ROOT: /app/data/integration-sandbox
     volumes:
       - delivery-evidence:/app/data/delivery-evidence
+      - integration-exchange:/app/data/integration-sandbox
     ports:
       - "${BACKEND_PORT:-8080}:8080"
     depends_on:
@@ -84,3 +86,4 @@ services:
 volumes:
   postgres-data:
   delivery-evidence:
+  integration-exchange:

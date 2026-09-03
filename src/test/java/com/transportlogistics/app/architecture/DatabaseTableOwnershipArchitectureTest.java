@@ -159,6 +159,8 @@ class DatabaseTableOwnershipArchitectureTest {
                 "notification_rule_policy", "notification_rule_quiet_day", "notification_rule_execution",
                 "notification_delivery_attempt", "customer_notification_preference");
         own(ownership, "offlinesync", "offline_sync_operation");
+        own(ownership, "integration", "integration_configuration", "integration_mapping", "integration_exchange",
+                "integration_exchange_attempt", "integration_audit_event");
         own(ownership, "shared", "integration_outbox_event");
         return Map.copyOf(ownership);
     }

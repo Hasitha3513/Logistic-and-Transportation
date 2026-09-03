@@ -47,6 +47,8 @@ import DeliverySlotListPage from './features/delivery/slots/pages/DeliverySlotLi
 import { DeliveryRiderListPage } from './features/delivery/riders/pages/DeliveryRiderListPage';
 import { DeliveryBatchListPage } from './features/delivery/batches/pages/DeliveryBatchListPage';
 import DeliverySelfServicePage from './features/delivery/selfService/pages/DeliverySelfServicePage';
+import IntegrationListPage from './features/integrations/pages/IntegrationListPage';
+import IntegrationDetailPage from './features/integrations/pages/IntegrationDetailPage';
 
 function ProtectedRoute() {
   const { user, isLoading } = useAuth();
@@ -136,6 +138,9 @@ export default function App() {
         <Route path="administration/users" element={<ResourceListPage {...resourcePages.users} />} />
         <Route path="administration/roles" element={<ResourceListPage {...resourcePages.roles} />} />
         <Route path="notification-rules" element={<NotificationRulesPage />} />
+        <Route path="integrations" element={<IntegrationListPage />} />
+        <Route path="integrations/new" element={<IntegrationDetailPage />} />
+        <Route path="integrations/:id" element={<IntegrationDetailPage />} />
         <Route path="workspace" element={<WorkspacePage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>

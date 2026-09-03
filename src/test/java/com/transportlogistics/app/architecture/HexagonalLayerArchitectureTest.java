@@ -201,4 +201,25 @@ public class HexagonalLayerArchitectureTest {
                 .check(importedClasses);
     }
 
+    @Test
+    void integrationDomainPortsAndApplicationMustRemainFrameworkFree() {
+        noClasses()
+                .that().resideInAnyPackage("..integration..domain..", "..integration..ports..",
+                        "..integration..application..")
+                .should().dependOnClassesThat().resideInAnyPackage(
+                        "org.springframework..", "jakarta.persistence..", "org.hibernate..", "com.fasterxml.jackson..",
+                        "..integration..adapters..")
+                .because("Integration core code must remain provider-neutral and depend inward")
+                .check(importedClasses);
+    }
+
+    @Test
+    void integrationWebMustNotAccessPersistenceAdapters() {
+        noClasses()
+                .that().resideInAPackage("..integration..adapters.inbound.web..")
+                .should().dependOnClassesThat().resideInAPackage("..integration..adapters.outbound.persistence..")
+                .because("Integration web adapters must invoke inbound ports")
+                .check(importedClasses);
+    }
+
 }
