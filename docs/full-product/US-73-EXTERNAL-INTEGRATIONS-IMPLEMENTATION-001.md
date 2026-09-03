@@ -1,8 +1,8 @@
 # US-73 Manage External Integrations — Implementation Evidence
 
 **Task:** `US-73-EXTERNAL-INTEGRATIONS-IMPLEMENTATION-001`
-**Status:** `IMPLEMENTATION_COMPLETE / ACCEPTANCE_PENDING`
-**Program accounting:** 65 / 87 COMPLETE; 22 / 87 remaining
+**Status:** `COMPLETE` after `US-73-EXTERNAL-INTEGRATIONS-FINAL-ACCEPTANCE-001`
+**Program accounting:** 66 / 87 COMPLETE; 21 / 87 remaining
 **Migration:** V61; current Flyway head V61
 **Evidence tier:** `CONTROLLED_SANDBOX`
 
@@ -69,4 +69,4 @@ Every future business ecosystem must separately govern its owner, source fact, c
 
 ## Closure state
 
-`US-73-EXTERNAL-INTEGRATIONS-TECHNICAL-CLOSURE-001` passed independently with zero unresolved technical blockers. US-73 remains `IMPLEMENTATION_COMPLETE / ACCEPTANCE_PENDING`; story accounting remains 65 / 87 complete. The next task is `US-73-EXTERNAL-INTEGRATIONS-FINAL-ACCEPTANCE-001`.
+`US-73-EXTERNAL-INTEGRATIONS-TECHNICAL-CLOSURE-001` passed independently with zero unresolved technical blockers. `US-73-EXTERNAL-INTEGRATIONS-FINAL-ACCEPTANCE-001` then independently reran the complete acceptance matrix and accepted only the frozen controlled outbound JSON-file capability. US-73 is `COMPLETE`; story accounting is 66 / 87 complete and 21 / 87 remaining. The next task is `US-78-OPERATIONAL-EXCEPTIONS-PRODUCT-DECISIONS-001`.
