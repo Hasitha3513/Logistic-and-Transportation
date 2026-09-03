@@ -20,8 +20,8 @@
 > - **MVP 1.4 Last-Mile Delivery:** 8 / 8 COMPLETE (US-63 through US-70 Accepted & Closed)
 > - **Overall Release Band:** 65 / 87 COMPLETE (22 REPRIORITIZED / 87 TOTAL)
 > - **Current Milestone:** MVP 1.4 Last-Mile Delivery — 8 / 8 COMPLETE, 100%, CLOSED.
-> - **Active Focus:** The remaining 22 stories are dependency-ordered across five governed full-product waves; P1-01 remains complete.
-> - **Immediate Next Action:** Execute `US-73-EXTERNAL-INTEGRATIONS-PRODUCT-DECISIONS-001`.
+> - **Active Focus:** US-73 external-integration product decisions are frozen; implementation has not started. P1-01 remains complete.
+> - **Immediate Next Action:** Execute `US-73-EXTERNAL-INTEGRATIONS-IMPLEMENTATION-001`.
 
 ---
 
@@ -207,7 +207,7 @@ Development startup now consistently provisions the idempotent PostgreSQL sample
 | :---: | :--- | :--- | :---: | :--- |
 | `US-71` | Support Offline Data Sync | Generic IndexedDB sync framework, idempotency | 🟢 `COMPLETE` | `OfflineSyncCoordinatorTest`, V29 |
 | `US-72` | Enforce Compliance | Vehicle, driver, cargo/hazmat, tax, regional and retention decisions | 🟡 `WAVE D / BLOCKED_BY_DEPENDENCY` | Requires typed domain facts and US-47 billing facts |
-| `US-73` | Manage External Integrations | Provider-neutral endpoint/configuration, mapping, exchange, status, retry and error handling | 🟡 `WAVE A / READY_FOR_PRODUCT_DECISIONS` | Highest-leverage queue head |
+| `US-73` | Manage External Integrations | Provider-neutral endpoint/configuration, mapping, exchange, status, retry and error handling | 🟡 `PRODUCT_DECISIONS_FROZEN / IMPLEMENTATION_NOT_STARTED` | Outbound governed JSON-file adapter; controlled-sandbox acceptance |
 | `US-74` | Manage Security | JWT authentication, multi-tenant RBAC | 🟢 `COMPLETE` | `SecurityAccessTest`, `TenantFilterTest` |
 | `US-75` | Maintain Audit and Reports | Comprehensive audit log trail, CSV exports | 🟢 `COMPLETE` | `AuditLogTest`, `AuditReportTest` |
 | `US-76` | Support Mobile Operations | Driver, dispatcher and delivery mobile workflows with offline, camera/signature, push and device health | 🟡 `WAVE D / BLOCKED_BY_DEPENDENCY` | PWA/native and device/provider decisions required |
@@ -235,10 +235,10 @@ Development startup now consistently provisions the idempotent PostgreSQL sample
 
 ```
 Current Status: 65 / 87 COMPLETE; 22 stories reprioritized across Waves A–E
-Queue Head:     US-73-EXTERNAL-INTEGRATIONS-PRODUCT-DECISIONS-001
+Queue Head:     US-73-EXTERNAL-INTEGRATIONS-IMPLEMENTATION-001
 ```
 
-1. **Wave A — Integration and exception-control foundations:** US-73, US-78.
+1. **Wave A — Integration and exception-control foundations:** implement US-73 from its frozen decision contract, then US-78.
 2. **Wave B — Fuel control and financial links:** US-37, US-35, US-38, US-46, US-47.
 3. **Wave C — GPS and telematics:** US-48, then US-49/50/51/52/55, then US-53, then US-54.
 4. **Wave D — Compliance and field mobility:** US-72, US-76.
