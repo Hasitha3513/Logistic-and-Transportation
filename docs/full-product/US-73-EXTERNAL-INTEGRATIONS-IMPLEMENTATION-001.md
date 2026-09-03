@@ -51,13 +51,15 @@ The feature-first React integration UI provides permission-gated list, create/de
 
 ## Verification evidence
 
-- Complete Java/Maven gate: `1276` tests, `0` failures, `0` errors, `15` skipped; `BUILD SUCCESS` in `04:51` under Java 21.
+- Independent technical-closure focused Integration gate: `24` tests, `0` failures, `0` errors, `0` skipped, including clean PostgreSQL V1-V61 migration, security, domain, persistence, and real filesystem adapter tests.
+- Independent P1-01 plus US-69/70 regression gate: `40` tests, `0` failures, `0` errors, `0` skipped.
+- Complete Java/Maven closure gate: `1276` tests, `0` failures, `0` errors, `15` skipped; `BUILD SUCCESS` in `04:56` under Java 21.
 - Architecture and Spring Modulith: `44/44` pass, including Integration layer/dependency/table-ownership rules.
 - Static analysis: Checkstyle `0` violations, PMD pass, SpotBugs `0` findings/errors under Java 21.
 - PostgreSQL acceptance used only `transport_logistics_acceptance` as authoritative destructive evidence and verified Flyway V1-V61, constraints, Tenant isolation, uniqueness, idempotency, ordered attempts, 50-row claim bound, lease recovery, terminal failure, and shared-outbox reuse.
-- Controlled-sandbox Chromium journey: `6/6` pass with real PostgreSQL, REST, React, durable outbox handling, and real filesystem I/O. It covers create/invalid mapping/test/enable/success, duplicate replay, retry then success, permanent integrity failure, safe history, disablement, RBAC, and cross-Tenant isolation.
+- Controlled-sandbox Chromium closure journey: `6/6` pass in `1.3m` with fresh local servers, real PostgreSQL, REST, React, durable outbox handling, and real filesystem I/O. It covers create/invalid mapping/test/enable/success, duplicate replay, retry then success, permanent integrity failure, safe history, disablement, RBAC, and cross-Tenant isolation.
 - Frontend: TypeScript pass; Vitest `60` files and `260` tests pass; production build pass; changed-file ESLint pass. Repository-wide ESLint retains `71` pre-existing errors in eight unchanged Delivery files; US-73 introduced errors are zero.
-- `git diff --check` passes; only Git CRLF normalization warnings are present.
+- `git diff --check` passes with no reported whitespace errors.
 
 One non-authoritative setup invocation earlier inherited the local development datasource and applied the forward V61 migration there. No destructive acceptance cleanup or acceptance query used that database, and it is not cited as evidence. All authoritative PostgreSQL acceptance and the final Maven gate used `transport_logistics_acceptance` on port 5433.
 
@@ -67,4 +69,4 @@ Every future business ecosystem must separately govern its owner, source fact, c
 
 ## Closure state
 
-US-73 is `IMPLEMENTATION_COMPLETE / ACCEPTANCE_PENDING`; story accounting remains 65 / 87 complete. The next task is `US-73-EXTERNAL-INTEGRATIONS-TECHNICAL-CLOSURE-001`.
+`US-73-EXTERNAL-INTEGRATIONS-TECHNICAL-CLOSURE-001` passed independently with zero unresolved technical blockers. US-73 remains `IMPLEMENTATION_COMPLETE / ACCEPTANCE_PENDING`; story accounting remains 65 / 87 complete. The next task is `US-73-EXTERNAL-INTEGRATIONS-FINAL-ACCEPTANCE-001`.
