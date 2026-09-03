@@ -39,6 +39,12 @@ class PostgreSqlSampleDataRbacIdempotencyTest extends PostgreSqlIntegrationTest 
                 JOIN app_user user_row ON user_row.id = membership.user_id
                 WHERE user_row.username = 'user.kasun' AND assignment.role_id = ?
                 """, Integer.class, EXISTING_ADMIN_ID));
+        assertEquals(10, jdbc.queryForObject("""
+                SELECT COUNT(*) FROM delivery_order
+                WHERE id BETWEEN 'a0000000-0000-0000-0000-000000000001'::uuid
+                             AND 'a0000000-0000-0000-0000-000000000010'::uuid
+                  AND delivery_number ~ '^DEL-[0-9]{4}-[0-9]{6}$'
+                """, Integer.class));
     }
 
     private void runFixture() {

@@ -18,10 +18,10 @@
 > - **Authority Order:** Original Requirements (`Traspotation & logistic.docx`), Frozen Architecture/Contracts, Verified Production Code/Tests, then Roadmap.
 > - **MVP 1.3 Delivery Operations:** 7 / 7 COMPLETE (100%) - CLOSED
 > - **MVP 1.4 Last-Mile Delivery:** 8 / 8 COMPLETE (US-63 through US-70 Accepted & Closed)
-> - **Overall Release Band:** 65 / 87 COMPLETE (22 DEFERRED / 87 TOTAL)
+> - **Overall Release Band:** 65 / 87 COMPLETE (22 REPRIORITIZED / 87 TOTAL)
 > - **Current Milestone:** MVP 1.4 Last-Mile Delivery — 8 / 8 COMPLETE, 100%, CLOSED.
-> - **Active Focus:** P1-01 event durability and envelope hardening is complete.
-> - **Immediate Next Action:** Execute `DEFERRED-BACKLOG-REPRIORITIZATION-001`.
+> - **Active Focus:** The remaining 22 stories are dependency-ordered across five governed full-product waves; P1-01 remains complete.
+> - **Immediate Next Action:** Execute `US-73-EXTERNAL-INTEGRATIONS-PRODUCT-DECISIONS-001`.
 
 ---
 
@@ -38,11 +38,11 @@ MVP 1.4 Band:     [████████████████████�
 | **Completed Stories (Accepted)** | 87 | **65** | `74.7%` | 🟢 `ON TRACK / VERIFIED` |
 | **Next Active / Acceptance Required** | — | **0** | `0.0%` | 🟢 `NONE` |
 | **Not Started (MVP 1.4 Active Scope)** | 1 | **0** | `0.0%` | 🟢 `NONE` |
-| **Approved Deferments (Post-MVP)** | 22 | **22** | `25.3%` | ⏸️ `DEFERRED BY GOVERNANCE` |
+| **Reprioritized Remaining Stories** | 22 | **22** | `25.3%` | 🟡 `PLANNED IN GOVERNED WAVES` |
 | **Total Registered User Stories** | **87** | **87** | **`100%`** | 🔒 `FROZEN REGISTER (US-01..US-87)` |
 
 > [!NOTE]
-> Stories `US-88`, `US-89`, and `US-90` are strictly undefined. The story accounting register is bounded exactly from `US-01` through `US-87` (`65 COMPLETE + 22 DEFERRED = 87`).
+> Stories `US-88`, `US-89`, and `US-90` are strictly undefined. The story accounting register is bounded exactly from `US-01` through `US-87` (`65 COMPLETE + 22 REMAINING = 87`).
 
 ---
 
@@ -54,10 +54,10 @@ MVP 1.4 Band:     [████████████████████�
 | **MVP 1.0** | **Core Operations** | Fleet (US-01–08), Trips (US-09–16), Basic Route (US-17–19), Drivers (US-39–45), Core Enablers | 34 | 34 / 34 | 🟢 `COMPLETE (100%)` |
 | **MVP 1.1A** | **Advanced Route** | Dynamic Route Optimization, Analytics, and Disruption Handling (US-20–23) | 4 | 4 / 4 | 🟢 `COMPLETE (100%)` |
 | **MVP 1.1B** | **Freight & Cargo** | Freight Orders, Manifests, Load Planning, Weight/Volume Engine, Claims, Exceptions (US-24–30) | 7 | 7 / 7 | 🟢 `COMPLETE (100%)` |
-| **MVP 1.2** | **Fuel Management** | Fuel Issues, Purchases, Mileage, Bunkers, Stock Transfers (US-31–34, US-36) | 8 | 5 / 8 | 🟢 `CLOSED (3 DEFERRED)` |
+| **MVP 1.2** | **Fuel Management** | Fuel Issues, Purchases, Mileage, Bunkers, Fuel Cards, Analytics, Exceptions (US-31–38) | 8 | 5 / 8 | 🟡 `MVP CLOSED; 3 STORIES REPRIORITIZED IN WAVE B` |
 | **MVP 1.3** | **Delivery Operations** | Delivery Orders, Online POD, Offline POD, Failed Deliveries, Redelivery, Analytics, Exceptions (US-56–62) | 7 | 7 / 7 | 🟢 `COMPLETE (100%) - CLOSED` |
 | **MVP 1.4** | **Last-Mile Delivery** | Delivery Zones, Delivery Slots, Riders, Batch Orders, ETA, Exceptions, Notifications, Self-Service (US-63–70) | 8 | 8 / 8 | 🟢 `COMPLETE (100%) - CLOSED` |
-| **Post-MVP** | **Extended Platform** | GPS Tracking (US-48–55), Billing (US-47), Advanced Compliance (US-72+) | 22 | 0 / 22 | ⏸️ `PLANNED POST-MVP` |
+| **Full Product** | **Waves A–E** | Integration/Exceptions; Fuel/Finance; GPS; Compliance/Mobile; Analytics/Integrity/Resilience/Risk | 22 | 0 / 22 | 🟡 `REPRIORITIZED / READY FOR GOVERNED EXECUTION` |
 
 ### Phase 0 Architecture Remediation
 
@@ -88,7 +88,7 @@ Development startup now consistently provisions the idempotent PostgreSQL sample
 | `US-05` | Maintain Fuel & Lubricant Logs | Consumption tracking, fluid top-ups | 🟢 `COMPLETE` | `LubricantLogTest`, V6 |
 | `US-06` | Maintain Running Logs | Odometer, engine hours, daily vehicle logs | 🟢 `COMPLETE` | `RunningLogTest`, V7 |
 | `US-07` | Link Maintenance to Availability | Maintenance blocking availability schedules | 🟢 `COMPLETE` | `MaintenanceAvailabilityTest`, V8 |
-| `US-08` | Track Fleet Operational Costs | Vehicle-level aggregated operational expenses | ⏸️ `DEFERRED` | Post-MVP financial reporting band |
+| `US-08` | Handle Fleet Exceptions | Breakdown, document/registration, allocation, maintenance-status and rental-contract edge cases | 🟢 `COMPLETE` | Accepted current register; excluded from the exact 22-story remainder |
 
 ---
 
@@ -139,10 +139,10 @@ Development startup now consistently provisions the idempotent PostgreSQL sample
 | `US-32` | Record External Fuel Purchases | Fuel card / receipt purchase logging | 🟢 `COMPLETE` | `FuelPurchaseTest`, V32 |
 | `US-33` | Track Fuel Consumption and Mileage | Km/L calculation, baseline variance alerts | 🟢 `COMPLETE` | `FuelMileageTest`, V33 |
 | `US-34` | Manage Bunker Fuel Stock | Internal tank dip readings, stock replenishment | 🟢 `COMPLETE` | `BunkerStockTest`, V34 |
-| `US-35` | Detect Fuel Anomalies | Fuel theft, abnormal consumption spikes | ⏸️ `DEFERRED` | Post-MVP anomaly detection band |
+| `US-35` | Manage Fuel Cards | Card issuance, restrictions, imported transactions, reconciliation and misuse control | 🟡 `WAVE B / READY_FOR_PRODUCT_DECISIONS` | Full-product roadmap |
 | `US-36` | Calculate Trip Fuel Costs | Trip-level fuel expense aggregation | 🟢 `COMPLETE` | `TripFuelCostTest`, V35 |
-| `US-37` | Manage EV Charging Sessions | Kilowatt-hour logging, charging station stats | ⏸️ `DEFERRED` | Post-MVP EV band |
-| `US-38` | Enforce Fuel Policies | Fuel limits per vehicle category / route | ⏸️ `DEFERRED` | Post-MVP policy enforcement band |
+| `US-37` | Analyze Fuel Performance | Vehicle/driver efficiency, anomaly and leakage analysis without changing raw fuel data | 🟡 `WAVE B / READY_FOR_IMPLEMENTATION_AFTER_DECISIONS` | Full-product roadmap |
+| `US-38` | Handle Fuel Exceptions | Theft, wrong readings, price swings, emergency refuel, card misuse and negative balances | 🟡 `WAVE B / BLOCKED_BY_DEPENDENCY` | Requires US-35 and US-78 contracts |
 
 ---
 
@@ -156,22 +156,22 @@ Development startup now consistently provisions the idempotent PostgreSQL sample
 | `US-43` | Monitor Driver Hours of Service | Drive time limits, mandatory rest enforcement | 🟢 `COMPLETE` | `DriverHosTest`, V40 |
 | `US-44` | Manage Driver Violations | Speeding, route deviation, safety incidents | 🟢 `COMPLETE` | `DriverViolationTest`, V41 |
 | `US-45` | Manage Driver Medicals & Drug Tests | Periodic fitness-to-drive certifications | 🟢 `COMPLETE` | `DriverMedicalTest`, V42 |
-| `US-46` | Manage Driver Payroll | Base pay, trip allowances, overtime calculations | ⏸️ `DEFERRED` | Post-MVP payroll band |
+| `US-46` | Process Driver Payroll Link | Traceable trip earnings, allowances, overtime and deductions exported to Payroll/HRMS | 🟡 `WAVE B / BLOCKED_BY_EXTERNAL_SYSTEM` | Payroll link only; not a payroll engine |
 
 ---
 
 ### 📡 Module 7: GPS & Telematics (US-47 to US-55)
 | ID | User Story Title | Scope / Feature | Status | Verification Evidence |
 | :---: | :--- | :--- | :---: | :--- |
-| `US-47` | Invoice Customers for Services | Freight billing, automated invoice generation | ⏸️ `DEFERRED` | Post-MVP billing band |
-| `US-48` | Ingest Real-Time GPS Feeds | Telematics device data ingestion pipeline | ⏸️ `DEFERRED` | Post-MVP telematics band |
-| `US-49` | Show Real-Time Vehicle Locations | Map-based live vehicle positioning | ⏸️ `DEFERRED` | Post-MVP telematics band |
-| `US-50` | Replay Trip Breadcrumb History | Route playback, speed profiles, stop history | ⏸️ `DEFERRED` | Post-MVP telematics band |
-| `US-51` | Manage Geofences | Virtual boundaries, entry/exit alert triggers | ⏸️ `DEFERRED` | Post-MVP telematics band |
-| `US-52` | Monitor Vehicle Speed | Speeding alerts, speed zone compliance | ⏸️ `DEFERRED` | Post-MVP telematics band |
-| `US-53` | Monitor Engine Diagnostics (OBD-II) | DTC fault codes, engine health, coolant temp | ⏸️ `DEFERRED` | Post-MVP telematics band |
-| `US-54` | Track Idling Duration | Excessive idle time logging, fuel waste alerts | ⏸️ `DEFERRED` | Post-MVP telematics band |
-| `US-55` | Detect Driving Events | Harsh braking, rapid acceleration, cornering | ⏸️ `DEFERRED` | Post-MVP telematics band |
+| `US-47` | Manage Transport Billing | Trip/freight costing, charges, adjustments, cost centres and billing finalization | 🟡 `WAVE B / READY_FOR_PRODUCT_DECISIONS` | Billing boundary requires ARB ratification |
+| `US-48` | Track Vehicles Live | Provider-neutral telemetry ingestion, live/last-known state, connectivity, accuracy and freshness | 🟡 `WAVE C / READY_FOR_PRODUCT_DECISIONS` | GPS provider/device required for real acceptance |
+| `US-49` | Manage Geofences | Depot, customer-site and unauthorized-zone entry/exit detection | 🟡 `WAVE C / BLOCKED_BY_DEPENDENCY` | Requires US-48 |
+| `US-50` | Monitor Speed | Threshold, road-rule and repeat-speed monitoring | 🟡 `WAVE C / BLOCKED_BY_DEPENDENCY` | Requires US-48 |
+| `US-51` | Monitor Idle Time | Engine-on versus movement duration and qualified fuel-waste estimates | 🟡 `WAVE C / BLOCKED_BY_DEPENDENCY` | Requires US-48 engine-state telemetry |
+| `US-52` | Monitor Route Deviations | Planned-versus-actual comparison, severity and audited approval | 🟡 `WAVE C / BLOCKED_BY_DEPENDENCY` | Requires US-48 and Routing contract |
+| `US-53` | Replay Journeys | Historical journey replay, stop analysis and incident forensics | 🟡 `WAVE C / BLOCKED_BY_DEPENDENCY` | Requires US-48 history; overlays US-49–52 |
+| `US-54` | View Tracking Dashboard | Fleet overview, exceptions, heat maps, alerts and stale-state visibility | 🟡 `WAVE C / BLOCKED_BY_DEPENDENCY` | Must follow US-48–53 producers |
+| `US-55` | Handle GPS Edge Cases | Signal loss, spoofing, tampering, delayed packets, battery drain and trusted-state protection | 🟡 `WAVE C / BLOCKED_BY_DEPENDENCY` | Requires US-48; integrates US-78 |
 
 ---
 
@@ -206,13 +206,13 @@ Development startup now consistently provisions the idempotent PostgreSQL sample
 | ID | User Story Title | Scope / Feature | Status | Verification Evidence |
 | :---: | :--- | :--- | :---: | :--- |
 | `US-71` | Support Offline Data Sync | Generic IndexedDB sync framework, idempotency | 🟢 `COMPLETE` | `OfflineSyncCoordinatorTest`, V29 |
-| `US-72` | Enforce Compliance | Regulatory vehicle inspection audits | ⏸️ `DEFERRED` | Post-MVP compliance band |
-| `US-73` | Manage External Integrations | Third-party 3PL REST webhook webhooks | ⏸️ `DEFERRED` | Post-MVP platform band |
+| `US-72` | Enforce Compliance | Vehicle, driver, cargo/hazmat, tax, regional and retention decisions | 🟡 `WAVE D / BLOCKED_BY_DEPENDENCY` | Requires typed domain facts and US-47 billing facts |
+| `US-73` | Manage External Integrations | Provider-neutral endpoint/configuration, mapping, exchange, status, retry and error handling | 🟡 `WAVE A / READY_FOR_PRODUCT_DECISIONS` | Highest-leverage queue head |
 | `US-74` | Manage Security | JWT authentication, multi-tenant RBAC | 🟢 `COMPLETE` | `SecurityAccessTest`, `TenantFilterTest` |
 | `US-75` | Maintain Audit and Reports | Comprehensive audit log trail, CSV exports | 🟢 `COMPLETE` | `AuditLogTest`, `AuditReportTest` |
-| `US-76` | Support Mobile Operations | Dedicated native mobile packaging | ⏸️ `DEFERRED` | Web SPA approved for MVP |
+| `US-76` | Support Mobile Operations | Driver, dispatcher and delivery mobile workflows with offline, camera/signature, push and device health | 🟡 `WAVE D / BLOCKED_BY_DEPENDENCY` | PWA/native and device/provider decisions required |
 | `US-77` | Manage Notification Rules | Rule-based alerts, multi-channel dispatch | 🟢 `COMPLETE` | `NotificationRuleTest`, V28 |
-| `US-78` | Manage Operational Exceptions | Cross-module global incident escalations | ⏸️ `DEFERRED` | Post-MVP platform band |
+| `US-78` | Manage Operational Exceptions | Cross-domain classification, assignment, severity, SLA, escalation, corrective action, RCA and closure | 🟡 `WAVE A / READY_FOR_PRODUCT_DECISIONS` | Domain modules retain detection/meaning |
 
 ---
 
@@ -222,24 +222,30 @@ Development startup now consistently provisions the idempotent PostgreSQL sample
 | `US-79` | Manage Master Data | Locations, customer records, branches | 🟢 `COMPLETE` | `MasterDataTest`, V1 |
 | `US-80` | Configure Workflows | Multi-step approval state machine definitions | 🟢 `COMPLETE` | `WorkflowEngineTest` |
 | `US-81` | Manage Scheduling | Universal operational cron schedule engine | 🟢 `COMPLETE` | `ScheduleCoordinatorTest` |
-| `US-82` | Use Operational Analytics | Cross-functional executive analytics | ⏸️ `DEFERRED` | Post-MVP analytics band |
+| `US-82` | Use Operational Analytics | Governed dashboards/KPIs, predictive maintenance, forecasts, risk and recommendations | 🟡 `WAVE E / LATER_WAVE` | Actual and predictive results remain distinct |
 | `US-83` | Manage Documents | Attachment storage, MIME type validation | 🟢 `COMPLETE` | `DocumentStorageTest` |
-| `US-84` | Handle Global System Failures | Cross-region failover and disaster recovery | ⏸️ `DEFERRED` | Enterprise resilience band |
-| `US-85` | Protect Data Integrity | Distributed consensus integrity scanners | ⏸️ `DEFERRED` | Enterprise resilience band |
-| `US-86` | Handle Operational Disruptions | Fleetwide disaster rerouting workflows | ⏸️ `DEFERRED` | Enterprise resilience band |
-| `US-87` | Detect User Risk | Anomaly detection for operator behavior | ⏸️ `DEFERRED` | Enterprise resilience band |
+| `US-84` | Handle Global System Failures | Outage, replication lag, third-party downtime, queue backlog, clock drift, degraded mode and verified recovery | 🟡 `WAVE E / LATER_WAVE` | Code + infrastructure + runbook evidence required |
+| `US-85` | Protect Data Integrity | Duplicate/orphan/mismatch/master-data detection, quarantine and audited owner correction | 🟡 `WAVE E / BLOCKED_BY_DEPENDENCY` | Requires US-48 for complete GPS/trip mismatch scope |
+| `US-86` | Handle Operational Disruptions | Disaster/restriction/strike/border/demand constraints and coordinated replanning | 🟡 `WAVE E / BLOCKED_BY_DEPENDENCY` | Requires US-78 and tracking/routing/scheduling contracts |
+| `US-87` | Detect User Risk | Explainable override, missing-field, fraud, shared-login and delayed-reporting controls | 🟡 `WAVE E / LATER_WAVE` | No opaque ML or automatic punitive decisions |
 
 ---
 
 ## 🎯 4. Immediate Execution Queue
 
 ```
-Current Status: MVP 1.4 (Last-Mile Delivery) 8 / 8 COMPLETE — CLOSED
-Queue Head:     DEFERRED-BACKLOG-REPRIORITIZATION-001
+Current Status: 65 / 87 COMPLETE; 22 stories reprioritized across Waves A–E
+Queue Head:     US-73-EXTERNAL-INTEGRATIONS-PRODUCT-DECISIONS-001
 ```
 
-1. **`DEFERRED-BACKLOG-REPRIORITIZATION-001`:**
-   - Reassess the 22 approved post-MVP deferments and select the next explicitly authorized delivery batch without changing the frozen US-01..US-87 register.
+1. **Wave A — Integration and exception-control foundations:** US-73, US-78.
+2. **Wave B — Fuel control and financial links:** US-37, US-35, US-38, US-46, US-47.
+3. **Wave C — GPS and telematics:** US-48, then US-49/50/51/52/55, then US-53, then US-54.
+4. **Wave D — Compliance and field mobility:** US-72, US-76.
+5. **Wave E — Analytics, integrity, resilience, disruption and user risk:** US-85, US-84, US-87, US-82, US-86.
+6. After 87/87: `FULL-SOURCE-PARITY-AUDIT-001`, then `FULL-PLATFORM-END-TO-END-ACCEPTANCE-001` after authorized parity disposition.
+
+Detailed dependencies, readiness/done gates, scores, rollback plans, source-parity links and exact 65→87 acceptance order are governed by `docs/roadmap/FULL-PRODUCT-87-STORY-COMPLETION-ROADMAP.md`.
 
 ---
 
@@ -277,4 +283,4 @@ Queue Head:     DEFERRED-BACKLOG-REPRIORITIZATION-001
   - `US-68`: `docs/mvp/MVP-1.4-US68-LAST-MILE-EXCEPTIONS-IMPLEMENTATION-001.md`
   - `US-69`: `docs/mvp/MVP-1.4-US69-DELIVERY-NOTIFICATIONS-IMPLEMENTATION-001.md`
   - `US-69 remediation`: `docs/mvp/MVP-1.4-US69-DELIVERY-NOTIFICATIONS-ACCEPTANCE-REMEDIATION-001.md`
-- **Central Knowledge Base:** US-69 remediation commit `4ab58cb` is synchronized to `origin/main`; final acceptance is committed locally as `f9445c5`, with normal push blocked by unavailable HTTPS credentials in this session.
+- **Central Knowledge Base:** P1-01 commit `6e2f1ca` is synchronized to `origin/main`; this reprioritization performs its own task-scoped planning sync.

@@ -3,6 +3,7 @@ package com.transportlogistics.app.delivery.adapters.outbound.persistence;
 import com.transportlogistics.app.delivery.domain.model.*;
 import com.transportlogistics.app.delivery.ports.outbound.DeliveryTenantContextPort;
 import com.transportlogistics.app.tenancy.CanonicalTenant;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -58,10 +59,16 @@ class DeliveryExceptionConcurrencyPostgreSqlAcceptanceTest {
                 "INSERT INTO delivery_order (id, tenant_id, delivery_number, customer_id, origin_location_id, " +
                 "destination_location_id, priority, service_type, window_start, window_end, status, version, " +
                 "created_at, updated_at, created_by, updated_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                deliveryOrderId, TENANT_A, "DEL-CONC-" + (int)(Math.random()*9000 + 1000),
+                deliveryOrderId, TENANT_A, "DEL-2026-%06d".formatted((int) (Math.random() * 900000 + 100000)),
                 customerId, loc1, loc2, "NORMAL", "STANDARD", now.minusHours(1), now.plusHours(1),
                 "READY_FOR_ASSIGNMENT", 0, now, now, "seed", "seed"
         );
+    }
+
+    @AfterEach
+    void cleanUpFixture() {
+        jdbcTemplate.update("DELETE FROM delivery_exception_case WHERE delivery_order_id = ?", deliveryOrderId);
+        jdbcTemplate.update("DELETE FROM delivery_order WHERE id = ?", deliveryOrderId);
     }
 
     @Test
