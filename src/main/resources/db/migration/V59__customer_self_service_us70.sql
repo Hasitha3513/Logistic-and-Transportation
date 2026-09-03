@@ -19,7 +19,10 @@ CREATE TABLE delivery_self_service_access (
     version BIGINT NOT NULL DEFAULT 0,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL,
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    created_by VARCHAR(255) NOT NULL,
+    updated_by VARCHAR(255) NOT NULL,
     CONSTRAINT uk_self_service_token_hash UNIQUE (token_hash),
+    CONSTRAINT uk_self_service_access_tenant UNIQUE (id, tenant_id),
     CONSTRAINT uk_self_service_issuance UNIQUE (tenant_id, issuance_idempotency_key),
     CONSTRAINT chk_self_service_token_hash CHECK (token_hash ~ '^[0-9a-f]{64}$'),
     CONSTRAINT chk_self_service_contact_hash CHECK (recipient_contact_hash ~ '^[0-9a-f]{64}$'),
@@ -46,7 +49,7 @@ CREATE TABLE delivery_customer_submission (
     submission_type VARCHAR(32) NOT NULL,
     category VARCHAR(64),
     description VARCHAR(1000),
-    rating INTEGER,
+    rating SMALLINT,
     preferred_start_at TIMESTAMP WITH TIME ZONE,
     preferred_end_at TIMESTAMP WITH TIME ZONE,
     status VARCHAR(32) NOT NULL DEFAULT 'SUBMITTED',
@@ -57,6 +60,8 @@ CREATE TABLE delivery_customer_submission (
     operator_outcome_by VARCHAR(255),
     created_at TIMESTAMP WITH TIME ZONE NOT NULL,
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    created_by VARCHAR(255) NOT NULL,
+    updated_by VARCHAR(255) NOT NULL,
     version BIGINT NOT NULL DEFAULT 0,
     CONSTRAINT chk_customer_submission_type CHECK
         (submission_type IN ('DELIVERY_PREFERENCE', 'REDELIVERY_REQUEST', 'ISSUE', 'FEEDBACK')),
@@ -86,15 +91,15 @@ CREATE TABLE delivery_customer_submission (
         UNIQUE (tenant_id, access_id, submission_type, idempotency_key),
     CONSTRAINT fk_customer_submission_delivery_tenant FOREIGN KEY (delivery_order_id, tenant_id)
         REFERENCES delivery_order (id, tenant_id) ON DELETE RESTRICT,
-    CONSTRAINT fk_customer_submission_access FOREIGN KEY (access_id)
-        REFERENCES delivery_self_service_access (id) ON DELETE RESTRICT
+    CONSTRAINT fk_customer_submission_access_tenant FOREIGN KEY (access_id, tenant_id)
+        REFERENCES delivery_self_service_access (id, tenant_id) ON DELETE RESTRICT
 );
 
 CREATE UNIQUE INDEX uk_customer_feedback_once
     ON delivery_customer_submission (tenant_id, delivery_order_id, customer_id)
     WHERE submission_type = 'FEEDBACK' AND status <> 'SUPERSEDED';
 CREATE INDEX idx_customer_submission_delivery
-    ON delivery_customer_submission (tenant_id, delivery_order_id, customer_id, created_at DESC);
+    ON delivery_customer_submission (tenant_id, delivery_order_id, customer_id, submission_type, created_at DESC);
 
 -- Persist only a controlled placeholder. The worker substitutes the transient URL at provider-send time.
 UPDATE notification_template

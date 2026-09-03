@@ -101,6 +101,8 @@ public final class CustomerSelfServiceService implements CustomerSelfServiceUseC
                 return map(value);
             } catch (ConflictException exception) {
                 throw new ConflictException("SELF_SERVICE_PREFERENCE_VERSION_CONFLICT", exception.getMessage());
+            } catch (NotFoundException exception) {
+                throw invalid();
             }
         });
     }
@@ -151,9 +153,15 @@ public final class CustomerSelfServiceService implements CustomerSelfServiceUseC
         var submissionViews = submissions.findByDelivery(order.id().value(), order.customerId()).stream()
                 .map(CustomerSelfServiceService::view).toList();
         List<String> available = new ArrayList<>();
-        available.add("TRACK"); available.add("PREFERENCES"); available.add("REPORT_ISSUE");
-        if (order.status() == DeliveryStatus.DELIVERED && !submissions.feedbackExists(order.id().value(), order.customerId())) available.add("FEEDBACK");
-        if (order.status() == DeliveryStatus.FAILED_ATTEMPT || order.status() == DeliveryStatus.READY_FOR_ASSIGNMENT) available.add("DELIVERY_REQUEST");
+        if (ctx.access().allowedActions().contains(SelfServiceAction.TRACK)) available.add("TRACK");
+        if (ctx.access().allowedActions().contains(SelfServiceAction.PREFERENCE_READ)) available.add("PREFERENCES");
+        if (ctx.access().allowedActions().contains(SelfServiceAction.ISSUE_SUBMIT)) available.add("REPORT_ISSUE");
+        if (ctx.access().allowedActions().contains(SelfServiceAction.FEEDBACK_SUBMIT)
+                && order.status() == DeliveryStatus.DELIVERED
+                && !submissions.feedbackExists(order.id().value(), order.customerId())) available.add("FEEDBACK");
+        if (ctx.access().allowedActions().contains(SelfServiceAction.REDELIVERY_REQUEST_SUBMIT)
+                && (order.status() == DeliveryStatus.FAILED_ATTEMPT
+                || order.status() == DeliveryStatus.READY_FOR_ASSIGNMENT)) available.add("DELIVERY_REQUEST");
         return new Projection(order.deliveryNumber().value(), status, explanation(status), order.window().start(),
                 order.window().end(), currentTenant.currentTenant().map(DeliveryTenantContextPort.TenantContext::timeZone).orElse("UTC"),
                 estimate == null ? null : estimate.estimatedArrivalAt(), estimate == null ? null : estimate.calculatedAt(),
@@ -170,16 +178,20 @@ public final class CustomerSelfServiceService implements CustomerSelfServiceUseC
         if (bootstrap == null) { invalidAttempt(ip); throw invalid(); }
         limit(write ? writeLimits : readLimits, hash, write ? 10 : 120, Duration.ofMinutes(15));
         return tenantExecutor.within(bootstrap.tenantId(), () -> transactions.execute(() -> {
-            DeliverySelfServiceAccess scoped = access.findByTokenHash(hash).orElseThrow(() -> invalid());
+            DeliveryOrder order = (write ? orders.findByIdForUpdate(bootstrap.deliveryOrderId())
+                    : orders.findById(bootstrap.deliveryOrderId())).orElseThrow(() -> invalid());
+            DeliverySelfServiceAccess scoped = (write ? access.findByTokenHashForUpdate(hash)
+                    : access.findByTokenHash(hash)).orElseThrow(() -> invalid());
             OffsetDateTime now = now();
             if (!scoped.permits(action, now) || !constantEquals(scoped.tokenHash(), hash)) throw invalid();
-            DeliveryOrder order = orders.findById(scoped.deliveryOrderId()).orElseThrow(() -> invalid());
-            if (!order.customerId().equals(scoped.customerId())) { access.revoke(scoped.id(), now, "CUSTOMER_ASSOCIATION_CHANGED"); throw invalid(); }
+            if (!order.id().value().equals(scoped.deliveryOrderId()) || !order.customerId().equals(scoped.customerId())) {
+                access.revoke(scoped.id(), now, "CUSTOMER_ASSOCIATION_CHANGED"); throw invalid();
+            }
             var customer = customers.find(scoped.customerId()).filter(CustomerNotificationContactLookup.CustomerNotificationContact::active).orElse(null);
             if (customer == null || !contactMatches(scoped, customer)) { access.revoke(scoped.id(), now, "CUSTOMER_CONTACT_INVALID"); throw invalid(); }
             if (write && submissions.countRecent(order.id().value(), now.minusHours(1)) >= 20)
                 throw new TooManyRequestsException("SELF_SERVICE_RATE_LIMITED", "Request rate limit exceeded");
-            access.markUsed(scoped.id(), now);
+            if (!access.markUsed(scoped.id(), now)) throw invalid();
             return work.apply(new Context(scoped, order, scoped.customerId()));
         }));
     }
@@ -202,11 +214,23 @@ public final class CustomerSelfServiceService implements CustomerSelfServiceUseC
     private Submission save(Context ctx, CustomerSubmissionType type, String key, String hash, String category,
                             String description, Integer rating, OffsetDateTime start, OffsetDateTime end) {
         OffsetDateTime now = now();
-        return view(submissions.save(new DeliveryCustomerSubmission(UUID.randomUUID(), ctx.access().tenantId(),
+        DeliveryCustomerSubmission saved = submissions.save(new DeliveryCustomerSubmission(UUID.randomUUID(), ctx.access().tenantId(),
                 ctx.order().id().value(), ctx.customerId(), ctx.access().id(), type, category, description, rating,
-                start, end, "SUBMITTED", key, hash, now, now, 0)));
+                start, end, type == CustomerSubmissionType.FEEDBACK ? "RECORDED" : "SUBMITTED",
+                key, hash, now, now, 0));
+        if (!constantEquals(saved.requestHash(), hash)) {
+            throw new ConflictException("SELF_SERVICE_IDEMPOTENCY_CONFLICT",
+                    "Idempotency key was already used for a different request");
+        }
+        return view(saved);
     }
-    private Preferences preferenceView(UUID customerId) { return map(preferences.get(customerId)); }
+    private Preferences preferenceView(UUID customerId) {
+        try {
+            return map(preferences.get(customerId));
+        } catch (NotFoundException exception) {
+            throw invalid();
+        }
+    }
     private static Preferences map(CustomerOperationalPreferenceManagement.PreferenceView value) {
         return new Preferences(value.emailEnabled(), value.smsEnabled(), value.maskedEmail(), value.maskedPhone(),
                 value.explicitProfile(), value.version());

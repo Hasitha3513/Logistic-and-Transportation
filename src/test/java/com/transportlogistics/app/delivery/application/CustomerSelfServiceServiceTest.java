@@ -16,6 +16,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.*;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -158,11 +159,79 @@ class CustomerSelfServiceServiceTest {
         verifyNoInteractions(batches);
 
         order = ready.markDelivered(OffsetDateTime.ofInstant(clock.instant(), ZoneOffset.UTC).plusMinutes(1), "rider");
-        when(orders.findById(orderId)).thenReturn(Optional.of(order));
+        when(orders.findByIdForUpdate(orderId)).thenReturn(Optional.of(order));
         when(submissions.feedbackExists(orderId, customerId)).thenReturn(false);
         var feedback = service.submitFeedback(raw, "127.0.0.1", "feedback-key-00000001",
                 new com.transportlogistics.app.delivery.ports.inbound.CustomerSelfServiceUseCase.FeedbackCommand(5, "Excellent"));
         assertThat(feedback.type()).isEqualTo("FEEDBACK");
+        assertThat(feedback.status()).isEqualTo("RECORDED");
+    }
+
+    @Test void idempotentIssueReplayReturnsOriginalAndChangedPayloadConflicts() {
+        stubIssuance();
+        String raw = raw(service.issue(new CustomerSelfServiceLinkIssuer.IssueRequest(orderId,
+                "customer@example.com", Set.of(), "notification-attempt-idempotency")));
+        stubAuthorization(order);
+        AtomicReference<DeliveryCustomerSubmission> stored = new AtomicReference<>();
+        when(submissions.findIdempotent(any(), eq(CustomerSubmissionType.ISSUE), eq("issue-key-0000000001")))
+                .thenAnswer(ignored -> Optional.ofNullable(stored.get()));
+        when(submissions.save(any())).thenAnswer(invocation -> {
+            DeliveryCustomerSubmission value = invocation.getArgument(0);
+            stored.compareAndSet(null, value);
+            return stored.get();
+        });
+
+        var first = service.submitIssue(raw, "127.0.0.1", "issue-key-0000000001",
+                new com.transportlogistics.app.delivery.ports.inbound.CustomerSelfServiceUseCase.IssueCommand(
+                        "OTHER", "A sufficiently detailed issue."));
+        var replay = service.submitIssue(raw, "127.0.0.1", "issue-key-0000000001",
+                new com.transportlogistics.app.delivery.ports.inbound.CustomerSelfServiceUseCase.IssueCommand(
+                        "OTHER", "A sufficiently detailed issue."));
+        assertThat(replay.reference()).isEqualTo(first.reference());
+        verify(submissions, times(1)).save(any());
+
+        assertThatThrownBy(() -> service.submitIssue(raw, "127.0.0.1", "issue-key-0000000001",
+                new com.transportlogistics.app.delivery.ports.inbound.CustomerSelfServiceUseCase.IssueCommand(
+                        "OTHER", "A different detailed issue payload.")))
+                .isInstanceOfSatisfying(com.transportlogistics.app.shared.domain.ConflictException.class,
+                        exception -> assertThat(exception.code()).isEqualTo("SELF_SERVICE_IDEMPOTENCY_CONFLICT"));
+    }
+
+    @Test void projectionAdvertisesOnlyActionsGrantedToTheToken() {
+        stubIssuance();
+        when(orders.findById(orderId)).thenReturn(Optional.of(order));
+        when(tenant.currentTenant()).thenReturn(Optional.of(
+                new DeliveryTenantContextPort.TenantContext(tenantId, "Asia/Colombo")));
+        String raw = raw(service.issue(new CustomerSelfServiceLinkIssuer.IssueRequest(orderId,
+                "customer@example.com", Set.of("TRACK"), "notification-attempt-track-only")));
+        when(customers.find(customerId)).thenReturn(Optional.of(customer()));
+        when(preferences.get(customerId)).thenReturn(new CustomerOperationalPreferenceManagement.PreferenceView(
+                customerId, false, true, false, "c***@example.com", "+94******000", null));
+        when(locations.findLocation(order.destinationLocationId())).thenReturn(Optional.empty());
+        when(proofs.findByDeliveryOrderId(orderId)).thenReturn(Optional.empty());
+        when(submissions.findByDelivery(orderId, customerId)).thenReturn(List.of());
+
+        assertThat(service.track(raw, "127.0.0.1").availableActions()).containsExactly("TRACK");
+    }
+
+    @Test void inactiveCustomerAndConcurrentRevocationUseTheSameSafeDenial() {
+        stubIssuance();
+        String raw = raw(service.issue(new CustomerSelfServiceLinkIssuer.IssueRequest(orderId,
+                "customer@example.com", Set.of(), "notification-attempt-inactive")));
+        when(orders.findById(orderId)).thenReturn(Optional.of(order));
+        when(customers.find(customerId)).thenReturn(Optional.of(new CustomerNotificationContactLookup.CustomerNotificationContact(
+                customerId, false, "Customer", "+94770000000", "customer@example.com")));
+        assertThatThrownBy(() -> service.track(raw, "127.0.0.1"))
+                .isInstanceOfSatisfying(NotFoundException.class,
+                        exception -> assertThat(exception.code()).isEqualTo("SELF_SERVICE_ACCESS_INVALID"));
+
+        String concurrent = raw(service.issue(new CustomerSelfServiceLinkIssuer.IssueRequest(orderId,
+                "customer@example.com", Set.of(), "notification-attempt-concurrent-revoke")));
+        access.allowUse = false;
+        when(customers.find(customerId)).thenReturn(Optional.of(customer()));
+        assertThatThrownBy(() -> service.track(concurrent, "127.0.0.2"))
+                .isInstanceOfSatisfying(NotFoundException.class,
+                        exception -> assertThat(exception.code()).isEqualTo("SELF_SERVICE_ACCESS_INVALID"));
     }
 
     @Test void writeRateLimitRejectsTheEleventhRequestWithoutRevealingDeliveryFacts() {
@@ -186,9 +255,13 @@ class CustomerSelfServiceServiceTest {
     }
 
     private void stubAuthorization(DeliveryOrder value) {
-        when(orders.findById(orderId)).thenReturn(Optional.of(value));
-        when(customers.find(customerId)).thenReturn(Optional.of(new CustomerNotificationContactLookup.CustomerNotificationContact(
-                customerId, true, "Customer", "+94770000000", "customer@example.com")));
+        when(orders.findByIdForUpdate(orderId)).thenReturn(Optional.of(value));
+        when(customers.find(customerId)).thenReturn(Optional.of(customer()));
+    }
+
+    private CustomerNotificationContactLookup.CustomerNotificationContact customer() {
+        return new CustomerNotificationContactLookup.CustomerNotificationContact(
+                customerId, true, "Customer", "+94770000000", "customer@example.com");
     }
 
     private static String raw(CustomerSelfServiceLinkIssuer.IssuedLink link) {
@@ -197,14 +270,16 @@ class CustomerSelfServiceServiceTest {
 
     private static final class AccessMemory implements DeliverySelfServiceAccessRepository {
         private final List<DeliverySelfServiceAccess> rows = new ArrayList<>();
+        private boolean allowUse = true;
         List<DeliverySelfServiceAccess> values() { return List.copyOf(rows); }
         @Override public Optional<DeliverySelfServiceAccess> findBootstrapByTokenHash(String hash) { return find(hash); }
         @Override public Optional<DeliverySelfServiceAccess> findByTokenHash(String hash) { return find(hash); }
+        @Override public Optional<DeliverySelfServiceAccess> findByTokenHashForUpdate(String hash) { return find(hash); }
         private Optional<DeliverySelfServiceAccess> find(String hash) { return rows.stream().filter(v -> v.tokenHash().equals(hash)).findFirst(); }
         @Override public Optional<DeliverySelfServiceAccess> findByIssuanceKeyForUpdate(String key) { return rows.stream().filter(v -> v.issuanceIdempotencyKey().equals(key)).findFirst(); }
         @Override public List<DeliverySelfServiceAccess> findActiveForUpdate(UUID deliveryId, UUID customerId, OffsetDateTime now) { return rows.stream().filter(v -> v.deliveryOrderId().equals(deliveryId) && v.customerId().equals(customerId) && v.permits(SelfServiceAction.TRACK, now)).toList(); }
         @Override public DeliverySelfServiceAccess save(DeliverySelfServiceAccess value) { rows.removeIf(v -> v.id().equals(value.id())); rows.add(value); return value; }
         @Override public void revoke(UUID id, OffsetDateTime at, String reason) { rows.replaceAll(v -> v.id().equals(id) ? new DeliverySelfServiceAccess(v.id(), v.tenantId(), v.deliveryOrderId(), v.customerId(), v.recipientContactHash(), v.contactHashKeyVersion(), v.tokenHash(), v.allowedActions(), v.issuanceIdempotencyKey(), v.issuedAt(), v.expiresAt(), at, v.lastUsedAt(), v.useCount(), v.version()) : v); }
-        @Override public void markUsed(UUID id, OffsetDateTime at) {}
+        @Override public boolean markUsed(UUID id, OffsetDateTime at) { return allowUse; }
     }
 }

@@ -9,9 +9,10 @@ import java.util.UUID;
 public interface DeliverySelfServiceAccessRepository {
     Optional<DeliverySelfServiceAccess> findBootstrapByTokenHash(String tokenHash);
     Optional<DeliverySelfServiceAccess> findByTokenHash(String tokenHash);
+    Optional<DeliverySelfServiceAccess> findByTokenHashForUpdate(String tokenHash);
     Optional<DeliverySelfServiceAccess> findByIssuanceKeyForUpdate(String key);
     List<DeliverySelfServiceAccess> findActiveForUpdate(UUID deliveryId, UUID customerId, OffsetDateTime now);
     DeliverySelfServiceAccess save(DeliverySelfServiceAccess access);
     void revoke(UUID id, OffsetDateTime at, String reason);
-    void markUsed(UUID id, OffsetDateTime at);
+    boolean markUsed(UUID id, OffsetDateTime at);
 }

@@ -165,6 +165,29 @@ class IdentitySecurityIntegrationTest {
                         .content("{\"emailEnabled\":true,\"smsEnabled\":false,\"version\":null}"))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.code").value("SELF_SERVICE_ACCESS_INVALID"));
+        mvc.perform(get("/api/public/v1/delivery-self-service/notification-preferences").contextPath("/api")
+                        .header("Authorization", "DeliveryAccess AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("SELF_SERVICE_ACCESS_INVALID"));
+        mvc.perform(post("/api/public/v1/delivery-self-service/issues").contextPath("/api")
+                        .header("Authorization", "DeliveryAccess AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
+                        .header("Idempotency-Key", "security-test-issue-0001")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"category\":\"OTHER\",\"description\":\"A valid security test issue.\"}"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("SELF_SERVICE_ACCESS_INVALID"));
+        mvc.perform(post("/api/public/v1/delivery-self-service/feedback").contextPath("/api")
+                        .header("Authorization", "DeliveryAccess AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
+                        .header("Idempotency-Key", "security-test-feedback-01")
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"rating\":5,\"comment\":\"Safe\"}"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("SELF_SERVICE_ACCESS_INVALID"));
+        mvc.perform(post("/api/public/v1/delivery-self-service/redelivery-requests").contextPath("/api")
+                        .header("Authorization", "DeliveryAccess AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
+                        .header("Idempotency-Key", "security-test-request-0001")
+                        .contentType(MediaType.APPLICATION_JSON).content("{}"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("SELF_SERVICE_ACCESS_INVALID"));
         mvc.perform(get("/auth/me")).andExpect(status().isUnauthorized());
         mvc.perform(get("/users")).andExpect(status().isUnauthorized());
     }

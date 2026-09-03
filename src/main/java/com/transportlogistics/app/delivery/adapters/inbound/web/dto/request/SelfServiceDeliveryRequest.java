@@ -1,7 +1,11 @@
 package com.transportlogistics.app.delivery.adapters.inbound.web.dto.request;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonAnySetter;
 import java.time.OffsetDateTime;
 
-@JsonIgnoreProperties(ignoreUnknown = false)
-public record SelfServiceDeliveryRequest(OffsetDateTime preferredStartAt, OffsetDateTime preferredEndAt, String notes) {}
+public record SelfServiceDeliveryRequest(OffsetDateTime preferredStartAt, OffsetDateTime preferredEndAt, String notes) {
+    @JsonAnySetter
+    public void rejectUnknown(String field, Object value) {
+        throw new IllegalArgumentException("Unknown self-service request field: " + field);
+    }
+}

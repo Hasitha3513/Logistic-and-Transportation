@@ -11,6 +11,12 @@ export const api = axios.create({
   headers: { 'Content-Type': 'application/json' },
 });
 
+// Public, possession-authorized transport. It deliberately has no operator JWT/refresh interceptors.
+export const publicApi = axios.create({
+  baseURL,
+  headers: { 'Content-Type': 'application/json' },
+});
+
 const refreshClient = axios.create({ baseURL, headers: { 'Content-Type': 'application/json' } });
 let refreshInFlight: Promise<string> | undefined;
 
