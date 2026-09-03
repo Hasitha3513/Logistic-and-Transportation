@@ -1,9 +1,161 @@
 # TENANT-LEGACY-OWNERSHIP-AUTHORITY-001 — Legacy Ownership Mapping
 
 **Discovery date:** 2026-08-27  
-**Status:** **BLOCKED_RUNTIME_DATABASE_UNAVAILABLE**  
-**Certification:** **NOT READY FOR BUSINESS APPROVAL**  
-**Backfill authorization:** **NOT AUTHORIZED**
+**Status:** **SUPERSEDED_BY_CLEAN_INITIALIZATION_DECISION**  
+**Certification:** **LEGACY_RECONCILIATION_NOT_APPLICABLE**  
+**Backfill authorization:** **LEGACY_BACKFILL_NOT_APPLICABLE**
+
+## Clean-initialization decision — TENANT-CLEAN-INITIALIZATION-DECISION-001
+
+**Decision date:** 2026-08-28  
+**Result:** **CLEAN TENANT INITIALIZATION AUTHORIZED**
+
+The authoritative decision declares that no recoverable legacy production
+database requires preservation. Both discovered PostgreSQL databases are empty
+new-environment targets, no credible backup exists, and the legacy preservation
+and backfill path is retired.
+
+- Legacy database: **NOT FOUND**
+- Legacy preservation: **NOT REQUIRED**
+- Legacy reconciliation: **NOT APPLICABLE**
+- Legacy backfill: **NOT REQUIRED / NOT EXECUTED**
+- Clean tenant-aware initialization for `CLTS-LK`: **AUTHORIZED**
+- Canonical Tenant: `4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a`, `CLTS-LK`,
+  Ceylon Logistics & Transport Solutions (Pvt) Ltd, `LKR`, `Asia/Colombo`,
+  `ACTIVE`
+
+Historical discovery and failed reconciliation evidence below is preserved for
+audit traceability but no longer represents a prerequisite to backfill, because
+there is no legacy backfill. No schema, row, migration, or application code was
+changed by this decision.
+
+## Database recovery discovery — TENANT-RUNTIME-DATABASE-RECOVERY-001
+
+**Discovery date:** 2026-08-28  
+**Mode:** Read-only database identification  
+**Result:** **LEGACY_DATABASE_NOT_FOUND**
+
+### Configuration paths checked
+
+| Source | Host | Port | Database | Username | Profile / purpose | Reachability |
+|---|---|---:|---|---|---|---|
+| `.env`, `.env.docker.example`, `compose.yml` | Compose service `postgres` / published `localhost` | 5432 | `transport_logistics` | `transport_app` | Docker PostgreSQL runtime | Reachable in both Docker contexts; empty |
+| `application-postgres.yml` | `localhost` default | 5432 | `transport_logistics` | `transport_app` default | Spring `postgres` profile | Same empty runtime endpoint |
+| IntelliJ data source and history | `localhost` | 5432 | `transport_logistics` | `transport_app` | Local development | Same endpoint; no alternate database recorded |
+| Default application/run scripts | Local detection | 5432 | PostgreSQL above or embedded H2 fallback | Configured environment | Development convenience | No additional persistent PostgreSQL source |
+
+No alternate host, port, database, Compose project, deployment configuration,
+or historical profile was found.
+
+### Docker evidence
+
+| Context | PostgreSQL container | Volume | Created | Size | Public tables | Flyway history | Classification |
+|---|---|---|---|---:|---:|---|---|
+| `desktop-linux` | `transport-logistics-postgres-1` (`postgres:16-alpine`, stopped) | `transport-logistics_postgres-data` | 2026-08-27 12:03 UTC | 70.28 MB | 0 | Absent | `EMPTY_SCHEMA` |
+| `default` | `transport-logistics-postgres-1` (`postgres:16-alpine`, healthy) | `transport-logistics_postgres-data` | 2026-08-27 07:28 +05:30 | 48.13 MB | 0 | Absent | `EMPTY_SCHEMA` |
+
+Both containers belong to Compose project `transport-logistics`, mount their
+context-local volume at `/var/lib/postgresql/data`, and expose only the expected
+PostgreSQL environment variable names. Secret values were not recorded.
+
+The live `default` cluster contains only connectable databases `postgres` and
+`transport_logistics`; each has zero public base tables and no
+`flyway_schema_history`. The host PostgreSQL service is inactive and no other
+PostgreSQL container, volume, or database was found.
+
+### Backup and old-project search
+
+- Accessible home, Documents, Downloads, Desktop, repository, and Git-history
+  searches found no `.dump`, `.backup`, database `.bak`, SQL archive, or credible
+  transport/logistics database backup.
+- The only project SQL assets are Flyway migrations V1–V42 and explicitly
+  non-authoritative PostgreSQL/H2 sample data. Build-output copies are identical
+  application resources, not dumps.
+- Only one repository checkout and its parent directory were found. IntelliJ
+  history records the same `localhost:5432/transport_logistics` endpoint.
+- Browser/profile databases, IDE metadata, plugin examples, and unrelated
+  archives were rejected as non-candidates.
+
+### Recovery decision
+
+No live database or backup meets the authoritative fingerprint: substantial
+application tables, identity/Freight/Fleet/Trip/Fuel tables, and Flyway history.
+The current empty databases are not authoritative, and schema recreation would
+not recover historical records.
+
+Runtime ownership reconciliation therefore remains blocked. The next decision
+must either supply/recover the historical database or formally declare that no
+legacy production data requires preservation and authorize a clean tenant-aware
+initialization. No database was started, restored, initialized, migrated,
+repaired, or modified by this recovery task.
+
+## Runtime reconciliation addendum — TENANT-LEGACY-RUNTIME-RECONCILIATION-001
+
+**Reconciliation date:** 2026-08-28  
+**Mode:** Read-only database audit  
+**Result:** **BLOCKED**
+
+Read-only inspection covered both PostgreSQL containers available through the
+machine's Docker contexts:
+
+- Docker Desktop Compose volume `transport-logistics_postgres-data`;
+- system Docker volume `transport-logistics_postgres-data` (Compose-normalized
+  volume name `transport-logistics_postgres-data` / daemon listing
+  `transport-logistics_postgres-data` as exposed by its context).
+
+Both connections reached PostgreSQL 16.15 as `transport_app` in database
+`transport_logistics`, schema `public`. Neither application startup nor Flyway
+was executed.
+
+Each inspected database contains **zero public base tables**. Neither has
+`flyway_schema_history`, identity tables, or tenant-owned business tables.
+Consequently, neither instance is the expected legacy V1–V42 runtime database.
+Starting the backend or applying migrations was deliberately avoided because
+this task forbids database changes.
+
+The canonical decision is synchronized as `CLTS-LK`, UUID
+`4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a`, legal name
+`Ceylon Logistics & Transport Solutions (Pvt) Ltd`, currency `LKR`, time zone
+`Asia/Colombo`, and status `ACTIVE`. The ownership and backfill authorization
+remain conditional on successful runtime reconciliation. Runtime emptiness
+cannot satisfy those gates.
+
+### Per-table runtime certification
+
+Every expected tenant-owned table is blocked because the table is absent from
+the inspected runtime schema; the approved policy therefore cannot be evaluated
+against actual legacy records.
+
+| Module | Expected tables | Runtime status | Certification |
+|---|---|---|---|
+| Organization | `customer`, `department`, `location`, `project`, `vendor` | All absent | **BLOCKED** |
+| Fleet | `vehicle_category`, `vehicle_type`, `vehicle`, `vehicle_document`, `vehicle_reading`, `vehicle_meter_reset`, `maintenance_schedule`, `lubricant_log` | All absent | **BLOCKED** |
+| Driver | `driver`, `driver_license`, `driver_exception`, `driver_violation`, `driver_medical_record`, `driver_drug_test` | All absent | **BLOCKED** |
+| Routing | `route`, `route_stop`, `route_revision`, `route_revision_stop`, `route_disruption` | All absent | **BLOCKED** |
+| Trip | `trip`, `trip_status_history`, `trip_dispatch`, `trip_operational_event` | All absent | **BLOCKED** |
+| Fuel | `fuel_station`, `fuel_limit_policy`, `fuel_issue`, `fuel_issue_history`, `fuel_price`, `fuel_purchase`, `fuel_purchase_history`, `bunker_tank`, `bunker_stock_movement`, `bunker_dip_reading`, `bunker_stock_adjustment` | All absent | **BLOCKED** |
+| Freight | `freight_order`, `freight_order_line`, `cargo_manifest`, `cargo_manifest_item`, `load_plan`, `load_plan_item_placement`, `freight_insurance_policy`, `freight_insurance_claim`, `freight_insurance_settlement`, `cargo_exception`, `cargo_exception_history` | All absent | **BLOCKED** |
+| Notification | `notification_rule`, `notification`, `notification_rule_policy`, `notification_rule_quiet_day`, `notification_rule_execution`, `notification_delivery_attempt` | All absent | **BLOCKED** |
+| Offline | `offline_sync_operation` | Absent | **BLOCKED** |
+
+### Required reconciliation gates
+
+| Gate | Observed result | Decision |
+|---|---|---|
+| Unmapped rows = 0 | Cannot be evaluated against absent legacy tables | **BLOCKED** |
+| Multi-mapped rows = 0 | Cannot be evaluated without legacy records and ownership paths | **BLOCKED** |
+| Unresolved shared records = 0 | The conditional policy exists, but no runtime records are available to classify | **BLOCKED** |
+| Unresolved user membership = 0 | `app_user` is absent, so operational/system/service classifications cannot be evaluated | **BLOCKED** |
+| Orphan tenant references = 0 | Tenant columns/tables are absent; no legacy relationships can be audited | **BLOCKED** |
+
+No row was inserted, updated, deleted, or backfilled. No migration was applied.
+US-29 remains `BLOCKED_BY_TENANT_FOUNDATION`.
+
+The sections below preserve the 2026-08-27 discovery baseline for audit history.
+Where they refer to unavailable Docker access or a missing canonical decision,
+the 2026-08-28 runtime reconciliation addendum above supersedes them. Their
+unresolved row-level findings remain applicable because no legacy schema was
+available to audit.
 
 ## 1. Scope and limitations
 

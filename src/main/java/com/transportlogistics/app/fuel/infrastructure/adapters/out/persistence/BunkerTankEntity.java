@@ -13,7 +13,7 @@ import java.util.UUID;
 @Table(name = "bunker_tank")
 @Getter
 @Setter
-class BunkerTankEntity {
+class BunkerTankEntity extends com.transportlogistics.app.shared.infrastructure.persistence.TenantScopedEntity {
     @Id
     private UUID id;
 

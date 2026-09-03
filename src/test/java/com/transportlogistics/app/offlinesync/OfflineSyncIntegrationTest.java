@@ -80,9 +80,9 @@ class OfflineSyncIntegrationTest {
         jdbc.update("DELETE FROM bunker_stock_adjustment");
         jdbc.update("DELETE FROM bunker_dip_reading");
         jdbc.update("DELETE FROM bunker_stock_movement");
-        jdbc.update("DELETE FROM app_user_role");
-        jdbc.update("DELETE FROM refresh_token");
-        jdbc.update("DELETE FROM app_user");
+        jdbc.update("DELETE FROM app_user_role WHERE user_id IN (?, ?)", ACTOR_ID, ACTOR_TWO_ID);
+        jdbc.update("DELETE FROM refresh_token WHERE user_id IN (?, ?)", ACTOR_ID, ACTOR_TWO_ID);
+        jdbc.update("DELETE FROM app_user WHERE id IN (?, ?)", ACTOR_ID, ACTOR_TWO_ID);
         insertUser(ACTOR_ID, "offline.operator");
         insertUser(ACTOR_TWO_ID, "offline.other");
         control.reset();
@@ -281,11 +281,11 @@ class OfflineSyncIntegrationTest {
         sync("offline.operator", Set.of("VEHICLE_READING_CREATE"), operation);
         Map<String, Object> row = jdbc.queryForMap("SELECT * FROM offline_sync_operation WHERE operation_id = ?",
                 operation.operationId());
-        assertEquals(ACTOR_ID, row.get("ACTOR_ID"));
-        assertEquals(AGGREGATE_ID, row.get("AGGREGATE_ID"));
-        assertEquals(64, row.get("REQUEST_HASH").toString().length());
-        assertEquals("APPLIED", row.get("RESULT_STATUS"));
-        assertEquals(2, jdbc.queryForObject("SELECT COUNT(*) FROM INFORMATION_SCHEMA.INDEXES WHERE UPPER(TABLE_NAME) = 'OFFLINE_SYNC_OPERATION' AND UPPER(INDEX_NAME) LIKE 'IDX_OFFLINE_SYNC_%'", Integer.class));
+        assertEquals(ACTOR_ID, row.get("actor_id") != null ? row.get("actor_id") : row.get("ACTOR_ID"));
+        assertEquals(AGGREGATE_ID, row.get("aggregate_id") != null ? row.get("aggregate_id") : row.get("AGGREGATE_ID"));
+        assertEquals(64, (row.get("request_hash") != null ? row.get("request_hash") : row.get("REQUEST_HASH")).toString().length());
+        assertEquals("APPLIED", row.get("result_status") != null ? row.get("result_status") : row.get("RESULT_STATUS"));
+        assertEquals(3, jdbc.queryForObject("SELECT COUNT(*) FROM pg_indexes WHERE tablename = 'offline_sync_operation' AND indexname LIKE 'idx_offline_sync_%'", Integer.class));
         org.junit.jupiter.api.Assertions.assertThrows(org.springframework.dao.DataIntegrityViolationException.class,
                 () -> jdbc.update("INSERT INTO offline_sync_operation (operation_id, operation_type, operation_version, actor_id, client_instance_id, aggregate_type, aggregate_id, request_hash, result_status, processed_at, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                         UUID.randomUUID(), "VEHICLE_READING_RECORD", 0, ACTOR_ID, CLIENT_ID, "VEHICLE", AGGREGATE_ID,

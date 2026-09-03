@@ -63,11 +63,11 @@ public record NotificationRulePolicy(
     }
 
     public void validateForChannel(NotificationChannel channel) {
-        if (quietHoursEnabled && channel != NotificationChannel.EMAIL) {
-            throw new IllegalArgumentException("Quiet hours may be enabled only for EMAIL rules");
+        if (quietHoursEnabled && channel != NotificationChannel.EMAIL && channel != NotificationChannel.SMS) {
+            throw new IllegalArgumentException("Quiet hours may be enabled only for EMAIL or SMS rules");
         }
-        if (escalationEnabled && channel != NotificationChannel.EMAIL) {
-            throw new IllegalArgumentException("Escalation may be enabled only for EMAIL rules");
+        if (escalationEnabled && channel != NotificationChannel.EMAIL && channel != NotificationChannel.SMS) {
+            throw new IllegalArgumentException("Escalation may be enabled only for EMAIL or SMS rules");
         }
     }
 }

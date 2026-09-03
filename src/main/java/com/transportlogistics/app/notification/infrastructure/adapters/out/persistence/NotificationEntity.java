@@ -16,7 +16,7 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "notification")
-public class NotificationEntity {
+public class NotificationEntity extends com.transportlogistics.app.shared.infrastructure.persistence.TenantScopedEntity {
 
     @Id
     private UUID id;
@@ -34,7 +34,7 @@ public class NotificationEntity {
     @Column(nullable = false, length = 32)
     private NotificationChannel channel;
 
-    @Column(nullable = false, length = 128)
+    @Column(nullable = false, length = 320)
     private String recipient;
 
     @Enumerated(EnumType.STRING)

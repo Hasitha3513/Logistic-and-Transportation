@@ -72,6 +72,23 @@ class VehicleDomainTest {
     }
 
     @Test
+    @DisplayName("Reject missing aggregate references instead of fabricating identifiers")
+    void rejectMissingMasterDataReferences() {
+        var categoryId = UUID.randomUUID();
+        var typeId = UUID.randomUUID();
+
+        assertThatThrownBy(() -> new Vehicle(UUID.randomUUID(), "WP-CAB-1234", null, null, null, typeId,
+                null, null, null, null, null, null, null, null, true))
+                .isInstanceOf(NullPointerException.class)
+                .hasMessage("Vehicle category reference is required");
+
+        assertThatThrownBy(() -> new Vehicle(UUID.randomUUID(), "WP-CAB-1234", null, null, categoryId, null,
+                null, null, null, null, null, null, null, null, true))
+                .isInstanceOf(NullPointerException.class)
+                .hasMessage("Vehicle type reference is required");
+    }
+
+    @Test
     @DisplayName("Reject negative capacity, odometer, and engine hours")
     void rejectNegativeMeters() {
         var categoryId = UUID.randomUUID();

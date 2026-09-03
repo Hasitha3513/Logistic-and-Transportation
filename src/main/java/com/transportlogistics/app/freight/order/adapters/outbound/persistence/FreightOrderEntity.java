@@ -13,7 +13,7 @@ import java.util.UUID;
 @Entity
 @Table(name = "freight_order")
 @Getter @Setter @NoArgsConstructor
-class FreightOrderEntity {
+class FreightOrderEntity extends com.transportlogistics.app.shared.infrastructure.persistence.TenantScopedEntity {
     @Id UUID id;
     @Column(name = "order_number", nullable = false, unique = true, length = 60) String orderNumber;
     @Column(name = "customer_id", nullable = false) UUID customerId;

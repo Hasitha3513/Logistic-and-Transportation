@@ -56,7 +56,7 @@ public final class RouteOptimizer {
         double originalTourDistance = calculateTourDistance(originLocationId, destinationLocationId, originalStops, distanceFunction);
 
         // Step 1: Nearest Neighbor heuristic from Origin -> intermediate stops -> Destination
-        List<UUID> nnStops = solveNearestNeighbor(originLocationId, destinationLocationId, originalStops, distanceFunction);
+        List<UUID> nnStops = solveNearestNeighbor(originLocationId, originalStops, distanceFunction);
 
         // Step 2: 2-Opt local search improvement on intermediate stops
         List<UUID> optimizedStops = solveTwoOpt(originLocationId, destinationLocationId, nnStops, distanceFunction);
@@ -65,7 +65,7 @@ public final class RouteOptimizer {
 
         // Guarantee: If optimization produces a shorter route, use it; otherwise retain original
         if (optimizedTourDistance < originalTourDistance - 1e-4) {
-            double distanceRatio = originalTourDistance > 0 ? (optimizedTourDistance / originalTourDistance) : 1.0;
+            double distanceRatio = originalTourDistance > 0 ? optimizedTourDistance / originalTourDistance : 1.0;
             double optimizedDistanceKm = originalPlannedDistanceKm > 0
                     ? originalPlannedDistanceKm * distanceRatio
                     : optimizedTourDistance;
@@ -76,7 +76,7 @@ public final class RouteOptimizer {
             double distanceSavedKm = Math.max(0.0, originalPlannedDistanceKm - optimizedDistanceKm);
             int durationSavedMinutes = Math.max(0, originalEstimatedDurationMinutes - optimizedDurationMinutes);
             double percentageImprovement = originalPlannedDistanceKm > 0
-                    ? (distanceSavedKm / originalPlannedDistanceKm) * 100.0
+                    ? distanceSavedKm / originalPlannedDistanceKm * 100.0
                     : 0.0;
 
             return new RouteOptimizationResult(
@@ -109,7 +109,6 @@ public final class RouteOptimizer {
 
     private static List<UUID> solveNearestNeighbor(
             UUID origin,
-            UUID destination,
             List<UUID> stops,
             BiFunction<UUID, UUID, Double> dist
     ) {

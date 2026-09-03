@@ -19,6 +19,10 @@ public interface IdentityRepository {
 
     List<User> findUsers();
 
+    Optional<User> findUser(UUID id, UUID tenantId);
+
+    List<User> findUsers(UUID tenantId);
+
     void replaceUserRoles(UUID userId, Set<UUID> roleIds);
 
     Set<Role> findRolesByIds(Set<UUID> roleIds);
@@ -30,4 +34,6 @@ public interface IdentityRepository {
     List<Role> findRoles();
 
     void deleteRole(UUID id);
+
+    boolean roleAssignedOutsideTenant(UUID roleId, UUID tenantId);
 }

@@ -10,7 +10,7 @@ import java.util.UUID;
 @Getter
 @Setter
 @NoArgsConstructor
-class CargoManifestItemEntity {
+class CargoManifestItemEntity extends com.transportlogistics.app.shared.infrastructure.persistence.TenantScopedEntity {
     @Id
     UUID id;
 

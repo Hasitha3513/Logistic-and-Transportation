@@ -45,6 +45,7 @@ class TripOperationalEventOfflineSyncIntegrationTest {
     @Autowired VehicleRepository vehicles;
     @Autowired ObjectMapper json;
     @Autowired JdbcTemplate jdbc;
+    @Autowired com.transportlogistics.app.tenancy.TenantContextExecutor tenantContexts;
 
     private UUID actorId;
     private UUID secondActorId;
@@ -218,8 +219,12 @@ class TripOperationalEventOfflineSyncIntegrationTest {
 
     private OfflineSyncResult sync(String actor, OfflineSyncUseCase.OperationCommand command,
                                    Set<String> authorities) {
-        return offlineSync.synchronize(new OfflineSyncUseCase.BatchCommand(actor, authorities, List.of(command)))
-                .results().getFirst();
+        UUID contextActorId = actor.equals(username) ? actorId : secondActorId;
+        return tenantContexts.within(new com.transportlogistics.app.tenancy.TenantExecutionContext(
+                        com.transportlogistics.app.tenancy.CanonicalTenant.ID, contextActorId, actor,
+                        UUID.randomUUID().toString()),
+                () -> offlineSync.synchronize(new OfflineSyncUseCase.BatchCommand(actor, authorities, List.of(command)))
+                        .results().getFirst());
     }
 
     private OfflineSyncUseCase.OperationCommand command(UUID operationId, String operationType, UUID aggregateId,

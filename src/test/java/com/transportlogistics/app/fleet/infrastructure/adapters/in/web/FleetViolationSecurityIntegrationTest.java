@@ -53,11 +53,7 @@ class FleetViolationSecurityIntegrationTest {
 
     @BeforeEach
     void setUpSecurity() throws Exception {
-        jdbc.update("DELETE FROM refresh_token");
-        jdbc.update("DELETE FROM app_user_role");
-        jdbc.update("DELETE FROM app_role_permission");
-        jdbc.update("DELETE FROM app_user");
-        jdbc.update("DELETE FROM app_role");
+        cleanupUsersAndRoles();
 
         seedRoleAndUser("violation.viewer", "DRIVER_VIEW");
         seedRoleAndUser("violation.manager", "DRIVER_VIEW", "DRIVER_VIOLATION_MANAGE");
@@ -66,6 +62,16 @@ class FleetViolationSecurityIntegrationTest {
         viewerToken = login("violation.viewer");
         managerToken = login("violation.manager");
         unprivilegedToken = login("unprivileged");
+    }
+
+    private void cleanupUsersAndRoles() {
+        jdbc.update("DELETE FROM refresh_token WHERE user_id IN (SELECT id FROM app_user WHERE username IN ('violation.viewer', 'violation.manager', 'unprivileged'))");
+        jdbc.update("DELETE FROM tenant_membership_role WHERE membership_id IN (SELECT membership_id FROM tenant_membership WHERE user_id IN (SELECT id FROM app_user WHERE username IN ('violation.viewer', 'violation.manager', 'unprivileged')))");
+        jdbc.update("DELETE FROM tenant_membership WHERE user_id IN (SELECT id FROM app_user WHERE username IN ('violation.viewer', 'violation.manager', 'unprivileged'))");
+        jdbc.update("DELETE FROM app_user_role WHERE user_id IN (SELECT id FROM app_user WHERE username IN ('violation.viewer', 'violation.manager', 'unprivileged'))");
+        jdbc.update("DELETE FROM app_user WHERE username IN ('violation.viewer', 'violation.manager', 'unprivileged')");
+        jdbc.update("DELETE FROM app_role_permission WHERE role_id IN (SELECT id FROM app_role WHERE name IN ('ROLE_VIOLATION_VIEWER', 'ROLE_VIOLATION_MANAGER', 'ROLE_UNPRIVILEGED'))");
+        jdbc.update("DELETE FROM app_role WHERE name IN ('ROLE_VIOLATION_VIEWER', 'ROLE_VIOLATION_MANAGER', 'ROLE_UNPRIVILEGED')");
     }
 
     @Test
@@ -165,8 +171,9 @@ class FleetViolationSecurityIntegrationTest {
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """, userId, username, username + "@example.test", passwords.encode(PASSWORD),
                 "Test", "User", null, true, now, now);
+        com.transportlogistics.app.support.TenantTestFixtures.canonicalMembership(jdbc, userId);
 
-        jdbc.update("INSERT INTO app_user_role (user_id, role_id) VALUES (?, ?)", userId, roleId);
+        com.transportlogistics.app.support.TenantTestFixtures.assignCanonicalRole(jdbc, userId, roleId);
     }
 
     private String login(String username) throws Exception {

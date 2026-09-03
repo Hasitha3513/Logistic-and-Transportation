@@ -11,7 +11,7 @@ import java.util.UUID;
 @Entity
 @Table(name = "freight_order_line")
 @Getter @Setter @NoArgsConstructor
-class FreightOrderLineEntity {
+class FreightOrderLineEntity extends com.transportlogistics.app.shared.infrastructure.persistence.TenantScopedEntity {
     @Id UUID id;
     @ManyToOne(fetch = FetchType.LAZY, optional = false) @JoinColumn(name = "freight_order_id", nullable = false)
     FreightOrderEntity order;

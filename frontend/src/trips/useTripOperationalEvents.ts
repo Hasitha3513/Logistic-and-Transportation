@@ -12,9 +12,9 @@ import type {
   TripOperationalEvent,
 } from './types';
 
-type TripOperationalOfflineOperation = Exclude<
+export type TripOperationalOfflineOperation = Exclude<
   OfflineOperation,
-  { operationType: 'VEHICLE_READING_RECORD' }
+  { operationType: 'VEHICLE_READING_RECORD' | 'DELIVERY_POD_OFFLINE_SYNC' }
 >;
 
 export function useTripOperationalEvents(tripId?: string) {

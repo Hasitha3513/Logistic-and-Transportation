@@ -11,6 +11,7 @@ import {
   UserOutlined,
   ThunderboltOutlined,
   ContainerOutlined,
+  SendOutlined,
 } from '@ant-design/icons';
 
 export interface NavigationItem {
@@ -98,6 +99,20 @@ export const navigation: NavigationItem[] = [
       { key: 'freight-policies', label: 'Insurance Policies', route: '/freight/insurance/policies', requiredPermission: 'CARGO_INSURANCE_VIEW' },
       { key: 'freight-claims', label: 'Insurance Claims', route: '/freight/insurance/claims', requiredPermission: 'CARGO_INSURANCE_VIEW' },
       { key: 'cargo-exceptions', label: 'Cargo Exceptions', route: '/freight/exceptions', requiredPermission: 'CARGO_EXCEPTION_VIEW' },
+      { key: 'freight-reports', label: 'Freight Reports', route: '/freight/reports', requiredPermission: 'FREIGHT_REPORT_VIEW' },
+    ],
+  },
+  {
+    key: 'delivery',
+    label: 'Delivery',
+    icon: <SendOutlined />,
+    children: [
+      { key: 'delivery-orders', label: 'Delivery Orders', route: '/deliveries', requiredPermission: 'DELIVERY_VIEW' },
+      { key: 'delivery-zones', label: 'Delivery Zones', route: '/deliveries/zones', requiredPermission: 'DELIVERY_ZONE_VIEW' },
+      { key: 'delivery-slots', label: 'Delivery Slots', route: '/deliveries/slots', requiredPermission: 'DELIVERY_SLOT_VIEW' },
+      { key: 'delivery-riders', label: 'Delivery Riders', route: '/deliveries/riders', requiredPermission: 'DELIVERY_RIDER_VIEW' },
+      { key: 'delivery-batches', label: 'Delivery Batches', route: '/deliveries/batches', requiredPermission: 'DELIVERY_BATCH_VIEW' },
+      { key: 'delivery-analytics', label: 'Delivery Analytics', route: '/deliveries/analytics', requiredPermission: 'DELIVERY_ANALYTICS_VIEW' },
     ],
   },
   {

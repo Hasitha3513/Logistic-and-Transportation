@@ -19,7 +19,7 @@ import java.util.UUID;
 @Getter
 @Setter
 @NoArgsConstructor
-class FuelIssueHistoryEntity {
+class FuelIssueHistoryEntity extends com.transportlogistics.app.shared.infrastructure.persistence.TenantScopedEntity {
     @Id UUID id;
     @Column(name = "fuel_issue_id", nullable = false) UUID fuelIssueId;
     @Enumerated(EnumType.STRING) @Column(name = "from_status") FuelIssueStatus fromStatus;

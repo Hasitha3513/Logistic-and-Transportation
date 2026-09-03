@@ -10,7 +10,7 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "notification_delivery_attempt")
-public class NotificationDeliveryAttemptEntity {
+public class NotificationDeliveryAttemptEntity extends com.transportlogistics.app.shared.infrastructure.persistence.TenantScopedEntity {
     @Id private UUID id;
     @Column(name = "notification_id", nullable = false) private UUID notificationId;
     @Column(name = "attempt_number", nullable = false) private int attemptNumber;

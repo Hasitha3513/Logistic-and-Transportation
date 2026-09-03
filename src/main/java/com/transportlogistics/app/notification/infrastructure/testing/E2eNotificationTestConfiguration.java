@@ -1,6 +1,5 @@
 package com.transportlogistics.app.notification.infrastructure.testing;
 
-import com.transportlogistics.app.notification.application.ports.out.EmailNotificationSenderPort;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
@@ -19,7 +18,7 @@ public class E2eNotificationTestConfiguration {
 
     @Bean
     @Primary
-    EmailNotificationSenderPort e2eEmailNotificationSender() {
+    E2eDeterministicEmailSender e2eEmailNotificationSender() {
         return new E2eDeterministicEmailSender();
     }
 }

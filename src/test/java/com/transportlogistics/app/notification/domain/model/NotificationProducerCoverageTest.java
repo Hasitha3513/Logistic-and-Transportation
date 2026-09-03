@@ -16,13 +16,18 @@ class NotificationProducerCoverageTest {
         "DRIVER_EXCEPTION_RECORDED",
         "DRIVER_MEDICAL_EXPIRING",
         "DRIVER_DRUG_TEST_FAILED",
-        "DRIVER_LICENSE_EXPIRING"
+        "DRIVER_LICENSE_EXPIRING",
+        "DELIVERY_OUT_FOR_DELIVERY",
+        "DELIVERY_ETA_RISK_CHANGED",
+        "DELIVERY_COMPLETED",
+        "DELIVERY_FAILED_ATTEMPT_RECORDED",
+        "DELIVERY_REDELIVERY_SCHEDULED"
     );
 
     @Test void everyAndOnlyFrozenMvpCatalogueEventHasProductionProducerEvidence() {
         var catalogueEvents = NotificationEventCatalogue.all().stream()
             .map(NotificationEventDefinition::eventType).collect(Collectors.toSet());
-        assertThat(catalogueEvents).hasSize(8).isEqualTo(PRODUCTION_PRODUCERS);
+        assertThat(catalogueEvents).hasSize(13).isEqualTo(PRODUCTION_PRODUCERS);
         assertThat(catalogueEvents).doesNotContain("DRIVER_DRUG_TEST_EXPIRING", "FUEL_LIMIT_EXCEEDED", "FUEL_EXCEPTION");
     }
 }

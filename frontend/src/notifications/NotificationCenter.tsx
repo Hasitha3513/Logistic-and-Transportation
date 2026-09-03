@@ -50,8 +50,8 @@ export const NotificationCenter: React.FC = () => {
   const { hasPermission } = useAuth();
 
   const canView = hasPermission('NOTIFICATION_VIEW');
-  const { data: unreadCount = 0 } = useUnreadNotificationCount();
-  const { data: notifications = [], isLoading, refetch } = useNotifications(50);
+  const { data: unreadCount = 0 } = useUnreadNotificationCount(canView);
+  const { data: notifications = [], isLoading, refetch } = useNotifications(50, canView);
   const markReadMutation = useMarkNotificationRead();
   const markAllReadMutation = useMarkAllNotificationsRead();
 

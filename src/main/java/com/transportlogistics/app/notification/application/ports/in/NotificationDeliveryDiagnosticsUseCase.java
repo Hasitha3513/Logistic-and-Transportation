@@ -10,6 +10,8 @@ import java.util.UUID;
 
 public interface NotificationDeliveryDiagnosticsUseCase {
     List<DeliveryDiagnostic> find(NotificationStatus status, String eventType, OffsetDateTime from,
+                                  OffsetDateTime to, String aggregateType, UUID aggregateId, int limit);
+    List<DeliveryDiagnostic> find(NotificationStatus status, String eventType, OffsetDateTime from,
                                   OffsetDateTime to, int limit);
     List<NotificationDeliveryAttempt> attempts(UUID notificationId);
 

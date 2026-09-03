@@ -1,17 +1,11 @@
 spring:
   datasource:
-    url: ${DB_URL:jdbc:postgresql://localhost:5432/transport_logistics}
-    username: ${DB_USERNAME:transport_app}
-    password: ${DB_PASSWORD:transport_app}
+    url: ${DB_URL:jdbc:postgresql://localhost:${POSTGRES_PORT:5432}/${POSTGRES_DB:transport_logistics}}
+    username: ${DB_USERNAME:${POSTGRES_USER:transport_app}}
+    password: ${DB_PASSWORD:${POSTGRES_PASSWORD:transport_app_secret}}
     hikari:
       maximum-pool-size: ${DB_POOL_MAX:10}
       minimum-idle: ${DB_POOL_MIN:2}
-  flyway:
-    placeholders:
-      vehicleReadingSourceIdentityIndex: >-
-        CREATE UNIQUE INDEX uq_vehicle_reading_source
-        ON vehicle_reading(vehicle_id, reading_type, source_type, source_reference_id)
-        WHERE source_reference_id IS NOT NULL AND correction_of_reading_id IS NULL
   jpa:
     properties:
       hibernate:

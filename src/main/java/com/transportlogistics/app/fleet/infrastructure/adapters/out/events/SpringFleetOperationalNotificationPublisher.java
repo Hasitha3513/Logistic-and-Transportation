@@ -2,19 +2,19 @@ package com.transportlogistics.app.fleet.infrastructure.adapters.out.events;
 
 import com.transportlogistics.app.fleet.application.ports.out.FleetOperationalNotificationPublisher;
 import com.transportlogistics.app.notification.OperationalNotificationEvent;
-import org.springframework.context.ApplicationEventPublisher;
+import com.transportlogistics.app.notification.OperationalNotificationPublisher;
 import org.springframework.stereotype.Component;
 
 @Component
 public class SpringFleetOperationalNotificationPublisher implements FleetOperationalNotificationPublisher {
-    private final ApplicationEventPublisher publisher;
+    private final OperationalNotificationPublisher publisher;
 
-    public SpringFleetOperationalNotificationPublisher(ApplicationEventPublisher publisher) {
+    public SpringFleetOperationalNotificationPublisher(OperationalNotificationPublisher publisher) {
         this.publisher = publisher;
     }
 
     @Override
     public void publish(OperationalNotificationEvent event) {
-        publisher.publishEvent(event);
+        publisher.publish(event);
     }
 }

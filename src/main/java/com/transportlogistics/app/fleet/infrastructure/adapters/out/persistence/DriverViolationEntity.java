@@ -11,7 +11,7 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "driver_violation")
-public class DriverViolationEntity {
+public class DriverViolationEntity extends com.transportlogistics.app.shared.infrastructure.persistence.TenantScopedEntity {
 
     @Id
     @Column(name = "id", nullable = false)

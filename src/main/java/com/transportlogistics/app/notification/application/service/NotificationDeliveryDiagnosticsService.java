@@ -25,6 +25,14 @@ public class NotificationDeliveryDiagnosticsService implements NotificationDeliv
     }
 
     public List<DeliveryDiagnostic> find(NotificationStatus status, String eventType, OffsetDateTime from,
+                                         OffsetDateTime to, String aggregateType, UUID aggregateId, int limit) {
+        int bounded = Math.max(1, Math.min(limit, 200));
+        return notifications.findDeliveries(status, eventType, from, to, aggregateType, aggregateId, bounded).stream()
+            .map(notification -> new DeliveryDiagnostic(notification, attempts.countByNotificationId(notification.id())))
+            .toList();
+    }
+
+    public List<DeliveryDiagnostic> find(NotificationStatus status, String eventType, OffsetDateTime from,
                                          OffsetDateTime to, int limit) {
         int bounded = Math.max(1, Math.min(limit, 200));
         return notifications.findDeliveries(status, eventType, from, to, bounded).stream()

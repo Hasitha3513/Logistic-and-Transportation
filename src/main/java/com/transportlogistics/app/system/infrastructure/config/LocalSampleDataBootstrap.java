@@ -5,6 +5,8 @@ import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Profile;
+import org.springframework.core.env.Environment;
+import org.springframework.core.env.Profiles;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.jdbc.datasource.init.DatabasePopulatorUtils;
@@ -20,23 +22,21 @@ import javax.sql.DataSource;
 @RequiredArgsConstructor
 class LocalSampleDataBootstrap implements ApplicationRunner {
     private final DataSource dataSource;
+    private final Environment environment;
 
     @Override
     public void run(ApplicationArguments args) {
-        try (var conn = dataSource.getConnection()) {
-            try (var stmt = conn.createStatement()) {
-                var rs = stmt.executeQuery("SELECT count(*) FROM customer");
-                if (rs.next() && rs.getInt(1) > 0) {
-                    return;
-                }
-            }
-        } catch (Exception ignored) {
-            // Table might not exist yet or query failed; proceed to attempt populating
-        }
-        var script = new ClassPathResource("db/sample-data/h2-phase1.sql");
+        var script = sampleDataScript();
         var populator = new ResourceDatabasePopulator(script);
         populator.setSeparator(";");
-        populator.setContinueOnError(true);
+        populator.setContinueOnError(false);
         DatabasePopulatorUtils.execute(populator, dataSource);
+    }
+
+    ClassPathResource sampleDataScript() {
+        var database = environment.acceptsProfiles(Profiles.of("postgres", "docker"))
+                ? "postgresql-sample-data.sql"
+                : "h2-phase1.sql";
+        return new ClassPathResource("db/sample-data/" + database);
     }
 }

@@ -9,9 +9,10 @@ interface ModulePageProps {
   title: string;
   description: string;
   icon: ReactNode;
+  onOpen: () => void;
 }
 
-export default function ModulePage({ eyebrow, title, description, icon }: ModulePageProps) {
+export default function ModulePage({ eyebrow, title, description, icon, onOpen }: ModulePageProps) {
   return (
     <Card className="module-card" variant="borderless">
       <Flex className="module-card__content" vertical gap={20}>
@@ -25,7 +26,7 @@ export default function ModulePage({ eyebrow, title, description, icon }: Module
           <Paragraph type="secondary">{description}</Paragraph>
         </div>
         <Space wrap>
-          <Button type="primary" icon={<ArrowRightOutlined />}>Open workspace</Button>
+          <Button type="primary" icon={<ArrowRightOutlined />} onClick={onOpen}>Open workspace</Button>
           <Button>View activity</Button>
         </Space>
       </Flex>

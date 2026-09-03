@@ -29,8 +29,8 @@ public record Vehicle(UUID id, String registrationNumber, String chassisNumber, 
         engineNumber = normalizeOptional(engineNumber);
         manufacturer = normalizeOptional(manufacturer);
         model = normalizeOptional(model);
-        categoryId = categoryId != null ? categoryId : UUID.randomUUID();
-        typeId = typeId != null ? typeId : UUID.randomUUID();
+        Objects.requireNonNull(categoryId, "Vehicle category reference is required");
+        Objects.requireNonNull(typeId, "Vehicle type reference is required");
         ownershipType = normalizeOwnership(ownershipType);
         operationalStatus = normalizeStatus(operationalStatus);
 

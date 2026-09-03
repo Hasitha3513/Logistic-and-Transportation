@@ -15,7 +15,7 @@ import java.util.UUID;
 @Table(name = "bunker_dip_reading")
 @Getter
 @Setter
-class DipReadingEntity {
+class DipReadingEntity extends com.transportlogistics.app.shared.infrastructure.persistence.TenantScopedEntity {
     @Id
     private UUID id;
 

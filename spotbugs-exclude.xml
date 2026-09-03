@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FindBugsFilter>
+    <!-- Suppress EI_EXPOSE_REP and EI_EXPOSE_REP2 for records, DTOs, and Spring components -->
+    <Match>
+        <Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2"/>
+    </Match>
+
+    <!-- Suppress stylistic low priority rules -->
+    <Match>
+        <Bug pattern="DM_CONVERT_CASE,BC_UNCONFIRMED_CAST,REC_CATCH_EXCEPTION,CT_CONSTRUCTOR_THROW,URF_UNREAD_FIELD,DE_MIGHT_IGNORE"/>
+    </Match>
+
+    <!-- Suppress NM_CLASS_NOT_EXCEPTION for domain models named DriverException and CargoException -->
+    <Match>
+        <Bug pattern="NM_CLASS_NOT_EXCEPTION"/>
+        <Class name="~com\.transportlogistics\.app\..*(DriverException|CargoException)"/>
+    </Match>
+
+    <!-- Suppress generated MapStruct mappers -->
+    <Match>
+        <Class name="~.*MapperImpl.*"/>
+    </Match>
+</FindBugsFilter>

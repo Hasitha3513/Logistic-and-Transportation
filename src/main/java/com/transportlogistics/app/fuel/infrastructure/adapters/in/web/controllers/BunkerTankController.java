@@ -1,7 +1,6 @@
 package com.transportlogistics.app.fuel.infrastructure.adapters.in.web.controllers;
 
 import com.transportlogistics.app.fuel.application.ports.in.BunkerTankUseCase;
-import com.transportlogistics.app.fuel.domain.model.BunkerTank;
 import com.transportlogistics.app.fuel.domain.model.DipReading;
 import com.transportlogistics.app.fuel.infrastructure.adapters.in.web.dto.request.*;
 import com.transportlogistics.app.fuel.infrastructure.adapters.in.web.dto.response.*;

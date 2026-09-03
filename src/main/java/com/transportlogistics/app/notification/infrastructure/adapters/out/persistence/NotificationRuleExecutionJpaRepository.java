@@ -22,4 +22,6 @@ public interface NotificationRuleExecutionJpaRepository extends JpaRepository<No
     List<NotificationRuleExecutionEntity> findRecent(@Param("ruleId") UUID ruleId,
                                                      @Param("eventId") UUID eventId,
                                                      Pageable pageable);
+
+    Optional<NotificationRuleExecutionEntity> findByControllingNotificationId(UUID notificationId);
 }

@@ -11,12 +11,21 @@ export const api = axios.create({
   headers: { 'Content-Type': 'application/json' },
 });
 
+// Public, possession-authorized transport. It deliberately has no operator JWT/refresh interceptors.
+export const publicApi = axios.create({
+  baseURL,
+  headers: { 'Content-Type': 'application/json' },
+});
+
 const refreshClient = axios.create({ baseURL, headers: { 'Content-Type': 'application/json' } });
 let refreshInFlight: Promise<string> | undefined;
 
 api.interceptors.request.use((config) => {
   const accessToken = localStorage.getItem(ACCESS_TOKEN_KEY);
   if (accessToken) config.headers.Authorization = `Bearer ${accessToken}`;
+  if (config.data instanceof FormData) {
+    delete config.headers['Content-Type'];
+  }
   return config;
 });
 

@@ -36,6 +36,11 @@ class DriverExceptionPersistenceIntegrationTest {
 
     @BeforeEach
     void setUp() {
+        jdbc.update("DELETE FROM fuel_issue_history");
+        jdbc.update("DELETE FROM fuel_issue");
+        jdbc.update("DELETE FROM trip_operational_event");
+        jdbc.update("DELETE FROM trip_status_history");
+        jdbc.update("DELETE FROM trip_dispatch");
         jdbc.update("DELETE FROM trip");
         jdbc.update("DELETE FROM driver_violation");
         jdbc.update("DELETE FROM driver_medical_record");

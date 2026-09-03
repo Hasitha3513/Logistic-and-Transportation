@@ -9,7 +9,7 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "vehicle")
-public class VehicleEntity {
+public class VehicleEntity extends com.transportlogistics.app.shared.infrastructure.persistence.TenantScopedEntity {
     @Id
     @Column(name = "id")
     private UUID id;

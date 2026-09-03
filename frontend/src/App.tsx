@@ -1,10 +1,7 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
-import {
-  DashboardOutlined,
-} from '@ant-design/icons';
 import AppLayout from './layout/AppLayout';
 import DashboardPage from './pages/DashboardPage';
-import ModulePage from './pages/ModulePage';
+import WorkspacePage from './pages/WorkspacePage';
 import ResourceListPage, { resourcePages } from './pages/ResourceListPage';
 import VehicleListPage from './features/fleet/vehicleMaster/pages/VehicleListPage';
 import TripListPage from './trips/TripListPage';
@@ -40,6 +37,16 @@ import { ClaimDetailsPage } from './features/freight/insurance/pages/ClaimDetail
 import { CargoExceptionListPage } from './features/freight/exceptions/pages/CargoExceptionListPage';
 import { CargoExceptionCreatePage } from './features/freight/exceptions/pages/CargoExceptionCreatePage';
 import { CargoExceptionDetailsPage } from './features/freight/exceptions/pages/CargoExceptionDetailsPage';
+import FreightReportsPage from './features/freight/reports/pages/FreightReportsPage';
+import DeliveryOrderListPage from './features/delivery/orders/pages/DeliveryOrderListPage';
+import DeliveryOrderFormPage from './features/delivery/orders/pages/DeliveryOrderFormPage';
+import DeliveryOrderDetailsPage from './features/delivery/orders/pages/DeliveryOrderDetailsPage';
+import DeliveryAnalyticsPage from './features/delivery/analytics/pages/DeliveryAnalyticsPage';
+import DeliveryZoneListPage from './features/delivery/zones/pages/DeliveryZoneListPage';
+import DeliverySlotListPage from './features/delivery/slots/pages/DeliverySlotListPage';
+import { DeliveryRiderListPage } from './features/delivery/riders/pages/DeliveryRiderListPage';
+import { DeliveryBatchListPage } from './features/delivery/batches/pages/DeliveryBatchListPage';
+import DeliverySelfServicePage from './features/delivery/selfService/pages/DeliverySelfServicePage';
 
 function ProtectedRoute() {
   const { user, isLoading } = useAuth();
@@ -63,6 +70,8 @@ function HomePage() {
   if (hasPermission('LOAD_PLAN_VIEW')) return <Navigate to="/freight/load-plans" replace />;
   if (hasPermission('CARGO_INSURANCE_VIEW')) return <Navigate to="/freight/insurance/policies" replace />;
   if (hasPermission('CARGO_EXCEPTION_VIEW')) return <Navigate to="/freight/exceptions" replace />;
+  if (hasPermission('FREIGHT_REPORT_VIEW')) return <Navigate to="/freight/reports" replace />;
+  if (hasPermission('DELIVERY_VIEW')) return <Navigate to="/deliveries" replace />;
   if (hasPermission('IDENTITY_MANAGE')) return <Navigate to="/administration/users" replace />;
   return <Navigate to="/workspace" replace />;
 }
@@ -71,6 +80,7 @@ export default function App() {
   return (
     <Routes>
       <Route path="login" element={<LoginPage />} />
+      <Route path="track" element={<DeliverySelfServicePage />} />
       <Route element={<ProtectedRoute />}>
         <Route index element={<HomePage />} />
         <Route path="fleet/vehicles" element={<VehicleListPage />} />
@@ -113,10 +123,20 @@ export default function App() {
         <Route path="freight/exceptions" element={<CargoExceptionListPage />} />
         <Route path="freight/exceptions/new" element={<CargoExceptionCreatePage />} />
         <Route path="freight/exceptions/:id" element={<CargoExceptionDetailsPage />} />
+        <Route path="freight/reports" element={<FreightReportsPage />} />
+        <Route path="deliveries" element={<DeliveryOrderListPage />} />
+        <Route path="deliveries/zones" element={<DeliveryZoneListPage />} />
+        <Route path="deliveries/slots" element={<DeliverySlotListPage />} />
+        <Route path="deliveries/riders" element={<DeliveryRiderListPage />} />
+        <Route path="deliveries/batches" element={<DeliveryBatchListPage />} />
+        <Route path="deliveries/analytics" element={<DeliveryAnalyticsPage />} />
+        <Route path="deliveries/new" element={<DeliveryOrderFormPage />} />
+        <Route path="deliveries/:deliveryId/edit" element={<DeliveryOrderFormPage />} />
+        <Route path="deliveries/:deliveryId" element={<DeliveryOrderDetailsPage />} />
         <Route path="administration/users" element={<ResourceListPage {...resourcePages.users} />} />
         <Route path="administration/roles" element={<ResourceListPage {...resourcePages.roles} />} />
         <Route path="notification-rules" element={<NotificationRulesPage />} />
-        <Route path="workspace" element={<ModulePage eyebrow="Operations" title="Workspace" description="Select an available module from the navigation." icon={<DashboardOutlined />} />} />
+        <Route path="workspace" element={<WorkspacePage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
     </Routes>

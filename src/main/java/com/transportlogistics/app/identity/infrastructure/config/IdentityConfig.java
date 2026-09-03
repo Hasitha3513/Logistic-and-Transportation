@@ -2,13 +2,18 @@ package com.transportlogistics.app.identity.infrastructure.config;
 
 import com.transportlogistics.app.identity.AuthenticatedUserLookup;
 import com.transportlogistics.app.identity.NotificationRecipientDirectory;
+import com.transportlogistics.app.identity.TenantAccessResolver;
+import com.transportlogistics.app.identity.TenantMembershipManager;
 import com.transportlogistics.app.identity.application.ports.in.IdentityUseCase;
 import com.transportlogistics.app.identity.application.ports.out.AccessTokenService;
 import com.transportlogistics.app.identity.application.ports.out.IdentityRepository;
 import com.transportlogistics.app.identity.application.ports.out.PasswordHasher;
 import com.transportlogistics.app.identity.application.ports.out.RefreshTokenStore;
+import com.transportlogistics.app.identity.application.ports.out.TenantMembershipRepository;
 import com.transportlogistics.app.identity.application.service.IdentityService;
+import com.transportlogistics.app.identity.application.service.TenantAccessService;
 import com.transportlogistics.app.identity.infrastructure.security.JwtProperties;
+import com.transportlogistics.app.tenancy.TenantDirectory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -19,9 +24,16 @@ class IdentityConfig {
     @Bean
     IdentityUseCase identityUseCase(IdentityRepository repository, PasswordHasher passwords,
                                     AccessTokenService accessTokens, RefreshTokenStore refreshTokens,
+                                    TenantAccessResolver tenantAccess, TenantMembershipManager tenantMemberships,
                                     JwtProperties properties, Clock clock) {
         return new IdentityService(repository, passwords, accessTokens, refreshTokens,
-                properties.refreshTokenTtl(), clock);
+                tenantAccess, tenantMemberships, properties.refreshTokenTtl(), clock);
+    }
+
+    @Bean
+    TenantAccessService tenantAccessService(TenantMembershipRepository memberships, TenantDirectory tenants,
+                                            Clock clock) {
+        return new TenantAccessService(memberships, tenants, clock);
     }
 
     @Bean

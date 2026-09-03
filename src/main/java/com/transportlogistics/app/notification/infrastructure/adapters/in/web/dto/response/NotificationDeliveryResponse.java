@@ -10,4 +10,5 @@ public record NotificationDeliveryResponse(UUID notificationId, UUID ruleId, UUI
                                            NotificationChannel channel, NotificationStatus status, long attemptCount,
                                            OffsetDateTime nextDeliveryAt, boolean terminalFailure,
                                            UUID parentNotificationId, int escalationLevel,
-                                           OffsetDateTime createdAt, OffsetDateTime sentAt, String recipient) {}
+                                           OffsetDateTime createdAt, OffsetDateTime sentAt, String recipient,
+                                           String failureCategory) {}

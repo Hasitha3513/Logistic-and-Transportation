@@ -23,7 +23,7 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "notification_rule_policy")
-public class NotificationRulePolicyEntity {
+public class NotificationRulePolicyEntity extends com.transportlogistics.app.shared.infrastructure.persistence.TenantScopedEntity {
     @Id
     @Column(name = "rule_id")
     private UUID ruleId;

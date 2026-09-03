@@ -10,6 +10,12 @@ import java.util.Set;
 import java.util.UUID;
 
 public interface IdentityUseCase {
+    record AdministrationContext(UUID tenantId, String actor, Set<String> permissions) {
+        public AdministrationContext {
+            permissions = permissions == null ? Set.of() : Set.copyOf(permissions);
+        }
+    }
+
     User createUser(User user, String rawPassword, Set<UUID> roleIds);
 
     User getUser(UUID id);
@@ -39,4 +45,20 @@ public interface IdentityUseCase {
     void logout(String refreshToken);
 
     User currentUser(String username);
+
+    User createUser(AdministrationContext context, User user, String rawPassword, Set<UUID> roleIds);
+
+    User getUser(AdministrationContext context, UUID id);
+
+    List<User> listUsers(AdministrationContext context);
+
+    User updateUser(AdministrationContext context, UUID id, User user, String rawPassword, Set<UUID> roleIds);
+
+    void deactivateUser(AdministrationContext context, UUID id);
+
+    Role createRole(AdministrationContext context, Role role);
+
+    Role updateRole(AdministrationContext context, UUID id, Role role);
+
+    void deleteRole(AdministrationContext context, UUID id);
 }

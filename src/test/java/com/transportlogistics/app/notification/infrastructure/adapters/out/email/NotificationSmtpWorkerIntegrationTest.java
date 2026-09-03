@@ -56,6 +56,7 @@ class NotificationSmtpWorkerIntegrationTest {
     @AfterEach void clean() {
         new TransactionTemplate(transactions).executeWithoutResult(status -> {
             attemptJpa.deleteAll();
+            notificationJpa.deleteEscalationChildren();
             notificationJpa.deleteAll();
         });
     }

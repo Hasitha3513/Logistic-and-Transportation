@@ -7,12 +7,12 @@ import com.transportlogistics.app.trip.TripOperationalEventRecorder;
 import com.transportlogistics.app.trip.application.ports.out.TripHistoryRepository;
 import com.transportlogistics.app.trip.application.ports.out.TripOperationalEventRepository;
 import com.transportlogistics.app.trip.application.ports.out.TripRepository;
+import com.transportlogistics.app.trip.application.ports.out.TripOperationalNotificationPublisher;
 import com.transportlogistics.app.trip.domain.model.Trip;
 import com.transportlogistics.app.trip.domain.model.TripHistoryEntry;
 import com.transportlogistics.app.trip.domain.model.TripLifecyclePolicy;
 import com.transportlogistics.app.trip.domain.model.TripOperationalEvent;
 import com.transportlogistics.app.notification.OperationalNotificationEvent;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.transaction.annotation.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,7 +42,7 @@ public class TripOperationalEventService implements TripOperationalEventUseCase,
     private final TripOperationalEventRepository eventRepo;
     private final TripHistoryRepository historyRepo;
     private final Clock clock;
-    private final ApplicationEventPublisher publisher;
+    private final TripOperationalNotificationPublisher publisher;
 
 
     public TripOperationalEventService(
@@ -50,13 +50,13 @@ public class TripOperationalEventService implements TripOperationalEventUseCase,
             TripOperationalEventRepository eventRepo,
             TripHistoryRepository historyRepo,
             Clock clock,
-            ApplicationEventPublisher publisher
+            TripOperationalNotificationPublisher publisher
     ) {
         this.tripRepo = Objects.requireNonNull(tripRepo, "TripRepository cannot be null");
         this.eventRepo = Objects.requireNonNull(eventRepo, "TripOperationalEventRepository cannot be null");
         this.historyRepo = Objects.requireNonNull(historyRepo, "TripHistoryRepository cannot be null");
         this.clock = Objects.requireNonNull(clock, "Clock cannot be null");
-        this.publisher = Objects.requireNonNull(publisher, "ApplicationEventPublisher cannot be null");
+        this.publisher = Objects.requireNonNull(publisher, "TripOperationalNotificationPublisher cannot be null");
     }
 
     @Override
@@ -257,7 +257,7 @@ public class TripOperationalEventService implements TripOperationalEventUseCase,
 
     private void publishSafely(OperationalNotificationEvent event) {
         try {
-            publisher.publishEvent(event);
+            publisher.publish(event);
         } catch (RuntimeException exception) {
             log.error("Operational notification publication failed for trip event {}", event.eventId(), exception);
         }

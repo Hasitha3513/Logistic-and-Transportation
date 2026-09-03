@@ -13,7 +13,7 @@ import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Entity @Table(name = "fuel_purchase") @Getter @Setter @NoArgsConstructor
-class FuelPurchaseEntity {
+class FuelPurchaseEntity extends com.transportlogistics.app.shared.infrastructure.persistence.TenantScopedEntity {
     @Id UUID id;
     @Column(name="purchase_number", nullable=false, unique=true, length=60) String purchaseNumber;
     @Column(name="vendor_id", nullable=false) UUID vendorId;

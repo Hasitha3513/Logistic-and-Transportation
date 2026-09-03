@@ -27,7 +27,8 @@ public final class NotificationQuietHoursEvaluator {
                                        NotificationChannel channel,
                                        NotificationSeverity severity) {
         Objects.requireNonNull(policy, "policy must not be null");
-        if (!policy.quietHoursEnabled() || channel != NotificationChannel.EMAIL
+        if (!policy.quietHoursEnabled()
+            || (channel != NotificationChannel.EMAIL && channel != NotificationChannel.SMS)
             || severity == NotificationSeverity.CRITICAL) {
             return QuietHoursDecision.immediate();
         }

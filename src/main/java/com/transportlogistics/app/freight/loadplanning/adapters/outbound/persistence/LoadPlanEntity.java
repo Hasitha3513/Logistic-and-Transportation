@@ -20,7 +20,7 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "load_plan")
-public class LoadPlanEntity {
+public class LoadPlanEntity extends com.transportlogistics.app.shared.infrastructure.persistence.TenantScopedEntity {
 
     @Id
     @Column(name = "id", nullable = false)

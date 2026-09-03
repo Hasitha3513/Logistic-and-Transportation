@@ -18,7 +18,7 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "freight_insurance_claim")
-public class FreightInsuranceClaimEntity {
+public class FreightInsuranceClaimEntity extends com.transportlogistics.app.shared.infrastructure.persistence.TenantScopedEntity {
 
     @Id
     @Column(name = "id", nullable = false)

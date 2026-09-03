@@ -3,6 +3,8 @@ package com.transportlogistics.app.shared.web;
 import com.transportlogistics.app.shared.domain.BusinessRuleException;
 import com.transportlogistics.app.shared.domain.ConflictException;
 import com.transportlogistics.app.shared.domain.NotFoundException;
+import com.transportlogistics.app.shared.domain.DependencyUnavailableException;
+import com.transportlogistics.app.shared.domain.TooManyRequestsException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -39,6 +41,16 @@ public class GlobalExceptionHandler {
     ResponseEntity<ApiError> validation(MethodArgumentNotValidException ex, HttpServletRequest request) {
         var v = ex.getBindingResult().getFieldErrors().stream().map(e -> new ApiError.FieldViolation(e.getField(), e.getDefaultMessage())).toList();
         return error(HttpStatus.BAD_REQUEST, "VALIDATION_ERROR", "Request validation failed", request, v);
+    }
+
+    @ExceptionHandler(TooManyRequestsException.class)
+    ResponseEntity<ApiError> handleTooManyRequests(TooManyRequestsException ex, HttpServletRequest request) {
+        return error(HttpStatus.TOO_MANY_REQUESTS, ex.code(), ex.getMessage(), request, List.of());
+    }
+
+    @ExceptionHandler(DependencyUnavailableException.class)
+    ResponseEntity<ApiError> dependencyUnavailable(DependencyUnavailableException ex, HttpServletRequest request) {
+        return error(HttpStatus.SERVICE_UNAVAILABLE, ex.code(), ex.getMessage(), request, List.of());
     }
 
     private ResponseEntity<ApiError> error(HttpStatus status, String code, String message, HttpServletRequest request,

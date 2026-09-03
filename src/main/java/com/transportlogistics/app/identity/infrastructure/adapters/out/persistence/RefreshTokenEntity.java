@@ -16,7 +16,7 @@ import java.util.UUID;
 @Getter
 @Setter
 @NoArgsConstructor
-class RefreshTokenEntity {
+class RefreshTokenEntity extends com.transportlogistics.app.shared.infrastructure.persistence.TenantScopedEntity {
     @Id
     private UUID id;
     @Column(name = "user_id", nullable = false)

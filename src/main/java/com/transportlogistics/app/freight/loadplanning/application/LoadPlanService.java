@@ -6,8 +6,6 @@ import com.transportlogistics.app.freight.loadplanning.domain.LoadPlanReadinessS
 import com.transportlogistics.app.freight.loadplanning.domain.LoadPlanViolation;
 import com.transportlogistics.app.freight.loadplanning.domain.ManifestItemFact;
 import com.transportlogistics.app.freight.loadplanning.domain.LoadValidationResult;
-import com.transportlogistics.app.freight.loadplanning.domain.LoadValidationViolation;
-import com.transportlogistics.app.freight.loadplanning.domain.ValidationOutcome;
 import com.transportlogistics.app.freight.loadplanning.domain.WeightVolumeCalculationEngine;
 import com.transportlogistics.app.freight.loadplanning.domain.event.LoadPlanCreated;
 import com.transportlogistics.app.freight.loadplanning.domain.event.LoadPlanUpdated;
@@ -166,7 +164,7 @@ public final class LoadPlanService implements LoadPlanUseCase {
             requireVersion(current, expectedVersion);
 
             ManifestPlanningView manifest = getAndValidateManifest(current.getCargoManifestId());
-            VehiclePlanningView vehicle = getAndValidateVehicle(current.getVehicleId());
+            getAndValidateVehicle(current.getVehicleId());
 
             List<ManifestItemFact> itemFacts = manifest.items().stream()
                     .map(i -> new ManifestItemFact(i.itemId(), i.hazardous(), i.fragile(), i.temperatureSensitive()))
@@ -221,8 +219,8 @@ public final class LoadPlanService implements LoadPlanUseCase {
         List<WeightVolumeCalculationEngine.CargoLineMeasurement> cargoMeasurements = new ArrayList<>();
         if (manifest.items() != null) {
             for (CargoManifestLookupPort.ManifestItemPlanningView item : manifest.items()) {
-                WeightVolumeCalculationEngine.WeightUnit weightUnit = item.weightUnit() != null ? parseWeightUnit(item.weightUnit()) : (item.unitWeight() != null ? WeightVolumeCalculationEngine.WeightUnit.KG : null);
-                WeightVolumeCalculationEngine.DimensionUnit dimensionUnit = item.dimensionUnit() != null ? parseDimensionUnit(item.dimensionUnit()) : ((item.length() != null || item.width() != null || item.height() != null) ? WeightVolumeCalculationEngine.DimensionUnit.M : null);
+                WeightVolumeCalculationEngine.WeightUnit weightUnit = item.weightUnit() != null ? parseWeightUnit(item.weightUnit()) : item.unitWeight() != null ? WeightVolumeCalculationEngine.WeightUnit.KG : null;
+                WeightVolumeCalculationEngine.DimensionUnit dimensionUnit = item.dimensionUnit() != null ? parseDimensionUnit(item.dimensionUnit()) : item.length() != null || item.width() != null || item.height() != null ? WeightVolumeCalculationEngine.DimensionUnit.M : null;
                 cargoMeasurements.add(new WeightVolumeCalculationEngine.CargoLineMeasurement(
                         item.quantity(),
                         item.unitWeight(),

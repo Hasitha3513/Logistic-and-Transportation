@@ -20,14 +20,43 @@ if %ERRORLEVEL% equ 0 (
     echo [INFO] Docker not found in PATH; using local PostgreSQL service on port 5432.
 )
 
-if exist "C:\Program Files\Java\jdk-21" (
-    set "JAVA_HOME=C:\Program Files\Java\jdk-21"
-    set "PATH=C:\Program Files\Java\jdk-21\bin;%PATH%"
+:: Auto-detect JDK 21 if JAVA_HOME is not set or not pointing to Java 21
+if defined JAVA_HOME (
+    if exist "%JAVA_HOME%\bin\java.exe" goto JAVA_FOUND
+)
+
+for %%D in (
+    "C:\Program Files\Java\jdk-21*"
+    "C:\Program Files\Eclipse Adoptium\jdk-21*"
+    "C:\Program Files\Microsoft\jdk-21*"
+    "C:\Program Files\Amazon Corretto\jdk21*"
+    "C:\Program Files\Zulu\zulu-21*"
+    "C:\Program Files\BellSoft\LibericaJDK-21*"
+) do (
+    if exist "%%~fD\bin\java.exe" (
+        set "JAVA_HOME=%%~fD"
+        set "PATH=%%~fD\bin;!PATH!"
+        goto JAVA_FOUND
+    )
+)
+
+:JAVA_FOUND
+:: Resolve Maven command (mvn or mvnw.cmd)
+where mvn >nul 2>&1
+if %ERRORLEVEL% equ 0 (
+    set "MVN_CMD=mvn"
+) else (
+    if exist "mvnw.cmd" (
+        set "MVN_CMD=mvnw.cmd"
+    ) else (
+        echo [!] Maven not found. Please install Maven or use mvnw.cmd.
+        exit /b 1
+    )
 )
 
 echo.
 echo [*] Launching Backend Spring Boot Application (Profile: postgres)...
-start "Backend - Transport & Logistics" cmd /k "title Backend - Spring Boot (Postgres) && set JAVA_HOME=C:\Program Files\Java\jdk-21&& set PATH=C:\Program Files\Java\jdk-21\bin;%%PATH%%&& mvn spring-boot:run -Dspring-boot.run.profiles=postgres"
+start "Backend - Transport & Logistics" cmd /k "title Backend - Spring Boot (Postgres) && %MVN_CMD% spring-boot:run -Dspring-boot.run.profiles=postgres"
 
 echo [*] Launching Frontend Application (Vite / React)...
 start "Frontend - Transport & Logistics" cmd /k "title Frontend - Vite (Port 5173) && cd frontend && npm run dev"

@@ -7,7 +7,13 @@ export function useOfflineOperationActions() {
   const { retryOperation, discardOperation } = useOfflineSync();
 
   const refresh = async (operation: OfflineOperation) => {
-    if (operation.aggregateType === 'VEHICLE') {
+    if (operation.aggregateType === 'DELIVERY') {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['deliveries'] }),
+        queryClient.invalidateQueries({ queryKey: ['delivery-proof', operation.aggregateId] }),
+        queryClient.invalidateQueries({ queryKey: ['delivery-orders'] }),
+      ]);
+    } else if (operation.aggregateType === 'VEHICLE') {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ['vehicle-readings', operation.aggregateId] }),
         queryClient.invalidateQueries({ queryKey: ['vehicle-readings-latest', operation.aggregateId] }),
@@ -32,7 +38,9 @@ export function useOfflineOperationActions() {
     open: (operation: OfflineOperation) => {
       const path = operation.aggregateType === 'TRIP'
         ? `/trips/${operation.aggregateId}`
-        : `/fleet/vehicles?vehicleId=${encodeURIComponent(operation.aggregateId)}`;
+        : operation.aggregateType === 'DELIVERY'
+          ? `/delivery/orders`
+          : `/fleet/vehicles?vehicleId=${encodeURIComponent(operation.aggregateId)}`;
       window.history.pushState({}, '', path);
       window.dispatchEvent(new PopStateEvent('popstate'));
     },

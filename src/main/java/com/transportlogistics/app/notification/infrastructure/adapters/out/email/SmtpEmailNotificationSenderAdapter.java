@@ -109,10 +109,9 @@ public class SmtpEmailNotificationSenderAdapter implements EmailNotificationSend
             if (current instanceof SMTPSendFailedException smtpSend) {
                 return smtpCodeResult(smtpSend.getReturnCode(), false);
             }
-            if (current instanceof SendFailedException sendFailed && hasInvalidAddresses(sendFailed)) {
-                if (smtpCode == -1 || smtpCode >= 500) {
-                    return rejected(EmailDeliveryErrorCategory.INVALID_RECIPIENT, "SMTP_RECIPIENT_REJECTED", "SMTP server rejected the recipient");
-                }
+            if (current instanceof SendFailedException sendFailed && hasInvalidAddresses(sendFailed)
+                    && (smtpCode == -1 || smtpCode >= 500)) {
+                return rejected(EmailDeliveryErrorCategory.INVALID_RECIPIENT, "SMTP_RECIPIENT_REJECTED", "SMTP server rejected the recipient");
             }
             if (current instanceof SocketTimeoutException) {
                 return rejected(EmailDeliveryErrorCategory.TIMEOUT, "SMTP_TIMEOUT", "SMTP operation timed out");

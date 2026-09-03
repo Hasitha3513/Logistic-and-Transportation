@@ -3,6 +3,8 @@ package com.transportlogistics.app.notification.infrastructure.adapters.out.pers
 import com.transportlogistics.app.notification.application.ports.out.NotificationRepository;
 import com.transportlogistics.app.notification.domain.model.Notification;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Component;
 
 import java.time.OffsetDateTime;
@@ -77,10 +79,48 @@ public class NotificationPersistenceAdapter implements NotificationRepository {
     }
 
     public List<Notification> findDeliveries(NotificationStatus status, String eventType,
-                                             OffsetDateTime from, OffsetDateTime to, int limit) {
+                                             OffsetDateTime from, OffsetDateTime to, String aggregateType,
+                                             UUID aggregateId, int limit) {
         String normalized = eventType == null || eventType.isBlank() ? null : eventType.trim().toUpperCase();
-        return jpaRepository.findDeliveries(status, normalized, from, to, PageRequest.of(0, limit)).stream()
+        String normalizedAggregate = aggregateType == null || aggregateType.isBlank()
+            ? null : aggregateType.trim().toUpperCase();
+        Specification<NotificationEntity> filters = Specification.where(null);
+        if (status != null) {
+            filters = filters.and((root, query, builder) -> builder.equal(root.get("status"), status));
+        }
+        if (normalized != null) {
+            filters = filters.and((root, query, builder) -> builder.equal(root.get("eventType"), normalized));
+        }
+        if (from != null) {
+            filters = filters.and((root, query, builder) -> builder.greaterThanOrEqualTo(root.get("createdAt"), from));
+        }
+        if (to != null) {
+            filters = filters.and((root, query, builder) -> builder.lessThanOrEqualTo(root.get("createdAt"), to));
+        }
+        if (normalizedAggregate != null) {
+            filters = filters.and((root, query, builder) -> {
+                var execution = query.subquery(UUID.class);
+                var executionRoot = execution.from(NotificationRuleExecutionEntity.class);
+                execution.select(executionRoot.get("id"));
+                var predicate = builder.and(
+                    builder.equal(executionRoot.get("controllingNotificationId"), root.get("id")),
+                    builder.equal(executionRoot.get("aggregateType"), normalizedAggregate));
+                if (aggregateId != null) {
+                    predicate = builder.and(predicate,
+                        builder.equal(executionRoot.get("aggregateId"), aggregateId));
+                }
+                execution.where(predicate);
+                return builder.exists(execution);
+            });
+        }
+        return jpaRepository.findAll(filters,
+                PageRequest.of(0, limit, Sort.by(Sort.Direction.DESC, "createdAt"))).getContent().stream()
             .map(NotificationEntity::toDomain).toList();
+    }
+
+    public List<Notification> findDeliveries(NotificationStatus status, String eventType,
+                                             OffsetDateTime from, OffsetDateTime to, int limit) {
+        return findDeliveries(status, eventType, from, to, null, null, limit);
     }
 
     public boolean existsByParentNotificationIdAndRecipient(UUID parentNotificationId, String recipient) {

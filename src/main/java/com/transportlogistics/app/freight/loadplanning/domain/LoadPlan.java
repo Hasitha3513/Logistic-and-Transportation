@@ -69,10 +69,9 @@ public final class LoadPlan {
             if (readyAt != null || readyBy != null) {
                 throw new IllegalArgumentException("Draft load plan must not have readyAt or readyBy audit fields");
             }
-        } else if (this.readinessStatus == LoadPlanReadinessStatus.STRUCTURALLY_READY) {
-            if (readyAt == null || readyBy == null || readyBy.isBlank()) {
-                throw new IllegalArgumentException("Structurally ready load plan requires readyAt and readyBy audit fields");
-            }
+        } else if (this.readinessStatus == LoadPlanReadinessStatus.STRUCTURALLY_READY
+                && (readyAt == null || readyBy == null || readyBy.isBlank())) {
+            throw new IllegalArgumentException("Structurally ready load plan requires readyAt and readyBy audit fields");
         }
         this.loadPlanId = loadPlanId;
         this.loadPlanNumber = loadPlanNumber;
@@ -362,14 +361,13 @@ public final class LoadPlan {
         // Temperature-sensitive rule: temperature-sensitive item requires non-blank zoneReference
         for (LoadPlanItemPlacement placement : placements) {
             ManifestItemFact fact = manifestItemMap.get(placement.manifestItemId());
-            if (fact != null && Boolean.TRUE.equals(fact.temperatureSensitive())) {
-                if (placement.zoneReference() == null || placement.zoneReference().isBlank()) {
-                    violations.add(new LoadPlanViolation(
-                            LoadPlanViolationCode.LOAD_PLAN_TEMPERATURE_RULE_FAILED,
-                            "Temperature-sensitive item " + placement.manifestItemId()
-                                    + " requires a designated zone reference"
-                    ));
-                }
+            if (fact != null && Boolean.TRUE.equals(fact.temperatureSensitive())
+                    && (placement.zoneReference() == null || placement.zoneReference().isBlank())) {
+                violations.add(new LoadPlanViolation(
+                        LoadPlanViolationCode.LOAD_PLAN_TEMPERATURE_RULE_FAILED,
+                        "Temperature-sensitive item " + placement.manifestItemId()
+                                + " requires a designated zone reference"
+                ));
             }
         }
 

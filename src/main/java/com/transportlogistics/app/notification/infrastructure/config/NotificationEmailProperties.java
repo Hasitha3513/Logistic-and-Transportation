@@ -48,6 +48,7 @@ public class NotificationEmailProperties {
         if ("production".equals(normalizedMode)) validateSmtp();
     }
 
+    @SuppressWarnings("PMD.AvoidUsingHardCodedIP")
     private void validateSmtp() {
         if (smtp == null) throw invalid("smtp configuration is required");
         String host = normalized(smtp.host);
@@ -68,6 +69,7 @@ public class NotificationEmailProperties {
         }
     }
 
+    @SuppressWarnings("PMD.AvoidUsingHardCodedIP")
     private static boolean isLoopback(String host) {
         return "localhost".equals(host) || "127.0.0.1".equals(host) || "::1".equals(host);
     }

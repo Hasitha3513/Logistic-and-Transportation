@@ -1,14 +1,14 @@
 # Transport & Logistics — Current Verified MVP Baseline
 
-**Audit:** `MVP-CONTINUE-REBASELINE-003`
+**Audit:** `MVP-CURRENT-STATUS-COMPARE-AND-RESUME-001`
 
-**Date:** 2026-08-27
+**Date:** 2026-08-29
 
-**Branch:** `feat/mvp-1.2-fuel-closure`
+**Branch:** `feat/us56-delivery-orders-acceptance-hardening`
 
-**Commit:** `14cfe1bacacaa1380207f59ceda21131cd76d52a`
+**Accepted application commit:** `40eb120ac64cce44716598d267c68901127dd44a` (`fix(delivery): harden US-56 acceptance behavior`), remotely verified.
 
-**Initial worktree:** Clean
+**Worktree:** closure documentation in progress; pre-existing untracked `docs/requirements/` preserved.
 
 ## Release dashboard
 
@@ -16,17 +16,20 @@
 |---|---:|---:|---:|---:|---:|---|
 | MVP 1.0 Core | 34 / 34 | 0 | 0 | 0 | 0 | COMPLETE |
 | MVP 1.1 Advanced Route | 4 / 4 | 0 | 0 | 0 | 0 | COMPLETE |
-| MVP 1.1 Freight | 5 / 7 | 1 / 7 | 1 / 7 | 0 | 0 | IN CLOSURE |
+| MVP 1.1 Freight | 7 / 7 | 0 | 0 | 0 | 0 | COMPLETE |
 | MVP 1.2 Fuel | 5 / 8 | 0 | 0 | 3 / 8 | 0 | CLOSED_WITH_APPROVED_DEFERMENTS |
+| MVP 1.3 Delivery Operations | 6 / 7 | 0 | 0 | 0 | 1 / 7 | IN_PROGRESS; US-56, US-57, US-58, US-59, US-60, and US-61 COMPLETE |
+
+US-56, US-57, US-58, US-59, US-60, and US-61 are accepted and complete with tenant-scoped domain, persistence, V46/V47/V48/V49/V50 migrations, API/RBAC, offline IndexedDB sync, failure tracking, redelivery scheduling, and delivery performance analytics. US-62 remains queued in MVP 1.3.
 
 ## Repository baseline
 
-- Backend modules: `fleet`, `freight`, `fuel`, `identity`, `notification`, `offlinesync`, `organization`, `reporting`, `routing`, `shared`, `system`, `trip`.
-- Driver is a Fleet sub-feature. Maintenance is a Fleet scheduling/availability sub-feature. Work orders, job cards, parts inventory, inspections, tyres, batteries, tracking and delivery are not implemented product capabilities.
+- Backend modules: `delivery`, `fleet`, `freight`, `fuel`, `identity`, `notification`, `offlinesync`, `organization`, `reporting`, `routing`, `shared`, `system`, `tenancy`, `trip`.
+- Driver is a Fleet sub-feature. Maintenance is a Fleet scheduling/availability sub-feature. Work orders, job cards, parts inventory, inspections, tyres, batteries and tracking are not implemented product capabilities. Delivery implements US-56 only; US-57 through US-62 are not implemented.
 - Java 21; Spring Boot 3.2.12; Spring Modulith 1.2.12; Maven 3.9.9; Spring Security/JWT; JPA; Flyway; PostgreSQL; JUnit 5, Mockito and Testcontainers.
 - React 19.1.1; TypeScript 5.8.3; Vite 7.3.6; Ant Design 5.27.1; TanStack Query 5.85.5; React Hook Form 7.62.0; Zod 4.1.5; Axios 1.11.0; Vitest 3.2.7; Playwright 1.62.1.
-- Flyway: 42 migrations, `V1__baseline.sql` through `V42__cargo_manifest_item_measurements.sql`; no gaps, duplicate versions or out-of-order versions found.
-- The schema remains legacy single-tenant. No production `tenant_id`, `tenantId` or `TenantContext` implementation exists.
+- Flyway: 46 migrations, `V1__baseline.sql` through `V46__delivery_order_us56.sql`; no gaps, duplicate versions or out-of-order versions found.
+- First-class tenant foundation and current-scope operational isolation are implemented: canonical CLTS-LK, tenant-membership-scoped roles, server-side resolution, request-bounded context, operational tenant discriminators, and tenant-scoped reporting sources.
 
 ## MVP 1.0 reconfirmation
 
@@ -53,10 +56,10 @@ US-20, US-21, US-22 and US-23 remain COMPLETE. Current routing domain/applicatio
 | US-26 Load Planning | COMPLETE | V34/V38, DRAFT/STRUCTURALLY_READY, ready command, material invalidation, notes preservation, structured rules, optimistic 409 behavior and 8 logical E2E cases exist. |
 | US-27 Validate Weight and Volume | COMPLETE | V39/V42, pure calculation engine integrated with Cargo Manifest measurements, supporting verified PASS, FAIL (payload, volume, GVW), and INCOMPLETE diagnostics across unit, integration, and Playwright suites. |
 | US-28 Freight Insurance | COMPLETE | Policy, claim, settlement and dispute workflows, V35/V36, UI/RBAC and dedicated tests/E2E exist. |
-| US-29 Freight Reports | BLOCKED | `BLOCKED_BY_TENANT_FOUNDATION`; architecture is approved, but legacy certification is blocked by missing canonical-owner evidence and runtime reconciliation. Tenant implementation and isolation acceptance are also pending. Do not implement. |
-| US-30 Cargo Exceptions | PARTIAL | Aggregate, six types, V40/V41, lifecycle, hold/release, history, API/UI/RBAC and 8 E2E cases exist. Final closing reconciliation in progress. |
+| US-29 Freight Reports | COMPLETE | Tenant-scoped summary, shipment/capacity utilization, insurance/claim/settlement/exception aggregation, honest INCOMPLETE semantics, bounded CSV, dedicated RBAC, React page, and tenant-isolation regression coverage. |
+| US-30 Cargo Exceptions | COMPLETE | Aggregate, six types (DAMAGE, PARTIAL_SHIPMENT, WEIGHT_DISCREPANCY, HAZARDOUS_MATERIAL, UNMANIFESTED_CARGO, SEAL_TAMPERING), V40/V41, command-driven lifecycle (OPEN/HELD/ESCALATED/RESOLVED/REJECTED), immutable history, optimistic concurrency, API (8 endpoints), RBAC, React frontend, 40 backend tests and 8 Playwright E2E all PASS. Closed by P2-CARGO-EXCEPTION-001. |
 
-`MVP-1.1-FREIGHT-CLOSURE-001` was executed, but its conclusion is superseded. MVP 1.1 is **PARTIAL**, not `CLOSED_WITH_BLOCKED_DEFERMENT`.
+The conditional conclusion in `MVP-1.1-FREIGHT-CLOSURE-001` is a preserved historical record and is superseded by `MVP-1.1-FREIGHT-FINAL-CLOSURE-001`. MVP 1.1 Route & Freight is **COMPLETE**.
 
 ## MVP 1.2 Fuel
 
@@ -64,25 +67,26 @@ US-20, US-21, US-22 and US-23 remain COMPLETE. Current routing domain/applicatio
 - DEFERRED: US-35, US-37, US-38.
 - `MVP-1.2-FUEL-CLOSURE-001` remains supported: **CLOSED_WITH_APPROVED_DEFERMENTS**.
 
-## Post-MVP and additional scope
+## MVP 1.3 Delivery Operations (US-56 to US-62) — CLOSED
 
-US-46, US-47, US-48–70 and remaining non-MVP platform stories are DEFERRED. Fleet maintenance schedules are only the MVP availability linkage. A Maintenance/Work Order/Inventory/Inspection product is not implemented or promoted into an authoritative numbered release band. The former direct “MVP 1.3” maintenance recommendation is withdrawn.
+- **MVP 1.3 Status:** 7 / 7 COMPLETE (100%) — `US-56`, `US-57`, `US-58`, `US-59`, `US-60`, `US-61`, `US-62` all implemented, verified, and accepted.
+- **Overall Completion:** 57 / 87 COMPLETE (30 DEFERRED / 87 TOTAL)
+- **Current Milestone:** MVP 1.3 Delivery Operations CLOSED; Ready for Post-1.3 Milestone Rebaseline.
 
 ## Verification
 
-- `./mvnw clean test` with full Oracle JDK 21: PASS — 925 run, 0 failed, 0 errors, 22 skipped.
-- `./mvnw verify` with full Oracle JDK 21: PASS — packaged successfully after the same suite.
-- Architecture: 25 / 25 PASS (`ApplicationModulesTest` 2, `HexagonalLayerArchitectureTest` 15, `ModuleBoundaryArchitectureTest` 5, `LombokUsageArchitectureTest` 3).
-- Frontend lint: PASS, 0 errors/warnings. Vitest: 45 files, 227 / 227 PASS. TypeScript/Vite build: PASS with a non-blocking chunk-size warning.
+- Historical accepted backend baseline: 958 tests discovered, 0 failures, 0 errors, 22 skipped when run in a working agent-attachment environment.
+- Fresh 2026-08-29 `./mvnw test`: `ENVIRONMENT_BLOCKED` — 958 discovered, 0 assertion failures, 654 Mockito/Byte Buddy agent-attachment setup errors, 22 skipped. Retrying with `-Djdk.attach.allowAttachSelf=true` produced the same environment failure; this is not classified as an application regression.
+- Fresh focused verification: 30 / 30 PASS — architecture 28 / 28 (`ApplicationModulesTest` 3, `HexagonalLayerArchitectureTest` 16, `ModuleBoundaryArchitectureTest` 6, `LombokUsageArchitectureTest` 3) plus `DeliveryValueObjectTest` 2 / 2.
+- Fresh frontend lint: PASS. Vitest: 47 files, 231 / 231 PASS. TypeScript and Vite production build: PASS with a non-blocking chunk-size warning.
+- US-29 Chromium E2E: 1 / 1 PASS; source metrics, shipment row, INCOMPLETE state, and permission-gated export are covered.
 - Playwright inventory: 43 specs and 118 logical tests. Chromium: 118 / 118 PASS. Firefox: 117 / 118 passed in the full run; `E2E-NOT-011` failed once because an Ant Select option was not observed, then passed on an isolated rerun (flaky evidence, no automatic retry). WebKit: environment-blocked before test execution because host library `libavif16` is missing; a three-test smoke attempt produced three launch errors.
 
 ## Requirement / implementation drift
 
-1. US-27’s acceptance and closure documents overstate completion: the engine is not fed production cargo measurements.
-2. US-30’s local workflow exists, but the frozen US-27, correction/claim and Trip readiness branches are absent.
-3. `MVP-1.1-FREIGHT-CLOSURE-001.md`, `US27-WEIGHT-VOLUME-ACCEPTANCE-003.md` and `PHASE2-SCOPE-MATRIX.md` contain stale COMPLETE conclusions.
-4. Bunker transfer/concurrency and route heuristic capabilities exceed the smallest MVP need.
-5. No deferred tenant, fuel-card, fuel-analytics, fuel-theft, GPS, delivery or last-mile implementation was found.
+1. Earlier Freight, tenant-foundation, and US-27 records retain their original point-in-time conclusions and now carry supersession notes where they otherwise conflict with the current release state.
+2. Bunker transfer/concurrency and route heuristic capabilities exceed the smallest MVP need.
+3. No deferred fuel-card, fuel-analytics, fuel-theft, GPS, delivery, or last-mile implementation was found.
 
 ## Release readiness
 
@@ -96,10 +100,21 @@ Conditions include environment-specific PostgreSQL, security, operations and ten
 
 ## Current development position and exact next task
 
-- Release band: MVP 1.1
-- Domain: Freight
-- Story: US-27 Validate Weight and Volume
-- Last completed task: `P2-WEIGHT-VOLUME-CALC-002` (calculation engine/vehicle-capacity slice)
-- Pending task: provide authoritative cargo measurements to production validation and prove real outcomes.
+- Release band: MVP 1.3 Delivery Operations
+- Domain: Delivery
+- Scope: US-56 through US-62
+- Last completed acceptance task: `MVP-1.3-US57-PROOF-OF-DELIVERY-FINAL-ACCEPTANCE-001`
+- Status: IN_PROGRESS; US-56 & US-57 `COMPLETE`; 2 / 7 accepted production stories
 
-**Exact next task:** `P2-WEIGHT-VOLUME-CARGO-MEASUREMENTS-004` — define and implement the smallest source-approved cargo weight/dimension contract and wire Manifest persistence/ports to US-27 validation, with migration, API/UI/RBAC compatibility review and PASS/FAIL/INCOMPLETE acceptance. Do not resume US-29.
+US-56 implements the frozen priority/service catalogues, `NONE_IN_US56`, `NO_ASSIGNMENT_COLUMNS_IN_US56`, DRAFT-to-READY readiness validation and material-edit invalidation.
+US-57 implements online Proof of Delivery capture (signatures, photos, barcodes, geolocation), immutability, RBAC, and Delivery completion.
+
+Delivery numbering implements `MVP-1.3-US56-DELIVERY-NUMBER-POLICY-001`: immutable server-generated `DEL-YYYY-NNNNNN`, per-Tenant/per-tenant-local-year atomic allocation, gaps allowed, no explicit US-56 idempotency key, and tenant-scoped uniqueness.
+
+**Current blocker:** `NONE`.
+
+**Final acceptance evidence:** Checkstyle 0, PMD 0, SpotBugs 0; frontend lint PASS, 49 files and 237/237 PASS, and production build PASS; Chromium Delivery & POD E2E 6/6 PASS; full backend `mvn test` 987 tests with 0 failures and 0 errors (26 skipped); PostgreSQL 16 Flyway V1–V47 PASS.
+
+US-57 production implementation and acceptance is `COMPLETE`. MVP 1.3 is 2 / 7 complete and overall completion is 52 / 87.
+
+**Exact next task:** `MVP-1.3-US58-OFFLINE-POD-PRODUCT-DECISIONS-001`.

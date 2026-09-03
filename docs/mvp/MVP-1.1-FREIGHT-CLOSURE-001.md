@@ -1,5 +1,11 @@
 # MVP 1.1 Release Band Formal Closure Record (MVP-1.1-FREIGHT-CLOSURE-001)
 
+> **SUPERSEDED BY:** `MVP-1.1-FREIGHT-FINAL-CLOSURE-001`
+>
+> **CURRENT STATUS:** US-29 COMPLETE; Freight 7/7 COMPLETE; MVP 1.1 Route & Freight COMPLETE.
+>
+> This document remains unchanged below as the point-in-time August 27, 2026 conditional closure record.
+
 **Date:** August 27, 2026  
 **Auditor / Governance:** Senior Principal Enterprise Architect, QA Architect, Spring Modulith Architect, & Release Manager  
 **Branch:** `feat/us30-cargo-exceptions`  

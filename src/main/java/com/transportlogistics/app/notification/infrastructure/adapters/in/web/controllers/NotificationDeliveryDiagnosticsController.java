@@ -2,6 +2,7 @@ package com.transportlogistics.app.notification.infrastructure.adapters.in.web.c
 
 import com.transportlogistics.app.notification.application.ports.in.NotificationDeliveryDiagnosticsUseCase;
 import com.transportlogistics.app.notification.domain.model.NotificationStatus;
+import com.transportlogistics.app.notification.domain.model.NotificationDestination;
 import com.transportlogistics.app.notification.infrastructure.adapters.in.web.dto.response.NotificationDeliveryAttemptResponse;
 import com.transportlogistics.app.notification.infrastructure.adapters.in.web.dto.response.NotificationDeliveryResponse;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -13,7 +14,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/notification-deliveries")
+@RequestMapping({"/notification-deliveries", "/v1/notification-deliveries"})
 public class NotificationDeliveryDiagnosticsController {
     private final NotificationDeliveryDiagnosticsUseCase useCase;
 
@@ -27,12 +28,15 @@ public class NotificationDeliveryDiagnosticsController {
         @RequestParam(required = false) String eventType,
         @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) OffsetDateTime from,
         @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) OffsetDateTime to,
+        @RequestParam(required = false) String aggregateType,
+        @RequestParam(required = false) UUID aggregateId,
         @RequestParam(defaultValue = "100") int limit) {
-        return useCase.find(status, eventType, from, to, limit).stream().map(diagnostic -> {
+        return useCase.find(status, eventType, from, to, aggregateType, aggregateId, limit).stream().map(diagnostic -> {
             var n = diagnostic.notification();
             return new NotificationDeliveryResponse(n.id(), n.ruleId(), n.eventId(), n.eventType(), n.channel(),
                 n.status(), diagnostic.attemptCount(), n.nextDeliveryAt(), n.status() == NotificationStatus.FAILED,
-                n.parentNotificationId(), n.escalationLevel(), n.createdAt(), n.sentAt(), mask(n.recipient()));
+                n.parentNotificationId(), n.escalationLevel(), n.createdAt(), n.sentAt(),
+                NotificationDestination.mask(n.recipient()), safeFailureCategory(n.failureReason()));
         }).toList();
     }
 
@@ -43,10 +47,9 @@ public class NotificationDeliveryDiagnosticsController {
             a.errorCode(), a.errorMessage(), a.providerMessageId())).toList());
     }
 
-    private static String mask(String recipient) {
-        if (recipient == null || recipient.isBlank()) return null;
-        int at = recipient.indexOf('@');
-        if (at > 0) return recipient.substring(0, 1) + "***" + recipient.substring(at);
-        return recipient.substring(0, 1) + "***";
+    private static String safeFailureCategory(String failureReason) {
+        if (failureReason == null || failureReason.isBlank()) return null;
+        String category = failureReason.split("[:\\s]", 2)[0];
+        return category.matches("[A-Z0-9_]{2,64}") ? category : "DELIVERY_FAILURE";
     }
 }

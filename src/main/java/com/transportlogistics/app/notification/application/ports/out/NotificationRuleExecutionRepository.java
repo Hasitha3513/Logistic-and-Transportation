@@ -12,4 +12,5 @@ public interface NotificationRuleExecutionRepository {
     boolean existsByExecutionKey(String executionKey);
     Optional<NotificationRuleExecution> findLatestAccepted(String suppressionKey, OffsetDateTime after);
     List<NotificationRuleExecution> findRecent(UUID ruleId, UUID eventId, int limit);
+    Optional<NotificationRuleExecution> findByControllingNotificationId(UUID notificationId);
 }

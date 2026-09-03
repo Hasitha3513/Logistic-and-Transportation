@@ -20,7 +20,7 @@ import java.util.UUID;
 @Getter
 @Setter
 @NoArgsConstructor
-class FuelIssueEntity {
+class FuelIssueEntity extends com.transportlogistics.app.shared.infrastructure.persistence.TenantScopedEntity {
     @Id UUID id;
     @Column(name = "voucher_number", nullable = false, unique = true) String voucherNumber;
     @Column(name = "vehicle_id", nullable = false) UUID vehicleId;

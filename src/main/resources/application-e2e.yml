@@ -1,7 +1,12 @@
 app:
   notification:
+    sms:
+      enabled: true
+      mode: test
+      read-timeout: PT30S
     email:
       enabled: true
       mode: test
       provider: test
-      worker-delay: PT24H
+      from: e2e@example.test
+      worker-delay: PT1S

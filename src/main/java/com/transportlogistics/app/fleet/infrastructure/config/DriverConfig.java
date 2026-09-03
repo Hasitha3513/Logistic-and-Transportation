@@ -2,6 +2,8 @@ package com.transportlogistics.app.fleet.infrastructure.config;
 
 import com.transportlogistics.app.fleet.DriverAssignmentEligibility;
 import com.transportlogistics.app.fleet.DriverAssignmentAvailability;
+import com.transportlogistics.app.fleet.DriverLookup;
+import com.transportlogistics.app.fleet.FleetDriverSummary;
 import com.transportlogistics.app.fleet.application.ports.in.DriverAvailabilityUseCase;
 import com.transportlogistics.app.fleet.application.ports.in.DriverUseCase;
 import com.transportlogistics.app.fleet.application.ports.out.DriverExceptionRepository;
@@ -41,5 +43,17 @@ class DriverConfig {
                 throw new IllegalArgumentException("Driver is unavailable for assignment: " + codes);
             }
         };
+    }
+
+    @Bean
+    DriverLookup driverLookup(DriverRepository drivers) {
+        return id -> drivers.findById(id).map(driver -> new FleetDriverSummary(
+                driver.id(),
+                driver.employeeNumber(),
+                driver.firstName(),
+                driver.lastName(),
+                driver.status(),
+                driver.active()
+        ));
     }
 }

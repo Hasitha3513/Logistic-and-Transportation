@@ -1,6 +1,7 @@
 package com.transportlogistics.app.identity.infrastructure.config;
 
 import com.transportlogistics.app.identity.application.ports.in.IdentityUseCase;
+import com.transportlogistics.app.identity.TenantMembershipManager;
 import com.transportlogistics.app.identity.domain.model.Role;
 import com.transportlogistics.app.identity.domain.model.User;
 import org.springframework.boot.ApplicationArguments;
@@ -10,6 +11,7 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
+import com.transportlogistics.app.tenancy.CanonicalTenant;
 
 import java.time.OffsetDateTime;
 import java.util.Set;
@@ -51,15 +53,24 @@ class LocalIdentityBootstrap implements ApplicationRunner {
             "DRIVER_MEDICAL_VIEW", "DRIVER_MEDICAL_MANAGE",
             "DRIVER_DRUG_TEST_VIEW", "DRIVER_DRUG_TEST_MANAGE",
             "LUBRICANT_LOG_VIEW", "LUBRICANT_LOG_MANAGE",
-            "TRIP_LOG_VIEW", "TRIP_LOG_MANAGE"
+            "TRIP_LOG_VIEW", "TRIP_LOG_MANAGE",
+            "DELIVERY_VIEW", "DELIVERY_CREATE", "DELIVERY_UPDATE", "DELIVERY_ASSIGN",
+            "DELIVERY_ZONE_CREATE", "DELIVERY_ZONE_VIEW", "DELIVERY_ZONE_UPDATE", "DELIVERY_ZONE_ACTIVATE", "DELIVERY_ZONE_OVERRIDE",
+            "DELIVERY_RIDER_VIEW", "DELIVERY_RIDER_CREATE", "DELIVERY_RIDER_UPDATE", "DELIVERY_RIDER_ACTIVATE", "DELIVERY_RIDER_ASSIGN", "DELIVERY_RIDER_OVERRIDE",
+            "DELIVERY_BATCH_VIEW", "DELIVERY_BATCH_CREATE", "DELIVERY_BATCH_UPDATE", "DELIVERY_BATCH_ASSIGN", "DELIVERY_BATCH_DISPATCH", "DELIVERY_BATCH_CANCEL",
+            "DELIVERY_POD_CAPTURE", "DELIVERY_POD_VIEW",
+            "DELIVERY_FAIL_RECORD", "DELIVERY_FAIL_VIEW", "DELIVERY_FAIL_ESCALATE", "DELIVERY_RETURN_INITIATE",
+            "DELIVERY_REDELIVERY_SCHEDULE", "DELIVERY_REDELIVERY_VIEW"
     );
 
     private final IdentityUseCase identities;
     private final Environment environment;
+    private final TenantMembershipManager memberships;
 
-    LocalIdentityBootstrap(IdentityUseCase identities, Environment environment) {
+    LocalIdentityBootstrap(IdentityUseCase identities, Environment environment, TenantMembershipManager memberships) {
         this.identities = identities;
         this.environment = environment;
+        this.memberships = memberships;
     }
 
     @Override
@@ -75,6 +86,7 @@ class LocalIdentityBootstrap implements ApplicationRunner {
                         "Opt-in local administrator with all implemented business permissions", true,
                         MVP_PERMISSIONS)));
         if (existingUser.isPresent()) {
+            memberships.ensureActiveMembership(existingUser.get().id(), CanonicalTenant.ID, username);
             identities.updateUser(existingUser.get().id(), existingUser.get(), password, Set.of(role.id()));
             return;
         }

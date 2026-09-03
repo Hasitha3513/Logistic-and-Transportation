@@ -10,9 +10,9 @@ import java.util.UUID;
 interface RouteJpaRepository extends JpaRepository<RouteEntity, UUID> {
     @Query("""
             select distinct route from RouteEntity route
-            where (:query is null
-                    or lower(route.code) like lower(concat('%', :query, '%'))
-                    or lower(route.name) like lower(concat('%', :query, '%')))
+            where (cast(:query as string) is null
+                    or lower(route.code) like lower(concat('%', cast(:query as string), '%'))
+                    or lower(route.name) like lower(concat('%', cast(:query as string), '%')))
               and (:originLocationId is null or route.originLocationId = :originLocationId)
               and (:destinationLocationId is null or route.destinationLocationId = :destinationLocationId)
               and (:active is null or route.active = :active)

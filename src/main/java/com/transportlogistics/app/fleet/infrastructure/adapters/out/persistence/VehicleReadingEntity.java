@@ -22,7 +22,7 @@ import java.util.UUID;
 @Getter
 @Setter
 @NoArgsConstructor
-class VehicleReadingEntity {
+class VehicleReadingEntity extends com.transportlogistics.app.shared.infrastructure.persistence.TenantScopedEntity {
     @Id
     @Column(name = "reading_id")
     private UUID id;

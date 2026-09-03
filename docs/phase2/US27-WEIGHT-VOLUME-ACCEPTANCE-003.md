@@ -1,5 +1,7 @@
 # US-27 — Calculate Weight and Volume: Dedicated Acceptance & Final Status Audit (P2-WEIGHT-VOLUME-ACCEPTANCE-003)
 
+> **CURRENT-STATE NOTE (2026-08-28):** US-27 remains COMPLETE. Subsequent tasks completed US-30 and tenant-scoped US-29; Freight is now 7/7 COMPLETE. Statements below about US-29 being blocked and US-30 being missing are preserved as point-in-time history.
+
 **Date:** August 27, 2026  
 **Auditor:** Senior Principal QA Architect, Freight Domain Architect, Release Gate Owner  
 **Story:** US-27 — Calculate Weight and Volume (Validate Weight and Volume)  

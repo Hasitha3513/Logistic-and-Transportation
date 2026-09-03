@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.transportlogistics.app.reporting.application.ports.in.DriverAssignmentUseCase;
 import com.transportlogistics.app.reporting.application.ports.in.TripReportUseCase;
 import com.transportlogistics.app.reporting.application.ports.in.VehicleUtilizationUseCase;
+import com.transportlogistics.app.reporting.application.ports.in.FreightReportUseCase;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,31 +44,36 @@ class ReportingSecurityIntegrationTest {
     @MockBean private TripReportUseCase tripReportUseCase;
     @MockBean private DriverAssignmentUseCase driverAssignmentUseCase;
     @MockBean private VehicleUtilizationUseCase vehicleUtilizationUseCase;
+    @MockBean private FreightReportUseCase freightReportUseCase;
 
     private String reportViewerToken;
     private String unprivilegedToken;
+    private String freightViewerToken;
+    private String freightExporterToken;
 
     @BeforeEach
     void setUpSecurity() throws Exception {
-        jdbc.update("DELETE FROM offline_sync_operation");
-        jdbc.update("DELETE FROM fuel_issue_history");
-        jdbc.update("DELETE FROM fuel_issue");
-        jdbc.update("DELETE FROM fuel_purchase_history");
-        jdbc.update("DELETE FROM fuel_purchase");
-        jdbc.update("DELETE FROM bunker_stock_adjustment");
-        jdbc.update("DELETE FROM bunker_dip_reading");
-        jdbc.update("DELETE FROM bunker_stock_movement");
-        jdbc.update("DELETE FROM refresh_token");
-        jdbc.update("DELETE FROM app_user_role");
-        jdbc.update("DELETE FROM app_role_permission");
-        jdbc.update("DELETE FROM app_user");
-        jdbc.update("DELETE FROM app_role");
+        cleanupUsersAndRoles();
 
         seedRoleAndUser("report.viewer", "REPORT_VIEW");
         seedRoleAndUser("unprivileged");
+        seedRoleAndUser("freight.viewer", "FREIGHT_REPORT_VIEW");
+        seedRoleAndUser("freight.exporter", "FREIGHT_REPORT_VIEW", "FREIGHT_REPORT_EXPORT");
 
         reportViewerToken = login("report.viewer");
         unprivilegedToken = login("unprivileged");
+        freightViewerToken = login("freight.viewer");
+        freightExporterToken = login("freight.exporter");
+    }
+
+    private void cleanupUsersAndRoles() {
+        jdbc.update("DELETE FROM refresh_token WHERE user_id IN (SELECT id FROM app_user WHERE username IN ('report.viewer', 'unprivileged', 'freight.viewer', 'freight.exporter'))");
+        jdbc.update("DELETE FROM tenant_membership_role WHERE membership_id IN (SELECT membership_id FROM tenant_membership WHERE user_id IN (SELECT id FROM app_user WHERE username IN ('report.viewer', 'unprivileged', 'freight.viewer', 'freight.exporter')))");
+        jdbc.update("DELETE FROM tenant_membership WHERE user_id IN (SELECT id FROM app_user WHERE username IN ('report.viewer', 'unprivileged', 'freight.viewer', 'freight.exporter'))");
+        jdbc.update("DELETE FROM app_user_role WHERE user_id IN (SELECT id FROM app_user WHERE username IN ('report.viewer', 'unprivileged', 'freight.viewer', 'freight.exporter'))");
+        jdbc.update("DELETE FROM app_user WHERE username IN ('report.viewer', 'unprivileged', 'freight.viewer', 'freight.exporter')");
+        jdbc.update("DELETE FROM app_role_permission WHERE role_id IN (SELECT id FROM app_role WHERE name IN ('ROLE_REPORT_VIEWER', 'ROLE_UNPRIVILEGED', 'ROLE_FREIGHT_VIEWER', 'ROLE_FREIGHT_EXPORTER'))");
+        jdbc.update("DELETE FROM app_role WHERE name IN ('ROLE_REPORT_VIEWER', 'ROLE_UNPRIVILEGED', 'ROLE_FREIGHT_VIEWER', 'ROLE_FREIGHT_EXPORTER')");
     }
 
     @Test
@@ -157,6 +163,26 @@ class ReportingSecurityIntegrationTest {
                 .andExpect(status().isOk());
     }
 
+    @Test
+    void freightReportsUseDedicatedViewAndExportPermissions() throws Exception {
+        when(freightReportUseCase.shipments(any(), anyInt(), anyInt(), any(), any()))
+                .thenReturn(new PageImpl<>(List.of()));
+        when(freightReportUseCase.exportCsv(any())).thenReturn("header\r\n".getBytes());
+
+        var shipments = get("/reports/freight/shipments").param("fromDate", "2026-08-01")
+                .param("toDate", "2026-08-10");
+        mvc.perform(shipments).andExpect(status().isUnauthorized());
+        mvc.perform(get("/reports/freight/shipments").param("fromDate", "2026-08-01").param("toDate", "2026-08-10")
+                .header("Authorization", "Bearer " + unprivilegedToken)).andExpect(status().isForbidden());
+        mvc.perform(get("/reports/freight/shipments").param("fromDate", "2026-08-01").param("toDate", "2026-08-10")
+                .header("Authorization", "Bearer " + freightViewerToken)).andExpect(status().isOk());
+
+        mvc.perform(get("/reports/freight/export").param("fromDate", "2026-08-01").param("toDate", "2026-08-10")
+                .header("Authorization", "Bearer " + freightViewerToken)).andExpect(status().isForbidden());
+        mvc.perform(get("/reports/freight/export").param("fromDate", "2026-08-01").param("toDate", "2026-08-10")
+                .header("Authorization", "Bearer " + freightExporterToken)).andExpect(status().isOk());
+    }
+
     private void seedRoleAndUser(String username, String... permissions) {
         var userId = UUID.randomUUID();
         var roleId = UUID.randomUUID();
@@ -176,8 +202,9 @@ class ReportingSecurityIntegrationTest {
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """, userId, username, username + "@example.test", passwords.encode(PASSWORD),
                 "Test", "User", null, true, now, now);
+        com.transportlogistics.app.support.TenantTestFixtures.canonicalMembership(jdbc, userId);
 
-        jdbc.update("INSERT INTO app_user_role (user_id, role_id) VALUES (?, ?)", userId, roleId);
+        com.transportlogistics.app.support.TenantTestFixtures.assignCanonicalRole(jdbc, userId, roleId);
     }
 
     private String login(String username) throws Exception {

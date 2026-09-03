@@ -59,35 +59,39 @@ class VehicleReadingApiIntegrationTest {
     }
 
     private void seedAdminIfNeeded() {
-        var count = jdbc.queryForObject("SELECT COUNT(*) FROM app_user WHERE username = 'admin'", Integer.class);
-        if (count == null || count == 0) {
-            var adminId = UUID.fromString("00000000-0000-0000-0000-000000000001");
-            var adminRoleId = UUID.fromString("00000000-0000-0000-0000-000000000002");
+        var userList = jdbc.queryForList("SELECT id FROM app_user WHERE username = 'admin'", UUID.class);
+        var roleList = jdbc.queryForList("SELECT id FROM app_role WHERE name = 'ADMIN'", UUID.class);
+
+        UUID adminRoleId;
+        if (roleList.isEmpty()) {
+            adminRoleId = UUID.randomUUID();
+            jdbc.update("INSERT INTO app_role (id, name, description, active) VALUES (?, 'ADMIN', 'Administrator', true)", adminRoleId);
+        } else {
+            adminRoleId = roleList.getFirst();
+        }
+
+        var permissions = new String[] {
+                "VEHICLE_READING_VIEW", "VEHICLE_READING_CREATE", "VEHICLE_READING_CORRECT", "VEHICLE_READING_RESET_METER"
+        };
+        for (String perm : permissions) {
+            jdbc.update("INSERT INTO app_permission (code, description, active) VALUES (?, 'Desc', true) ON CONFLICT DO NOTHING", perm);
+            jdbc.update("INSERT INTO app_role_permission (role_id, permission_code) VALUES (?, ?) ON CONFLICT DO NOTHING", adminRoleId, perm);
+        }
+
+        if (userList.isEmpty()) {
+            var userById = jdbc.queryForObject("SELECT COUNT(*) FROM app_user WHERE id = ?", Integer.class, UUID.fromString("00000000-0000-0000-0000-000000000001"));
+            UUID adminId = (userById == null || userById == 0) ? UUID.fromString("00000000-0000-0000-0000-000000000001") : UUID.randomUUID();
             var now = OffsetDateTime.parse("2026-01-01T00:00:00Z");
-
-            var roleCount = jdbc.queryForObject("SELECT COUNT(*) FROM app_role WHERE id = ?", Integer.class, adminRoleId);
-            if (roleCount == null || roleCount == 0) {
-                jdbc.update("INSERT INTO app_role (id, name, description, active) VALUES (?, ?, ?, ?)",
-                        adminRoleId, "ADMIN", "Administrator", true);
-
-                var permissions = new String[] {
-                        "VEHICLE_READING_VIEW", "VEHICLE_READING_CREATE", "VEHICLE_READING_CORRECT", "VEHICLE_READING_RESET_METER"
-                };
-                for (String perm : permissions) {
-                    jdbc.update("INSERT INTO app_role_permission (role_id, permission_code) VALUES (?, ?)",
-                            adminRoleId, perm);
-                }
-            }
-
             jdbc.update("""
                     INSERT INTO app_user
                         (id, username, email, password_hash, first_name, last_name, active, created_at, updated_at)
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                     """, adminId, "admin", "admin@transportlogistics.test", passwords.encode("AdminPass!2026"),
                     "Admin", "User", true, now, now);
-
-            jdbc.update("INSERT INTO app_user_role (user_id, role_id) VALUES (?, ?)",
-                    adminId, adminRoleId);
+            com.transportlogistics.app.support.TenantTestFixtures.canonicalMembership(jdbc, adminId);
+            com.transportlogistics.app.support.TenantTestFixtures.assignCanonicalRole(jdbc, adminId, adminRoleId);
+        } else {
+            com.transportlogistics.app.support.TenantTestFixtures.assignCanonicalRole(jdbc, userList.getFirst(), adminRoleId);
         }
     }
 

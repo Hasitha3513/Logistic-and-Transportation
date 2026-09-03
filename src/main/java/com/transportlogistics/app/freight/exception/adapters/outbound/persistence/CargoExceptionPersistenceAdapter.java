@@ -1,8 +1,6 @@
 package com.transportlogistics.app.freight.exception.adapters.outbound.persistence;
 
 import com.transportlogistics.app.freight.exception.domain.CargoException;
-import com.transportlogistics.app.freight.exception.domain.CargoExceptionHistoryEntry;
-import com.transportlogistics.app.freight.exception.domain.ExceptionSeverity;
 import com.transportlogistics.app.freight.exception.domain.ExceptionStatus;
 import com.transportlogistics.app.freight.exception.domain.ExceptionType;
 import com.transportlogistics.app.freight.exception.ports.outbound.CargoExceptionRepository;

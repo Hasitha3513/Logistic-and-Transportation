@@ -2,19 +2,20 @@ package com.transportlogistics.app.notification.infrastructure.adapters.out.pers
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.data.jpa.repository.Lock;
 import jakarta.persistence.LockModeType;
-import com.transportlogistics.app.notification.domain.model.NotificationStatus;
 
 import java.time.OffsetDateTime;
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
-public interface NotificationJpaRepository extends JpaRepository<NotificationEntity, UUID> {
+public interface NotificationJpaRepository extends JpaRepository<NotificationEntity, UUID>,
+    JpaSpecificationExecutor<NotificationEntity> {
     boolean existsByEventIdAndRuleIdAndRecipient(UUID eventId, UUID ruleId, String recipient);
 
     @Query("SELECT n FROM NotificationEntity n WHERE n.recipient IN :recipients ORDER BY n.createdAt DESC")
@@ -31,7 +32,7 @@ public interface NotificationJpaRepository extends JpaRepository<NotificationEnt
     @Query("SELECT n FROM NotificationEntity n WHERE n.id = :id")
     java.util.Optional<NotificationEntity> findByIdForUpdate(@Param("id") UUID id);
 
-    @Query("SELECT n FROM NotificationEntity n WHERE n.channel = 'EMAIL' AND n.status = 'PENDING' " +
+    @Query("SELECT n FROM NotificationEntity n WHERE n.channel IN ('EMAIL', 'SMS') AND n.status = 'PENDING' " +
         "AND (n.nextDeliveryAt IS NULL OR n.nextDeliveryAt <= :now) ORDER BY n.createdAt")
     List<NotificationEntity> findDuePendingEmails(@Param("now") OffsetDateTime now, Pageable pageable);
 
@@ -39,13 +40,9 @@ public interface NotificationJpaRepository extends JpaRepository<NotificationEnt
         "AND n.escalationLevel = 0 ORDER BY n.createdAt")
     List<NotificationEntity> findFailedEmails(Pageable pageable);
 
-    @Query("SELECT n FROM NotificationEntity n WHERE (:status IS NULL OR n.status = :status) " +
-        "AND (:eventType IS NULL OR n.eventType = :eventType) " +
-        "AND (:fromTime IS NULL OR n.createdAt >= :fromTime) AND (:toTime IS NULL OR n.createdAt <= :toTime) " +
-        "ORDER BY n.createdAt DESC")
-    List<NotificationEntity> findDeliveries(@Param("status") NotificationStatus status,
-        @Param("eventType") String eventType, @Param("fromTime") OffsetDateTime from,
-        @Param("toTime") OffsetDateTime to, Pageable pageable);
-
     boolean existsByParentNotificationIdAndRecipient(UUID parentNotificationId, String recipient);
+
+    @Modifying
+    @Query("DELETE FROM NotificationEntity n WHERE n.parentNotificationId IS NOT NULL")
+    void deleteEscalationChildren();
 }

@@ -12,7 +12,7 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "fuel_price")
-public class FuelPriceEntity {
+public class FuelPriceEntity extends com.transportlogistics.app.shared.infrastructure.persistence.TenantScopedEntity {
     @Id
     private UUID id;
     @Column(name = "vendor_id", nullable = false)

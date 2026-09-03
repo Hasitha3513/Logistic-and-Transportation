@@ -45,6 +45,15 @@ public class NotificationRecipientResolver {
                         "Active notification role not found: " + recipient);
                 }
             }
+            case EVENT_CUSTOMER -> {
+                if (channel != NotificationChannel.EMAIL && channel != NotificationChannel.SMS) {
+                    incompatible("EVENT_CUSTOMER recipients support EMAIL and SMS only");
+                }
+                if (!"customerId".equals(recipient)) {
+                    throw new BusinessRuleException("NOTIFICATION_RECIPIENT_INVALID",
+                        "EVENT_CUSTOMER recipient value must be customerId");
+                }
+            }
         }
     }
 
@@ -66,6 +75,8 @@ public class NotificationRecipientResolver {
                 .distinct()
                 .sorted(String.CASE_INSENSITIVE_ORDER)
                 .toList();
+            case EVENT_CUSTOMER -> throw new BusinessRuleException("NOTIFICATION_RECIPIENT_EVENT_REQUIRED",
+                "EVENT_CUSTOMER recipients must be resolved from an event");
         };
     }
 

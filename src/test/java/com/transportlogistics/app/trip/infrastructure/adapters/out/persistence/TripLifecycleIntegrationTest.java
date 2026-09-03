@@ -38,6 +38,7 @@ class TripLifecycleIntegrationTest {
 
     @Test
     void persistsTheCompleteAuthorizedLifecycleAndAppendOnlyHistory() {
+        userReference(jdbc, UUID.fromString("00000000-0000-0000-0000-000000000001"));
         var vehicle = vehicle();
         var driver = driver();
         vehicleHierarchy(jdbc, vehicle);

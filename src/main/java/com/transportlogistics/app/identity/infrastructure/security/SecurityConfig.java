@@ -40,6 +40,9 @@ class SecurityConfig {
                 .authorizeHttpRequests(requests -> requests
                         .requestMatchers("/health", "/auth/login", "/auth/refresh", "/swagger-ui/**", "/swagger-ui.html",
                                 "/v3/api-docs/**", "/error").permitAll()
+                        .requestMatchers("/public/v1/delivery-self-service/**",
+                                "/api/public/v1/delivery-self-service/**").permitAll()
+                        .requestMatchers("/auth/me", "/auth/logout").authenticated()
                         .requestMatchers("/actuator/**").hasAuthority("IDENTITY_MANAGE")
                         .requestMatchers("/users/**", "/roles/**").hasAuthority("IDENTITY_MANAGE")
                         .requestMatchers(HttpMethod.POST, "/offline-sync/operations").authenticated()
@@ -219,6 +222,85 @@ class SecurityConfig {
                         .requestMatchers(HttpMethod.PATCH, "/v1/freight/orders/*")
                         .hasAuthority("FREIGHT_ORDER_MANAGE")
 
+                        // Servlet security matching excludes the /api context path at runtime; retain the
+                        // literal variant below for controller-level regression and match the effective path here.
+                        .requestMatchers(HttpMethod.GET, "/v1/deliveries/*/last-mile-planner")
+                        .hasAnyAuthority("DELIVERY_FAIL_VIEW", "DELIVERY_EXCEPTION_VIEW")
+                        .requestMatchers(HttpMethod.GET, "/v1/deliveries", "/v1/deliveries/*")
+                        .hasAuthority("DELIVERY_VIEW")
+                        .requestMatchers(HttpMethod.POST, "/v1/deliveries")
+                        .hasAuthority("DELIVERY_CREATE")
+                        .requestMatchers(HttpMethod.PATCH, "/v1/deliveries/*")
+                        .hasAuthority("DELIVERY_UPDATE")
+                        .requestMatchers(HttpMethod.POST, "/v1/deliveries/*/validate-readiness")
+                        .hasAuthority("DELIVERY_ASSIGN")
+                        .requestMatchers(HttpMethod.GET, "/v1/deliveries/*/proof")
+                        .hasAnyAuthority("DELIVERY_POD_VIEW", "DELIVERY_POD_CAPTURE")
+                        .requestMatchers(HttpMethod.GET, "/v1/deliveries/*/proof/evidence/*/content")
+                        .hasAuthority("DELIVERY_POD_VIEW")
+                        .requestMatchers(HttpMethod.POST, "/v1/deliveries/*/proof", "/v1/deliveries/*/proof/evidence", "/v1/deliveries/*/proof/finalize")
+                        .hasAuthority("DELIVERY_POD_CAPTURE")
+                        .requestMatchers(HttpMethod.DELETE, "/v1/deliveries/*/proof/evidence/*")
+                        .hasAuthority("DELIVERY_POD_CAPTURE")
+
+                        .requestMatchers(HttpMethod.GET, "/v1/deliveries/*/attempts")
+                        .hasAuthority("DELIVERY_FAIL_VIEW")
+                        .requestMatchers(HttpMethod.POST, "/v1/deliveries/*/failed-attempt", "/v1/deliveries/*/failed-attempts/*/contacts")
+                        .hasAuthority("DELIVERY_FAIL_RECORD")
+                        .requestMatchers(HttpMethod.POST, "/v1/deliveries/*/escalate")
+                        .hasAuthority("DELIVERY_FAIL_ESCALATE")
+                        .requestMatchers(HttpMethod.PATCH, "/v1/deliveries/*/escalations/*")
+                        .hasAuthority("DELIVERY_FAIL_ESCALATE")
+                        .requestMatchers(HttpMethod.POST, "/v1/deliveries/*/return-to-base")
+                        .hasAuthority("DELIVERY_RETURN_INITIATE")
+                        .requestMatchers(HttpMethod.POST, "/v1/deliveries/*/redelivery/suggestions")
+                        .hasAuthority("DELIVERY_REDELIVERY_VIEW")
+                        .requestMatchers(HttpMethod.GET, "/v1/deliveries/*/redelivery/history")
+                        .hasAuthority("DELIVERY_REDELIVERY_VIEW")
+                        .requestMatchers(HttpMethod.POST, "/v1/deliveries/*/redelivery/schedule", "/v1/deliveries/*/redelivery/reschedule")
+                        .hasAuthority("DELIVERY_REDELIVERY_SCHEDULE")
+                        .requestMatchers(HttpMethod.GET, "/v1/deliveries/analytics/**")
+                        .hasAuthority("DELIVERY_ANALYTICS_VIEW")
+
+                        .requestMatchers(HttpMethod.GET, "/v1/deliveries/*/exceptions", "/v1/deliveries/*/exceptions/*")
+                        .hasAuthority("DELIVERY_EXCEPTION_VIEW")
+                        .requestMatchers(HttpMethod.POST, "/v1/deliveries/*/exceptions")
+                        .hasAuthority("DELIVERY_EXCEPTION_CREATE")
+                        .requestMatchers(HttpMethod.POST, "/v1/deliveries/*/exceptions/*/investigate")
+                        .hasAuthority("DELIVERY_EXCEPTION_MANAGE")
+                        .requestMatchers(HttpMethod.POST, "/v1/deliveries/*/exceptions/*/resolve", "/v1/deliveries/*/exceptions/*/cancel")
+                        .hasAuthority("DELIVERY_EXCEPTION_RESOLVE")
+
+                        .requestMatchers(HttpMethod.GET, "/v1/delivery-zones", "/v1/delivery-zones/*", "/v1/delivery-zones/resolve")
+                        .hasAuthority("DELIVERY_ZONE_VIEW")
+                        .requestMatchers(HttpMethod.POST, "/v1/delivery-zones")
+                        .hasAuthority("DELIVERY_ZONE_CREATE")
+                        .requestMatchers(HttpMethod.PUT, "/v1/delivery-zones/*")
+                        .hasAuthority("DELIVERY_ZONE_UPDATE")
+                        .requestMatchers(HttpMethod.POST, "/v1/delivery-zones/*/activate", "/v1/delivery-zones/*/deactivate")
+                        .hasAuthority("DELIVERY_ZONE_ACTIVATE")
+
+                        .requestMatchers(HttpMethod.GET, "/api/v1/delivery-slots", "/api/v1/delivery-slots/*", "/api/v1/delivery-slots/available", "/v1/delivery-slots", "/v1/delivery-slots/*", "/v1/delivery-slots/available")
+                        .hasAuthority("DELIVERY_SLOT_VIEW")
+                        .requestMatchers(HttpMethod.POST, "/api/v1/delivery-slots", "/v1/delivery-slots")
+                        .hasAuthority("DELIVERY_SLOT_CREATE")
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/delivery-slots/*", "/v1/delivery-slots/*")
+                        .hasAuthority("DELIVERY_SLOT_UPDATE")
+                        .requestMatchers(HttpMethod.POST, "/api/v1/delivery-slots/*/activate", "/api/v1/delivery-slots/*/deactivate", "/api/v1/delivery-slots/*/close", "/v1/delivery-slots/*/activate", "/v1/delivery-slots/*/deactivate", "/v1/delivery-slots/*/close")
+                        .hasAuthority("DELIVERY_SLOT_ACTIVATE")
+                        .requestMatchers(HttpMethod.POST, "/api/v1/delivery-slots/*/reservations", "/api/v1/delivery-slots/*/reservations/*/release", "/v1/delivery-slots/*/reservations", "/v1/delivery-slots/*/reservations/*/release")
+                        .hasAnyAuthority("DELIVERY_SLOT_ASSIGN", "DELIVERY_SLOT_OVERRIDE")
+
+                        .requestMatchers(HttpMethod.POST, "/api/v1/deliveries/orders/*/eta/calculate")
+                        .hasAuthority("DELIVERY_UPDATE")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/deliveries/*/last-mile-planner")
+                        .hasAnyAuthority("DELIVERY_FAIL_VIEW", "DELIVERY_EXCEPTION_VIEW")
+
+                        // These controllers include the application context path in their explicit mapping.
+                        // Their method-level @PreAuthorize contracts remain the authoritative action checks.
+                        .requestMatchers("/api/v1/delivery-riders/**", "/api/v1/deliveries/batches/**", "/api/v1/deliveries/orders/**")
+                        .authenticated()
+
                         .requestMatchers(HttpMethod.GET, "/bunker-tanks/*/movements").hasAuthority("BUNKER_LEDGER_VIEW")
                         .requestMatchers(HttpMethod.GET, "/bunker-tanks", "/bunker-tanks/*", "/bunker-tanks/*/balance", "/bunker-tanks/*/dip-readings")
                         .hasAuthority("BUNKER_VIEW")
@@ -229,6 +311,8 @@ class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/bunker-tanks/*/dip-readings").hasAuthority("BUNKER_DIP_RECORD")
                         .requestMatchers(HttpMethod.POST, "/bunker-transfers").hasAuthority("BUNKER_TRANSFER")
 
+                        .requestMatchers(HttpMethod.GET, "/reports/freight/export").hasAuthority("FREIGHT_REPORT_EXPORT")
+                        .requestMatchers(HttpMethod.GET, "/reports/freight/**").hasAuthority("FREIGHT_REPORT_VIEW")
                         .requestMatchers(HttpMethod.GET, "/dashboard/**").hasAuthority("DASHBOARD_VIEW")
                         .requestMatchers(HttpMethod.GET, "/reports/**").hasAuthority("REPORT_VIEW")
 
@@ -263,8 +347,15 @@ class SecurityConfig {
                         .hasAuthority("NOTIFICATION_RULE_VIEW")
                         .requestMatchers(HttpMethod.GET, "/notification-rule-executions")
                         .hasAuthority("NOTIFICATION_RULE_VIEW")
-                        .requestMatchers(HttpMethod.GET, "/notification-deliveries", "/notification-deliveries/*/attempts")
+                        .requestMatchers(HttpMethod.GET, "/notification-deliveries", "/notification-deliveries/*/attempts",
+                                "/v1/notification-deliveries", "/v1/notification-deliveries/*/attempts")
                         .hasAuthority("NOTIFICATION_RULE_VIEW")
+                        .requestMatchers(HttpMethod.GET, "/notification-customer-preferences/*",
+                                "/v1/notification-customer-preferences/*")
+                        .hasAuthority("NOTIFICATION_RULE_VIEW")
+                        .requestMatchers(HttpMethod.PUT, "/notification-customer-preferences/*",
+                                "/v1/notification-customer-preferences/*")
+                        .hasAuthority("NOTIFICATION_RULE_MANAGE")
                         .requestMatchers(HttpMethod.GET, "/notification-event-catalogue", "/notification-templates", "/notification-templates/*")
                         .hasAuthority("NOTIFICATION_RULE_VIEW")
                         .requestMatchers(HttpMethod.POST, "/notification-rules")
@@ -301,9 +392,10 @@ class SecurityConfig {
                                 "/fuel-purchases/**", "/fuel-prices/**", "/vendors/**",
                                 "/bunker-tanks/**", "/bunker-transfers/**",
                                 "/dashboard/**", "/reports/**",
-                                "/notification-rules/**", "/notification-rule-executions/**", "/notification-deliveries/**", "/notification-event-catalogue/**", "/notification-templates/**",
+                                "/v1/deliveries/**",
+                                "/notification-rules/**", "/notification-rule-executions/**", "/notification-deliveries/**", "/notification-customer-preferences/**", "/notification-event-catalogue/**", "/notification-templates/**",
                                 "/notifications/**", "/offline-sync/**").denyAll()
-                        .anyRequest().authenticated())
+                        .anyRequest().denyAll())
                 .addFilterBefore(jwt, UsernamePasswordAuthenticationFilter.class)
                 .build();
     }

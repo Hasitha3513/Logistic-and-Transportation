@@ -67,4 +67,19 @@ public class ModuleBoundaryArchitectureTest {
                 .because("Freight must use organization-owned public lookup contracts")
                 .check(importedClasses);
     }
+
+    @Test
+    void deliveryMustNotDirectlyAccessOtherModuleInternals() {
+        noClasses()
+                .that().resideInAPackage("..delivery..")
+                .should().dependOnClassesThat().resideInAnyPackage(
+                        "..freight..adapters..", "..freight..application..", "..freight..domain..",
+                        "..trip..infrastructure..", "..trip..application..", "..trip..domain..",
+                        "..routing..infrastructure..", "..routing..application..", "..routing..domain..",
+                        "..organization..infrastructure..", "..organization..application..", "..organization..domain..",
+                        "..notification..infrastructure..", "..notification..application..", "..notification..domain..",
+                        "..offlinesync..infrastructure..", "..offlinesync..application..", "..offlinesync..domain..")
+                .because("Delivery must consume external facts through public contracts or Delivery-owned ports")
+                .check(importedClasses);
+    }
 }

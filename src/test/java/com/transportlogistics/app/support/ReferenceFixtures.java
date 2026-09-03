@@ -47,14 +47,16 @@ public final class ReferenceFixtures {
     }
 
     public static void userReference(JdbcTemplate jdbc, UUID userId) {
-        var now = java.time.OffsetDateTime.parse("2026-01-01T00:00:00Z");
-        jdbc.update("""
-                INSERT INTO app_user
-                    (id, username, email, password_hash, first_name, last_name, active, created_at, updated_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-                ON CONFLICT (id) DO NOTHING
-                """, userId, "user-" + shortId(userId), "user-" + shortId(userId) + "@test.example",
-                "hash", "Test", "User", true, now, now);
+        Integer count = jdbc.queryForObject("SELECT count(*) FROM app_user WHERE id = ?", Integer.class, userId);
+        if (count == null || count == 0) {
+            var now = java.time.OffsetDateTime.parse("2026-01-01T00:00:00Z");
+            jdbc.update("""
+                    INSERT INTO app_user
+                        (id, username, email, password_hash, first_name, last_name, active, created_at, updated_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """, userId, "user-" + shortId(userId), "user-" + shortId(userId) + "@test.example",
+                    "hash", "Test", "User", true, now, now);
+        }
     }
 
     public static void tripLocations(JdbcTemplate jdbc, Trip trip) {

@@ -4,29 +4,29 @@ import com.transportlogistics.app.fleet.VehicleMeterResetRecorded;
 import com.transportlogistics.app.fleet.VehicleReadingCorrected;
 import com.transportlogistics.app.fleet.VehicleReadingRecorded;
 import com.transportlogistics.app.fleet.application.ports.out.VehicleReadingEventPublisher;
-import org.springframework.context.ApplicationEventPublisher;
+import com.transportlogistics.app.shared.AfterCommitEventPublisher;
 import org.springframework.stereotype.Component;
 
 @Component
 class SpringVehicleReadingEventPublisher implements VehicleReadingEventPublisher {
-    private final ApplicationEventPublisher publisher;
+    private final AfterCommitEventPublisher publisher;
 
-    SpringVehicleReadingEventPublisher(ApplicationEventPublisher publisher) {
+    SpringVehicleReadingEventPublisher(AfterCommitEventPublisher publisher) {
         this.publisher = publisher;
     }
 
     @Override
     public void publishAfterCommit(VehicleReadingRecorded event) {
-        publisher.publishEvent(event);
+        publisher.publish(event);
     }
 
     @Override
     public void publishAfterCommit(VehicleReadingCorrected event) {
-        publisher.publishEvent(event);
+        publisher.publish(event);
     }
 
     @Override
     public void publishAfterCommit(VehicleMeterResetRecorded event) {
-        publisher.publishEvent(event);
+        publisher.publish(event);
     }
 }

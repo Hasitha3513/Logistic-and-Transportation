@@ -15,8 +15,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 class FleetOperationalNotificationEventsTest {
     private final OffsetDateTime now = OffsetDateTime.parse("2026-08-22T00:00:00Z");
     private final LocalDate today = LocalDate.of(2026, 8, 22);
-    private final Vehicle vehicle = new Vehicle(UUID.randomUUID(), "WP-ABC-1234", "C", "E", null,
-        null, "Maker", "Model", 2024, "OWNED", "AVAILABLE", 1d, 1d, 1000d, true);
+    private final Vehicle vehicle = new Vehicle(UUID.randomUUID(), "WP-ABC-1234", "C", "E", UUID.randomUUID(),
+        UUID.randomUUID(), "Maker", "Model", 2024, "OWNED", "AVAILABLE", 1d, 1d, 1000d, true);
     private final Driver driver = new Driver(UUID.randomUUID(), "EMP-1", "Jane", "Doe", "1",
         "jane@example.test", "AVAILABLE", true);
 
