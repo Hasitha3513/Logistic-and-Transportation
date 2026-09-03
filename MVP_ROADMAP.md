@@ -20,8 +20,8 @@
 > - **MVP 1.4 Last-Mile Delivery:** 8 / 8 COMPLETE (US-63 through US-70 Accepted & Closed)
 > - **Overall Release Band:** 66 / 87 COMPLETE (21 REPRIORITIZED / 87 TOTAL)
 > - **Current Milestone:** MVP 1.4 Last-Mile Delivery — 8 / 8 COMPLETE, 100%, CLOSED.
-> - **Active Focus:** US-73 external integrations are independently accepted and COMPLETE; Wave A continues with US-78 product decisions.
-> - **Immediate Next Action:** Execute `US-78-OPERATIONAL-EXCEPTIONS-PRODUCT-DECISIONS-001`.
+> - **Active Focus:** US-73 external integrations are independently accepted and COMPLETE; US-78 product decisions are frozen and implementation has not started.
+> - **Immediate Next Action:** Execute `US-78-OPERATIONAL-EXCEPTIONS-IMPLEMENTATION-001`.
 
 ---
 
@@ -212,7 +212,7 @@ Development startup now consistently provisions the idempotent PostgreSQL sample
 | `US-75` | Maintain Audit and Reports | Comprehensive audit log trail, CSV exports | 🟢 `COMPLETE` | `AuditLogTest`, `AuditReportTest` |
 | `US-76` | Support Mobile Operations | Driver, dispatcher and delivery mobile workflows with offline, camera/signature, push and device health | 🟡 `WAVE D / BLOCKED_BY_DEPENDENCY` | PWA/native and device/provider decisions required |
 | `US-77` | Manage Notification Rules | Rule-based alerts, multi-channel dispatch | 🟢 `COMPLETE` | `NotificationRuleTest`, V28 |
-| `US-78` | Manage Operational Exceptions | Cross-domain classification, assignment, severity, SLA, escalation, corrective action, RCA and closure | 🟡 `WAVE A / READY_FOR_PRODUCT_DECISIONS` | Domain modules retain detection/meaning |
+| `US-78` | Manage Operational Exceptions | Cross-domain classification, assignment, severity, SLA, escalation, corrective action, RCA and closure | 🟡 `WAVE A / PRODUCT_DECISIONS_FROZEN / IMPLEMENTATION_NOT_STARTED` | `docs/full-product/US-78-OPERATIONAL-EXCEPTIONS-PRODUCT-DECISIONS-001.md`; Operations owns lifecycle, domains retain detection/meaning |
 
 ---
 
@@ -235,10 +235,10 @@ Development startup now consistently provisions the idempotent PostgreSQL sample
 
 ```
 Current Status: 66 / 87 COMPLETE; 21 stories remain across Waves A–E
-Queue Head:     US-78-OPERATIONAL-EXCEPTIONS-PRODUCT-DECISIONS-001
+Queue Head:     US-78-OPERATIONAL-EXCEPTIONS-IMPLEMENTATION-001
 ```
 
-1. **Wave A — Integration and exception-control foundations:** US-73 COMPLETE; freeze US-78 operational-exception product decisions next.
+1. **Wave A — Integration and exception-control foundations:** US-73 COMPLETE; US-78 product decisions FROZEN, implementation next.
 2. **Wave B — Fuel control and financial links:** US-37, US-35, US-38, US-46, US-47.
 3. **Wave C — GPS and telematics:** US-48, then US-49/50/51/52/55, then US-53, then US-54.
 4. **Wave D — Compliance and field mobility:** US-72, US-76.
@@ -272,6 +272,8 @@ Detailed dependencies, readiness/done gates, scores, rollback plans, source-pari
   - `US-69`: `docs/mvp/MVP-1.4-US69-DELIVERY-NOTIFICATIONS-FINAL-ACCEPTANCE-001.md`
   - `US-70`: `docs/mvp/MVP-1.4-US70-CUSTOMER-SELF-SERVICE-FINAL-ACCEPTANCE-001.md`
   - `US-73`: `docs/full-product/US-73-EXTERNAL-INTEGRATIONS-FINAL-ACCEPTANCE-001.md`
+- **Frozen Product Decisions:**
+  - `US-78`: `docs/full-product/US-78-OPERATIONAL-EXCEPTIONS-PRODUCT-DECISIONS-001.md`
 - **Implementation Reports:**
   - `US-59`: `docs/mvp/MVP-1.3-US59-FAILED-DELIVERIES-IMPLEMENTATION-001.md`
   - `US-60`: `docs/mvp/MVP-1.3-US60-REDELIVERY-IMPLEMENTATION-001.md`
