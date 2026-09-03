@@ -1,7 +1,7 @@
 # P0-02 Database Table Ownership
 
-Status: Enforced baseline  
-Scope: current Flyway schema through V56  
+Status: Enforced baseline
+Scope: current Flyway schema through V60
 Rule: one table has one owning top-level Spring Modulith module; only that owner may persist or modify it.
 
 `Migration` in the repository column means the table is intentionally managed without a standalone JPA repository (for example a join, collection, counter, or catalogue table). Flyway is the schema deployment mechanism, not a business-data owner.
@@ -95,6 +95,7 @@ Rule: one table has one owning top-level Spring Modulith module; only that owner
 | `notification_rule_execution` | notification | `NotificationRuleExecutionEntity` | `NotificationRuleExecutionJpaRepository` | notification | notification | none | VALID |
 | `notification_delivery_attempt` | notification | `NotificationDeliveryAttemptEntity` | `NotificationDeliveryAttemptJpaRepository` | notification | notification | none | VALID |
 | `offline_sync_operation` | offlinesync | `OfflineSyncOperationEntity` | `OfflineSyncOperationJpaRepository` | offlinesync | offlinesync | logical actor/aggregate IDs | VALID |
+| `integration_outbox_event` | shared | `IntegrationOutboxEventEntity` | `IntegrationOutboxJpaRepository` | shared durable-event publisher/worker | shared durable-event worker | business modules use public technical ports only | VALID |
 
 ## Legacy violations reserved for P0-03
 

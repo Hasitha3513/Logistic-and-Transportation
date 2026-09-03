@@ -1,5 +1,7 @@
 package com.transportlogistics.app.notification;
 
+import com.transportlogistics.app.shared.EventEnvelope;
+
 import java.time.OffsetDateTime;
 import java.util.Map;
 import java.util.UUID;
@@ -16,7 +18,7 @@ public record OperationalNotificationEvent(
     Map<String, String> metadata,
     UUID tenantId,
     int schemaVersion
-) {
+) implements EventEnvelope {
     public OperationalNotificationEvent(UUID eventId, String eventType, String aggregateType, UUID aggregateId,
                                         Severity severity, String title, String message,
                                         OffsetDateTime occurredAt, Map<String, String> metadata) {
@@ -46,8 +48,8 @@ public record OperationalNotificationEvent(
         title = title.trim();
         message = message.trim();
         metadata = metadata != null ? Map.copyOf(metadata) : Map.of();
-        if (schemaVersion < 1) {
-            throw new IllegalArgumentException("Schema version must be positive");
+        if (schemaVersion != 1) {
+            throw new IllegalArgumentException("Operational notification event version must be 1");
         }
     }
 
@@ -76,6 +78,21 @@ public record OperationalNotificationEvent(
     public OperationalNotificationEvent withTenantId(UUID resolvedTenantId) {
         return new OperationalNotificationEvent(eventId, eventType, aggregateType, aggregateId, severity, title,
                 message, occurredAt, metadata, java.util.Objects.requireNonNull(resolvedTenantId), schemaVersion);
+    }
+
+    @Override
+    public int version() {
+        return schemaVersion;
+    }
+
+    @Override
+    public Map<String, ?> payload() {
+        return Map.of(
+            "severity", severity.name(),
+            "title", title,
+            "message", message,
+            "metadata", metadata
+        );
     }
 
     public enum Severity {

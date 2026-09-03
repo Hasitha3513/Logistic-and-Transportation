@@ -1,5 +1,7 @@
 package com.transportlogistics.app.delivery;
 
+import com.transportlogistics.app.shared.DurableEventEnvelope;
+
 import java.time.OffsetDateTime;
 import java.util.Map;
 import java.util.Objects;
@@ -16,7 +18,8 @@ public record DeliveryCustomerNotificationEvent(
     String aggregateType,
     UUID aggregateId,
     Map<String, String> payload
-) {
+) implements DurableEventEnvelope {
+    public static final String DURABLE_CONSUMER = "delivery-customer-notification-bridge";
     private static final Set<String> EVENT_TYPES = Set.of(
         "DELIVERY_OUT_FOR_DELIVERY",
         "DELIVERY_ETA_RISK_CHANGED",
@@ -59,5 +62,10 @@ public record DeliveryCustomerNotificationEvent(
                                                             OffsetDateTime occurredAt, Map<String, String> payload) {
         return new DeliveryCustomerNotificationEvent(UUID.randomUUID(), eventType, tenantId, occurredAt, 1,
             "DELIVERY_ORDER", deliveryOrderId, payload);
+    }
+
+    @Override
+    public String durableConsumer() {
+        return DURABLE_CONSUMER;
     }
 }

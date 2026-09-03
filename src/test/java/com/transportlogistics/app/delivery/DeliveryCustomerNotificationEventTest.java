@@ -27,6 +27,10 @@ class DeliveryCustomerNotificationEventTest {
         assertThat(new DeliveryCustomerNotificationEvent(event.eventId(), event.eventType(), event.tenantId(),
             event.occurredAt(), event.version(), event.aggregateType(), event.aggregateId(), event.payload()))
             .isEqualTo(event);
+        assertThat(event.durableConsumer()).isEqualTo(DeliveryCustomerNotificationEvent.DURABLE_CONSUMER);
+        assertThat(event.payload().toString().toLowerCase())
+            .doesNotContain("password", "jwt", "refresh token", "access_token", "magic link", "access code",
+                "provider credential", "signature", "photo", "medical");
     }
 
     @Test

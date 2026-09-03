@@ -6,7 +6,7 @@
 ![Completed](https://img.shields.io/badge/Completed-65%20%2F%2087-2da44e.svg?style=for-the-badge&logo=checkmarx)
 ![Progress](https://img.shields.io/badge/Progress-74.7%25-brightgreen.svg?style=for-the-badge&logo=speedtest)
 ![MVP 1.4 Closed](https://img.shields.io/badge/MVP%201.4%20Last--Mile-8%20%2F%208-2da44e.svg?style=for-the-badge&logo=pinboard)
-![Database](https://img.shields.io/badge/PostgreSQL%20%2F%20Flyway-V59-8a63d2.svg?style=for-the-badge&logo=postgresql)
+![Database](https://img.shields.io/badge/PostgreSQL%20%2F%20Flyway-V60-8a63d2.svg?style=for-the-badge&logo=postgresql)
 
 </div>
 
@@ -20,8 +20,8 @@
 > - **MVP 1.4 Last-Mile Delivery:** 8 / 8 COMPLETE (US-63 through US-70 Accepted & Closed)
 > - **Overall Release Band:** 65 / 87 COMPLETE (22 DEFERRED / 87 TOTAL)
 > - **Current Milestone:** MVP 1.4 Last-Mile Delivery — 8 / 8 COMPLETE, 100%, CLOSED.
-> - **Active Focus:** `P1-01` recommended architecture batch from the authoritative queue.
-> - **Immediate Next Action:** Execute `P1-01` only after its architecture scope is approved.
+> - **Active Focus:** P1-01 event durability and envelope hardening is complete.
+> - **Immediate Next Action:** Execute `DEFERRED-BACKLOG-REPRIORITIZATION-001`.
 
 ---
 
@@ -70,6 +70,7 @@ MVP 1.4 Band:     [████████████████████�
 | `P0-05` | Harden Tenant-aware RBAC, contextual identity administration, privilege ceilings, and fail-closed HTTP authorization | ✅ `COMPLETE` | Focused authorization/architecture gate 72/72 PASS; Delivery PostgreSQL fixtures aligned with the canonical Tenant context; full Java 21 suite 1,180 PASS with 31 existing skips |
 | `P0-06` | Correct aggregate-root identity/reference invariants and prevent unreviewed JPA aggregate graphs or cascades | ✅ `COMPLETE` | Focused domain/application/architecture gate 52/52 PASS; full Java 21 suite 1,185 PASS with 31 existing skips; no API/schema/event change |
 | `P0-07` | Harden owning-module ACID transactions, after-commit local events, consumer failure isolation, Tenant event identity, and durable-integration decisions | ✅ `COMPLETE` | Focused consistency tests 46/46 and architecture/Modulith tests 42/42 PASS; full Java 21 suite 1,191 PASS with 31 existing conditional skips; no REST/schema/broker change |
+| `P1-01` | Classify actual event usage, standardize consumed envelopes, and add one Tenant-scoped durable internal outbox boundary only where required | ✅ `COMPLETE` | 32 events classified; focused 52/52, PostgreSQL 7/7, architecture 45/45, full Java 21 suite 1,250 PASS with 15 conditional skips; V60 shared outbox; no broker/API/frontend change |
 
 Development startup now consistently provisions the idempotent PostgreSQL sample fixture after Flyway when `run.sh` launches either the Docker stack or local PostgreSQL mode. H2 test startup continues to use the H2-specific fixture; this operational correction does not add a remediation batch or alter story accounting.
 
@@ -234,11 +235,11 @@ Development startup now consistently provisions the idempotent PostgreSQL sample
 
 ```
 Current Status: MVP 1.4 (Last-Mile Delivery) 8 / 8 COMPLETE — CLOSED
-Queue Head:     P1-01 (recommended architecture batch; scope approval required)
+Queue Head:     DEFERRED-BACKLOG-REPRIORITIZATION-001
 ```
 
-1. **`P1-01` (recommended architecture batch):**
-   - Modernize only legacy event contracts that acquire real consumers: complete Tenant/version envelopes and approve a database outbox/inbox boundary before claiming durable external delivery.
+1. **`DEFERRED-BACKLOG-REPRIORITIZATION-001`:**
+   - Reassess the 22 approved post-MVP deferments and select the next explicitly authorized delivery batch without changing the frozen US-01..US-87 register.
 
 ---
 

@@ -60,6 +60,9 @@ security:
     secret: ${JWT_SECRET:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef}
 
 app:
+  integration:
+    outbox:
+      enabled: false
   delivery:
     self-service:
       customer-origin: http://localhost:5173
