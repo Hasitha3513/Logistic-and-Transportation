@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.IntStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -124,9 +125,92 @@ class FuelPerformanceServiceTest {
         var criteria = new FuelPerformanceQuery.Criteria(7, null, null, VEHICLE, null, null, "DIESEL",
                 FuelPerformanceQuery.MeasurementMode.DISTANCE);
         var trends = service.trends(criteria);
-        assertThat(trends).hasSize(2);
-        assertThat(trends.get(1).indicators()).contains(
+        assertThat(trends).hasSize(7);
+        assertThat(trends.get(trends.size() - 1).indicators()).contains(
                 FuelPerformanceQuery.Indicator.POSSIBLE_LEAKAGE_INDICATOR);
+    }
+
+    @Test
+    void leakageBoundaryRequiresTwoConsecutiveBucketsAtExactlyThirtyPercent() {
+        repository.values.add(issue("2026-08-23T00:00:00Z", "10", "0", null));
+        repository.values.add(issue("2026-08-25T00:00:00Z", "10", "150", null));
+        repository.values.add(issue("2026-08-27T00:00:00Z", "10", "300", null));
+        repository.values.add(issue("2026-09-03T01:00:00Z", "6.4995", "300", null));
+        repository.values.add(issue("2026-09-03T20:00:00Z", "6.4995", "400", null));
+        repository.values.add(issue("2026-09-04T01:00:00Z", "6.500", "400", null));
+        repository.values.add(issue("2026-09-04T20:00:00Z", "6.500", "500", null));
+
+        var trends = service.trends(new FuelPerformanceQuery.Criteria(7, null, null, VEHICLE, null, null,
+                "DIESEL", FuelPerformanceQuery.MeasurementMode.DISTANCE));
+
+        var below = trends.get(trends.size() - 2);
+        var boundary = trends.get(trends.size() - 1);
+        assertThat(below.percentChange()).isEqualByComparingTo("29.99");
+        assertThat(below.indicators()).doesNotContain(FuelPerformanceQuery.Indicator.POSSIBLE_LEAKAGE_INDICATOR);
+        assertThat(boundary.percentChange()).isEqualByComparingTo("30.00");
+        assertThat(boundary.indicators()).doesNotContain(FuelPerformanceQuery.Indicator.POSSIBLE_LEAKAGE_INDICATOR);
+
+        repository.values.set(repository.values.size() - 4,
+                issue("2026-09-03T01:00:00Z", "6.500", "300", null));
+        repository.values.set(repository.values.size() - 3,
+                issue("2026-09-03T20:00:00Z", "6.500", "400", null));
+        trends = service.trends(new FuelPerformanceQuery.Criteria(7, null, null, VEHICLE, null, null,
+                "DIESEL", FuelPerformanceQuery.MeasurementMode.DISTANCE));
+        assertThat(trends.get(trends.size() - 1).indicators()).contains(
+                FuelPerformanceQuery.Indicator.POSSIBLE_LEAKAGE_INDICATOR,
+                FuelPerformanceQuery.Indicator.REVIEW_REQUIRED);
+    }
+
+    @Test
+    void missingTrendBucketsAreExplicitInsufficientGapsRatherThanZero() {
+        baseline("100", "10");
+        repository.values.add(issue("2026-09-04T01:00:00Z", "5", "300", null));
+        repository.values.add(issue("2026-09-04T20:00:00Z", "5", "400", null));
+
+        var trends = service.trends(new FuelPerformanceQuery.Criteria(7, null, null, VEHICLE, null, null,
+                "DIESEL", FuelPerformanceQuery.MeasurementMode.DISTANCE));
+
+        assertThat(trends).hasSize(7);
+        assertThat(trends.subList(0, 6)).allSatisfy(gap -> {
+            assertThat(gap.quality()).isEqualTo(FuelPerformanceQuery.DataQuality.INSUFFICIENT);
+            assertThat(gap.actualRate()).isNull();
+        });
+    }
+
+    @Test
+    void paginatesRepresentativeOneHundredAndOneVehicleComparisonRowsWithStableTieBreak() {
+        var vehicles = IntStream.range(0, 101).mapToObj(index -> new FuelPerformanceContextPort.VehicleContext(
+                new UUID(0, 10_000L + index), "Vehicle " + index, TYPE, true)).toList();
+        FuelPerformanceContextPort contexts = new FuelPerformanceContextPort() {
+            public Map<UUID, VehicleContext> vehicles(Set<UUID> ids) {
+                return vehicles.stream().filter(vehicle -> ids.contains(vehicle.id()))
+                        .collect(java.util.stream.Collectors.toMap(VehicleContext::id, value -> value));
+            }
+            public Map<UUID, DriverContext> drivers(Set<UUID> ids) { return Map.of(); }
+            public Map<UUID, TripContext> trips(Set<UUID> ids) { return Map.of(); }
+        };
+        var paginationService = new FuelPerformanceService(repository, contexts,
+                () -> new FuelPerformanceTenantPort.TenantContext(UUID.randomUUID(), "UTC", "LKR"),
+                Clock.fixed(Instant.parse("2026-09-04T12:00:00Z"), ZoneOffset.UTC));
+        for (var vehicle : vehicles) {
+            addVehicleIssue(vehicle.id(), "2026-07-10T00:00:00Z", "10", "0");
+            addVehicleIssue(vehicle.id(), "2026-07-20T00:00:00Z", "10", "100");
+            addVehicleIssue(vehicle.id(), "2026-08-01T00:00:00Z", "10", "200");
+            addVehicleIssue(vehicle.id(), "2026-08-10T00:00:00Z", "10", "300");
+            addVehicleIssue(vehicle.id(), "2026-08-20T00:00:00Z", "10", "400");
+            addVehicleIssue(vehicle.id(), "2026-09-01T00:00:00Z", "10", "500");
+        }
+
+        var first = paginationService.vehicles(new FuelPerformanceQuery.Criteria(30, null, null, null, null,
+                null, "DIESEL", FuelPerformanceQuery.MeasurementMode.DISTANCE), 0, 100, "sampleCount", "asc");
+        var second = paginationService.vehicles(new FuelPerformanceQuery.Criteria(30, null, null, null, null,
+                null, "DIESEL", FuelPerformanceQuery.MeasurementMode.DISTANCE), 1, 100, "sampleCount", "asc");
+
+        assertThat(first.content()).hasSize(100);
+        assertThat(second.content()).hasSize(1);
+        assertThat(first.totalElements()).isEqualTo(101);
+        assertThat(first.totalPages()).isEqualTo(2);
+        assertThat(first.content().get(99).vehicleId()).isLessThan(second.content().get(0).vehicleId());
     }
 
     @Test
@@ -159,8 +243,10 @@ class FuelPerformanceServiceTest {
         service.summary(criteria(FuelPerformanceQuery.MeasurementMode.DISTANCE));
         service.vehicles(criteria(FuelPerformanceQuery.MeasurementMode.DISTANCE), 0, 20,
                 "consumptionRate", "asc");
+        service.vehicle(VEHICLE, criteria(FuelPerformanceQuery.MeasurementMode.DISTANCE));
         service.drivers(criteria(FuelPerformanceQuery.MeasurementMode.DISTANCE), 0, 20,
                 "sampleCount", "desc");
+        service.driver(DRIVER, criteria(FuelPerformanceQuery.MeasurementMode.DISTANCE));
         service.trends(criteria(FuelPerformanceQuery.MeasurementMode.DISTANCE));
         assertThat(repository.values).containsExactlyElementsOf(before);
     }
@@ -208,13 +294,24 @@ class FuelPerformanceServiceTest {
                 OffsetDateTime.parse(date), OffsetDateTime.parse(date));
     }
 
+    private void addVehicleIssue(UUID vehicleId, String date, String quantity, String odometer) {
+        var value = new BigDecimal(quantity);
+        repository.values.add(new FuelIssue(UUID.randomUUID(), "FI-" + repository.values.size(), vehicleId,
+                null, null, "DIESEL", value, new BigDecimal("100"), value.multiply(new BigDecimal("100")),
+                UUID.randomUUID(), new BigDecimal(odometer), null, OffsetDateTime.parse(date),
+                FuelIssueStatus.ISSUED, UUID.randomUUID(), UUID.randomUUID(), OffsetDateTime.parse(date), null,
+                OffsetDateTime.parse(date), OffsetDateTime.parse(date)));
+    }
+
     private static BigDecimal decimal(String value) {
         return value == null ? null : new BigDecimal(value);
     }
 
     private static final class InMemoryIssues implements FuelIssueRepository {
         private final List<FuelIssue> values = new ArrayList<>();
-        public List<FuelIssue> findIssuedBetween(OffsetDateTime from, OffsetDateTime to) { return List.copyOf(values); }
+        public List<FuelIssue> findIssuedBetween(OffsetDateTime from, OffsetDateTime to, int limit) {
+            return values.stream().limit(limit).toList();
+        }
         public FuelIssue save(FuelIssue issue) { throw new UnsupportedOperationException(); }
         public Optional<FuelIssue> findById(UUID id) { return Optional.empty(); }
         public Optional<FuelIssue> findByIdForUpdate(UUID id) { return Optional.empty(); }

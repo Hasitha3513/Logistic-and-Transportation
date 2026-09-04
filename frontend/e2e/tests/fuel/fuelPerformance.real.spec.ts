@@ -41,7 +41,7 @@ test.describe.serial('US-37 real PostgreSQL fuel performance acceptance', () => 
     expect(types.length).toBeGreaterThan(0);
     vehicleIds = [];
     driverIds = [];
-    for (let index = 0; index < 3; index++) {
+    for (let index = 0; index < 101; index++) {
       const vehicle = await api.post('/api/vehicles', { data: {
         registrationNumber: `US37-${suffix}-${index}`.toUpperCase(),
         categoryId: categories[0].id, typeId: types[0].id,
@@ -52,6 +52,7 @@ test.describe.serial('US-37 real PostgreSQL fuel performance acceptance', () => 
       } });
       expect(vehicle.status(), await vehicle.text()).toBe(201);
       vehicleIds.push((await vehicle.json() as Entity).id);
+      if (index >= 3) continue;
       const driver = await api.post('/api/drivers', { data: {
         employeeNumber: `US37-${suffix}-${index}`.toUpperCase(), firstName: 'US37',
         lastName: `Driver ${index + 1}`, status: 'AVAILABLE', active: true,
@@ -61,7 +62,7 @@ test.describe.serial('US-37 real PostgreSQL fuel performance acceptance', () => 
     }
     const stations = entities(await stationsResponse.json());
     const me = await meResponse.json() as { id: string; permissions: string[] };
-    expect(vehicleIds).toHaveLength(3);
+    expect(vehicleIds).toHaveLength(101);
     expect(driverIds).toHaveLength(3);
     expect(stations.length).toBeGreaterThan(0);
     expect(me.permissions).toContain('FUEL_PERFORMANCE_VIEW');
@@ -72,7 +73,7 @@ test.describe.serial('US-37 real PostgreSQL fuel performance acceptance', () => 
     const fixtureBody = await fixture.json() as { issueIds: string[]; fuelType: string };
     issueIds = fixtureBody.issueIds;
     fuelType = fixtureBody.fuelType;
-    expect(issueIds.length).toBeGreaterThanOrEqual(35);
+    expect(issueIds.length).toBeGreaterThanOrEqual(600);
     sourceBefore = await sourceFacts(api);
     const tenant = await api.post('/api/e2e/tenant-fixtures', { data: { suffix } });
     expect(tenant.status(), await tenant.text()).toBe(201);
@@ -86,7 +87,7 @@ test.describe.serial('US-37 real PostgreSQL fuel performance acceptance', () => 
     const response = await api.get(`/api/v1/fuel/performance/summary?preset=7&measurementMode=DISTANCE&fuelType=${fuelType}`);
     expect(response.status(), await response.text()).toBe(200);
     const summary = await response.json() as { vehicleCount: number; driverCount: number; period: { timeZone: string } };
-    expect(summary.vehicleCount).toBeGreaterThanOrEqual(3);
+    expect(summary.vehicleCount).toBeGreaterThanOrEqual(101);
     expect(summary.driverCount).toBeGreaterThanOrEqual(3);
     expect(summary.period.timeZone).toBeTruthy();
     await authenticatePage(page, admin);
@@ -114,6 +115,10 @@ test.describe.serial('US-37 real PostgreSQL fuel performance acceptance', () => 
     expect(list.status(), await list.text()).toBe(200);
     const body = await list.json() as Page<{ vehicleId: string; metrics: { sampleCount: number } }>;
     expect(body.content).toHaveLength(2);
+    expect(body.totalElements).toBeGreaterThanOrEqual(101);
+    const lastPage = await api.get(`/api/v1/fuel/performance/vehicles?preset=7&measurementMode=DISTANCE&page=1&size=100&sort=sampleCount&direction=asc&fuelType=${fuelType}`);
+    expect(lastPage.status(), await lastPage.text()).toBe(200);
+    expect((await lastPage.json() as Page<unknown>).content.length).toBeGreaterThanOrEqual(1);
     const detail = await api.get(`/api/v1/fuel/performance/vehicles/${body.content[0].vehicleId}?preset=7&measurementMode=DISTANCE&fuelType=${fuelType}`);
     expect(detail.status(), await detail.text()).toBe(200);
     expect((await detail.json() as { metrics: { sampleCount: number } }).metrics.sampleCount).toBeGreaterThan(0);
@@ -151,6 +156,8 @@ test.describe.serial('US-37 real PostgreSQL fuel performance acceptance', () => 
     const other = await authorized(tenantB);
     const foreign = await other.get(`/api/v1/fuel/performance/vehicles/${vehicleIds[0]}?preset=7`);
     expect(foreign.status()).toBe(404);
+    const foreignDriver = await other.get(`/api/v1/fuel/performance/drivers/${driverIds[0]}?preset=7`);
+    expect(foreignDriver.status()).toBe(404);
     const otherSummary = await other.get('/api/v1/fuel/performance/summary?preset=7');
     expect(otherSummary.status(), await otherSummary.text()).toBe(200);
     expect((await otherSummary.json() as { vehicleCount: number }).vehicleCount).toBe(0);
@@ -170,10 +177,15 @@ test.describe.serial('US-37 real PostgreSQL fuel performance acceptance', () => 
   }
 
   async function sourceFacts(api: Awaited<ReturnType<typeof request.newContext>>) {
-    const response = await api.get(`/api/fuel-issues?limit=100&voucherNumber=US37-${suffix}`);
-    expect(response.status(), await response.text()).toBe(200);
-    const body = await response.json() as Page<Record<string, unknown>>;
-    return body.content.filter(item => issueIds.includes(String(item.id)))
+    const facts: Record<string, unknown>[] = [];
+    for (let page = 0; ; page++) {
+      const response = await api.get(`/api/fuel-issues?page=${page}&limit=100&voucherNumber=US37-${suffix}`);
+      expect(response.status(), await response.text()).toBe(200);
+      const body = await response.json() as Page<Record<string, unknown>> & { totalPages: number };
+      facts.push(...body.content);
+      if (page + 1 >= body.totalPages) break;
+    }
+    return facts.filter(item => issueIds.includes(String(item.id)))
       .sort((left, right) => String(left.id).localeCompare(String(right.id)));
   }
 

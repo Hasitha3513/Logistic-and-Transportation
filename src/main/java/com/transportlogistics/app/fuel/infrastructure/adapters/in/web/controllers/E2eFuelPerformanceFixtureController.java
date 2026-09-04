@@ -59,8 +59,21 @@ public class E2eFuelPerformanceFixtureController {
                 }
             }
         }
+        for (int vehicleIndex = 3; vehicleIndex < request.vehicleIds().size(); vehicleIndex++) {
+            var vehicleId = request.vehicleIds().get(vehicleIndex);
+            BigDecimal odometer = BigDecimal.valueOf(100_000L + vehicleIndex * 1_000L);
+            for (int offset : List.of(13, 10, 8, 6, 3, 0)) {
+                created.add(save(request, vehicleId, null, today.minusDays(offset), 8,
+                        odometer, null, new BigDecimal("5.000"), fuelType));
+                odometer = odometer.add(new BigDecimal("100.000"));
+            }
+        }
         created.add(save(request, request.vehicleIds().get(2), request.driverIds().get(2), today, 20,
                 null, null, new BigDecimal("2.000"), "PETROL"));
+        created.add(save(request, request.vehicleIds().get(2), request.driverIds().get(2), today.minusDays(1), 20,
+                new BigDecimal("999999.000"), null, new BigDecimal("2.000"), "PETROL"));
+        created.add(save(request, request.vehicleIds().get(2), request.driverIds().get(2), today, 21,
+                new BigDecimal("999000.000"), null, new BigDecimal("2.000"), "PETROL"));
         return new FixtureResponse(List.copyOf(created), fuelType);
     }
 

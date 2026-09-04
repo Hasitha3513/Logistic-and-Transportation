@@ -19,7 +19,7 @@ public interface FuelIssueRepository {
 
     List<FuelIssue> findByTripId(UUID tripId);
 
-    List<FuelIssue> findIssuedBetween(OffsetDateTime fromInclusive, OffsetDateTime toExclusive);
+    List<FuelIssue> findIssuedBetween(OffsetDateTime fromInclusive, OffsetDateTime toExclusive, int limit);
 
     boolean existsByVoucherNumber(String voucherNumber);
 }

@@ -44,8 +44,9 @@ class FuelIssuePersistenceAdapter implements FuelIssueRepository {
 
     @Override
     public java.util.List<FuelIssue> findIssuedBetween(java.time.OffsetDateTime fromInclusive,
-                                                       java.time.OffsetDateTime toExclusive) {
-        return repository.findIssuedBetween(fromInclusive, toExclusive).stream().map(this::map).toList();
+                                                       java.time.OffsetDateTime toExclusive, int limit) {
+        return repository.findIssuedBetween(fromInclusive, toExclusive, PageRequest.of(0, limit)).stream()
+                .map(this::map).toList();
     }
 
     @Override

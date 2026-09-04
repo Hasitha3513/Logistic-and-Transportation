@@ -3,10 +3,10 @@
 <div align="center">
 
 ![Total Stories](https://img.shields.io/badge/Total%20Stories-87-0969da.svg?style=for-the-badge&logo=target)
-![Completed](https://img.shields.io/badge/Completed-66%20%2F%2087-2da44e.svg?style=for-the-badge&logo=checkmarx)
-![Progress](https://img.shields.io/badge/Progress-75.9%25-brightgreen.svg?style=for-the-badge&logo=speedtest)
+![Completed](https://img.shields.io/badge/Completed-67%20%2F%2087-2da44e.svg?style=for-the-badge&logo=checkmarx)
+![Progress](https://img.shields.io/badge/Progress-77.0%25-brightgreen.svg?style=for-the-badge&logo=speedtest)
 ![MVP 1.4 Closed](https://img.shields.io/badge/MVP%201.4%20Last--Mile-8%20%2F%208-2da44e.svg?style=for-the-badge&logo=pinboard)
-![Database](https://img.shields.io/badge/PostgreSQL%20%2F%20Flyway-V62-8a63d2.svg?style=for-the-badge&logo=postgresql)
+![Database](https://img.shields.io/badge/PostgreSQL%20%2F%20Flyway-V63-8a63d2.svg?style=for-the-badge&logo=postgresql)
 
 </div>
 
@@ -21,7 +21,7 @@
 > - **Overall Release Band:** 67 / 87 COMPLETE (20 REPRIORITIZED / 87 TOTAL)
 > - **Current Milestone:** MVP 1.4 Last-Mile Delivery — 8 / 8 COMPLETE, 100%, CLOSED.
 > - **Active Focus:** Wave A is 2 / 2 COMPLETE and closed after independent US-78 acceptance.
-> - **Immediate Next Action:** Execute `US-37-FUEL-PERFORMANCE-TECHNICAL-CLOSURE-001`.
+> - **Immediate Next Action:** Execute `US-37-FUEL-PERFORMANCE-FINAL-ACCEPTANCE-001`.
 
 ---
 
@@ -35,14 +35,14 @@ MVP 1.4 Band:     [████████████████████�
 
 | Metric | Target | Current Count | Percentage | Status Indicator |
 | :--- | :---: | :---: | :---: | :--- |
-| **Completed Stories (Accepted)** | 87 | **66** | `75.9%` | 🟢 `ON TRACK / VERIFIED` |
+| **Completed Stories (Accepted)** | 87 | **67** | `77.0%` | 🟢 `ON TRACK / VERIFIED` |
 | **Next Active / Acceptance Required** | — | **0** | `0.0%` | 🟢 `NONE` |
 | **Not Started (MVP 1.4 Active Scope)** | 1 | **0** | `0.0%` | 🟢 `NONE` |
-| **Reprioritized Remaining Stories** | 21 | **21** | `24.1%` | 🟡 `PLANNED IN GOVERNED WAVES` |
+| **Reprioritized Remaining Stories** | 20 | **20** | `23.0%` | 🟡 `PLANNED IN GOVERNED WAVES` |
 | **Total Registered User Stories** | **87** | **87** | **`100%`** | 🔒 `FROZEN REGISTER (US-01..US-87)` |
 
 > [!NOTE]
-> Stories `US-88`, `US-89`, and `US-90` are strictly undefined. The story accounting register is bounded exactly from `US-01` through `US-87` (`66 COMPLETE + 21 REMAINING = 87`).
+> Stories `US-88`, `US-89`, and `US-90` are strictly undefined. The story accounting register is bounded exactly from `US-01` through `US-87` (`67 COMPLETE + 20 REMAINING = 87`).
 
 ---
 
@@ -141,7 +141,7 @@ Development startup now consistently provisions the idempotent PostgreSQL sample
 | `US-34` | Manage Bunker Fuel Stock | Internal tank dip readings, stock replenishment | 🟢 `COMPLETE` | `BunkerStockTest`, V34 |
 | `US-35` | Manage Fuel Cards | Card issuance, restrictions, imported transactions, reconciliation and misuse control | 🟡 `WAVE B / READY_FOR_PRODUCT_DECISIONS` | Full-product roadmap |
 | `US-36` | Calculate Trip Fuel Costs | Trip-level fuel expense aggregation | 🟢 `COMPLETE` | `TripFuelCostTest`, V35 |
-| `US-37` | Analyze Fuel Performance | Vehicle/driver efficiency, anomaly and leakage analysis without changing raw fuel data | 🟡 `IMPLEMENTATION_COMPLETE / ACCEPTANCE_PENDING` | V63; Maven 1,307/0/0/15; Chromium 6/6; `US-37-FUEL-PERFORMANCE-IMPLEMENTATION-001.md` |
+| `US-37` | Analyze Fuel Performance | Vehicle/driver efficiency, anomaly and leakage analysis without changing raw fuel data | 🟡 `IMPLEMENTATION_COMPLETE / ACCEPTANCE_PENDING` | Technical closure PASS; V63; Maven 1,310/0/0/15; Chromium 6/6; `US-37-FUEL-PERFORMANCE-TECHNICAL-CLOSURE-001.md` |
 | `US-38` | Handle Fuel Exceptions | Theft, wrong readings, price swings, emergency refuel, card misuse and negative balances | 🟡 `WAVE B / BLOCKED_BY_DEPENDENCY` | Requires US-35 and US-78 contracts |
 
 ---
@@ -235,7 +235,7 @@ Development startup now consistently provisions the idempotent PostgreSQL sample
 
 ```
 Current Status: 67 / 87 COMPLETE; 20 stories remain across Waves B–E
-Queue Head:     US-37-FUEL-PERFORMANCE-TECHNICAL-CLOSURE-001
+Queue Head:     US-37-FUEL-PERFORMANCE-FINAL-ACCEPTANCE-001
 ```
 
 1. **Wave A — Integration and exception-control foundations:** 2 / 2 COMPLETE / CLOSED (US-73 and US-78).

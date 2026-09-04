@@ -31,6 +31,7 @@ public final class FuelPerformanceService implements FuelPerformanceQuery {
     private static final BigDecimal HUNDRED = new BigDecimal("100");
     private static final BigDecimal DEVIATION_THRESHOLD = new BigDecimal("20.00");
     private static final BigDecimal LEAKAGE_THRESHOLD = new BigDecimal("30.00");
+    private static final int MAX_SOURCE_ROWS = 100_000;
     private static final Set<String> SORTS = Set.of("consumptionRate", "adverseVariancePercent", "fuelQuantity",
             "distanceKm", "engineHours", "cost", "sampleCount");
 
@@ -114,20 +115,22 @@ public final class FuelPerformanceService implements FuelPerformanceQuery {
                 LinkedHashMap::new, Collectors.toList()));
         var baselineMetrics = calculate(data.baseline(), List.of(), data.criteria().measurementMode(),
                 null, data.tenant().currency());
+        var baselineRate = baselineRate(data.baseline(), data.criteria().measurementMode());
         var results = new ArrayList<FuelPerformanceTrend>();
-        for (var entry : buckets.entrySet().stream().sorted(Map.Entry.comparingByKey()).toList()) {
-            var end = bucketEnd(entry.getKey(), grain, data.period().to());
-            var metric = calculate(entry.getValue(), List.of(), data.criteria().measurementMode(),
+        for (var start : bucketStarts(data.period(), grain)) {
+            var end = bucketEnd(start, grain, data.period().to());
+            var metric = calculate(buckets.getOrDefault(start, List.of()), List.of(), data.criteria().measurementMode(),
                     null, data.tenant().currency());
-            var change = variance(metric.consumptionRate(), baselineMetrics.consumptionRate());
+            var change = variance(consumptionRate(buckets.getOrDefault(start, List.of()),
+                    data.criteria().measurementMode()), baselineRate);
             var quality = metric.consumptionRate() == null || baselineMetrics.consumptionRate() == null
                     ? DataQuality.INSUFFICIENT
                     : metric.excludedQuantity().compareTo(BigDecimal.ZERO) > 0 || metric.unpricedCount() > 0
                     ? DataQuality.PARTIAL : DataQuality.COMPLETE;
             var indicators = change != null && change.compareTo(DEVIATION_THRESHOLD) >= 0
                     ? List.of(Indicator.EFFICIENCY_DEVIATION, Indicator.REVIEW_REQUIRED) : List.<Indicator>of();
-            results.add(new FuelPerformanceTrend(entry.getKey(), end, grain, metric.consumptionRate(),
-                    baselineMetrics.consumptionRate(), change, quality, indicators));
+            results.add(new FuelPerformanceTrend(start, end, grain, metric.consumptionRate(),
+                    baselineMetrics.consumptionRate(), scale(change, 2), quality, indicators));
         }
         markLeakage(results);
         return List.copyOf(results);
@@ -142,7 +145,12 @@ public final class FuelPerformanceService implements FuelPerformanceQuery {
         var zone = zone(tenant);
         var from = baselinePeriod.from().atStartOfDay(zone).toOffsetDateTime();
         var to = range.to().plusDays(1).atStartOfDay(zone).toOffsetDateTime();
-        var all = issues.findIssuedBetween(from, to).stream().filter(issue -> matches(issue, criteria)).toList();
+        var source = issues.findIssuedBetween(from, to, MAX_SOURCE_ROWS + 1);
+        if (source.size() > MAX_SOURCE_ROWS) {
+            throw new BusinessRuleException("FUEL_PERFORMANCE_SOURCE_INVALID",
+                    "Fuel performance source window exceeds the bounded query limit");
+        }
+        var all = source.stream().filter(issue -> matches(issue, criteria)).toList();
         var current = all.stream().filter(issue -> in(issue, range, zone)).toList();
         var baseline = all.stream().filter(issue -> in(issue, baselinePeriod, zone)).toList();
         var vehicleIds = all.stream().map(FuelIssue::vehicleId).filter(Objects::nonNull).collect(Collectors.toSet());
@@ -328,6 +336,13 @@ public final class FuelPerformanceService implements FuelPerformanceQuery {
         return valid.size() >= 3 && positive(denominator) ? divide(sum(valid, FuelIssue::quantity), denominator, 8) : null;
     }
 
+    private static BigDecimal consumptionRate(List<FuelIssue> values, MeasurementMode mode) {
+        var valid = values.stream().filter(issue -> meter(issue, mode) != null).toList();
+        var denominator = delta(valid, mode);
+        return !descending(valid, mode) && positive(denominator)
+                ? divide(sum(valid, FuelIssue::quantity), denominator, 8) : null;
+    }
+
     private static BigDecimal variance(BigDecimal current, BigDecimal baseline) {
         return current == null || !positive(baseline) ? null
                 : current.subtract(baseline).divide(baseline, 8, RoundingMode.HALF_UP).multiply(HUNDRED);
@@ -374,6 +389,19 @@ public final class FuelPerformanceService implements FuelPerformanceQuery {
             case MONTHLY -> start.with(TemporalAdjusters.lastDayOfMonth());
         };
         return end.isAfter(periodEnd) ? periodEnd : end;
+    }
+
+    private static List<LocalDate> bucketStarts(Period period, TrendGrain grain) {
+        var starts = new ArrayList<LocalDate>();
+        var cursor = period.from();
+        LocalDate previous = null;
+        while (!cursor.isAfter(period.to())) {
+            var start = bucketStart(cursor, grain);
+            if (!start.equals(previous)) starts.add(start);
+            previous = start;
+            cursor = cursor.plusDays(1);
+        }
+        return List.copyOf(starts);
     }
 
     private static void markLeakage(List<FuelPerformanceTrend> values) {

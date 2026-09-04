@@ -19,7 +19,7 @@ The public Fuel-root `FuelPerformanceQuery` publishes summary, Vehicle, Driver, 
 - Arithmetic uses `BigDecimal`, source precision during aggregation, `HALF_UP`, and the frozen output scales.
 - Denominators are calculated per Vehicle and then summed, preventing cross-Vehicle meter subtraction.
 - Quality is exactly `COMPLETE`, `PARTIAL`, `INSUFFICIENT`, or `INVALID_SOURCE_DATA`; missing values remain null/`N/A`.
-- Presets are 7/30/90 Tenant-calendar days; custom periods are inclusive and capped at 365 days. Trends are daily, weekly, or monthly according to the frozen window boundaries.
+- Presets are 7/30/90 Tenant-calendar days; custom periods are inclusive and capped at 365 days. Trends are daily, weekly, or monthly according to the frozen window boundaries, including explicit `INSUFFICIENT` null gaps for empty buckets.
 - Historical baseline is the immediately preceding equal-length same-Vehicle/fuel/mode period with at least three valid samples and a positive denominator.
 - Compatible peer comparison is separate and requires at least three active same-Tenant Vehicles of the same type, fuel, and mode.
 - Driver attribution exposes only ID, operational label, and aggregate/sample facts. A Trip-linked issue is attributed only when Trip, Driver, and Vehicle agree.
@@ -42,14 +42,14 @@ The `/fuel/performance` page remains inside `AppLayout`, uses TanStack Query and
 
 ## Verification evidence
 
-- Focused analytics/security: 11/11 PASS, including literal `/api/v1/...` authorization.
+- Focused analytics/security: 14/14 PASS, including literal `/api/v1/...` authorization, exact 19.99/20.00 and 29.99/30.00 boundaries, consecutive leakage, explicit trend gaps, and 101-row bounded pagination.
 - Architecture: 46/46 PASS; approved `fuel -> tenancy` is limited to published root contracts.
 - PostgreSQL/Flyway: isolated `transport_logistics_acceptance`; V1–V63 PASS; V63 permission present; development database excluded.
-- Complete Maven: 1,307 tests, 0 failures, 0 errors, 15 skipped; `BUILD SUCCESS`; 05:16.
+- Complete Maven: 1,310 tests, 0 failures, 0 errors, 15 skipped; `BUILD SUCCESS`; 05:14. The first run exposed one suite-level bunker concurrency timing failure; its isolated test passed 1/1, its affected class passed 7/7, and the required complete rerun passed.
 - Static analysis: Checkstyle, PMD, SpotBugs PASS.
 - Frontend: TypeScript PASS; Vitest 262/262 PASS; production build PASS; changed-file ESLint PASS with 0 introduced errors.
 - Global ESLint: 71 errors remain in unchanged Delivery files and are classified as pre-existing out-of-scope debt; no US-37 file is implicated.
-- Real Chromium: 6/6 PASS against PostgreSQL. It covers real committed Fuel facts, both modes, period/UI, Vehicle detail/paging, Driver privacy, deterministic deviation/leakage, insufficient data, Tenant-B denial, and exact before/after source-response equality.
+- Real Chromium: 6/6 PASS in 23.1 seconds against PostgreSQL. It covers 101 Vehicle comparison rows, real committed Fuel facts, both modes, period/UI, Vehicle detail/paging, Driver privacy, deterministic deviation/leakage, insufficient data, Tenant-B Vehicle/Driver denial, and paginated exact before/after source-response equality.
 - `git diff --check`: PASS.
 
 ## Scope exclusions
@@ -58,4 +58,4 @@ US-35 cards, US-38 exceptions/corrections, US-46 payroll, US-47 billing, US-82 p
 
 ## Next gate
 
-`US-37-FUEL-PERFORMANCE-TECHNICAL-CLOSURE-001`. Story accounting remains 67/87 accepted and 20/87 remaining until independent acceptance.
+`US-37-FUEL-PERFORMANCE-FINAL-ACCEPTANCE-001`. Technical closure passed; story accounting remains 67/87 accepted and 20/87 remaining until independent acceptance.
