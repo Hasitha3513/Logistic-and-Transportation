@@ -15,6 +15,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class PostgreSqlSampleDataRbacIdempotencyTest extends PostgreSqlIntegrationTest {
     private static final UUID EXISTING_ADMIN_ID = UUID.fromString("11111111-1111-1111-1111-111111111111");
+    private static final UUID EXISTING_ADMIN_USER_ID = UUID.fromString("11111111-1111-1111-1111-111111111112");
+    private static final String EXISTING_ADMIN_PASSWORD_HASH = "bootstrap-owned-password-hash";
 
     @Autowired JdbcTemplate jdbc;
     @Autowired DataSource dataSource;
@@ -23,11 +25,19 @@ class PostgreSqlSampleDataRbacIdempotencyTest extends PostgreSqlIntegrationTest 
     void reusesAnExistingAdminRoleIdForPermissionsAndMembershipLinksOnRepeatedSeeds() {
         jdbc.update("INSERT INTO app_role (id, name, description, active) VALUES (?, 'ADMIN', 'Existing admin', true)",
                 EXISTING_ADMIN_ID);
+        jdbc.update("""
+                INSERT INTO app_user
+                    (id, username, email, password_hash, first_name, last_name, active, created_at, updated_at)
+                VALUES (?, 'admin', 'admin@localhost.test', ?, 'Local', 'Administrator', true,
+                        CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+                """, EXISTING_ADMIN_USER_ID, EXISTING_ADMIN_PASSWORD_HASH);
 
         runFixture();
         runFixture();
 
         assertEquals(EXISTING_ADMIN_ID, jdbc.queryForObject("SELECT id FROM app_role WHERE name = 'ADMIN'", UUID.class));
+        assertEquals(EXISTING_ADMIN_PASSWORD_HASH,
+                jdbc.queryForObject("SELECT password_hash FROM app_user WHERE username = 'admin'", String.class));
         assertEquals(1, jdbc.queryForObject("SELECT COUNT(*) FROM app_role WHERE name = 'ADMIN'", Integer.class));
         assertEquals(0, jdbc.queryForObject("SELECT COUNT(*) FROM app_role WHERE id = '20000000-0000-0000-0000-000000000001'", Integer.class));
         assertEquals(jdbc.queryForObject("SELECT COUNT(*) FROM app_permission", Integer.class),
@@ -44,6 +54,18 @@ class PostgreSqlSampleDataRbacIdempotencyTest extends PostgreSqlIntegrationTest 
                 WHERE id BETWEEN 'a0000000-0000-0000-0000-000000000001'::uuid
                              AND 'a0000000-0000-0000-0000-000000000010'::uuid
                   AND delivery_number ~ '^DEL-[0-9]{4}-[0-9]{6}$'
+                """, Integer.class));
+        assertEquals(5, jdbc.queryForObject("""
+                SELECT COUNT(*) FROM fuel_card
+                WHERE tenant_id = '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a'
+                  AND id BETWEEN 'c0000000-0000-0000-0000-000000000001'::uuid
+                             AND 'c0000000-0000-0000-0000-000000000005'::uuid
+                """, Integer.class));
+        assertEquals(5, jdbc.queryForObject("""
+                SELECT COUNT(*) FROM fuel_card_transaction
+                WHERE tenant_id = '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a'
+                  AND id BETWEEN 'c4000000-0000-0000-0000-000000000001'::uuid
+                             AND 'c4000000-0000-0000-0000-000000000005'::uuid
                 """, Integer.class));
     }
 
