@@ -190,6 +190,21 @@ class SecurityConfig {
 
                         .requestMatchers(HttpMethod.GET, "/v1/fuel/performance", "/v1/fuel/performance/**")
                         .hasAuthority("FUEL_PERFORMANCE_VIEW")
+                        .requestMatchers(HttpMethod.GET, "/v1/fuel/cards", "/v1/fuel/cards/**",
+                                "/v1/fuel/card-imports", "/v1/fuel/card-imports/**",
+                                "/v1/fuel/card-transactions", "/v1/fuel/card-transactions/**")
+                        .hasAuthority("FUEL_CARD_VIEW")
+                        .requestMatchers(HttpMethod.POST, "/v1/fuel/cards/*/block")
+                        .hasAuthority("FUEL_CARD_BLOCK")
+                        .requestMatchers(HttpMethod.POST, "/v1/fuel/card-imports")
+                        .hasAuthority("FUEL_CARD_IMPORT")
+                        .requestMatchers(HttpMethod.POST, "/v1/fuel/card-transactions/*/match",
+                                "/v1/fuel/card-transactions/*/unmatch", "/v1/fuel/card-transactions/*/reject")
+                        .hasAuthority("FUEL_CARD_RECONCILE")
+                        .requestMatchers(HttpMethod.POST, "/v1/fuel/cards", "/v1/fuel/cards/**")
+                        .hasAuthority("FUEL_CARD_MANAGE")
+                        .requestMatchers(HttpMethod.PUT, "/v1/fuel/cards/*", "/v1/fuel/cards/*/restrictions")
+                        .hasAuthority("FUEL_CARD_MANAGE")
                         .requestMatchers(HttpMethod.GET, "/fuel-issues", "/fuel-issues/*",
                                 "/fuel-issues/*/history", "/fuel-stations", "/fuel-stations/*")
                         .hasAuthority("FUEL_ISSUE_VIEW")

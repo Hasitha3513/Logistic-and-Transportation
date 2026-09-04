@@ -36,9 +36,33 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import java.time.Clock;
+import com.transportlogistics.app.fuel.application.ports.in.FuelCardUseCase;
+import com.transportlogistics.app.fuel.application.ports.out.FuelCardReferencePort;
+import com.transportlogistics.app.fuel.application.ports.out.FuelCardRepository;
+import com.transportlogistics.app.fuel.application.service.FuelCardService;
+import com.transportlogistics.app.fuel.application.ports.in.FuelCardImportUseCase;
+import com.transportlogistics.app.fuel.application.ports.out.FuelCardImportParser;
+import com.transportlogistics.app.fuel.application.ports.out.FuelCardTransactionRepository;
+import com.transportlogistics.app.fuel.application.service.FuelCardImportService;
 
 @Configuration
 class FuelConfig {
+    @Bean
+    FuelCardUseCase fuelCardUseCase(FuelCardRepository cards, FuelCardReferencePort references,
+                                    FuelPerformanceTenantPort tenants, Clock clock) {
+        return new FuelCardService(cards, references, tenants, clock);
+    }
+
+    @Bean
+    FuelCardImportUseCase fuelCardImportUseCase(FuelCardImportParser parser,
+                                                FuelCardTransactionRepository transactions,
+                                                FuelCardRepository cards,
+                                                FuelCardReferencePort references,
+                                                FuelTransaction transaction,
+                                                FuelPerformanceTenantPort tenants,
+                                                Clock clock) {
+        return new FuelCardImportService(parser, transactions, cards, references, transaction, tenants, clock);
+    }
     @Bean
     FuelPerformanceQuery fuelPerformanceQuery(FuelIssueRepository issues, FuelPerformanceContextPort contexts,
                                                FuelPerformanceTenantPort tenants, Clock clock) {

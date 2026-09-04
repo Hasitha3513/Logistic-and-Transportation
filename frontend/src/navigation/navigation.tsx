@@ -87,6 +87,7 @@ export const navigation: NavigationItem[] = [
       { key: 'fuel-purchases', label: 'Fuel Purchases', route: '/fuel/purchases', requiredPermission: 'FUEL_PURCHASE_VIEW' },
       { key: 'bunker-tanks', label: 'Bunker Tanks', route: '/fuel/bunker-tanks', requiredPermission: 'BUNKER_VIEW' },
       { key: 'fuel-prices', label: 'Fuel Prices', route: '/fuel/prices', requiredPermission: 'FUEL_PRICE_VIEW' },
+      { key: 'fuel-cards', label: 'Fuel Cards', route: '/fuel/cards', requiredPermission: 'FUEL_CARD_VIEW' },
     ],
   },
   {

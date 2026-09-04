@@ -43,7 +43,7 @@ class IntegrationPostgreSqlAcceptanceTest extends PostgreSqlIntegrationTest {
 
     @Test
     void v61IsCurrentAndOwnsExactlyFiveIntegrationTablesWhileReusingSharedOutbox() {
-        assertThat(flyway.info().current().getVersion().getVersion()).isEqualTo("63");
+        assertThat(flyway.info().current().getVersion().getVersion()).isEqualTo("64");
         assertThat(jdbc.queryForList("select tablename from pg_tables where schemaname='public' "
             + "and tablename like 'integration_%' order by tablename", String.class))
             .contains("integration_configuration", "integration_mapping", "integration_exchange",

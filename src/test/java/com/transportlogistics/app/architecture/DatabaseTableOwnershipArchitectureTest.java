@@ -145,7 +145,9 @@ class DatabaseTableOwnershipArchitectureTest {
         own(ownership, "trip", "trip", "trip_status_history", "trip_dispatch", "trip_operational_event");
         own(ownership, "fuel", "fuel_station", "fuel_limit_policy", "fuel_issue", "fuel_issue_history",
                 "fuel_price", "fuel_purchase", "fuel_purchase_history", "bunker_tank", "bunker_dip_reading",
-                "bunker_stock_adjustment", "bunker_stock_movement");
+                "bunker_stock_adjustment", "bunker_stock_movement", "fuel_card", "fuel_card_binding_history",
+                "fuel_card_restriction", "fuel_card_import_batch", "fuel_card_transaction",
+                "fuel_card_reconciliation_history", "fuel_card_transaction_indicator", "fuel_card_audit_event");
         own(ownership, "freight", "freight_order", "freight_order_line", "cargo_manifest", "cargo_manifest_item",
                 "load_plan", "load_plan_item_placement", "freight_insurance_policy", "freight_insurance_claim",
                 "freight_insurance_settlement", "cargo_exception", "cargo_exception_history");
