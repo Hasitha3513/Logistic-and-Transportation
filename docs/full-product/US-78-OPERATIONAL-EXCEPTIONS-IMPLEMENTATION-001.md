@@ -4,7 +4,8 @@
 **Status:** `IMPLEMENTATION_COMPLETE / ACCEPTANCE_PENDING`
 **Program accounting:** 66 / 87 COMPLETE; 21 / 87 remaining
 **Migration:** V62; current Flyway head V62
-**Next task:** `US-78-OPERATIONAL-EXCEPTIONS-TECHNICAL-CLOSURE-001`
+**Technical closure:** `US-78-OPERATIONAL-EXCEPTIONS-TECHNICAL-CLOSURE-001` PASS
+**Next task:** `US-78-OPERATIONAL-EXCEPTIONS-FINAL-ACCEPTANCE-001`
 
 ## Owner and model
 
@@ -53,15 +54,15 @@ The feature-first React implementation lives under `features/operations/operatio
 
 ## Verification evidence
 
-- Focused Operations/Routing/Delivery domain and producer tests: 26/26 pass.
+- Technical-closure focused Operations/Routing/Delivery/durable-publication tests: 41/41 pass.
 - Deterministic concurrency/interleaving tests: 6/6 pass without sleeps, covering duplicate intake, competing assignment, close versus escalation, action completion versus resolution, RCA approval versus closure, SLA versus close/reopen, and escalation replay.
 - PostgreSQL acceptance: 3/3 pass against only `transport_logistics_acceptance`, including clean V1-V62 migration, five tables/indexes, source replay, Tenant consistency, immutable history, stale-version rejection, lifecycle/action/RCA consistency, and the SLA worker.
 - Literal and effective security plus E2E-profile safety: 3/3 pass. Opt-in local identity bootstrap regression: 1/1 pass with the complete 146-permission set.
-- Complete Maven verification: 1,296 tests, 0 failures, 0 errors, 15 skipped; `BUILD SUCCESS` in 05:14 under Java 21.
-- Architecture and Spring Modulith: 49/49 pass, including module dependencies, hexagonal layers, P0/P1 rules, and ownership of all five Operations tables.
+- Complete Maven technical-closure verification: 1,296 tests, 0 failures, 0 errors, 15 skipped; `BUILD SUCCESS` in 05:05 under Java 21.
+- Architecture and Spring Modulith technical-closure gate: 46/46 pass, including module dependencies, hexagonal layers, P0/P1 rules, and ownership of all five Operations tables.
 - Static analysis: Checkstyle 0 violations; PMD pass; SpotBugs 0 findings/errors.
 - Frontend: TypeScript pass; Vitest 61 files/261 tests pass; production build pass; changed-file ESLint pass. Repository-wide ESLint retains 71 pre-existing errors in eight unchanged Delivery files; US-78 introduced errors are zero.
-- Real PostgreSQL-backed Chromium: 6/6 pass in 19.1 seconds with fresh backend/authenticated sessions, real Routing and Delivery producers, shared durable processing, the common Operations lifecycle, safe Notification fact, separate RCA approver/closer, source immutability, replay dedupe, RBAC, and cross-Tenant non-inference.
+- Real PostgreSQL-backed Chromium technical-closure rerun: 6/6 pass in 20.8 seconds with fresh backend/authenticated sessions, real Routing and Delivery producers, shared durable processing, the common Operations lifecycle, safe Notification fact, separate RCA approver/closer, source immutability, replay dedupe, RBAC, and cross-Tenant non-inference.
 - `git diff --check` passes with no whitespace errors.
 
 One early non-authoritative security-test invocation inherited the development datasource and advanced its Flyway schema from V61 to V62. It did not run destructive cleanup or mutate business rows and is not acceptance evidence. Every authoritative PostgreSQL acceptance, complete Maven gate, and real browser suite explicitly used `transport_logistics_acceptance` on port 5433.
@@ -72,4 +73,4 @@ Fuel US-38, Tracking US-55, Trip/Cargo/Driver/Fleet/Compliance/Integration detec
 
 ## Closure state
 
-The frozen US-78 implementation is technically complete with zero unresolved technical blockers. It is not product-accepted or counted complete. Status is `IMPLEMENTATION_COMPLETE / ACCEPTANCE_PENDING`; program accounting remains 66 / 87 complete with 21 remaining. The next task is `US-78-OPERATIONAL-EXCEPTIONS-TECHNICAL-CLOSURE-001`.
+The frozen US-78 implementation passed independent technical closure with zero unresolved technical blockers. It is not product-accepted or counted complete. Status is `IMPLEMENTATION_COMPLETE / ACCEPTANCE_PENDING`; program accounting remains 66 / 87 complete with 21 remaining. The next task is `US-78-OPERATIONAL-EXCEPTIONS-FINAL-ACCEPTANCE-001`.

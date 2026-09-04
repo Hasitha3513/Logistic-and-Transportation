@@ -20,8 +20,8 @@
 > - **MVP 1.4 Last-Mile Delivery:** 8 / 8 COMPLETE (US-63 through US-70 Accepted & Closed)
 > - **Overall Release Band:** 66 / 87 COMPLETE (21 REPRIORITIZED / 87 TOTAL)
 > - **Current Milestone:** MVP 1.4 Last-Mile Delivery — 8 / 8 COMPLETE, 100%, CLOSED.
-> - **Active Focus:** US-78 frozen implementation is technically complete and awaiting independent technical closure and final acceptance.
-> - **Immediate Next Action:** Execute `US-78-OPERATIONAL-EXCEPTIONS-TECHNICAL-CLOSURE-001`.
+> - **Active Focus:** US-78 independent technical closure passed; final acceptance remains pending.
+> - **Immediate Next Action:** Execute `US-78-OPERATIONAL-EXCEPTIONS-FINAL-ACCEPTANCE-001`.
 
 ---
 
@@ -212,7 +212,7 @@ Development startup now consistently provisions the idempotent PostgreSQL sample
 | `US-75` | Maintain Audit and Reports | Comprehensive audit log trail, CSV exports | 🟢 `COMPLETE` | `AuditLogTest`, `AuditReportTest` |
 | `US-76` | Support Mobile Operations | Driver, dispatcher and delivery mobile workflows with offline, camera/signature, push and device health | 🟡 `WAVE D / BLOCKED_BY_DEPENDENCY` | PWA/native and device/provider decisions required |
 | `US-77` | Manage Notification Rules | Rule-based alerts, multi-channel dispatch | 🟢 `COMPLETE` | `NotificationRuleTest`, V28 |
-| `US-78` | Manage Operational Exceptions | Cross-domain classification, assignment, severity, SLA, escalation, corrective action, RCA and closure | 🟡 `WAVE A / IMPLEMENTATION_COMPLETE / ACCEPTANCE_PENDING` | V62; Maven 1,296/0/0/15; architecture 49/49; Chromium 6/6; `docs/full-product/US-78-OPERATIONAL-EXCEPTIONS-IMPLEMENTATION-001.md` |
+| `US-78` | Manage Operational Exceptions | Cross-domain classification, assignment, severity, SLA, escalation, corrective action, RCA and closure | 🟡 `WAVE A / IMPLEMENTATION_COMPLETE / ACCEPTANCE_PENDING` | Technical closure PASS: V62; focused 41/41; Maven 1,296/0/0/15 in 05:05; architecture 46/46; Chromium 6/6; `docs/full-product/US-78-OPERATIONAL-EXCEPTIONS-IMPLEMENTATION-001.md` |
 
 ---
 
@@ -235,7 +235,7 @@ Development startup now consistently provisions the idempotent PostgreSQL sample
 
 ```
 Current Status: 66 / 87 COMPLETE; 21 stories remain across Waves A–E
-Queue Head:     US-78-OPERATIONAL-EXCEPTIONS-TECHNICAL-CLOSURE-001
+Queue Head:     US-78-OPERATIONAL-EXCEPTIONS-FINAL-ACCEPTANCE-001
 ```
 
 1. **Wave A — Integration and exception-control foundations:** US-73 COMPLETE; US-78 implementation complete and acceptance pending.
