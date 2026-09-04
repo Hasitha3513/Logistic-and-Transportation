@@ -1,11 +1,12 @@
 # US-78 Manage Operational Exceptions — Implementation Evidence
 
 **Task:** `US-78-OPERATIONAL-EXCEPTIONS-IMPLEMENTATION-001`
-**Status:** `IMPLEMENTATION_COMPLETE / ACCEPTANCE_PENDING`
-**Program accounting:** 66 / 87 COMPLETE; 21 / 87 remaining
+**Status:** `COMPLETE / FINAL_ACCEPTANCE_PASS`
+**Program accounting:** 67 / 87 COMPLETE; 20 / 87 remaining
 **Migration:** V62; current Flyway head V62
 **Technical closure:** `US-78-OPERATIONAL-EXCEPTIONS-TECHNICAL-CLOSURE-001` PASS
-**Next task:** `US-78-OPERATIONAL-EXCEPTIONS-FINAL-ACCEPTANCE-001`
+**Final acceptance:** `US-78-OPERATIONAL-EXCEPTIONS-FINAL-ACCEPTANCE-001` PASS
+**Next task:** `US-37-FUEL-PERFORMANCE-PRODUCT-DECISIONS-001`
 
 ## Owner and model
 
@@ -73,4 +74,4 @@ Fuel US-38, Tracking US-55, Trip/Cargo/Driver/Fleet/Compliance/Integration detec
 
 ## Closure state
 
-The frozen US-78 implementation passed independent technical closure with zero unresolved technical blockers. It is not product-accepted or counted complete. Status is `IMPLEMENTATION_COMPLETE / ACCEPTANCE_PENDING`; program accounting remains 66 / 87 complete with 21 remaining. The next task is `US-78-OPERATIONAL-EXCEPTIONS-FINAL-ACCEPTANCE-001`.
+The frozen US-78 implementation passed independent technical closure and final acceptance with zero unresolved blockers. Status is `COMPLETE`; program accounting is 67 / 87 complete with 20 remaining. Wave A is 2 / 2 complete and closed. The next task is `US-37-FUEL-PERFORMANCE-PRODUCT-DECISIONS-001`.

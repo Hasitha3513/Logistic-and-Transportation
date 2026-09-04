@@ -18,17 +18,17 @@
 > - **Authority Order:** Original Requirements (`Traspotation & logistic.docx`), Frozen Architecture/Contracts, Verified Production Code/Tests, then Roadmap.
 > - **MVP 1.3 Delivery Operations:** 7 / 7 COMPLETE (100%) - CLOSED
 > - **MVP 1.4 Last-Mile Delivery:** 8 / 8 COMPLETE (US-63 through US-70 Accepted & Closed)
-> - **Overall Release Band:** 66 / 87 COMPLETE (21 REPRIORITIZED / 87 TOTAL)
+> - **Overall Release Band:** 67 / 87 COMPLETE (20 REPRIORITIZED / 87 TOTAL)
 > - **Current Milestone:** MVP 1.4 Last-Mile Delivery — 8 / 8 COMPLETE, 100%, CLOSED.
-> - **Active Focus:** US-78 independent technical closure passed; final acceptance remains pending.
-> - **Immediate Next Action:** Execute `US-78-OPERATIONAL-EXCEPTIONS-FINAL-ACCEPTANCE-001`.
+> - **Active Focus:** Wave A is 2 / 2 COMPLETE and closed after independent US-78 acceptance.
+> - **Immediate Next Action:** Execute `US-37-FUEL-PERFORMANCE-PRODUCT-DECISIONS-001`.
 
 ---
 
 ## 📊 1. Executive Metrics & Milestone Progress
 
 ```
-Overall Progress: [███████████████████████████████████████████░░░░░░░] 66 / 87 Stories Complete (75.9%)
+Overall Progress: [████████████████████████████████████████████░░░░░░] 67 / 87 Stories Complete (77.0%)
 MVP 1.3 Band:     [██████████████████████████████████████████████████] 7 / 7 Complete (100.0%) - CLOSED
 MVP 1.4 Band:     [██████████████████████████████████████████████████] 8 / 8 Complete (100.0%) - CLOSED
 ```
@@ -212,7 +212,7 @@ Development startup now consistently provisions the idempotent PostgreSQL sample
 | `US-75` | Maintain Audit and Reports | Comprehensive audit log trail, CSV exports | 🟢 `COMPLETE` | `AuditLogTest`, `AuditReportTest` |
 | `US-76` | Support Mobile Operations | Driver, dispatcher and delivery mobile workflows with offline, camera/signature, push and device health | 🟡 `WAVE D / BLOCKED_BY_DEPENDENCY` | PWA/native and device/provider decisions required |
 | `US-77` | Manage Notification Rules | Rule-based alerts, multi-channel dispatch | 🟢 `COMPLETE` | `NotificationRuleTest`, V28 |
-| `US-78` | Manage Operational Exceptions | Cross-domain classification, assignment, severity, SLA, escalation, corrective action, RCA and closure | 🟡 `WAVE A / IMPLEMENTATION_COMPLETE / ACCEPTANCE_PENDING` | Technical closure PASS: V62; focused 41/41; Maven 1,296/0/0/15 in 05:05; architecture 46/46; Chromium 6/6; `docs/full-product/US-78-OPERATIONAL-EXCEPTIONS-IMPLEMENTATION-001.md` |
+| `US-78` | Manage Operational Exceptions | Cross-domain classification, assignment, severity, SLA, escalation, corrective action, RCA and closure | 🟢 `COMPLETE` | Final acceptance PASS: V62; focused 41/41; concurrency 6/6; PostgreSQL 3/3; regressions 84/84; Maven 1,296/0/0/15 in 05:06; architecture 46/46; Chromium 6/6; `docs/full-product/US-78-OPERATIONAL-EXCEPTIONS-FINAL-ACCEPTANCE-001.md` |
 
 ---
 
@@ -234,11 +234,11 @@ Development startup now consistently provisions the idempotent PostgreSQL sample
 ## 🎯 4. Immediate Execution Queue
 
 ```
-Current Status: 66 / 87 COMPLETE; 21 stories remain across Waves A–E
-Queue Head:     US-78-OPERATIONAL-EXCEPTIONS-FINAL-ACCEPTANCE-001
+Current Status: 67 / 87 COMPLETE; 20 stories remain across Waves B–E
+Queue Head:     US-37-FUEL-PERFORMANCE-PRODUCT-DECISIONS-001
 ```
 
-1. **Wave A — Integration and exception-control foundations:** US-73 COMPLETE; US-78 implementation complete and acceptance pending.
+1. **Wave A — Integration and exception-control foundations:** 2 / 2 COMPLETE / CLOSED (US-73 and US-78).
 2. **Wave B — Fuel control and financial links:** US-37, US-35, US-38, US-46, US-47.
 3. **Wave C — GPS and telematics:** US-48, then US-49/50/51/52/55, then US-53, then US-54.
 4. **Wave D — Compliance and field mobility:** US-72, US-76.
@@ -272,6 +272,7 @@ Detailed dependencies, readiness/done gates, scores, rollback plans, source-pari
   - `US-69`: `docs/mvp/MVP-1.4-US69-DELIVERY-NOTIFICATIONS-FINAL-ACCEPTANCE-001.md`
   - `US-70`: `docs/mvp/MVP-1.4-US70-CUSTOMER-SELF-SERVICE-FINAL-ACCEPTANCE-001.md`
   - `US-73`: `docs/full-product/US-73-EXTERNAL-INTEGRATIONS-FINAL-ACCEPTANCE-001.md`
+  - `US-78`: `docs/full-product/US-78-OPERATIONAL-EXCEPTIONS-FINAL-ACCEPTANCE-001.md`
 - **Frozen Product Decisions:**
   - `US-78`: `docs/full-product/US-78-OPERATIONAL-EXCEPTIONS-PRODUCT-DECISIONS-001.md`
 - **Implementation Reports:**
