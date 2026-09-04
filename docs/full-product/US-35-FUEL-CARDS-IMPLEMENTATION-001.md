@@ -62,16 +62,20 @@ Composite tenant/card foreign keys enforce same-tenant child ownership. Vehicle,
 
 ## Verification evidence
 
-- Focused domain, parser, application service, and literal security tests: 15 passed.
-- PostgreSQL V1→V64 schema/constraint/concurrency acceptance: 7 passed against `transport_logistics_acceptance` only.
+- Technical closure: `US-35-FUEL-CARDS-TECHNICAL-CLOSURE-001` passed after repairing sample-data test baseline isolation; the fixture test passed 1/1 and the complete focused group passed 23/23.
+- Focused domain, parser, application service, literal security, sample-data idempotency, and PostgreSQL tests: 23 passed.
+- PostgreSQL V1→V64 schema/constraint/concurrency acceptance: 7 passed against `transport_logistics_acceptance` only; the development database was not used.
 - Real PostgreSQL-backed Chromium suite: 6/6 passed, including real multipart parsing/persistence, replay, reconciliation SoD, review indicators, reversal, source immutability, tenant isolation, RBAC, filters, and forbidden routes.
 - Frontend Vitest: 63 files / 263 tests passed.
 - TypeScript and production Vite build passed; changed-file ESLint introduced zero errors.
 - Checkstyle: zero violations; PMD and SpotBugs passed.
-- Complete Maven and architecture totals are recorded from the terminal in the task completion report.
+- Complete Maven: 1,332 tests, 0 failures, 0 errors, 15 skipped; `BUILD SUCCESS` in 04:57.
+- Architecture: 46 tests, 0 failures, 0 errors, 0 skipped.
+- Global ESLint retains 71 unrelated pre-existing Delivery errors; US-35 changed-file lint has zero errors.
+- `git diff --check`: passed.
 
 ## Regression and scope containment
 
 The complete Maven suite covers existing US-31/32/34/36/37, Fleet, Driver, Trip, Organization, Identity/RBAC, Tenancy, Audit, US-73, and US-78 behavior. The US-35 implementation adds no inbound Integration capability and no Operations case side effect. Existing Fuel Purchase and Fuel Performance facts remain unchanged by card imports and reconciliation.
 
-No application commit or push was performed. Independent final acceptance has not started; the next task is `US-35-FUEL-CARDS-TECHNICAL-CLOSURE-001`.
+Independent final acceptance has not started; the next task is `US-35-FUEL-CARDS-FINAL-ACCEPTANCE-001`.

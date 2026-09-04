@@ -1,6 +1,8 @@
 package com.transportlogistics.app.system.infrastructure.config;
 
 import com.transportlogistics.app.support.PostgreSqlIntegrationTest;
+import org.flywaydb.core.Flyway;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
@@ -20,6 +22,13 @@ class PostgreSqlSampleDataRbacIdempotencyTest extends PostgreSqlIntegrationTest 
 
     @Autowired JdbcTemplate jdbc;
     @Autowired DataSource dataSource;
+    @Autowired Flyway flyway;
+
+    @BeforeEach
+    void restoreProductionBaseline() {
+        flyway.clean();
+        flyway.migrate();
+    }
 
     @Test
     void reusesAnExistingAdminRoleIdForPermissionsAndMembershipLinksOnRepeatedSeeds() {

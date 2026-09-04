@@ -21,7 +21,7 @@
 > - **Overall Release Band:** 68 / 87 COMPLETE (19 REPRIORITIZED / 87 TOTAL)
 > - **Current Milestone:** MVP 1.4 Last-Mile Delivery — 8 / 8 COMPLETE, 100%, CLOSED.
 > - **Active Focus:** Wave B is open; US-37 is accepted and US-35 implementation is complete with acceptance pending.
-> - **Immediate Next Action:** Execute `US-35-FUEL-CARDS-TECHNICAL-CLOSURE-001`.
+> - **Immediate Next Action:** Execute `US-35-FUEL-CARDS-FINAL-ACCEPTANCE-001`.
 
 ---
 
@@ -235,11 +235,11 @@ Development startup now consistently provisions the idempotent PostgreSQL sample
 
 ```
 Current Status: 68 / 87 COMPLETE; 19 stories remain across Waves B–E
-Queue Head:     US-35-FUEL-CARDS-TECHNICAL-CLOSURE-001
+Queue Head:     US-35-FUEL-CARDS-FINAL-ACCEPTANCE-001
 ```
 
 1. **Wave A — Integration and exception-control foundations:** 2 / 2 COMPLETE / CLOSED (US-73 and US-78).
-2. **Wave B — Fuel control and financial links:** US-37 COMPLETE; US-35 implementation complete and technical closure next; then US-38, US-46, US-47.
+2. **Wave B — Fuel control and financial links:** US-37 COMPLETE; US-35 technical closure complete and final acceptance next; then US-38, US-46, US-47.
 3. **Wave C — GPS and telematics:** US-48, then US-49/50/51/52/55, then US-53, then US-54.
 4. **Wave D — Compliance and field mobility:** US-72, US-76.
 5. **Wave E — Analytics, integrity, resilience, disruption and user risk:** US-85, US-84, US-87, US-82, US-86.
