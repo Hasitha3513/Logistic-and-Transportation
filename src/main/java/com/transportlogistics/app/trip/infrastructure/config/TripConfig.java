@@ -3,6 +3,7 @@ package com.transportlogistics.app.trip.infrastructure.config;
 import com.transportlogistics.app.trip.VehicleAllocationLookup;
 import com.transportlogistics.app.trip.DriverAssignmentLookup;
 import com.transportlogistics.app.trip.TripFuelContextLookup;
+import com.transportlogistics.app.trip.TripFuelPerformanceLookup;
 import com.transportlogistics.app.trip.application.ports.in.TripUseCase;
 import com.transportlogistics.app.trip.application.ports.out.TripRepository;
 import com.transportlogistics.app.trip.application.ports.out.VehicleEligibilityPort;
@@ -18,6 +19,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import java.time.Clock;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Configuration
 class TripConfig {
@@ -46,5 +49,12 @@ class TripConfig {
         return tripId -> trips.findById(tripId).map(trip -> new TripFuelContextLookup.TripFuelContext(
                 trip.id(), trip.tripNumber(), trip.status(), trip.vehicleId(), trip.driverId(),
                 trip.requestedStartTime(), trip.requestedEndTime()));
+    }
+
+    @Bean
+    TripFuelPerformanceLookup tripFuelPerformanceLookup(TripRepository trips) {
+        return ids -> trips.findAllByIds(ids).stream()
+                .map(trip -> new TripFuelPerformanceLookup.Attribution(trip.id(), trip.vehicleId(), trip.driverId()))
+                .collect(Collectors.toMap(TripFuelPerformanceLookup.Attribution::tripId, Function.identity()));
     }
 }

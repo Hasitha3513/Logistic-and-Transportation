@@ -94,6 +94,7 @@ export const navigation: NavigationItem[] = [
     label: 'Freight',
     icon: <ContainerOutlined />,
     children: [
+      { key: 'fuel-performance', label: 'Fuel Performance', route: '/fuel/performance', requiredPermission: 'FUEL_PERFORMANCE_VIEW' },
       { key: 'freight-orders', label: 'Freight Orders', route: '/freight/orders', requiredPermission: 'FREIGHT_ORDER_VIEW' },
       { key: 'cargo-manifests', label: 'Cargo Manifests', route: '/freight/manifests', requiredPermission: 'CARGO_MANIFEST_VIEW' },
       { key: 'load-plans', label: 'Load Plans', route: '/freight/load-plans', requiredPermission: 'LOAD_PLAN_VIEW' },

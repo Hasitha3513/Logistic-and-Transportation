@@ -9,6 +9,7 @@ import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.Set;
 
 @Component
 @RequiredArgsConstructor
@@ -31,6 +32,10 @@ class TripPersistenceAdapter implements TripRepository {
 
     public List<Trip> findAll() {
         return repo.findAll().stream().map(mapper::toDomain).toList();
+    }
+
+    public List<Trip> findAllByIds(Set<UUID> ids) {
+        return repo.findAllById(ids).stream().map(mapper::toDomain).toList();
     }
 
     @Override

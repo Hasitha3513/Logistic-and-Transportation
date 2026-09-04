@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.Set;
 
 @Component
 class VehiclePersistenceAdapter implements VehicleRepository {
@@ -32,6 +33,10 @@ class VehiclePersistenceAdapter implements VehicleRepository {
 
     public List<Vehicle> findAll() {
         return repo.findAll().stream().map(mapper::toDomain).toList();
+    }
+
+    public List<Vehicle> findAllByIds(Set<UUID> ids) {
+        return repo.findAllById(ids).stream().map(mapper::toDomain).toList();
     }
 
     public Optional<Vehicle> findByRegistrationNumber(String registrationNumber) {

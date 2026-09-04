@@ -16,8 +16,8 @@ class CustomerSelfServicePostgreSqlAcceptanceTest extends PostgreSqlIntegrationT
     @Autowired JdbcTemplate jdbc;
     @Autowired Flyway flyway;
 
-    @Test void flywayCurrentHeadIsV62AndTenantConsistentForeignKeyIsEnforced() {
-        assertThat(flyway.info().current().getVersion().getVersion()).isEqualTo("62");
+    @Test void flywayCurrentHeadIsV63AndTenantConsistentForeignKeyIsEnforced() {
+        assertThat(flyway.info().current().getVersion().getVersion()).isEqualTo("63");
         UUID tenant = UUID.randomUUID(); UUID delivery = insertOrder(tenant); UUID access = UUID.randomUUID();
         insertAccess(access, tenant, delivery, "a".repeat(64), "attempt-acceptance-000001");
         assertThatThrownBy(() -> insertAccess(UUID.randomUUID(), UUID.randomUUID(), delivery,

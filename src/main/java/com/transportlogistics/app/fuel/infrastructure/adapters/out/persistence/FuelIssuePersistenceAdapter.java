@@ -43,6 +43,12 @@ class FuelIssuePersistenceAdapter implements FuelIssueRepository {
     }
 
     @Override
+    public java.util.List<FuelIssue> findIssuedBetween(java.time.OffsetDateTime fromInclusive,
+                                                       java.time.OffsetDateTime toExclusive) {
+        return repository.findIssuedBetween(fromInclusive, toExclusive).stream().map(this::map).toList();
+    }
+
+    @Override
     public FuelIssueUseCase.PageResult<FuelIssue> search(FuelIssueUseCase.SearchQuery request) {
         var specification = (org.springframework.data.jpa.domain.Specification<FuelIssueEntity>) (root, query, builder) -> {
             var predicates = new ArrayList<Predicate>();

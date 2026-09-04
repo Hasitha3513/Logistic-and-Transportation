@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.Set;
 
 @Component
 class DriverPersistenceAdapter implements DriverRepository {
@@ -39,6 +40,10 @@ class DriverPersistenceAdapter implements DriverRepository {
 
     public List<Driver> findAll() {
         return repo.findAll().stream().map(this::map).toList();
+    }
+
+    public List<Driver> findAllByIds(Set<UUID> ids) {
+        return repo.findAllById(ids).stream().map(this::map).toList();
     }
 
     private Driver map(DriverEntity e) {

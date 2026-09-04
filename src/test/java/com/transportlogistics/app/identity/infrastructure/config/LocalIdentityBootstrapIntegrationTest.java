@@ -37,7 +37,7 @@ class LocalIdentityBootstrapIntegrationTest {
         mvc.perform(get("/auth/me").header("Authorization", "Bearer " + accessToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.firstName").value("Local"))
-                .andExpect(jsonPath("$.permissions.length()").value(146))
+                .andExpect(jsonPath("$.permissions.length()").value(147))
                 .andExpect(jsonPath("$.permissions").value(org.hamcrest.Matchers.hasItem("DELIVERY_VIEW")))
                 .andExpect(jsonPath("$.permissions").value(org.hamcrest.Matchers.hasItem("DELIVERY_CREATE")))
                 .andExpect(jsonPath("$.permissions").value(org.hamcrest.Matchers.hasItem("DELIVERY_UPDATE")))

@@ -6,6 +6,7 @@ import com.transportlogistics.app.fuel.domain.model.FuelIssue;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.time.OffsetDateTime;
 
 public interface FuelIssueRepository {
     FuelIssue save(FuelIssue issue);
@@ -17,6 +18,8 @@ public interface FuelIssueRepository {
     FuelIssueUseCase.PageResult<FuelIssue> search(FuelIssueUseCase.SearchQuery query);
 
     List<FuelIssue> findByTripId(UUID tripId);
+
+    List<FuelIssue> findIssuedBetween(OffsetDateTime fromInclusive, OffsetDateTime toExclusive);
 
     boolean existsByVoucherNumber(String voucherNumber);
 }

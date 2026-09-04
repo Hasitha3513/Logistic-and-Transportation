@@ -188,6 +188,8 @@ class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/trips/*/checkpoints", "/trips/*/delays", "/trips/*/incidents")
                         .hasAnyAuthority("TRIP_DISPATCH", "TRIP_LOG_MANAGE", "TRIP_UPDATE")
 
+                        .requestMatchers(HttpMethod.GET, "/v1/fuel/performance", "/v1/fuel/performance/**")
+                        .hasAuthority("FUEL_PERFORMANCE_VIEW")
                         .requestMatchers(HttpMethod.GET, "/fuel-issues", "/fuel-issues/*",
                                 "/fuel-issues/*/history", "/fuel-stations", "/fuel-stations/*")
                         .hasAuthority("FUEL_ISSUE_VIEW")

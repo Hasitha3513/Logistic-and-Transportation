@@ -28,6 +28,10 @@ import com.transportlogistics.app.fuel.application.ports.out.FuelVehicleReadingP
 import com.transportlogistics.app.fuel.application.ports.out.BunkerStockLedgerRepository;
 import com.transportlogistics.app.fuel.application.ports.out.BunkerTankRepository;
 import com.transportlogistics.app.fuel.domain.policy.BunkerTankPolicy;
+import com.transportlogistics.app.fuel.FuelPerformanceQuery;
+import com.transportlogistics.app.fuel.application.ports.out.FuelPerformanceContextPort;
+import com.transportlogistics.app.fuel.application.ports.out.FuelPerformanceTenantPort;
+import com.transportlogistics.app.fuel.application.service.FuelPerformanceService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -35,6 +39,11 @@ import java.time.Clock;
 
 @Configuration
 class FuelConfig {
+    @Bean
+    FuelPerformanceQuery fuelPerformanceQuery(FuelIssueRepository issues, FuelPerformanceContextPort contexts,
+                                               FuelPerformanceTenantPort tenants, Clock clock) {
+        return new FuelPerformanceService(issues, contexts, tenants, clock);
+    }
     @Bean
     BunkerTankPolicy bunkerTankPolicy() {
         return new BunkerTankPolicy();

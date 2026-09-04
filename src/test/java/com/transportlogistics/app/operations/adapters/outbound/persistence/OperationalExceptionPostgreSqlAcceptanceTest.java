@@ -38,7 +38,7 @@ class OperationalExceptionPostgreSqlAcceptanceTest extends PostgreSqlIntegration
 
     @Test
     void v62OwnsFiveTenantConsistentTablesAndBoundedQueryIndexes() {
-        assertThat(flyway.info().current().getVersion().getVersion()).isEqualTo("62");
+        assertThat(flyway.info().current().getVersion().getVersion()).isEqualTo("63");
         assertThat(jdbc.queryForList("select tablename from pg_tables where schemaname='public' "
             + "and tablename like 'operational_exception_%'", String.class)).containsExactlyInAnyOrder(
                 "operational_exception_case", "operational_exception_assignment_history",

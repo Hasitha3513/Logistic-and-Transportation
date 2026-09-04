@@ -50,6 +50,7 @@ import DeliverySelfServicePage from './features/delivery/selfService/pages/Deliv
 import IntegrationListPage from './features/integrations/pages/IntegrationListPage';
 import IntegrationDetailPage from './features/integrations/pages/IntegrationDetailPage';
 import OperationalExceptionQueuePage from './features/operations/operationalExceptions/pages/OperationalExceptionQueuePage';
+import FuelPerformancePage from './features/fuel/performance/pages/FuelPerformancePage';
 
 function ProtectedRoute() {
   const { user, isLoading } = useAuth();
@@ -64,6 +65,7 @@ function HomePage() {
   if (hasPermission('DRIVER_VIEW')) return <Navigate to="/drivers" replace />;
   if (hasPermission('ROUTE_VIEW')) return <Navigate to="/routes" replace />;
   if (hasPermission('TRIP_VIEW')) return <Navigate to="/trips" replace />;
+  if (hasPermission('FUEL_PERFORMANCE_VIEW')) return <Navigate to="/fuel/performance" replace />;
   if (hasPermission('FUEL_ISSUE_VIEW')) return <Navigate to="/fuel/issues" replace />;
   if (hasPermission('FUEL_PURCHASE_VIEW')) return <Navigate to="/fuel/purchases" replace />;
   if (hasPermission('BUNKER_VIEW')) return <Navigate to="/fuel/bunker-tanks" replace />;
@@ -107,6 +109,7 @@ export default function App() {
         <Route path="fuel/bunker-tanks" element={<BunkerTankListPage />} />
         <Route path="fuel/bunker-tanks/:bunkerTankId" element={<BunkerTankDetailsPage />} />
         <Route path="fuel/prices" element={<FuelPricePage />} />
+        <Route path="fuel/performance" element={<FuelPerformancePage />} />
         <Route path="freight/orders" element={<FreightOrderListPage />} />
         <Route path="freight/orders/new" element={<FreightOrderFormPage />} />
         <Route path="freight/orders/:freightOrderId/edit" element={<FreightOrderFormPage />} />
