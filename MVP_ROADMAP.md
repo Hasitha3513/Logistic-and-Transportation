@@ -21,7 +21,7 @@
 > - **Overall Release Band:** 67 / 87 COMPLETE (20 REPRIORITIZED / 87 TOTAL)
 > - **Current Milestone:** MVP 1.4 Last-Mile Delivery — 8 / 8 COMPLETE, 100%, CLOSED.
 > - **Active Focus:** Wave A is 2 / 2 COMPLETE and closed after independent US-78 acceptance.
-> - **Immediate Next Action:** Execute `US-37-FUEL-PERFORMANCE-PRODUCT-DECISIONS-001`.
+> - **Immediate Next Action:** Execute `US-37-FUEL-PERFORMANCE-IMPLEMENTATION-001`.
 
 ---
 
@@ -141,7 +141,7 @@ Development startup now consistently provisions the idempotent PostgreSQL sample
 | `US-34` | Manage Bunker Fuel Stock | Internal tank dip readings, stock replenishment | 🟢 `COMPLETE` | `BunkerStockTest`, V34 |
 | `US-35` | Manage Fuel Cards | Card issuance, restrictions, imported transactions, reconciliation and misuse control | 🟡 `WAVE B / READY_FOR_PRODUCT_DECISIONS` | Full-product roadmap |
 | `US-36` | Calculate Trip Fuel Costs | Trip-level fuel expense aggregation | 🟢 `COMPLETE` | `TripFuelCostTest`, V35 |
-| `US-37` | Analyze Fuel Performance | Vehicle/driver efficiency, anomaly and leakage analysis without changing raw fuel data | 🟡 `WAVE B / READY_FOR_IMPLEMENTATION_AFTER_DECISIONS` | Full-product roadmap |
+| `US-37` | Analyze Fuel Performance | Vehicle/driver efficiency, anomaly and leakage analysis without changing raw fuel data | 🟡 `PRODUCT_DECISIONS_FROZEN / IMPLEMENTATION_NOT_STARTED` | `US-37-FUEL-PERFORMANCE-PRODUCT-DECISIONS-001.md` |
 | `US-38` | Handle Fuel Exceptions | Theft, wrong readings, price swings, emergency refuel, card misuse and negative balances | 🟡 `WAVE B / BLOCKED_BY_DEPENDENCY` | Requires US-35 and US-78 contracts |
 
 ---
@@ -235,7 +235,7 @@ Development startup now consistently provisions the idempotent PostgreSQL sample
 
 ```
 Current Status: 67 / 87 COMPLETE; 20 stories remain across Waves B–E
-Queue Head:     US-37-FUEL-PERFORMANCE-PRODUCT-DECISIONS-001
+Queue Head:     US-37-FUEL-PERFORMANCE-IMPLEMENTATION-001
 ```
 
 1. **Wave A — Integration and exception-control foundations:** 2 / 2 COMPLETE / CLOSED (US-73 and US-78).
