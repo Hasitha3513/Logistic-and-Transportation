@@ -20,8 +20,8 @@
 > - **MVP 1.4 Last-Mile Delivery:** 8 / 8 COMPLETE (US-63 through US-70 Accepted & Closed)
 > - **Overall Release Band:** 69 / 87 COMPLETE (18 REPRIORITIZED / 87 TOTAL)
 > - **Current Milestone:** MVP 1.4 Last-Mile Delivery — 8 / 8 COMPLETE, 100%, CLOSED.
-> - **Active Focus:** Wave B is open; US-35 and US-37 are accepted, with US-38, US-46, and US-47 remaining in the wave.
-> - **Immediate Next Action:** Execute `US-38-FUEL-EXCEPTIONS-PRODUCT-DECISIONS-001`.
+> - **Active Focus:** Wave B is open; US-35 and US-37 are accepted, US-38 product decisions are frozen, and US-46/47 remain in the wave.
+> - **Immediate Next Action:** Execute `US-38-FUEL-EXCEPTIONS-IMPLEMENTATION-001`.
 
 ---
 
@@ -142,7 +142,7 @@ Development startup now consistently provisions the idempotent PostgreSQL sample
 | `US-35` | Manage Fuel Cards | Card issuance, restrictions, imported transactions, reconciliation and misuse control | 🟢 `COMPLETE` | Final acceptance PASS; V64/V65; Maven 1,335/0/0/15; Chromium 6/6; zero post-startup ledger mismatches; `US-35-FUEL-CARDS-FINAL-ACCEPTANCE-001.md` |
 | `US-36` | Calculate Trip Fuel Costs | Trip-level fuel expense aggregation | 🟢 `COMPLETE` | `TripFuelCostTest`, V35 |
 | `US-37` | Analyze Fuel Performance | Vehicle/driver efficiency, anomaly and leakage analysis without changing raw fuel data | 🟢 `COMPLETE` | Final acceptance PASS; V63; Maven 1,310/0/0/15; Chromium 6/6; `US-37-FUEL-PERFORMANCE-FINAL-ACCEPTANCE-001.md` |
-| `US-38` | Handle Fuel Exceptions | Theft, wrong readings, price swings, emergency refuel, card misuse and negative balances | 🟡 `WAVE B / READY_FOR_PRODUCT_DECISIONS` | US-35 and US-78 prerequisite contracts are accepted |
+| `US-38` | Handle Fuel Exceptions | Suspected loss, wrong readings, price changes, emergency refuel, card policy deviations and negative Bunker balance | 🟡 `PRODUCT_DECISIONS_FROZEN / IMPLEMENTATION_NOT_STARTED` | Fuel-local case/correction model and durable US-78 handoff frozen; no accounting change |
 
 ---
 
@@ -235,11 +235,11 @@ Development startup now consistently provisions the idempotent PostgreSQL sample
 
 ```
 Current Status: 69 / 87 COMPLETE; 18 stories remain across Waves B–E
-Queue Head:     US-38-FUEL-EXCEPTIONS-PRODUCT-DECISIONS-001
+Queue Head:     US-38-FUEL-EXCEPTIONS-IMPLEMENTATION-001
 ```
 
 1. **Wave A — Integration and exception-control foundations:** 2 / 2 COMPLETE / CLOSED (US-73 and US-78).
-2. **Wave B — Fuel control and financial links:** US-35 and US-37 COMPLETE; US-38, US-46, and US-47 remain, beginning with US-38 product decisions.
+2. **Wave B — Fuel control and financial links:** US-35 and US-37 COMPLETE; US-38 decisions FROZEN and implementation next; US-46 and US-47 remain.
 3. **Wave C — GPS and telematics:** US-48, then US-49/50/51/52/55, then US-53, then US-54.
 4. **Wave D — Compliance and field mobility:** US-72, US-76.
 5. **Wave E — Analytics, integrity, resilience, disruption and user risk:** US-85, US-84, US-87, US-82, US-86.
