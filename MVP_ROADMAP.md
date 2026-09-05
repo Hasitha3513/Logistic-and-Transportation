@@ -3,10 +3,10 @@
 <div align="center">
 
 ![Total Stories](https://img.shields.io/badge/Total%20Stories-87-0969da.svg?style=for-the-badge&logo=target)
-![Completed](https://img.shields.io/badge/Completed-68%20%2F%2087-2da44e.svg?style=for-the-badge&logo=checkmarx)
-![Progress](https://img.shields.io/badge/Progress-78.2%25-brightgreen.svg?style=for-the-badge&logo=speedtest)
+![Completed](https://img.shields.io/badge/Completed-69%20%2F%2087-2da44e.svg?style=for-the-badge&logo=checkmarx)
+![Progress](https://img.shields.io/badge/Progress-79.3%25-brightgreen.svg?style=for-the-badge&logo=speedtest)
 ![MVP 1.4 Closed](https://img.shields.io/badge/MVP%201.4%20Last--Mile-8%20%2F%208-2da44e.svg?style=for-the-badge&logo=pinboard)
-![Database](https://img.shields.io/badge/PostgreSQL%20%2F%20Flyway-V63-8a63d2.svg?style=for-the-badge&logo=postgresql)
+![Database](https://img.shields.io/badge/PostgreSQL%20%2F%20Flyway-V65-8a63d2.svg?style=for-the-badge&logo=postgresql)
 
 </div>
 
@@ -14,31 +14,31 @@
 
 > [!IMPORTANT]
 > **Authoritative Baseline & Current State:**
-> - **Last Reconciled:** `2026-09-04`
+> - **Last Reconciled:** `2026-09-05`
 > - **Authority Order:** Original Requirements (`Traspotation & logistic.docx`), Frozen Architecture/Contracts, Verified Production Code/Tests, then Roadmap.
 > - **MVP 1.3 Delivery Operations:** 7 / 7 COMPLETE (100%) - CLOSED
 > - **MVP 1.4 Last-Mile Delivery:** 8 / 8 COMPLETE (US-63 through US-70 Accepted & Closed)
-> - **Overall Release Band:** 68 / 87 COMPLETE (19 REPRIORITIZED / 87 TOTAL)
+> - **Overall Release Band:** 69 / 87 COMPLETE (18 REPRIORITIZED / 87 TOTAL)
 > - **Current Milestone:** MVP 1.4 Last-Mile Delivery — 8 / 8 COMPLETE, 100%, CLOSED.
-> - **Active Focus:** Wave B is open; US-37 is accepted and US-35 implementation remains acceptance-blocked after the Bunker sample-ledger remediation passed.
-> - **Immediate Next Action:** Execute `US-35-FUEL-CARDS-FINAL-ACCEPTANCE-001-RERUN-2`.
+> - **Active Focus:** Wave B is open; US-35 and US-37 are accepted, with US-38, US-46, and US-47 remaining in the wave.
+> - **Immediate Next Action:** Execute `US-38-FUEL-EXCEPTIONS-PRODUCT-DECISIONS-001`.
 
 ---
 
 ## 📊 1. Executive Metrics & Milestone Progress
 
 ```
-Overall Progress: [█████████████████████████████████████████████░░░░░] 68 / 87 Stories Complete (78.2%)
+Overall Progress: [██████████████████████████████████████████████░░░░] 69 / 87 Stories Complete (79.3%)
 MVP 1.3 Band:     [██████████████████████████████████████████████████] 7 / 7 Complete (100.0%) - CLOSED
 MVP 1.4 Band:     [██████████████████████████████████████████████████] 8 / 8 Complete (100.0%) - CLOSED
 ```
 
 | Metric | Target | Current Count | Percentage | Status Indicator |
 | :--- | :---: | :---: | :---: | :--- |
-| **Completed Stories (Accepted)** | 87 | **68** | `78.2%` | 🟢 `ON TRACK / VERIFIED` |
+| **Completed Stories (Accepted)** | 87 | **69** | `79.3%` | 🟢 `ON TRACK / VERIFIED` |
 | **Next Active / Acceptance Required** | — | **0** | `0.0%` | 🟢 `NONE` |
 | **Not Started (MVP 1.4 Active Scope)** | 1 | **0** | `0.0%` | 🟢 `NONE` |
-| **Reprioritized Remaining Stories** | 19 | **19** | `21.8%` | 🟡 `PLANNED IN GOVERNED WAVES` |
+| **Reprioritized Remaining Stories** | 18 | **18** | `20.7%` | 🟡 `PLANNED IN GOVERNED WAVES` |
 | **Total Registered User Stories** | **87** | **87** | **`100%`** | 🔒 `FROZEN REGISTER (US-01..US-87)` |
 
 > [!NOTE]
@@ -139,10 +139,10 @@ Development startup now consistently provisions the idempotent PostgreSQL sample
 | `US-32` | Record External Fuel Purchases | Fuel card / receipt purchase logging | 🟢 `COMPLETE` | `FuelPurchaseTest`, V32 |
 | `US-33` | Track Fuel Consumption and Mileage | Km/L calculation, baseline variance alerts | 🟢 `COMPLETE` | `FuelMileageTest`, V33 |
 | `US-34` | Manage Bunker Fuel Stock | Internal tank dip readings, stock replenishment | 🟢 `COMPLETE` | `BunkerStockTest`, V34 |
-| `US-35` | Manage Fuel Cards | Card issuance, restrictions, imported transactions, reconciliation and misuse control | 🔴 `IMPLEMENTATION_COMPLETE / ACCEPTANCE_BLOCKED` | V65 and sample-ledger remediations passed; independent final-acceptance rerun-2 next |
+| `US-35` | Manage Fuel Cards | Card issuance, restrictions, imported transactions, reconciliation and misuse control | 🟢 `COMPLETE` | Final acceptance PASS; V64/V65; Maven 1,335/0/0/15; Chromium 6/6; zero post-startup ledger mismatches; `US-35-FUEL-CARDS-FINAL-ACCEPTANCE-001.md` |
 | `US-36` | Calculate Trip Fuel Costs | Trip-level fuel expense aggregation | 🟢 `COMPLETE` | `TripFuelCostTest`, V35 |
 | `US-37` | Analyze Fuel Performance | Vehicle/driver efficiency, anomaly and leakage analysis without changing raw fuel data | 🟢 `COMPLETE` | Final acceptance PASS; V63; Maven 1,310/0/0/15; Chromium 6/6; `US-37-FUEL-PERFORMANCE-FINAL-ACCEPTANCE-001.md` |
-| `US-38` | Handle Fuel Exceptions | Theft, wrong readings, price swings, emergency refuel, card misuse and negative balances | 🟡 `WAVE B / BLOCKED_BY_DEPENDENCY` | Requires US-35 and US-78 contracts |
+| `US-38` | Handle Fuel Exceptions | Theft, wrong readings, price swings, emergency refuel, card misuse and negative balances | 🟡 `WAVE B / READY_FOR_PRODUCT_DECISIONS` | US-35 and US-78 prerequisite contracts are accepted |
 
 ---
 
@@ -234,12 +234,12 @@ Development startup now consistently provisions the idempotent PostgreSQL sample
 ## 🎯 4. Immediate Execution Queue
 
 ```
-Current Status: 68 / 87 COMPLETE; 19 stories remain across Waves B–E
-Queue Head:     US-35-FUEL-CARDS-FINAL-ACCEPTANCE-001-RERUN-2
+Current Status: 69 / 87 COMPLETE; 18 stories remain across Waves B–E
+Queue Head:     US-38-FUEL-EXCEPTIONS-PRODUCT-DECISIONS-001
 ```
 
 1. **Wave A — Integration and exception-control foundations:** 2 / 2 COMPLETE / CLOSED (US-73 and US-78).
-2. **Wave B — Fuel control and financial links:** US-37 COMPLETE; US-35 V65 and sample-ledger remediations passed and independent final acceptance rerun-2 is next; then US-38, US-46, US-47.
+2. **Wave B — Fuel control and financial links:** US-35 and US-37 COMPLETE; US-38, US-46, and US-47 remain, beginning with US-38 product decisions.
 3. **Wave C — GPS and telematics:** US-48, then US-49/50/51/52/55, then US-53, then US-54.
 4. **Wave D — Compliance and field mobility:** US-72, US-76.
 5. **Wave E — Analytics, integrity, resilience, disruption and user risk:** US-85, US-84, US-87, US-82, US-86.
