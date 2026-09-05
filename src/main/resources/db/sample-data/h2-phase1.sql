@@ -394,7 +394,7 @@ INSERT INTO bunker_tank (id, fuel_station_id, tank_code, tank_name, fuel_type, c
 VALUES ('72000000-0000-0000-0000-000000000002', '70000000-0000-0000-0000-000000000001', 'BNK-CMB-PET-01', 'Colombo Hub Petrol 92 Tank', 'PETROL_92', 5000.000, 2755.000, 500.000, 'ACTIVE', CURRENT_TIMESTAMP - INTERVAL '60' DAY, TRUE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 INSERT INTO bunker_tank (id, fuel_station_id, tank_code, tank_name, fuel_type, capacity_liters, current_stock_liters, minimum_stock_liters, status, commissioned_at, active, created_at, updated_at)
-VALUES ('72000000-0000-0000-0000-000000000003', '70000000-0000-0000-0000-000000000002', 'BNK-KDY-DSL-01', 'Kandy Depot Diesel Tank', 'DIESEL', 8000.000, 4200.000, 800.000, 'ACTIVE', CURRENT_TIMESTAMP - INTERVAL '60' DAY, TRUE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+VALUES ('72000000-0000-0000-0000-000000000003', '70000000-0000-0000-0000-000000000002', 'BNK-KDY-DSL-01', 'Kandy Depot Diesel Tank', 'DIESEL', 8000.000, 0.000, 800.000, 'ACTIVE', CURRENT_TIMESTAMP - INTERVAL '60' DAY, TRUE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 -- Bunker Stock Movement Audit Ledger
 INSERT INTO bunker_stock_movement (id, tank_id, ledger_sequence, movement_type, quantity_liters, resulting_balance_liters, reference_type, reference_id, occurred_at, created_by, reason, created_at)
