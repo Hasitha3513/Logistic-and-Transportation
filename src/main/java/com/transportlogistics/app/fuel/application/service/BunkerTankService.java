@@ -123,6 +123,7 @@ public class BunkerTankService implements BunkerTankUseCase {
                 movements.save(new BunkerStockMovement(
                         UUID.randomUUID(),
                         saved.id(),
+                        movements.nextLedgerSequence(saved.id()),
                         BunkerMovementType.OPENING_BALANCE,
                         openingBalance,
                         openingBalance,
@@ -228,6 +229,7 @@ public class BunkerTankService implements BunkerTankUseCase {
             movements.save(new BunkerStockMovement(
                     UUID.randomUUID(),
                     saved.id(),
+                    movements.nextLedgerSequence(saved.id()),
                     BunkerMovementType.OPENING_BALANCE,
                     balance,
                     balance,
@@ -357,6 +359,7 @@ public class BunkerTankService implements BunkerTankUseCase {
             movements.save(new BunkerStockMovement(
                     UUID.randomUUID(),
                     tankId,
+                    movements.nextLedgerSequence(tankId),
                     movementType,
                     movementQty,
                     resultingBalance,
@@ -423,6 +426,7 @@ public class BunkerTankService implements BunkerTankUseCase {
             movements.save(new BunkerStockMovement(
                     UUID.randomUUID(),
                     source.id(),
+                    movements.nextLedgerSequence(source.id()),
                     BunkerMovementType.TRANSFER_OUT,
                     transferQty,
                     sourceNewBalance,
@@ -437,6 +441,7 @@ public class BunkerTankService implements BunkerTankUseCase {
             movements.save(new BunkerStockMovement(
                     UUID.randomUUID(),
                     destination.id(),
+                    movements.nextLedgerSequence(destination.id()),
                     BunkerMovementType.TRANSFER_IN,
                     transferQty,
                     destNewBalance,

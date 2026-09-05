@@ -23,6 +23,7 @@ class BunkerStockLedgerPersistenceAdapter implements BunkerStockLedgerRepository
         var entity = new BunkerStockMovementEntity();
         entity.setId(m.id());
         entity.setTankId(m.tankId());
+        entity.setLedgerSequence(m.ledgerSequence());
         entity.setMovementType(m.movementType());
         entity.setQuantityLiters(m.quantityLiters());
         entity.setResultingBalanceLiters(m.resultingBalanceLiters());
@@ -36,6 +37,11 @@ class BunkerStockLedgerPersistenceAdapter implements BunkerStockLedgerRepository
     }
 
     @Override
+    public long nextLedgerSequence(UUID tankId) {
+        return repository.findMaxLedgerSequence(tankId) + 1L;
+    }
+
+    @Override
     public Optional<BunkerStockMovement> findById(UUID id) {
         return repository.findById(id).map(this::map);
     }
@@ -44,7 +50,7 @@ class BunkerStockLedgerPersistenceAdapter implements BunkerStockLedgerRepository
     public List<BunkerStockMovement> findByTankIdPaged(UUID tankId, int offset, int limit) {
         int pageIndex = limit > 0 ? offset / limit : 0;
         int pageSize = limit > 0 ? limit : 20;
-        return repository.findByTankIdOrderByOccurredAtDesc(tankId, PageRequest.of(pageIndex, pageSize))
+        return repository.findByTankIdOrderByLedgerSequenceDesc(tankId, PageRequest.of(pageIndex, pageSize))
                 .stream()
                 .map(this::map)
                 .toList();
@@ -64,6 +70,7 @@ class BunkerStockLedgerPersistenceAdapter implements BunkerStockLedgerRepository
         return new BunkerStockMovement(
                 e.getId(),
                 e.getTankId(),
+                e.getLedgerSequence(),
                 e.getMovementType(),
                 e.getQuantityLiters(),
                 e.getResultingBalanceLiters(),

@@ -29,8 +29,8 @@ class IntegrationOutboxPostgreSqlAcceptanceTest extends PostgreSqlIntegrationTes
     @Autowired TransactionTemplate transactions;
 
     @Test
-    void currentHeadV64RetainsV60TenantQualifiedPollingAndTerminalIndexes() {
-        assertThat(flyway.info().current().getVersion().getVersion()).isEqualTo("64");
+    void currentHeadV65RetainsV60TenantQualifiedPollingAndTerminalIndexes() {
+        assertThat(flyway.info().current().getVersion().getVersion()).isEqualTo("65");
         var definitions = jdbc.queryForList("select indexdef from pg_indexes where schemaname='public' "
             + "and tablename='integration_outbox_event'", String.class);
         assertThat(definitions).anyMatch(value -> value.contains("tenant_id, status, next_attempt_at"));

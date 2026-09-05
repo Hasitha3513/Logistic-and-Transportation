@@ -123,6 +123,7 @@ public final class FuelPurchaseService implements FuelPurchaseUseCase {
                         bunkerMovements.save(new BunkerStockMovement(
                                 UUID.randomUUID(),
                                 bunkerTank.id(),
+                                bunkerMovements.nextLedgerSequence(bunkerTank.id()),
                                 BunkerMovementType.PURCHASE_RECEIPT,
                                 command.receivedQuantity(),
                                 newStock,

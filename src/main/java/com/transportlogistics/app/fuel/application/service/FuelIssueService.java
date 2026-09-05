@@ -220,6 +220,7 @@ public final class FuelIssueService implements FuelIssueUseCase {
                     bunkerMovements.save(new BunkerStockMovement(
                             UUID.randomUUID(),
                             bunkerTank.id(),
+                            bunkerMovements.nextLedgerSequence(bunkerTank.id()),
                             BunkerMovementType.FUEL_ISSUE,
                             saved.quantity(),
                             newBalance,

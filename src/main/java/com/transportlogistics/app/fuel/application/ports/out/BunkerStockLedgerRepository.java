@@ -11,6 +11,8 @@ public interface BunkerStockLedgerRepository {
 
     BunkerStockMovement save(BunkerStockMovement movement);
 
+    long nextLedgerSequence(UUID tankId);
+
     Optional<BunkerStockMovement> findById(UUID id);
 
     List<BunkerStockMovement> findByTankIdPaged(UUID tankId, int offset, int limit);

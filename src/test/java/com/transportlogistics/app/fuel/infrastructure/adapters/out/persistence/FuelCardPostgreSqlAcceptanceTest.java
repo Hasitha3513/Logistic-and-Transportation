@@ -22,7 +22,7 @@ class FuelCardPostgreSqlAcceptanceTest extends PostgreSqlIntegrationTest {
     @Test
     void currentHeadContainsUs35TablesAndPermissions() {
         assertThat(jdbc.sql("select version from flyway_schema_history where success order by installed_rank desc limit 1")
-                .query(String.class).single()).isEqualTo("64");
+                .query(String.class).single()).isEqualTo("65");
         assertThat(jdbc.sql("select count(*) from information_schema.tables where table_schema='public' and table_name like 'fuel_card%'")
                 .query(Integer.class).single()).isEqualTo(8);
         assertThat(jdbc.sql("select count(*) from app_permission where code like 'FUEL_CARD_%' and active")

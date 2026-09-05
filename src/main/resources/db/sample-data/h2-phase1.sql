@@ -397,23 +397,23 @@ INSERT INTO bunker_tank (id, fuel_station_id, tank_code, tank_name, fuel_type, c
 VALUES ('72000000-0000-0000-0000-000000000003', '70000000-0000-0000-0000-000000000002', 'BNK-KDY-DSL-01', 'Kandy Depot Diesel Tank', 'DIESEL', 8000.000, 4200.000, 800.000, 'ACTIVE', CURRENT_TIMESTAMP - INTERVAL '60' DAY, TRUE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 -- Bunker Stock Movement Audit Ledger
-INSERT INTO bunker_stock_movement (id, tank_id, movement_type, quantity_liters, resulting_balance_liters, reference_type, reference_id, occurred_at, created_by, reason, created_at)
-VALUES ('73000000-0000-0000-0000-000000000001', '72000000-0000-0000-0000-000000000001', 'OPENING_BALANCE', 2500.000, 2500.000, 'INITIAL_SETUP', '72000000-0000-0000-0000-000000000001', CURRENT_TIMESTAMP - INTERVAL '60' DAY, '00000000-0000-0000-0000-000000000001', 'Initial depot tank commissioning', CURRENT_TIMESTAMP);
+INSERT INTO bunker_stock_movement (id, tank_id, ledger_sequence, movement_type, quantity_liters, resulting_balance_liters, reference_type, reference_id, occurred_at, created_by, reason, created_at)
+VALUES ('73000000-0000-0000-0000-000000000001', '72000000-0000-0000-0000-000000000001', 1, 'OPENING_BALANCE', 2500.000, 2500.000, 'INITIAL_SETUP', '72000000-0000-0000-0000-000000000001', CURRENT_TIMESTAMP - INTERVAL '60' DAY, '00000000-0000-0000-0000-000000000001', 'Initial depot tank commissioning', CURRENT_TIMESTAMP);
 
-INSERT INTO bunker_stock_movement (id, tank_id, movement_type, quantity_liters, resulting_balance_liters, reference_type, reference_id, occurred_at, created_by, reason, created_at)
-VALUES ('73000000-0000-0000-0000-000000000002', '72000000-0000-0000-0000-000000000002', 'OPENING_BALANCE', 1200.000, 1200.000, 'INITIAL_SETUP', '72000000-0000-0000-0000-000000000002', CURRENT_TIMESTAMP - INTERVAL '60' DAY, '00000000-0000-0000-0000-000000000001', 'Initial depot tank commissioning', CURRENT_TIMESTAMP);
+INSERT INTO bunker_stock_movement (id, tank_id, ledger_sequence, movement_type, quantity_liters, resulting_balance_liters, reference_type, reference_id, occurred_at, created_by, reason, created_at)
+VALUES ('73000000-0000-0000-0000-000000000002', '72000000-0000-0000-0000-000000000002', 1, 'OPENING_BALANCE', 1200.000, 1200.000, 'INITIAL_SETUP', '72000000-0000-0000-0000-000000000002', CURRENT_TIMESTAMP - INTERVAL '60' DAY, '00000000-0000-0000-0000-000000000001', 'Initial depot tank commissioning', CURRENT_TIMESTAMP);
 
-INSERT INTO bunker_stock_movement (id, tank_id, movement_type, quantity_liters, resulting_balance_liters, reference_type, reference_id, occurred_at, created_by, reason, created_at)
-VALUES ('73000000-0000-0000-0000-000000000003', '72000000-0000-0000-0000-000000000001', 'RECEIPT', 4000.000, 6500.000, 'FUEL_PURCHASE', '75000000-0000-0000-0000-000000000001', CURRENT_TIMESTAMP - INTERVAL '15' DAY, '00000000-0000-0000-0000-000000000001', 'Bulk diesel replenishment delivery', CURRENT_TIMESTAMP);
+INSERT INTO bunker_stock_movement (id, tank_id, ledger_sequence, movement_type, quantity_liters, resulting_balance_liters, reference_type, reference_id, occurred_at, created_by, reason, created_at)
+VALUES ('73000000-0000-0000-0000-000000000003', '72000000-0000-0000-0000-000000000001', 2, 'RECEIPT', 4000.000, 6500.000, 'FUEL_PURCHASE', '75000000-0000-0000-0000-000000000001', CURRENT_TIMESTAMP - INTERVAL '15' DAY, '00000000-0000-0000-0000-000000000001', 'Bulk diesel replenishment delivery', CURRENT_TIMESTAMP);
 
-INSERT INTO bunker_stock_movement (id, tank_id, movement_type, quantity_liters, resulting_balance_liters, reference_type, reference_id, occurred_at, created_by, reason, created_at)
-VALUES ('73000000-0000-0000-0000-000000000004', '72000000-0000-0000-0000-000000000002', 'RECEIPT', 1600.000, 2800.000, 'FUEL_PURCHASE', '75000000-0000-0000-0000-000000000002', CURRENT_TIMESTAMP - INTERVAL '10' DAY, '00000000-0000-0000-0000-000000000001', 'Bulk petrol replenishment delivery', CURRENT_TIMESTAMP);
+INSERT INTO bunker_stock_movement (id, tank_id, ledger_sequence, movement_type, quantity_liters, resulting_balance_liters, reference_type, reference_id, occurred_at, created_by, reason, created_at)
+VALUES ('73000000-0000-0000-0000-000000000004', '72000000-0000-0000-0000-000000000002', 2, 'RECEIPT', 1600.000, 2800.000, 'FUEL_PURCHASE', '75000000-0000-0000-0000-000000000002', CURRENT_TIMESTAMP - INTERVAL '10' DAY, '00000000-0000-0000-0000-000000000001', 'Bulk petrol replenishment delivery', CURRENT_TIMESTAMP);
 
-INSERT INTO bunker_stock_movement (id, tank_id, movement_type, quantity_liters, resulting_balance_liters, reference_type, reference_id, occurred_at, created_by, reason, created_at)
-VALUES ('73000000-0000-0000-0000-000000000005', '72000000-0000-0000-0000-000000000001', 'DISPENSE', 85.000, 6415.000, 'FUEL_ISSUE', '76000000-0000-0000-0000-000000000001', CURRENT_TIMESTAMP - INTERVAL '2' HOUR, '00000000-0000-0000-0000-000000000001', 'Dispensed to vehicle WP-CAB-1201 for Trip TRIP-DEMO-006', CURRENT_TIMESTAMP);
+INSERT INTO bunker_stock_movement (id, tank_id, ledger_sequence, movement_type, quantity_liters, resulting_balance_liters, reference_type, reference_id, occurred_at, created_by, reason, created_at)
+VALUES ('73000000-0000-0000-0000-000000000005', '72000000-0000-0000-0000-000000000001', 3, 'DISPENSE', 85.000, 6415.000, 'FUEL_ISSUE', '76000000-0000-0000-0000-000000000001', CURRENT_TIMESTAMP - INTERVAL '2' HOUR, '00000000-0000-0000-0000-000000000001', 'Dispensed to vehicle WP-CAB-1201 for Trip TRIP-DEMO-006', CURRENT_TIMESTAMP);
 
-INSERT INTO bunker_stock_movement (id, tank_id, movement_type, quantity_liters, resulting_balance_liters, reference_type, reference_id, occurred_at, created_by, reason, created_at)
-VALUES ('73000000-0000-0000-0000-000000000006', '72000000-0000-0000-0000-000000000002', 'DISPENSE', 45.000, 2755.000, 'FUEL_ISSUE', '76000000-0000-0000-0000-000000000002', CURRENT_TIMESTAMP - INTERVAL '2' DAY, '00000000-0000-0000-0000-000000000001', 'Dispensed to vehicle WP-CAA-2202 for Trip TRIP-DEMO-007', CURRENT_TIMESTAMP);
+INSERT INTO bunker_stock_movement (id, tank_id, ledger_sequence, movement_type, quantity_liters, resulting_balance_liters, reference_type, reference_id, occurred_at, created_by, reason, created_at)
+VALUES ('73000000-0000-0000-0000-000000000006', '72000000-0000-0000-0000-000000000002', 3, 'DISPENSE', 45.000, 2755.000, 'FUEL_ISSUE', '76000000-0000-0000-0000-000000000002', CURRENT_TIMESTAMP - INTERVAL '2' DAY, '00000000-0000-0000-0000-000000000001', 'Dispensed to vehicle WP-CAA-2202 for Trip TRIP-DEMO-007', CURRENT_TIMESTAMP);
 
 -- Bunker Physical Dip Readings
 INSERT INTO bunker_dip_reading (id, tank_id, physical_quantity_liters, book_quantity_at_measurement, variance_quantity_liters, measured_at, measured_by, notes, created_at)
@@ -468,44 +468,44 @@ VALUES ('90000000-0000-0000-0000-000000000001', 'RECORD_CHECKPOINT', 1, '0000000
 -- 9. FREIGHT ORDERS, CARGO MANIFESTS, LOAD PLANS & INSURANCE
 -- -------------------------------------------------------------------------------------------------
 INSERT INTO freight_order (id, order_number, customer_id, origin_location_id, destination_location_id, requested_pickup_at, requested_delivery_at, service_level, priority, special_handling_instructions, version, created_at, updated_at, created_by, updated_by)
-VALUES 
+VALUES
   ('85000000-0000-0000-0000-000000000001', 'FO-2026-0001', '10000000-0000-0000-0000-000000000003', '20000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000002', CURRENT_TIMESTAMP - INTERVAL '3' DAY, CURRENT_TIMESTAMP + INTERVAL '2' DAY, 'EXPRESS', 'HIGH', 'Temperature sensitive medical vaccines and diagnostics', 0, CURRENT_TIMESTAMP - INTERVAL '3' DAY, CURRENT_TIMESTAMP - INTERVAL '3' DAY, 'freight.planner', 'freight.planner'),
   ('85000000-0000-0000-0000-000000000002', 'FO-2026-0002', '10000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000003', CURRENT_TIMESTAMP - INTERVAL '2' DAY, CURRENT_TIMESTAMP + INTERVAL '3' DAY, 'STANDARD', 'NORMAL', 'General retail consumer hardware and appliances', 0, CURRENT_TIMESTAMP - INTERVAL '2' DAY, CURRENT_TIMESTAMP - INTERVAL '2' DAY, 'freight.planner', 'freight.planner');
 
 INSERT INTO freight_order_line (id, freight_order_id, description, quantity, line_order)
-VALUES 
+VALUES
   ('86000000-0000-0000-0000-000000000001', '85000000-0000-0000-0000-000000000001', 'Insulin Vials Cold Packs (2C to 8C)', 50.0000, 0),
   ('86000000-0000-0000-0000-000000000002', '85000000-0000-0000-0000-000000000001', 'Laboratory Glass Test Tubes & Pipettes', 20.0000, 1),
   ('86000000-0000-0000-0000-000000000003', '85000000-0000-0000-0000-000000000002', 'Electric Water Heaters & Geysers', 30.0000, 0);
 
 
 INSERT INTO cargo_manifest (id, manifest_number, freight_order_id, freight_order_number, version, created_at, updated_at, created_by, updated_by, finalized_at, finalized_by)
-VALUES 
+VALUES
   ('87000000-0000-0000-0000-000000000001', 'MNF-2026-0001', '85000000-0000-0000-0000-000000000001', 'FO-2026-0001', 0, CURRENT_TIMESTAMP - INTERVAL '2' DAY, CURRENT_TIMESTAMP - INTERVAL '2' DAY, 'freight.planner', 'freight.planner', CURRENT_TIMESTAMP - INTERVAL '2' DAY, 'freight.planner');
 
 INSERT INTO cargo_manifest_item (id, cargo_manifest_id, freight_order_line_id, description, quantity, packing_information, commodity_classification, customs_applicable, customs_information, hazardous, hazardous_classification, hazardous_details, item_order, fragile, temperature_sensitive)
-VALUES 
+VALUES
   ('88000000-0000-0000-0000-000000000001', '87000000-0000-0000-0000-000000000001', '86000000-0000-0000-0000-000000000001', 'Insulin Vials Cold Packs (2C to 8C)', 50.0000, 'Insulated Thermocol Boxes with Gel Packs', 'PHARMACEUTICAL', FALSE, NULL, FALSE, NULL, NULL, 0, FALSE, TRUE),
   ('88000000-0000-0000-0000-000000000002', '87000000-0000-0000-0000-000000000001', '86000000-0000-0000-0000-000000000002', 'Laboratory Glass Test Tubes & Pipettes', 20.0000, 'Corrugated Cardboard with Bubble Wrap', 'GLASSWARE', FALSE, NULL, FALSE, NULL, NULL, 1, TRUE, FALSE);
 
 INSERT INTO load_plan (id, load_plan_number, cargo_manifest_id, vehicle_id, notes, version, created_at, updated_at, created_by, updated_by, readiness_status, ready_at, ready_by)
-VALUES 
+VALUES
   ('89000000-0000-0000-0000-000000000001', 'LP-2026-0001', '87000000-0000-0000-0000-000000000001', '32000000-0000-0000-0000-000000000004', 'Validated Reefer loading layout for cold chain vaccines', 1, CURRENT_TIMESTAMP - INTERVAL '1' DAY, CURRENT_TIMESTAMP - INTERVAL '1' DAY, 'freight.planner', 'freight.planner', 'STRUCTURALLY_READY', CURRENT_TIMESTAMP - INTERVAL '1' DAY, 'freight.planner');
 
 INSERT INTO load_plan_item_placement (id, load_plan_id, manifest_item_id, placement_order, zone_reference, stack_group, container_reference, loading_sequence, special_handling_notes)
-VALUES 
+VALUES
   ('89500000-0000-0000-0000-000000000001', '89000000-0000-0000-0000-000000000001', '88000000-0000-0000-0000-000000000001', 0, 'REEFER_ZONE_A', 'TEMP_STACK_01', 'CONT-COLD-01', 0, 'Keep cold at 4C'),
   ('89500000-0000-0000-0000-000000000002', '89000000-0000-0000-0000-000000000001', '88000000-0000-0000-0000-000000000002', 1, 'AMBIENT_ZONE_B', 'FRAGILE_STACK_01', 'CONT-BOX-02', 1, 'Handle with care - fragile glassware');
 
 INSERT INTO freight_insurance_policy (id, policy_number, freight_order_id, cargo_manifest_id, insurance_provider, policy_type, coverage_amount, premium_amount, currency, valid_from, valid_until, status, version, created_at, updated_at, created_by, updated_by)
-VALUES 
+VALUES
   ('89800000-0000-0000-0000-000000000001', 'POL-2026-0001', '85000000-0000-0000-0000-000000000001', '87000000-0000-0000-0000-000000000001', 'Sri Lanka Insurance Corporation (SLIC)', 'ALL_RISK_CARGO', 3500000.0000, 17500.0000, 'LKR', CURRENT_TIMESTAMP - INTERVAL '3' DAY, CURRENT_TIMESTAMP + INTERVAL '30' DAY, 'ACTIVE', 0, CURRENT_TIMESTAMP - INTERVAL '3' DAY, CURRENT_TIMESTAMP - INTERVAL '3' DAY, 'freight.planner', 'freight.planner');
 
 INSERT INTO freight_insurance_claim (id, claim_number, policy_id, freight_order_id, incident_reference, damage_description, claimed_amount, assessed_amount, assessment_notes, assessed_by, assessed_at, status, resolution_reason, version, created_at, updated_at, created_by, updated_by)
-VALUES 
+VALUES
   ('89900000-0000-0000-0000-000000000001', 'CLM-2026-0001', '89800000-0000-0000-0000-000000000001', '85000000-0000-0000-0000-000000000001', 'INC-2026-001', 'Minor temperature excursion in Reefer Zone A due to sensor fluctuation', 45000.0000, 40000.0000, 'Assessed 2 affected boxes, approved claim compensation', 'claims.officer', CURRENT_TIMESTAMP - INTERVAL '1' DAY, 'APPROVED', 'Approved by Senior Underwriter', 1, CURRENT_TIMESTAMP - INTERVAL '2' DAY, CURRENT_TIMESTAMP - INTERVAL '1' DAY, 'freight.planner', 'claims.officer');
 
 INSERT INTO freight_insurance_settlement (id, claim_id, settlement_reference, amount, currency, notes, settled_by, settled_at)
-VALUES 
+VALUES
   ('89950000-0000-0000-0000-000000000001', '89900000-0000-0000-0000-000000000001', 'SETTLE-2026-001', 40000.0000, 'LKR', 'Bank wire transfer settlement processed to client account', 'finance.manager', CURRENT_TIMESTAMP - INTERVAL '12' HOUR);
 
