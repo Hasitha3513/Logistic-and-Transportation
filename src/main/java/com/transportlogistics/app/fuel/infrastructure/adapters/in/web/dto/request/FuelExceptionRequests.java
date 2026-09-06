@@ -15,7 +15,7 @@ public final class FuelExceptionRequests {
                          Map<String,String> safeMetadata,UUID vehicleId,UUID driverId,UUID tripId,UUID cardId,UUID tankId) {}
     public record VersionedReason(long version,@NotBlank @Size(max=500) String reason) {}
     public record Evidence(@NotBlank String evidenceType,String sourceType,UUID sourceId,@NotBlank @Size(max=500) String summary,Map<String,String> safeSnapshot) {}
-    public record Note(@NotBlank @Size(max=1000) String text) {}
+    public record Note(@NotBlank @Size(max=2000) String text) {}
     public record Correction(@NotBlank String correctionType,@NotNull Map<String,String> ownerCommand,boolean changesFinancialFact) {}
     public record Resolve(long version,@NotNull FuelExceptionCase.Outcome outcome,@NotBlank @Size(max=500) String reason) {}
 }

@@ -21,8 +21,15 @@ public interface FuelExceptionStore {
     Optional<FuelExceptionUseCase.Correction> correction(UUID tenantId, UUID exceptionId, UUID correctionId);
     FuelExceptionUseCase.Correction reviewCorrection(UUID tenantId, UUID exceptionId, UUID correctionId, long version, String status, UUID actor, String reason, OffsetDateTime now);
     FuelExceptionUseCase.Correction correctionResult(UUID tenantId, UUID exceptionId, UUID correctionId, long version, String status, String ownerReference, String failureCode, OffsetDateTime now);
+    Optional<String> successfulCorrectionResult(UUID tenantId, UUID correctionId);
+    boolean startCorrectionExecution(UUID tenantId, UUID exceptionId, UUID correctionId, long version,
+                                     OffsetDateTime now);
+    void correctionAttempt(UUID tenantId, UUID correctionId, UUID idempotencyKey, UUID actor,
+                           String result, String reference, String errorCode, OffsetDateTime now);
     void history(UUID tenantId, UUID exceptionId, String action, String from, String to, String detail, UUID actor, OffsetDateTime now);
     FuelExceptionUseCase.Detail detail(FuelExceptionCase value);
     UUID handoff(UUID tenantId, UUID exceptionId, String reason, OffsetDateTime now);
+    Optional<UUID> handoffEvent(UUID tenantId, UUID exceptionId);
+    void handoffResult(UUID tenantId, UUID exceptionId, String status, String failureCode, OffsetDateTime now);
     boolean sourceExists(UUID tenantId, String sourceType, UUID sourceId);
 }

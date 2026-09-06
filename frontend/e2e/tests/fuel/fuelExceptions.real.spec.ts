@@ -11,6 +11,7 @@ type FuelCase = Entity & { category: string; lifecycle: string; impact: string; 
 
 test.describe.serial('US-38 real PostgreSQL fuel-exception acceptance', () => {
   let admin: Auth; let approver: Auth; let limited: Auth; let tenantB: Auth; let tank: Tank;
+  let vehicleId: string; let driverId: string;
   const cases: FuelCase[] = [];
 
   test.beforeAll(async () => {
@@ -23,6 +24,10 @@ test.describe.serial('US-38 real PostgreSQL fuel-exception acceptance', () => {
     tenantB = await login(other.username, other.password);
     const stations = await json<Entity[]>(api.get('/api/fuel-stations'));
     expect(stations.length).toBeGreaterThan(0);
+    const vehicles = entities(await json<unknown>(api.get('/api/vehicles')));
+    const drivers = entities(await json<unknown>(api.get('/api/drivers')));
+    expect(vehicles.length).toBeGreaterThan(0); expect(drivers.length).toBeGreaterThan(0);
+    vehicleId = vehicles[0].id; driverId = drivers[0].id;
     const createdTank = await api.post('/api/bunker-tanks', { data: { fuelStationId: stations[0].id,
       tankCode: suffix.toUpperCase(), tankName: `US-38 acceptance ${suffix}`, fuelType: 'DIESEL',
       capacityLiters: 1000, minimumStockLiters: 10, openingBalanceLiters: 100 } });
@@ -72,7 +77,11 @@ test.describe.serial('US-38 real PostgreSQL fuel-exception acceptance', () => {
     const before = await json<Tank>(api.get(`/api/bunker-tanks/${tank.id}`));
     cases.push(await createCase(api, 'SUDDEN_PRICE_CHANGE', 'HIGH', 'Sudden price change requires effective-dated review'));
     cases.push(await createCase(api, 'EMERGENCY_REFUEL', 'HIGH', 'Emergency refuel recorded retrospectively for review', {
-      vehicleId: crypto.randomUUID(), tripId: crypto.randomUUID(), occurredAt: new Date().toISOString() }));
+      vehicleId, driverId, occurredAt: new Date().toISOString() }));
+    const missing = await api.post('/api/v1/fuel/exceptions', { data: { category: 'EMERGENCY_REFUEL', impact: 'HIGH',
+      sourceType: 'BUNKER_TANK', sourceId: tank.id, summary: `Missing emergency reference ${suffix}`,
+      vehicleId: crypto.randomUUID(), driverId: crypto.randomUUID(), occurredAt: new Date().toISOString() } });
+    expect(missing.status()).toBe(404);
     const after = await json<Tank>(api.get(`/api/bunker-tanks/${tank.id}`));
     expect(after.currentStockLiters).toBe(before.currentStockLiters); await api.dispose();
   });
@@ -96,17 +105,23 @@ test.describe.serial('US-38 real PostgreSQL fuel-exception acceptance', () => {
     expect(after.currentStockLiters).toBe(before.currentStockLiters);
     expect(movementsAfter.totalElements).toBe(movementsBefore.totalElements);
     const found = await json<FuelCase[]>(api.get(`/api/v1/fuel/exceptions?category=NEGATIVE_BUNKER_BALANCE&tankId=${tank.id}`));
-    expect(found).toHaveLength(1); cases.push(found[0]); await api.dispose();
+    expect(found).toHaveLength(1);
+    const replay = await api.post(`/api/bunker-tanks/${tank.id}/adjustments`, { data: {
+      quantityDeltaLiters: String(-(Number(before.currentStockLiters) + 1)), reason: 'US-38 negative balance rejection' } });
+    expect(replay.status()).toBe(400);
+    const replayed = await json<FuelCase[]>(api.get(`/api/v1/fuel/exceptions?category=NEGATIVE_BUNKER_BALANCE&tankId=${tank.id}`));
+    expect(replayed).toHaveLength(1);
+    cases.push(found[0]); await api.dispose();
   });
 
   test('6/6 performs durable critical handoff and enforces tenant and command RBAC', async () => {
     const api = await authorized(admin);
     let critical = await createCase(api, 'SUSPECTED_FUEL_LOSS', 'CRITICAL',
       'Critical unexplained variance requiring Operations coordination', { sourceType: 'REJECTED_BUNKER_COMMAND' });
-    critical = await command<FuelCase>(api, critical, 'escalate', { reason: 'Cross-module coordination required' });
+    critical = await command<FuelCase>(api, critical, 'escalate', { reason: '[E2E_FAIL_FIRST] Cross-module coordination required' });
+    expect(critical.handoffStatus).toBe('FAILED');
+    critical = await command<FuelCase>(api, critical, 'escalate', { reason: 'Retry durable Operations handoff' });
     expect(critical.handoffStatus).toBe('PUBLISHED');
-    const retry = await api.post(`/api/v1/fuel/exceptions/${critical.id}/escalate`, { data: { version: critical.version, reason: 'retry' } });
-    expect(retry.status()).toBe(400);
     await expect.poll(async () => {
       const operations = await json<{ content: Array<{ sourceModule: string; sourceId: string }> }>(
         api.get('/api/v1/operational-exceptions?sourceModule=FUEL'));
@@ -121,8 +136,15 @@ test.describe.serial('US-38 real PostgreSQL fuel-exception acceptance', () => {
       viewer.post(`/api/v1/fuel/exceptions/${critical.id}/escalate`, { data: { version: critical.version, reason: 'denied' } })]) {
       expect((await call).status()).toBe(403);
     }
-    const detail = await json<{ evidence: unknown[]; history: unknown[] }>(api.get(`/api/v1/fuel/exceptions/${cases[0].id}`));
-    expect(detail.evidence.length).toBeGreaterThan(0); expect(detail.history.length).toBeGreaterThan(0);
+    const note2000 = await api.post(`/api/v1/fuel/exceptions/${cases[0].id}/notes`, { data: { text: 'n'.repeat(2000) } });
+    expect(note2000.status(), await note2000.text()).toBe(201);
+    const note2001 = await api.post(`/api/v1/fuel/exceptions/${cases[0].id}/notes`, { data: { text: 'n'.repeat(2001) } });
+    expect(note2001.status()).toBe(400);
+    const evidenceDetail = await json<{ evidence: unknown[] }>(api.get(`/api/v1/fuel/exceptions/${cases[0].id}`));
+    const handoffDetail = await json<{ history: Array<{ action: string }> }>(api.get(`/api/v1/fuel/exceptions/${critical.id}`));
+    expect(evidenceDetail.evidence.length).toBeGreaterThan(0); expect(handoffDetail.history.length).toBeGreaterThan(0);
+    expect(handoffDetail.history.map(value => value.action)).toEqual(expect.arrayContaining([
+      'HANDOFF_CREATED', 'HANDOFF_FAILED', 'HANDOFF_RETRIED', 'HANDOFF_PUBLISHED']));
     await api.dispose(); await other.dispose(); await viewer.dispose();
   });
 
@@ -154,4 +176,8 @@ async function authenticatePage(page: import('@playwright/test').Page, auth: Aut
 async function login(username = process.env.E2E_ADMIN_USERNAME ?? 'admin', password = process.env.E2E_ADMIN_PASSWORD ?? 'AdminPass!2026') {
   const api = await request.newContext({ baseURL: backend }); const response = await api.post('/api/auth/login', { data: { username, password } });
   expect(response.status(), await response.text()).toBe(200); const auth = await response.json() as Auth; await api.dispose(); return auth;
+}
+function entities(value: unknown): Entity[] {
+  if (Array.isArray(value)) return value as Entity[];
+  return ((value as { content?: Entity[] }).content ?? []);
 }
