@@ -1,7 +1,7 @@
 # US-38 Fuel Exceptions Implementation
 
-Status: `IMPLEMENTATION_COMPLETE / ACCEPTANCE_PENDING`  
-Migration: `V66__fuel_exceptions_us38.sql`  
+Status: `IMPLEMENTATION_COMPLETE / ACCEPTANCE_PENDING`
+Migrations: `V66__fuel_exceptions_us38.sql`, `V67__us38_technical_remediation.sql`
 Accounting: 69 / 87 complete; 18 / 87 remaining (unchanged)
 
 ## Implemented contract
@@ -28,11 +28,15 @@ V66 creates `fuel_exception_case`, `fuel_exception_evidence`, `fuel_exception_no
 
 Fuel Exceptions is integrated under the existing Fuel navigation and AppLayout. The page provides permission-aware queue/detail views, safe-language guidance, source/review/handoff state, append-only notes/evidence/history, correction approval and Operations escalation. Backend authorization remains authoritative.
 
+## Technical remediation
+
+The V67 remediation is complete. It adds immutable correction-attempt evidence, stable idempotency and negative-source event identity, durable handoff failure/retry state, safe owner-command failure persistence, and the CRITICAL resolution precondition. Deterministic PostgreSQL races and real owner flows prove source immutability across Fuel Issue, Fuel Purchase, Fuel Price, Fleet reading, Bunker, and Fuel Card provider facts. See `US-38-FUEL-EXCEPTIONS-TECHNICAL-REMEDIATION-001.md`.
+
 ## Verification evidence
 
-- Complete Maven: 1,339 tests, 0 failures, 0 errors, 15 skipped — BUILD SUCCESS (05:18).
+- Complete Maven: 1,356 tests, 0 failures, 0 errors, 15 skipped — BUILD SUCCESS (05:34).
 - Architecture: 46/46 PASS.
-- PostgreSQL migration and structural acceptance: V1 through V66 PASS using only `transport_logistics_acceptance`.
+- PostgreSQL migration, structural and nine-race acceptance: V1 through V67 PASS using only `transport_logistics_acceptance`.
 - Checkstyle: zero violations; PMD: PASS; SpotBugs: zero findings.
 - TypeScript: PASS; Vitest: 263/263 PASS; production build: PASS; changed-file lint: PASS.
 - Real PostgreSQL-backed Chromium: 6/6 PASS across all categories and required safety, correction, handoff, tenancy and RBAC outcomes.
@@ -42,4 +46,4 @@ Fuel Exceptions is integrated under the existing Fuel navigation and AppLayout. 
 
 No generic incident/workflow/fraud engine, raw-source rewrite, distributed transaction, second outbox, payment/provider authority, punitive conclusion, automated discipline, cross-module repository access, arbitrary Operations creation, or development-database acceptance path was introduced.
 
-Next task: `US-38-FUEL-EXCEPTIONS-TECHNICAL-CLOSURE-001`.
+Next task: `US-38-FUEL-EXCEPTIONS-TECHNICAL-CLOSURE-001-RERUN`.

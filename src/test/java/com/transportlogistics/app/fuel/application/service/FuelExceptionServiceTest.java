@@ -24,6 +24,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Supplier;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -63,6 +64,7 @@ class FuelExceptionServiceTest {
         when(store.note(eq(TENANT), eq(CASE_ID), any(), eq(ACTOR), any())).thenAnswer(invocation ->
                 new FuelExceptionUseCase.Note(UUID.randomUUID(), invocation.getArgument(2), ACTOR, NOW));
 
+        service.addNote(context, CASE_ID, new FuelExceptionUseCase.Text("x".repeat(1999)));
         service.addNote(context, CASE_ID, new FuelExceptionUseCase.Text("x".repeat(2000)));
         assertThatThrownBy(() -> service.addNote(context, CASE_ID,
                 new FuelExceptionUseCase.Text("x".repeat(2001)))).isInstanceOf(BusinessRuleException.class);
@@ -90,6 +92,23 @@ class FuelExceptionServiceTest {
 
         assertThatThrownBy(() -> service.resolve(context, CASE_ID, resolve)).isInstanceOf(BusinessRuleException.class);
         assertThatThrownBy(() -> service.resolve(context, CASE_ID, resolve)).isInstanceOf(BusinessRuleException.class);
+    }
+
+    @Test void criticalResolutionAllowsPublishedHandoff() {
+        var published = aCase(FuelExceptionCase.Impact.CRITICAL, FuelExceptionCase.HandoffStatus.PUBLISHED,
+                FuelExceptionCase.Lifecycle.UNDER_REVIEW, 1);
+        var resolved = aCase(FuelExceptionCase.Impact.CRITICAL, FuelExceptionCase.HandoffStatus.PUBLISHED,
+                FuelExceptionCase.Lifecycle.RESOLVED, 2);
+        when(store.find(TENANT, CASE_ID)).thenReturn(Optional.of(published));
+        when(store.update(eq(TENANT), eq(CASE_ID), eq(1L), eq(FuelExceptionCase.Lifecycle.RESOLVED),
+                eq(false), eq(FuelExceptionCase.HandoffStatus.PUBLISHED),
+                eq(FuelExceptionCase.Outcome.REFERRED_TO_OPERATIONS), eq("Reviewed outcome"), eq(ACTOR), any()))
+                .thenReturn(resolved);
+
+        assertThat(service.resolve(context, CASE_ID, new FuelExceptionUseCase.Resolve(1,
+                FuelExceptionCase.Outcome.REFERRED_TO_OPERATIONS, "Reviewed outcome"))).isEqualTo(resolved);
+        verify(store).history(eq(TENANT), eq(CASE_ID), eq("CASE_RESOLVED"), eq("UNDER_REVIEW"),
+                eq("RESOLVED"), eq("Reviewed outcome"), eq(ACTOR), any());
     }
 
     @Test void retryAfterSuccessfulOwnerCommandIsNoop() {

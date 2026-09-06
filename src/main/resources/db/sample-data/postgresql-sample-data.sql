@@ -593,6 +593,11 @@ INSERT INTO fuel_issue (id, voucher_number, vehicle_id, trip_id, driver_id, fuel
   ('83000000-0000-0000-0000-000000000010', 'FV-2026-0010', '52000000-0000-0000-0000-000000000010', '70000000-0000-0000-0000-000000000010', '40000000-0000-0000-0000-000000000010', 'AUTO_DIESEL', 80.0, 317.0, 25360.0, '80000000-0000-0000-0000-000000000005', 50000.0, 1500.0, CURRENT_TIMESTAMP - INTERVAL '10 days', 'ISSUED', '10000000-0000-0000-0000-000000000002', '10000000-0000-0000-0000-000000000005', CURRENT_TIMESTAMP - INTERVAL '10 days', 'Fuel voucher #10', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a')
 ON CONFLICT DO NOTHING;
 
+-- Keep generated vouchers ahead of idempotently seeded business keys.
+SELECT setval('fuel_voucher_sequence', GREATEST(
+  (SELECT COALESCE(MAX(CAST(SUBSTRING(voucher_number FROM '[0-9]+$') AS BIGINT)), 0) FROM fuel_issue),
+  (SELECT last_value FROM fuel_voucher_sequence)), true);
+
 -- 43. fuel_issue_history
 INSERT INTO fuel_issue_history (id, fuel_issue_id, from_status, to_status, action, actor_id, actor, comment, occurred_at, tenant_id) VALUES
   ('87000000-0000-0000-0000-000000000001', '83000000-0000-0000-0000-000000000001', 'AUTHORIZED', 'ISSUED', 'ISSUE', '10000000-0000-0000-0000-000000000005', 'fuel.kamal', 'Dispensed fuel voucher #1', CURRENT_TIMESTAMP - INTERVAL '1 days', '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a'),

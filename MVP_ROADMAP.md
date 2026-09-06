@@ -6,7 +6,7 @@
 ![Completed](https://img.shields.io/badge/Completed-69%20%2F%2087-2da44e.svg?style=for-the-badge&logo=checkmarx)
 ![Progress](https://img.shields.io/badge/Progress-79.3%25-brightgreen.svg?style=for-the-badge&logo=speedtest)
 ![MVP 1.4 Closed](https://img.shields.io/badge/MVP%201.4%20Last--Mile-8%20%2F%208-2da44e.svg?style=for-the-badge&logo=pinboard)
-![Database](https://img.shields.io/badge/PostgreSQL%20%2F%20Flyway-V65-8a63d2.svg?style=for-the-badge&logo=postgresql)
+![Database](https://img.shields.io/badge/PostgreSQL%20%2F%20Flyway-V67-8a63d2.svg?style=for-the-badge&logo=postgresql)
 
 </div>
 
@@ -21,7 +21,7 @@
 > - **Overall Release Band:** 69 / 87 COMPLETE (18 REPRIORITIZED / 87 TOTAL)
 > - **Current Milestone:** MVP 1.4 Last-Mile Delivery — 8 / 8 COMPLETE, 100%, CLOSED.
 > - **Active Focus:** Wave B is open; US-35 and US-37 are accepted, US-38 implementation is complete and awaiting independent acceptance, and US-46/47 remain in the wave.
-> - **Immediate Next Action:** Continue `US-38-FUEL-EXCEPTIONS-TECHNICAL-REMEDIATION-001` under the approved V67 and non-public acceptance-observability authorizations.
+> - **Immediate Next Action:** Run `US-38-FUEL-EXCEPTIONS-TECHNICAL-CLOSURE-001-RERUN`; V67 technical remediation is complete and story accounting remains unchanged.
 
 ---
 
@@ -42,7 +42,7 @@ MVP 1.4 Band:     [████████████████████�
 | **Total Registered User Stories** | **87** | **87** | **`100%`** | 🔒 `FROZEN REGISTER (US-01..US-87)` |
 
 > [!NOTE]
-> Stories `US-88`, `US-89`, and `US-90` are strictly undefined. The story accounting register is bounded exactly from `US-01` through `US-87` (`67 COMPLETE + 20 REMAINING = 87`).
+> Stories `US-88`, `US-89`, and `US-90` are strictly undefined. The story accounting register is bounded exactly from `US-01` through `US-87` (`69 COMPLETE + 18 REMAINING = 87`).
 
 ---
 
@@ -142,7 +142,7 @@ Development startup now consistently provisions the idempotent PostgreSQL sample
 | `US-35` | Manage Fuel Cards | Card issuance, restrictions, imported transactions, reconciliation and misuse control | 🟢 `COMPLETE` | Final acceptance PASS; V64/V65; Maven 1,335/0/0/15; Chromium 6/6; zero post-startup ledger mismatches; `US-35-FUEL-CARDS-FINAL-ACCEPTANCE-001.md` |
 | `US-36` | Calculate Trip Fuel Costs | Trip-level fuel expense aggregation | 🟢 `COMPLETE` | `TripFuelCostTest`, V35 |
 | `US-37` | Analyze Fuel Performance | Vehicle/driver efficiency, anomaly and leakage analysis without changing raw fuel data | 🟢 `COMPLETE` | Final acceptance PASS; V63; Maven 1,310/0/0/15; Chromium 6/6; `US-37-FUEL-PERFORMANCE-FINAL-ACCEPTANCE-001.md` |
-| `US-38` | Handle Fuel Exceptions | Suspected loss, wrong readings, price changes, emergency refuel, card policy deviations and negative Bunker balance | 🟡 `IMPLEMENTATION_COMPLETE / ACCEPTANCE_PENDING` | V67 remediation underway; real Chromium plus read-only acceptance-DB observability authorized; no public API or accounting change |
+| `US-38` | Handle Fuel Exceptions | Suspected loss, wrong readings, price changes, emergency refuel, card policy deviations and negative Bunker balance | 🟡 `IMPLEMENTATION_COMPLETE / ACCEPTANCE_PENDING` | V67 technical remediation COMPLETE; Maven 1,356/0/0/15; PostgreSQL races 9/9; Chromium 6/6; technical-closure rerun next |
 
 ---
 
@@ -235,7 +235,7 @@ Development startup now consistently provisions the idempotent PostgreSQL sample
 
 ```
 Current Status: 69 / 87 COMPLETE; 18 stories remain across Waves B–E
-Queue Head:     US-38-FUEL-EXCEPTIONS-TECHNICAL-REMEDIATION-001
+Queue Head:     US-38-FUEL-EXCEPTIONS-TECHNICAL-CLOSURE-001-RERUN
 ```
 
 1. **Wave A — Integration and exception-control foundations:** 2 / 2 COMPLETE / CLOSED (US-73 and US-78).
