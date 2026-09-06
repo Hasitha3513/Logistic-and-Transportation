@@ -21,7 +21,7 @@
 > - **Overall Release Band:** 69 / 87 COMPLETE (18 REPRIORITIZED / 87 TOTAL)
 > - **Current Milestone:** MVP 1.4 Last-Mile Delivery — 8 / 8 COMPLETE, 100%, CLOSED.
 > - **Active Focus:** Wave B is open; US-35 and US-37 are accepted, US-38 implementation is complete and awaiting independent acceptance, and US-46/47 remain in the wave.
-> - **Immediate Next Action:** Execute `US-38-FUEL-EXCEPTIONS-TECHNICAL-REMEDIATION-001` under the approved forward-only V67 authorization.
+> - **Immediate Next Action:** Continue `US-38-FUEL-EXCEPTIONS-TECHNICAL-REMEDIATION-001` under the approved V67 and non-public acceptance-observability authorizations.
 
 ---
 
@@ -142,7 +142,7 @@ Development startup now consistently provisions the idempotent PostgreSQL sample
 | `US-35` | Manage Fuel Cards | Card issuance, restrictions, imported transactions, reconciliation and misuse control | 🟢 `COMPLETE` | Final acceptance PASS; V64/V65; Maven 1,335/0/0/15; Chromium 6/6; zero post-startup ledger mismatches; `US-35-FUEL-CARDS-FINAL-ACCEPTANCE-001.md` |
 | `US-36` | Calculate Trip Fuel Costs | Trip-level fuel expense aggregation | 🟢 `COMPLETE` | `TripFuelCostTest`, V35 |
 | `US-37` | Analyze Fuel Performance | Vehicle/driver efficiency, anomaly and leakage analysis without changing raw fuel data | 🟢 `COMPLETE` | Final acceptance PASS; V63; Maven 1,310/0/0/15; Chromium 6/6; `US-37-FUEL-PERFORMANCE-FINAL-ACCEPTANCE-001.md` |
-| `US-38` | Handle Fuel Exceptions | Suspected loss, wrong readings, price changes, emergency refuel, card policy deviations and negative Bunker balance | 🟡 `IMPLEMENTATION_COMPLETE / ACCEPTANCE_PENDING` | Technical closure blocked; forward V67 compliance remediation authorized; no accounting change |
+| `US-38` | Handle Fuel Exceptions | Suspected loss, wrong readings, price changes, emergency refuel, card policy deviations and negative Bunker balance | 🟡 `IMPLEMENTATION_COMPLETE / ACCEPTANCE_PENDING` | V67 remediation underway; real Chromium plus read-only acceptance-DB observability authorized; no public API or accounting change |
 
 ---
 
