@@ -3,8 +3,8 @@
 <div align="center">
 
 ![Total Stories](https://img.shields.io/badge/Total%20Stories-87-0969da.svg?style=for-the-badge&logo=target)
-![Completed](https://img.shields.io/badge/Completed-69%20%2F%2087-2da44e.svg?style=for-the-badge&logo=checkmarx)
-![Progress](https://img.shields.io/badge/Progress-79.3%25-brightgreen.svg?style=for-the-badge&logo=speedtest)
+![Completed](https://img.shields.io/badge/Completed-70%20%2F%2087-2da44e.svg?style=for-the-badge&logo=checkmarx)
+![Progress](https://img.shields.io/badge/Progress-80.5%25-brightgreen.svg?style=for-the-badge&logo=speedtest)
 ![MVP 1.4 Closed](https://img.shields.io/badge/MVP%201.4%20Last--Mile-8%20%2F%208-2da44e.svg?style=for-the-badge&logo=pinboard)
 ![Database](https://img.shields.io/badge/PostgreSQL%20%2F%20Flyway-V67-8a63d2.svg?style=for-the-badge&logo=postgresql)
 
@@ -18,27 +18,27 @@
 > - **Authority Order:** Original Requirements (`Traspotation & logistic.docx`), Frozen Architecture/Contracts, Verified Production Code/Tests, then Roadmap.
 > - **MVP 1.3 Delivery Operations:** 7 / 7 COMPLETE (100%) - CLOSED
 > - **MVP 1.4 Last-Mile Delivery:** 8 / 8 COMPLETE (US-63 through US-70 Accepted & Closed)
-> - **Overall Release Band:** 69 / 87 COMPLETE (18 REPRIORITIZED / 87 TOTAL)
+> - **Overall Release Band:** 70 / 87 COMPLETE (17 REPRIORITIZED / 87 TOTAL)
 > - **Current Milestone:** MVP 1.4 Last-Mile Delivery — 8 / 8 COMPLETE, 100%, CLOSED.
-> - **Active Focus:** Wave B is open; US-35 and US-37 are accepted, US-38 implementation is complete and awaiting independent acceptance, and US-46/47 remain in the wave.
-> - **Immediate Next Action:** Run `US-38-FUEL-EXCEPTIONS-FINAL-ACCEPTANCE-001`; independent technical closure passed and story accounting remains unchanged.
+> - **Active Focus:** Wave B is open; US-35, US-37 and US-38 are accepted, and US-46/47 remain in the wave.
+> - **Immediate Next Action:** Run `US-46-DRIVER-PAYROLL-LINK-PRODUCT-DECISIONS-001`.
 
 ---
 
 ## 📊 1. Executive Metrics & Milestone Progress
 
 ```
-Overall Progress: [██████████████████████████████████████████████░░░░] 69 / 87 Stories Complete (79.3%)
+Overall Progress: [████████████████████████████████████████████████░░] 70 / 87 Stories Complete (80.5%)
 MVP 1.3 Band:     [██████████████████████████████████████████████████] 7 / 7 Complete (100.0%) - CLOSED
 MVP 1.4 Band:     [██████████████████████████████████████████████████] 8 / 8 Complete (100.0%) - CLOSED
 ```
 
 | Metric | Target | Current Count | Percentage | Status Indicator |
 | :--- | :---: | :---: | :---: | :--- |
-| **Completed Stories (Accepted)** | 87 | **69** | `79.3%` | 🟢 `ON TRACK / VERIFIED` |
+| **Completed Stories (Accepted)** | 87 | **70** | `80.5%` | 🟢 `ON TRACK / VERIFIED` |
 | **Next Active / Acceptance Required** | — | **0** | `0.0%` | 🟢 `NONE` |
 | **Not Started (MVP 1.4 Active Scope)** | 1 | **0** | `0.0%` | 🟢 `NONE` |
-| **Reprioritized Remaining Stories** | 18 | **18** | `20.7%` | 🟡 `PLANNED IN GOVERNED WAVES` |
+| **Reprioritized Remaining Stories** | 17 | **17** | `19.5%` | 🟡 `PLANNED IN GOVERNED WAVES` |
 | **Total Registered User Stories** | **87** | **87** | **`100%`** | 🔒 `FROZEN REGISTER (US-01..US-87)` |
 
 > [!NOTE]
@@ -54,10 +54,10 @@ MVP 1.4 Band:     [████████████████████�
 | **MVP 1.0** | **Core Operations** | Fleet (US-01–08), Trips (US-09–16), Basic Route (US-17–19), Drivers (US-39–45), Core Enablers | 34 | 34 / 34 | 🟢 `COMPLETE (100%)` |
 | **MVP 1.1A** | **Advanced Route** | Dynamic Route Optimization, Analytics, and Disruption Handling (US-20–23) | 4 | 4 / 4 | 🟢 `COMPLETE (100%)` |
 | **MVP 1.1B** | **Freight & Cargo** | Freight Orders, Manifests, Load Planning, Weight/Volume Engine, Claims, Exceptions (US-24–30) | 7 | 7 / 7 | 🟢 `COMPLETE (100%)` |
-| **MVP 1.2** | **Fuel Management** | Fuel Issues, Purchases, Mileage, Bunkers, Fuel Cards, Analytics, Exceptions (US-31–38) | 8 | 5 / 8 | 🟡 `MVP CLOSED; 3 STORIES REPRIORITIZED IN WAVE B` |
+| **MVP 1.2** | **Fuel Management** | Fuel Issues, Purchases, Mileage, Bunkers, Fuel Cards, Analytics, Exceptions (US-31–38) | 8 | 6 / 8 | 🟡 `MVP CLOSED; 2 STORIES REPRIORITIZED IN WAVE B` |
 | **MVP 1.3** | **Delivery Operations** | Delivery Orders, Online POD, Offline POD, Failed Deliveries, Redelivery, Analytics, Exceptions (US-56–62) | 7 | 7 / 7 | 🟢 `COMPLETE (100%) - CLOSED` |
 | **MVP 1.4** | **Last-Mile Delivery** | Delivery Zones, Delivery Slots, Riders, Batch Orders, ETA, Exceptions, Notifications, Self-Service (US-63–70) | 8 | 8 / 8 | 🟢 `COMPLETE (100%) - CLOSED` |
-| **Full Product** | **Waves A–E** | Integration/Exceptions; Fuel/Finance; GPS; Compliance/Mobile; Analytics/Integrity/Resilience/Risk | 22 | 1 / 22 | 🟡 `IN PROGRESS — US-73 ACCEPTED` |
+| **Full Product** | **Waves A–E** | Integration/Exceptions; Fuel/Finance; GPS; Compliance/Mobile; Analytics/Integrity/Resilience/Risk | 22 | 2 / 22 | 🟡 `IN PROGRESS — US-73 AND US-38 ACCEPTED` |
 
 ### Phase 0 Architecture Remediation
 
@@ -142,7 +142,7 @@ Development startup now consistently provisions the idempotent PostgreSQL sample
 | `US-35` | Manage Fuel Cards | Card issuance, restrictions, imported transactions, reconciliation and misuse control | 🟢 `COMPLETE` | Final acceptance PASS; V64/V65; Maven 1,335/0/0/15; Chromium 6/6; zero post-startup ledger mismatches; `US-35-FUEL-CARDS-FINAL-ACCEPTANCE-001.md` |
 | `US-36` | Calculate Trip Fuel Costs | Trip-level fuel expense aggregation | 🟢 `COMPLETE` | `TripFuelCostTest`, V35 |
 | `US-37` | Analyze Fuel Performance | Vehicle/driver efficiency, anomaly and leakage analysis without changing raw fuel data | 🟢 `COMPLETE` | Final acceptance PASS; V63; Maven 1,310/0/0/15; Chromium 6/6; `US-37-FUEL-PERFORMANCE-FINAL-ACCEPTANCE-001.md` |
-| `US-38` | Handle Fuel Exceptions | Suspected loss, wrong readings, price changes, emergency refuel, card policy deviations and negative Bunker balance | 🟡 `IMPLEMENTATION_COMPLETE / ACCEPTANCE_PENDING` | Technical closure PASS; V67; Maven 1,356/0/0/15 in 05:37; PostgreSQL races 9/9; regressions 112/112; Chromium 6/6; final acceptance next |
+| `US-38` | Handle Fuel Exceptions | Suspected loss, wrong readings, price changes, emergency refuel, card policy deviations and negative Bunker balance | 🟢 `COMPLETE` | Final acceptance PASS; V67; Maven 1,356/0/0/15 in 05:34; PostgreSQL races 9/9; regressions 112/112; Chromium 6/6 in 36.6s |
 
 ---
 
@@ -234,12 +234,12 @@ Development startup now consistently provisions the idempotent PostgreSQL sample
 ## 🎯 4. Immediate Execution Queue
 
 ```
-Current Status: 69 / 87 COMPLETE; 18 stories remain across Waves B–E
-Queue Head:     US-38-FUEL-EXCEPTIONS-FINAL-ACCEPTANCE-001
+Current Status: 70 / 87 COMPLETE; 17 stories remain across Waves B–E
+Queue Head:     US-46-DRIVER-PAYROLL-LINK-PRODUCT-DECISIONS-001
 ```
 
 1. **Wave A — Integration and exception-control foundations:** 2 / 2 COMPLETE / CLOSED (US-73 and US-78).
-2. **Wave B — Fuel control and financial links:** US-35 and US-37 COMPLETE; US-38 implementation complete with acceptance pending; US-46 and US-47 remain.
+2. **Wave B — Fuel control and financial links:** US-35, US-37 and US-38 COMPLETE; US-46 and US-47 remain.
 3. **Wave C — GPS and telematics:** US-48, then US-49/50/51/52/55, then US-53, then US-54.
 4. **Wave D — Compliance and field mobility:** US-72, US-76.
 5. **Wave E — Analytics, integrity, resilience, disruption and user risk:** US-85, US-84, US-87, US-82, US-86.

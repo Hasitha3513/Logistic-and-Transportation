@@ -3,7 +3,7 @@
 **Task:** `DEFERRED-BACKLOG-REPRIORITIZATION-001`  
 **Planning baseline:** 2026-09-03  
 **Register:** exactly `US-01..US-87`  
-**Current state:** 69 / 87 accepted; 18 / 87 remaining; Wave A is 2 / 2 COMPLETE / CLOSED; Wave B is OPEN
+**Current state:** 70 / 87 accepted; 17 / 87 remaining; Wave A is 2 / 2 COMPLETE / CLOSED; Wave B is OPEN
 **Architecture enabler:** `P1-01` COMPLETE; Flyway head `V67`
 **Mode:** planning only; no story is accepted or implemented by this document
 
@@ -11,13 +11,13 @@
 
 The exact remaining set is confirmed as:
 
-`US-38, US-46, US-47, US-48, US-49, US-50, US-51, US-52, US-53, US-54, US-55, US-72, US-76, US-82, US-84, US-85, US-86, US-87`.
+`US-46, US-47, US-48, US-49, US-50, US-51, US-52, US-53, US-54, US-55, US-72, US-76, US-82, US-84, US-85, US-86, US-87`.
 
-This is 18 stories, so the invariant is `69 + 18 = 87`. `US-88`, `US-89`, and `US-90` are undefined and must not be created. The word *deferred* means scheduled into a governed future wave, not permanently abandoned.
+This is 17 stories, so the invariant is `70 + 17 = 87`. `US-88`, `US-89`, and `US-90` are undefined and must not be created. The word *deferred* means scheduled into a governed future wave, not permanently abandoned.
 
 The existing roadmap had correct IDs but non-authoritative labels for several remaining stories. This plan restores the DOCX/UML titles and meanings, notably US-35/37/38 and US-48..55. It does not reopen accepted stories or change their acceptance decisions.
 
-**Wave A is 2 / 2 COMPLETE / CLOSED and Wave B is OPEN.** US-73 and US-78 are accepted. US-35 and US-37 final acceptance pass. US-38 remains implementation-complete/acceptance-pending; forward-only V67 remediation and independent technical closure pass with non-public read-only acceptance observability. The next task is `US-38-FUEL-EXCEPTIONS-FINAL-ACCEPTANCE-001`.
+**Wave A is 2 / 2 COMPLETE / CLOSED and Wave B is OPEN.** US-73 and US-78 are accepted. US-35, US-37 and US-38 final acceptance pass. US-46 and US-47 remain in Wave B. The next task is `US-46-DRIVER-PAYROLL-LINK-PRODUCT-DECISIONS-001`.
 
 ## 2. Source reconciliation and non-negotiable boundaries
 
@@ -58,7 +58,7 @@ Governing conclusions:
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 | US-35 | Manage Fuel Cards | `fuel` | COMPLETE | P1 | B | H/H/H/H/H | US-31/32/34/36, Fleet, Driver, Organization, Identity, Tenancy, Audit; US-73 outbound capability inspected but not reused | CONTROLLED_PROVIDER_FIXTURE only; named provider remains future | Accepted: limited card reference; local lifecycle; one Vehicle/Driver binding; limits; canonical JSON import; immutable transactions; deterministic reconciliation/review; no payment/fraud engine | V64; V65 canonical Bunker ledger order | frozen operator card/import/reconciliation API implemented | OPERATOR UI implemented | five permissions; Tenant; masked data; importer/reconciler SoD | Fuel owns local control/evidence only; provider owns financial authority; no foreign persistence | US-46 decisions | NONE | Final acceptance PASS after ledger-order and sample-ledger remediations; Maven 1,335/0/0/15; Chromium 6/6; zero post-startup mismatches | COMPLETE; `US-35-FUEL-CARDS-FINAL-ACCEPTANCE-001.md` |
 | US-37 | Analyze Fuel Performance | `fuel` (publishes `FuelPerformanceQuery`) | COMPLETE | P1 | B | H/M/M/M/M | US-31/32/33/34/36, Driver, Trip, Fleet, Reporting, Tenant | NONE | Accepted: distance/engine-hour metrics; 7/30/90/custom≤365-day windows; explicit quality; same-vehicle prior-period baseline; compatible peers; deterministic 20% deviation and repeated 30% possible-leakage indicators; non-punitive language; no ML | V63 permission seed only; no analytics table | six read-only `/fuel/performance` query routes | DASHBOARD | `FUEL_PERFORMANCE_VIEW`; Tenant; privacy-controlled driver performance | On-demand bounded Fuel-owned analytics; published bulk contracts only; no foreign SQL/raw mutation/ranking/event/export/US-38 action | NONE | NONE | Final acceptance PASS: Maven 1,310/0/0/15, architecture 46/46, frontend 262/262, Chromium 6/6 with 101 rows, PostgreSQL V1–V63 | COMPLETE; raw Fuel data unchanged; `US-37-FUEL-PERFORMANCE-FINAL-ACCEPTANCE-001.md` |
-| US-38 | Handle Fuel Exceptions | `fuel` | IMPLEMENTATION_COMPLETE / ACCEPTANCE_PENDING; TECHNICAL_REMEDIATION_AUTHORIZED | P1 | B | H/M/H/M/H | US-31/32/33/34/35/36/37, US-78 intake, Audit, Notification | NONE for Phase 1; accepted local facts and controlled Fuel Card fixture | Frozen six categories/lifecycle; forward-only compliance remediation and read-only acceptance-store observability authorized | V67 current | Existing `/api/v1/fuel/exceptions` route set unchanged; internal IDs remain non-public | OPERATOR UI under Fuel/AppLayout | five permissions unchanged; Tenant; SoD | Fuel/Operations ownership unchanged; no second outbox/workflow | US-46/47 decisions | NONE | V67 and acceptance-observability authorizations APPROVED | Continue remediation with real Chromium plus acceptance-only read queries, then rerun closure; accounting unchanged |
+| US-38 | Handle Fuel Exceptions | `fuel` | COMPLETE | P1 | B | H/M/H/M/H | US-31/32/33/34/35/36/37, US-78 intake, Audit, Notification | NONE for Phase 1; accepted local facts and controlled Fuel Card fixture | Accepted six categories/lifecycle, immutable owner corrections and durable handoff | V66/V67 | Frozen `/api/v1/fuel/exceptions` route set; internal identities non-public | OPERATOR UI under Fuel/AppLayout | five permissions; Tenant; requester/approver and US-35 SoD | Fuel/Operations ownership; P1-01 shared outbox only | US-46/47 decisions | NONE | Final acceptance PASS: focused 21/21, concurrency 9/9, regression 112/112, Maven 1,356/0/0/15, architecture 46/46, Chromium 6/6 | COMPLETE; historical source mutation NO; `US-38-FUEL-EXCEPTIONS-FINAL-ACCEPTANCE-001.md` |
 | US-46 | Process Driver Payroll Link | `driver` (operational payroll-input owner) | BLOCKED_BY_EXTERNAL_SYSTEM | P1 | B | H/H/H/H/H | Driver, Trip, Scheduling/US-81, Audit, Identity, Tenancy, US-73 | Payroll/HRMS sandbox or signed file exchange | earning/allowance/overtime/deduction rules; cutoff; corrections; export format; settlement-authorization boundary | YES | operator API + external export API/file | OPERATOR UI | RBAC/SoD; Tenant; driver PII; financial data; credentials | Never implement salary/tax/payment; HRM blueprint remains PROPOSED | US-35, US-37 | frozen HRMS/file contract and sample | Rules, ownership, mapping, reconciliation, permission, and sandbox/file evidence frozen | Calculations trace to driver/trip; replay/correction safe; final settlement finance-authorized; real exchange evidence; DoD-C |
 | US-47 | Manage Transport Billing | justified new `billing` bounded context; Finance owns ledger/payment | READY_FOR_PRODUCT_DECISIONS | P1 | B | H/H/H/H/H | Trip, Freight, Delivery, Customer/Organization, Fuel, Audit, US-73; US-72 for tax/compliance gate | Accounting/ERP optional for acceptance, required before claiming live posting | billable event; currency/tax; surcharge/penalty; cost centre; invoice versus bill-finalization boundary; reversals; Finance handoff | YES | new billing APIs + external accounting port | OPERATOR UI | RBAC/SoD; Tenant; customer/financial/tax data; credentials | New context is justified by independent financial lifecycle; ARB must ratify it and forbid foreign-table reads | US-38, US-46 | product/ownership decision; external posting if included | Billing-versus-ledger boundary, monetary rules, ownership, event/API, permissions and acceptance mode frozen | Cost/surcharge/penalty/cost-centre/finalization/audit pass; no operational aggregate ownership leak; DoD-C |
 | US-48 | Track Vehicles Live | justified new `tracking` bounded context | READY_FOR_PRODUCT_DECISIONS | P0 | C | H/H/H/H/H | Fleet vehicle identity, Trip, Routing, Organization, Identity, Tenancy, Audit, P1-01, US-73 | GPS provider/device for real acceptance | protocol(s); device registry/link; source timestamps; accuracy/freshness; dedupe/order; retention; live definition; durable-ingestion need | YES | external ingestion + tracking query/stream API | DASHBOARD | RBAC/ABAC; Tenant; precise location; device credentials | High-volume stream and location lifecycle justify a distinct owner; no vendor types in ports | US-55 decisions; provider contract work | US-73 minimum adapter governance; device/provider availability for real acceptance | Provider-neutral contract, owner, retention, stale/order rules, load target, credentials and real-device/sandbox plan frozen | Current/last-known/connectivity/accuracy/staleness pass under duplicates/out-of-order events; real provider/device evidence; DoD-C |
@@ -220,7 +220,7 @@ Every story follows `PRODUCT DECISIONS → IMPLEMENTATION → TECHNICAL CLOSURE 
 2. `US-78-OPERATIONAL-EXCEPTIONS-FINAL-ACCEPTANCE-001` — COMPLETE; accounting advanced to 67 / 87 and Wave A closed.
 3. `US-37-FUEL-PERFORMANCE-FINAL-ACCEPTANCE-001` — COMPLETE; accounting advanced to 68 / 87 and Wave B remains open.
 4. `US-35-FUEL-CARDS-FINAL-ACCEPTANCE-001-RERUN-2` — COMPLETE; accounting advanced to 69 / 87 and Wave B remains open.
-5. US-38 product decisions → implementation → closure → acceptance (US-35 and US-78 prerequisite contracts are accepted).
+5. `US-38-FUEL-EXCEPTIONS-FINAL-ACCEPTANCE-001` — COMPLETE; accounting advanced to 70 / 87 and Wave B remains open.
 6. US-46 product decisions → implementation → closure → acceptance (may overlap Fuel work once US-73 contract freezes).
 7. US-47 product/ARB decisions → implementation → closure → acceptance.
 8. US-48 product/architecture decisions → implementation → closure → real provider/device acceptance.
@@ -290,6 +290,6 @@ After 87/87 and disposition of parity findings, execute a real Tenant-isolated o
 
 Exactly one queue head is authorized by this roadmap:
 
-`US-38-FUEL-EXCEPTIONS-TECHNICAL-REMEDIATION-001`
+`US-46-DRIVER-PAYROLL-LINK-PRODUCT-DECISIONS-001`
 
-It must implement only the frozen US-38 Fuel-local exception, correction, approval, evidence, and durable Operations-handoff contracts.
+It must freeze the US-46 payroll-link boundary before implementation and must not invent a payroll engine.
