@@ -6,6 +6,7 @@ import com.transportlogistics.app.fuel.domain.model.*;
 import com.transportlogistics.app.fuel.domain.policy.BunkerTankPolicy;
 import com.transportlogistics.app.shared.domain.BusinessRuleException;
 import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -26,7 +27,9 @@ public class BunkerTankService implements BunkerTankUseCase {
     private final FuelTransaction transactions;
     private final BunkerTankPolicy policy = new BunkerTankPolicy();
     private final Clock clock;
+    private final NegativeBunkerExceptionRecorder negativeExceptions;
 
+    @Autowired
     public BunkerTankService(
             BunkerTankRepository tanks,
             BunkerStockLedgerRepository movements,
@@ -35,7 +38,8 @@ public class BunkerTankService implements BunkerTankUseCase {
             FuelStationRepository stations,
             FuelActorPort actors,
             FuelTransaction transactions,
-            Clock clock
+            Clock clock,
+            NegativeBunkerExceptionRecorder negativeExceptions
     ) {
         this.tanks = tanks;
         this.movements = movements;
@@ -45,6 +49,13 @@ public class BunkerTankService implements BunkerTankUseCase {
         this.actors = actors;
         this.transactions = transactions;
         this.clock = clock;
+        this.negativeExceptions = negativeExceptions;
+    }
+
+    public BunkerTankService(BunkerTankRepository tanks, BunkerStockLedgerRepository movements,
+            DipReadingRepository dipReadings, StockAdjustmentRepository adjustments,
+            FuelStationRepository stations, FuelActorPort actors, FuelTransaction transactions, Clock clock) {
+        this(tanks,movements,dipReadings,adjustments,stations,actors,transactions,clock,(a,b,c,d)->{});
     }
 
     private FuelActorPort.Actor actor(String username) {
@@ -296,8 +307,9 @@ public class BunkerTankService implements BunkerTankUseCase {
 
     @Override
     public StockAdjustment adjustStock(UUID tankId, BigDecimal quantityDeltaLiters, String reason, UUID sourceDipReadingId, String actorName) {
-        return transactions.execute(() -> {
-            var actor = actor(actorName);
+        FuelActorPort.Actor resolvedActor=actor(actorName);
+        try { return transactions.execute(() -> {
+            var actor = resolvedActor;
             var now = OffsetDateTime.now(clock);
 
             if (reason == null || reason.trim().isBlank()) {
@@ -372,7 +384,20 @@ public class BunkerTankService implements BunkerTankUseCase {
             ));
 
             return savedAdj;
-        });
+        }); } catch (BusinessRuleException exception) {
+            if ("INSUFFICIENT_BUNKER_STOCK".equals(exception.code()) && quantityDeltaLiters != null) {
+                var tank=tanks.findById(tankId);
+                if(tank.isPresent()) {
+                    try {
+                        negativeExceptions.record(tankId,quantityDeltaLiters,
+                                tank.get().currentStockLiters().add(quantityDeltaLiters),resolvedActor.id());
+                    } catch (RuntimeException recordingFailure) {
+                        exception.addSuppressed(recordingFailure);
+                    }
+                }
+            }
+            throw exception;
+        }
     }
 
     @Override

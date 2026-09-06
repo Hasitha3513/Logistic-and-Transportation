@@ -52,6 +52,7 @@ import IntegrationDetailPage from './features/integrations/pages/IntegrationDeta
 import OperationalExceptionQueuePage from './features/operations/operationalExceptions/pages/OperationalExceptionQueuePage';
 import FuelPerformancePage from './features/fuel/performance/pages/FuelPerformancePage';
 import FuelCardsPage from './features/fuel/cards/pages/FuelCardsPage';
+import FuelExceptionsPage from './features/fuel/exceptions/pages/FuelExceptionsPage';
 
 function ProtectedRoute() {
   const { user, isLoading } = useAuth();
@@ -113,6 +114,7 @@ export default function App() {
         <Route path="fuel/prices" element={<FuelPricePage />} />
         <Route path="fuel/performance" element={<FuelPerformancePage />} />
         <Route path="fuel/cards" element={<FuelCardsPage />} />
+        <Route path="fuel/exceptions" element={<FuelExceptionsPage />} />
         <Route path="freight/orders" element={<FreightOrderListPage />} />
         <Route path="freight/orders/new" element={<FreightOrderFormPage />} />
         <Route path="freight/orders/:freightOrderId/edit" element={<FreightOrderFormPage />} />

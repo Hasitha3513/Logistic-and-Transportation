@@ -30,15 +30,19 @@ public record OperationalExceptionFactV1(
     private static final Map<SourceModule, Set<String>> SOURCE_TYPES = Map.of(
         SourceModule.ROUTING, Set.of("ROAD_CLOSURE", "ACCIDENT", "WEATHER", "RESTRICTION"),
         SourceModule.DELIVERY, Set.of("DAMAGED_DELIVERY", "WRONG_ADDRESS", "PARTIAL_DELIVERY",
-            "OTP_MISMATCH", "RECIPIENT_REFUSAL")
+            "OTP_MISMATCH", "RECIPIENT_REFUSAL"),
+        SourceModule.FUEL, Set.of("SUSPECTED_FUEL_LOSS", "INCORRECT_READING", "SUDDEN_PRICE_CHANGE",
+            "EMERGENCY_REFUEL", "FUEL_CARD_POLICY_DEVIATION", "NEGATIVE_BUNKER_BALANCE")
     );
     private static final Map<SourceModule, String> SUMMARY_CODES = Map.of(
         SourceModule.ROUTING, "ROUTE_DISRUPTION_CREATED",
-        SourceModule.DELIVERY, "DELIVERY_EXCEPTION_CREATED"
+        SourceModule.DELIVERY, "DELIVERY_EXCEPTION_CREATED",
+        SourceModule.FUEL, "FUEL_EXCEPTION_ESCALATED"
     );
     private static final Map<SourceModule, Set<String>> METADATA_KEYS = Map.of(
         SourceModule.ROUTING, Set.of("routeId", "detourRouteId", "effectiveFrom", "effectiveUntil"),
-        SourceModule.DELIVERY, Set.of("deliveryOrderId", "deliveryAttemptId")
+        SourceModule.DELIVERY, Set.of("deliveryOrderId", "deliveryAttemptId"),
+        SourceModule.FUEL, Set.of("fuelExceptionId", "sourceType", "sourceId")
     );
 
     public OperationalExceptionFactV1 {
@@ -110,7 +114,7 @@ public record OperationalExceptionFactV1(
         return required(value, max, field);
     }
 
-    public enum SourceModule { ROUTING, DELIVERY }
+    public enum SourceModule { ROUTING, DELIVERY, FUEL }
     public enum Severity { LOW, MEDIUM, HIGH, CRITICAL }
     public enum Category { OPERATIONAL, SAFETY, COMPLIANCE, CUSTOMER, FINANCIAL, TECHNICAL, SECURITY }
 }

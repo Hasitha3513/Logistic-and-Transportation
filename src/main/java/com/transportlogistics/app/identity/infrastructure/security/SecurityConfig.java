@@ -188,6 +188,19 @@ class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/trips/*/checkpoints", "/trips/*/delays", "/trips/*/incidents")
                         .hasAnyAuthority("TRIP_DISPATCH", "TRIP_LOG_MANAGE", "TRIP_UPDATE")
 
+                        .requestMatchers(HttpMethod.GET, "/v1/fuel/exceptions", "/v1/fuel/exceptions/**")
+                        .hasAuthority("FUEL_EXCEPTION_VIEW")
+                        .requestMatchers(HttpMethod.POST, "/v1/fuel/exceptions/*/corrections/*/approve",
+                                "/v1/fuel/exceptions/*/corrections/*/reject")
+                        .hasAuthority("FUEL_EXCEPTION_APPROVE")
+                        .requestMatchers(HttpMethod.POST, "/v1/fuel/exceptions/*/corrections")
+                        .hasAuthority("FUEL_EXCEPTION_CORRECT")
+                        .requestMatchers(HttpMethod.POST, "/v1/fuel/exceptions/*/escalate")
+                        .hasAuthority("FUEL_EXCEPTION_ESCALATE")
+                        .requestMatchers(HttpMethod.POST, "/v1/fuel/exceptions", "/v1/fuel/exceptions/*/review",
+                                "/v1/fuel/exceptions/*/evidence", "/v1/fuel/exceptions/*/notes",
+                                "/v1/fuel/exceptions/*/resolve")
+                        .hasAuthority("FUEL_EXCEPTION_MANAGE")
                         .requestMatchers(HttpMethod.GET, "/v1/fuel/performance", "/v1/fuel/performance/**")
                         .hasAuthority("FUEL_PERFORMANCE_VIEW")
                         .requestMatchers(HttpMethod.GET, "/v1/fuel/cards", "/v1/fuel/cards/**",
