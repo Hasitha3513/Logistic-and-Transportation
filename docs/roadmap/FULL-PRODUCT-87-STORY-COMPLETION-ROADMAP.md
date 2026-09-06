@@ -4,7 +4,7 @@
 **Planning baseline:** 2026-09-03  
 **Register:** exactly `US-01..US-87`  
 **Current state:** 69 / 87 accepted; 18 / 87 remaining; Wave A is 2 / 2 COMPLETE / CLOSED; Wave B is OPEN
-**Architecture enabler:** `P1-01` COMPLETE; Flyway head `V65`
+**Architecture enabler:** `P1-01` COMPLETE; Flyway head `V67`
 **Mode:** planning only; no story is accepted or implemented by this document
 
 ## 1. Executive decision
@@ -17,7 +17,7 @@ This is 18 stories, so the invariant is `69 + 18 = 87`. `US-88`, `US-89`, and `U
 
 The existing roadmap had correct IDs but non-authoritative labels for several remaining stories. This plan restores the DOCX/UML titles and meanings, notably US-35/37/38 and US-48..55. It does not reopen accepted stories or change their acceptance decisions.
 
-**Wave A is 2 / 2 COMPLETE / CLOSED and Wave B is OPEN.** US-73 and US-78 are accepted. US-35 and US-37 final acceptance pass. US-38 remains implementation-complete/acceptance-pending; forward-only V67 remediation and non-public read-only acceptance observability are authorized. The next task is to continue `US-38-FUEL-EXCEPTIONS-TECHNICAL-REMEDIATION-001`.
+**Wave A is 2 / 2 COMPLETE / CLOSED and Wave B is OPEN.** US-73 and US-78 are accepted. US-35 and US-37 final acceptance pass. US-38 remains implementation-complete/acceptance-pending; forward-only V67 remediation and independent technical closure pass with non-public read-only acceptance observability. The next task is `US-38-FUEL-EXCEPTIONS-FINAL-ACCEPTANCE-001`.
 
 ## 2. Source reconciliation and non-negotiable boundaries
 

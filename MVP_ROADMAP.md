@@ -21,7 +21,7 @@
 > - **Overall Release Band:** 69 / 87 COMPLETE (18 REPRIORITIZED / 87 TOTAL)
 > - **Current Milestone:** MVP 1.4 Last-Mile Delivery — 8 / 8 COMPLETE, 100%, CLOSED.
 > - **Active Focus:** Wave B is open; US-35 and US-37 are accepted, US-38 implementation is complete and awaiting independent acceptance, and US-46/47 remain in the wave.
-> - **Immediate Next Action:** Run `US-38-FUEL-EXCEPTIONS-TECHNICAL-CLOSURE-001-RERUN`; V67 technical remediation is complete and story accounting remains unchanged.
+> - **Immediate Next Action:** Run `US-38-FUEL-EXCEPTIONS-FINAL-ACCEPTANCE-001`; independent technical closure passed and story accounting remains unchanged.
 
 ---
 
@@ -142,7 +142,7 @@ Development startup now consistently provisions the idempotent PostgreSQL sample
 | `US-35` | Manage Fuel Cards | Card issuance, restrictions, imported transactions, reconciliation and misuse control | 🟢 `COMPLETE` | Final acceptance PASS; V64/V65; Maven 1,335/0/0/15; Chromium 6/6; zero post-startup ledger mismatches; `US-35-FUEL-CARDS-FINAL-ACCEPTANCE-001.md` |
 | `US-36` | Calculate Trip Fuel Costs | Trip-level fuel expense aggregation | 🟢 `COMPLETE` | `TripFuelCostTest`, V35 |
 | `US-37` | Analyze Fuel Performance | Vehicle/driver efficiency, anomaly and leakage analysis without changing raw fuel data | 🟢 `COMPLETE` | Final acceptance PASS; V63; Maven 1,310/0/0/15; Chromium 6/6; `US-37-FUEL-PERFORMANCE-FINAL-ACCEPTANCE-001.md` |
-| `US-38` | Handle Fuel Exceptions | Suspected loss, wrong readings, price changes, emergency refuel, card policy deviations and negative Bunker balance | 🟡 `IMPLEMENTATION_COMPLETE / ACCEPTANCE_PENDING` | V67 technical remediation COMPLETE; Maven 1,356/0/0/15; PostgreSQL races 9/9; Chromium 6/6; technical-closure rerun next |
+| `US-38` | Handle Fuel Exceptions | Suspected loss, wrong readings, price changes, emergency refuel, card policy deviations and negative Bunker balance | 🟡 `IMPLEMENTATION_COMPLETE / ACCEPTANCE_PENDING` | Technical closure PASS; V67; Maven 1,356/0/0/15 in 05:37; PostgreSQL races 9/9; regressions 112/112; Chromium 6/6; final acceptance next |
 
 ---
 
@@ -235,7 +235,7 @@ Development startup now consistently provisions the idempotent PostgreSQL sample
 
 ```
 Current Status: 69 / 87 COMPLETE; 18 stories remain across Waves B–E
-Queue Head:     US-38-FUEL-EXCEPTIONS-TECHNICAL-CLOSURE-001-RERUN
+Queue Head:     US-38-FUEL-EXCEPTIONS-FINAL-ACCEPTANCE-001
 ```
 
 1. **Wave A — Integration and exception-control foundations:** 2 / 2 COMPLETE / CLOSED (US-73 and US-78).
