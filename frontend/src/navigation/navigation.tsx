@@ -13,6 +13,7 @@ import {
   ContainerOutlined,
   SendOutlined,
   WarningOutlined,
+  DollarOutlined,
 } from '@ant-design/icons';
 
 export interface NavigationItem {
@@ -119,6 +120,13 @@ export const navigation: NavigationItem[] = [
       { key: 'delivery-batches', label: 'Delivery Batches', route: '/deliveries/batches', requiredPermission: 'DELIVERY_BATCH_VIEW' },
       { key: 'delivery-analytics', label: 'Delivery Analytics', route: '/deliveries/analytics', requiredPermission: 'DELIVERY_ANALYTICS_VIEW' },
     ],
+  },
+  {
+    key: 'billing',
+    label: 'Transport Billing',
+    route: '/billing/records',
+    icon: <DollarOutlined />,
+    requiredPermission: 'BILLING_VIEW',
   },
   {
     key: 'operations',

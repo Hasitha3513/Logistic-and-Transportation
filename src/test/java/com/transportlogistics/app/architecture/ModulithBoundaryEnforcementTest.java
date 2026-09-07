@@ -30,6 +30,7 @@ class ModulithBoundaryEnforcementTest {
     // P0-03 approved dependency graph. Cross-module targets are additionally constrained
     // below to published types in the provider module's root package.
     private static final Set<String> APPROVED_MODULE_DEPENDENCIES = Set.of(
+            "billing->freight", "billing->integration", "billing->organization", "billing->tenancy", "billing->trip",
             "delivery->fleet", "delivery->notification", "delivery->operations", "delivery->organization", "delivery->tenancy",
             "fleet->identity", "fleet->notification", "fleet->tenancy",
             "freight->fleet", "freight->organization", "freight->tenancy",
@@ -41,7 +42,7 @@ class ModulithBoundaryEnforcementTest {
             "operations->identity", "operations->tenancy",
             "reporting->fleet", "reporting->freight", "reporting->trip",
             "routing->operations", "routing->organization", "routing->tenancy",
-            "system->delivery", "system->fleet", "system->integration", "system->notification", "system->operations", "system->organization", "system->trip",
+            "system->billing", "system->delivery", "system->fleet", "system->integration", "system->notification", "system->operations", "system->organization", "system->trip",
             "trip->fleet", "trip->identity", "trip->notification", "trip->routing"
     );
 

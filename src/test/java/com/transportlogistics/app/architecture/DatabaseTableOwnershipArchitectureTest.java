@@ -154,7 +154,7 @@ class DatabaseTableOwnershipArchitectureTest {
                 "fuel_exception_case", "fuel_exception_evidence", "fuel_exception_correction",
                 "fuel_exception_correction_attempt",
                 "fuel_exception_note", "fuel_exception_history", "fuel_exception_operations_handoff");
-        own(ownership, "freight", "freight_order", "freight_order_line", "cargo_manifest", "cargo_manifest_item",
+        own(ownership, "freight", "freight_order", "freight_order_line", "freight_billing_fact", "cargo_manifest", "cargo_manifest_item",
                 "load_plan", "load_plan_item_placement", "freight_insurance_policy", "freight_insurance_claim",
                 "freight_insurance_settlement", "cargo_exception", "cargo_exception_history");
         own(ownership, "delivery", "delivery_order", "delivery_number_counter", "proof_of_delivery", "pod_evidence",
@@ -169,6 +169,9 @@ class DatabaseTableOwnershipArchitectureTest {
         own(ownership, "offlinesync", "offline_sync_operation");
         own(ownership, "integration", "integration_configuration", "integration_mapping", "integration_exchange",
                 "integration_exchange_attempt", "integration_audit_event");
+        own(ownership, "billing", "transport_billing_record", "transport_billing_line",
+                "transport_billing_cost_centre", "transport_billing_tax_fact", "transport_billing_source_claim",
+                "transport_billing_history");
         own(ownership, "operations", "operational_exception_case", "operational_exception_assignment_history",
                 "operational_exception_corrective_action", "operational_exception_rca", "operational_exception_history");
         own(ownership, "shared", "integration_outbox_event");

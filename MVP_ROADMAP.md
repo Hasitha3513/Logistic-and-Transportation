@@ -3,10 +3,10 @@
 <div align="center">
 
 ![Total Stories](https://img.shields.io/badge/Total%20Stories-87-0969da.svg?style=for-the-badge&logo=target)
-![Completed](https://img.shields.io/badge/Completed-70%20%2F%2087-2da44e.svg?style=for-the-badge&logo=checkmarx)
-![Progress](https://img.shields.io/badge/Progress-80.5%25-brightgreen.svg?style=for-the-badge&logo=speedtest)
+![Completed](https://img.shields.io/badge/Completed-71%20%2F%2087-2da44e.svg?style=for-the-badge&logo=checkmarx)
+![Progress](https://img.shields.io/badge/Progress-81.6%25-brightgreen.svg?style=for-the-badge&logo=speedtest)
 ![MVP 1.4 Closed](https://img.shields.io/badge/MVP%201.4%20Last--Mile-8%20%2F%208-2da44e.svg?style=for-the-badge&logo=pinboard)
-![Database](https://img.shields.io/badge/PostgreSQL%20%2F%20Flyway-V71-8a63d2.svg?style=for-the-badge&logo=postgresql)
+![Database](https://img.shields.io/badge/PostgreSQL%20%2F%20Flyway-V72-8a63d2.svg?style=for-the-badge&logo=postgresql)
 
 </div>
 
@@ -18,31 +18,31 @@
 > - **Authority Order:** Original Requirements (`Traspotation & logistic.docx`), Frozen Architecture/Contracts, Verified Production Code/Tests, then Roadmap.
 > - **MVP 1.3 Delivery Operations:** 7 / 7 COMPLETE (100%) - CLOSED
 > - **MVP 1.4 Last-Mile Delivery:** 8 / 8 COMPLETE (US-63 through US-70 Accepted & Closed)
-> - **Overall Release Band:** 70 / 87 COMPLETE (17 REPRIORITIZED / 87 TOTAL)
+> - **Overall Release Band:** 71 / 87 COMPLETE (16 REPRIORITIZED / 87 TOTAL)
 > - **Current Milestone:** MVP 1.4 Last-Mile Delivery — 8 / 8 COMPLETE, 100%, CLOSED.
-> - **Active Focus:** Wave B is open; US-35, US-37 and US-38 are accepted, US-46 implementation is complete with acceptance pending, and US-47 remains.
-> - **Immediate Next Action:** Run `US-46-DRIVER-PAYROLL-LINK-FINAL-ACCEPTANCE-001`; independent technical closure passed and US-46 remains acceptance pending.
+> - **Active Focus:** Wave B is open; US-35, US-37, US-38, and US-46 are accepted; US-47 implementation is complete with acceptance pending.
+> - **Immediate Next Action:** Run `US-47-TRANSPORT-BILLING-TECHNICAL-CLOSURE-001`.
 
 ---
 
 ## 📊 1. Executive Metrics & Milestone Progress
 
 ```
-Overall Progress: [████████████████████████████████████████████████░░] 70 / 87 Stories Complete (80.5%)
+Overall Progress: [█████████████████████████████████████████████████░] 71 / 87 Stories Complete (81.6%)
 MVP 1.3 Band:     [██████████████████████████████████████████████████] 7 / 7 Complete (100.0%) - CLOSED
 MVP 1.4 Band:     [██████████████████████████████████████████████████] 8 / 8 Complete (100.0%) - CLOSED
 ```
 
 | Metric | Target | Current Count | Percentage | Status Indicator |
 | :--- | :---: | :---: | :---: | :--- |
-| **Completed Stories (Accepted)** | 87 | **70** | `80.5%` | 🟢 `ON TRACK / VERIFIED` |
+| **Completed Stories (Accepted)** | 87 | **71** | `81.6%` | 🟢 `ON TRACK / VERIFIED` |
 | **Next Active / Acceptance Required** | — | **0** | `0.0%` | 🟢 `NONE` |
 | **Not Started (MVP 1.4 Active Scope)** | 1 | **0** | `0.0%` | 🟢 `NONE` |
-| **Reprioritized Remaining Stories** | 17 | **17** | `19.5%` | 🟡 `PLANNED IN GOVERNED WAVES` |
+| **Reprioritized Remaining Stories** | 16 | **16** | `18.4%` | 🟡 `PLANNED IN GOVERNED WAVES` |
 | **Total Registered User Stories** | **87** | **87** | **`100%`** | 🔒 `FROZEN REGISTER (US-01..US-87)` |
 
 > [!NOTE]
-> Stories `US-88`, `US-89`, and `US-90` are strictly undefined. The story accounting register is bounded exactly from `US-01` through `US-87` (`69 COMPLETE + 18 REMAINING = 87`).
+> Stories `US-88`, `US-89`, and `US-90` are strictly undefined. The story accounting register is bounded exactly from `US-01` through `US-87` (`71 COMPLETE + 16 REMAINING = 87`).
 
 ---
 
@@ -57,7 +57,7 @@ MVP 1.4 Band:     [████████████████████�
 | **MVP 1.2** | **Fuel Management** | Fuel Issues, Purchases, Mileage, Bunkers, Fuel Cards, Analytics, Exceptions (US-31–38) | 8 | 6 / 8 | 🟡 `MVP CLOSED; 2 STORIES REPRIORITIZED IN WAVE B` |
 | **MVP 1.3** | **Delivery Operations** | Delivery Orders, Online POD, Offline POD, Failed Deliveries, Redelivery, Analytics, Exceptions (US-56–62) | 7 | 7 / 7 | 🟢 `COMPLETE (100%) - CLOSED` |
 | **MVP 1.4** | **Last-Mile Delivery** | Delivery Zones, Delivery Slots, Riders, Batch Orders, ETA, Exceptions, Notifications, Self-Service (US-63–70) | 8 | 8 / 8 | 🟢 `COMPLETE (100%) - CLOSED` |
-| **Full Product** | **Waves A–E** | Integration/Exceptions; Fuel/Finance; GPS; Compliance/Mobile; Analytics/Integrity/Resilience/Risk | 22 | 2 / 22 | 🟡 `IN PROGRESS — US-73 AND US-38 ACCEPTED` |
+| **Full Product** | **Waves A–E** | Integration/Exceptions; Fuel/Finance; GPS; Compliance/Mobile; Analytics/Integrity/Resilience/Risk | 22 | 3 / 22 | 🟡 `IN PROGRESS — WAVE B OPEN` |
 
 ### Phase 0 Architecture Remediation
 
@@ -156,14 +156,14 @@ Development startup now consistently provisions the idempotent PostgreSQL sample
 | `US-43` | Monitor Driver Hours of Service | Drive time limits, mandatory rest enforcement | 🟢 `COMPLETE` | `DriverHosTest`, V40 |
 | `US-44` | Manage Driver Violations | Speeding, route deviation, safety incidents | 🟢 `COMPLETE` | `DriverViolationTest`, V41 |
 | `US-45` | Manage Driver Medicals & Drug Tests | Periodic fitness-to-drive certifications | 🟢 `COMPLETE` | `DriverMedicalTest`, V42 |
-| `US-46` | Process Driver Payroll Link | Traceable trip earnings, allowances, overtime and deductions exported to Payroll/HRMS | 🟡 `IMPLEMENTATION_COMPLETE / ACCEPTANCE_PENDING` | Technical closure PASS; PostgreSQL 18/18 and races 9/9, Maven 1,380/0/0/15 in 06:13, Chromium 7/7 in 39.2s; final acceptance next; accounting unchanged |
+| `US-46` | Process Driver Payroll Link | Traceable trip earnings, allowances, overtime and deductions exported to Payroll/HRMS | 🟢 `COMPLETE` | Final acceptance PASS; V68–V71; PostgreSQL 18/18 and races 9/9; Maven 1,380/0/0/15 in 06:21; Chromium 7/7 in 38.2s |
 
 ---
 
 ### 📡 Module 7: GPS & Telematics (US-47 to US-55)
 | ID | User Story Title | Scope / Feature | Status | Verification Evidence |
 | :---: | :--- | :--- | :---: | :--- |
-| `US-47` | Manage Transport Billing | Trip/freight costing, charges, adjustments, cost centres and billing finalization | 🟡 `WAVE B / READY_FOR_PRODUCT_DECISIONS` | Billing boundary requires ARB ratification |
+| `US-47` | Manage Transport Billing | Trip/freight costing, charges, adjustments, cost centres and operational billing finalization | 🟡 `IMPLEMENTATION_COMPLETE / ACCEPTANCE_PENDING` | V72; Maven 1,389/0/0/15; architecture 46/46; Chromium 7/7; controlled US-73 file/hash; technical closure next; accounting unchanged |
 | `US-48` | Track Vehicles Live | Provider-neutral telemetry ingestion, live/last-known state, connectivity, accuracy and freshness | 🟡 `WAVE C / READY_FOR_PRODUCT_DECISIONS` | GPS provider/device required for real acceptance |
 | `US-49` | Manage Geofences | Depot, customer-site and unauthorized-zone entry/exit detection | 🟡 `WAVE C / BLOCKED_BY_DEPENDENCY` | Requires US-48 |
 | `US-50` | Monitor Speed | Threshold, road-rule and repeat-speed monitoring | 🟡 `WAVE C / BLOCKED_BY_DEPENDENCY` | Requires US-48 |
@@ -234,12 +234,12 @@ Development startup now consistently provisions the idempotent PostgreSQL sample
 ## 🎯 4. Immediate Execution Queue
 
 ```
-Current Status: 70 / 87 COMPLETE; 17 stories remain across Waves B–E
-Queue Head:     US-46-DRIVER-PAYROLL-LINK-FINAL-ACCEPTANCE-001
+Current Status: 71 / 87 COMPLETE; 16 stories remain across Waves B–E
+Queue Head:     US-47-TRANSPORT-BILLING-TECHNICAL-CLOSURE-001
 ```
 
 1. **Wave A — Integration and exception-control foundations:** 2 / 2 COMPLETE / CLOSED (US-73 and US-78).
-2. **Wave B — Fuel control and financial links:** US-35, US-37 and US-38 COMPLETE; US-46 technical closure PASS with final acceptance next; US-47 remains.
+2. **Wave B — Fuel control and financial links:** US-35, US-37, US-38, and US-46 COMPLETE; US-47 implementation complete with technical closure next.
 3. **Wave C — GPS and telematics:** US-48, then US-49/50/51/52/55, then US-53, then US-54.
 4. **Wave D — Compliance and field mobility:** US-72, US-76.
 5. **Wave E — Analytics, integrity, resilience, disruption and user risk:** US-85, US-84, US-87, US-82, US-86.

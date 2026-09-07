@@ -122,6 +122,29 @@ class SecurityConfig {
                                 "/v1/drivers/payroll-input-batches/*/export",
                                 "/api/v1/drivers/payroll-input-batches/*/export")
                         .hasAuthority("DRIVER_PAYROLL_EXPORT")
+                        .requestMatchers(HttpMethod.GET, "/billing/records", "/billing/records/**",
+                                "/v1/billing/records", "/v1/billing/records/**",
+                                "/api/v1/billing/records", "/api/v1/billing/records/**")
+                        .hasAuthority("BILLING_VIEW")
+                        .requestMatchers(HttpMethod.PUT, "/billing/records/*/lines", "/v1/billing/records/*/lines",
+                                "/api/v1/billing/records/*/lines")
+                        .hasAuthority("BILLING_PREPARE")
+                        .requestMatchers(HttpMethod.POST, "/billing/records", "/billing/records/*/validate",
+                                "/billing/records/*/cancel", "/billing/records/*/reversals",
+                                "/v1/billing/records", "/v1/billing/records/*/validate",
+                                "/v1/billing/records/*/cancel", "/v1/billing/records/*/reversals",
+                                "/api/v1/billing/records", "/api/v1/billing/records/*/validate",
+                                "/api/v1/billing/records/*/cancel", "/api/v1/billing/records/*/reversals")
+                        .hasAuthority("BILLING_PREPARE")
+                        .requestMatchers(HttpMethod.POST, "/billing/records/*/approve",
+                                "/v1/billing/records/*/approve", "/api/v1/billing/records/*/approve")
+                        .hasAuthority("BILLING_APPROVE")
+                        .requestMatchers(HttpMethod.POST, "/billing/records/*/finalize",
+                                "/v1/billing/records/*/finalize", "/api/v1/billing/records/*/finalize")
+                        .hasAuthority("BILLING_FINALIZE")
+                        .requestMatchers(HttpMethod.POST, "/billing/records/*/export",
+                                "/v1/billing/records/*/export", "/api/v1/billing/records/*/export")
+                        .hasAuthority("BILLING_EXPORT")
                         .requestMatchers(HttpMethod.GET, "/drivers", "/drivers/*", "/drivers/*/licenses",
                                 "/drivers/*/exceptions", "/drivers/*/exceptions/*",
                                 "/drivers/*/violations", "/drivers/*/violations/*",

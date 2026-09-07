@@ -26,6 +26,11 @@ public class IntegrationDurableEventHandler implements DurableEventHandler {
                     event.eventType(), event.version(), event.aggregateType(), event.occurredAt(), event.payload()));
                 return;
             }
+            if ("TRANSPORT_BILLING_V1".equals(event.eventType())) {
+                exchanges.acceptBilling(new IntegrationExchangeUseCase.ExchangeFact(event.eventId(), event.tenantId(),
+                    event.eventType(), event.version(), event.aggregateType(), event.occurredAt(), event.payload()));
+                return;
+            }
             exchanges.acceptProbe(new IntegrationExchangeUseCase.ProbeFact(event.eventId(), event.tenantId(),
                 event.aggregateId(), event.eventType(), event.version(), event.aggregateType(), event.occurredAt(),
                 event.payload()));
