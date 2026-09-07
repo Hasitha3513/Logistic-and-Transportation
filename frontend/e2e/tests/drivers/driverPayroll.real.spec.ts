@@ -1,4 +1,6 @@
 import { expect, request, test } from '@playwright/test';
+import { execFileSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import { readFile, rm } from 'node:fs/promises';
 import path from 'node:path';
 
@@ -42,7 +44,7 @@ test.describe.serial('US-46 real Driver payroll-input acceptance', () => {
 
   test.afterAll(async () => { await rm(sandbox, { recursive: true, force: true }); });
 
-  test('1/6 creates a regular batch from a real completed Trip and calculates all categories', async () => {
+  test('1/7 creates a regular batch from a real completed Trip and calculates all categories', async () => {
     const api = await authorized(admin);
     const created = await api.post('/api/v1/drivers/payroll-input-batches', {
       headers: { 'Idempotency-Key': `${suffix}-batch` }, data: {
@@ -64,7 +66,7 @@ test.describe.serial('US-46 real Driver payroll-input acceptance', () => {
       deductions: 5, provisionalNetInput: 145.69 }); await api.dispose();
   });
 
-  test('2/6 requires a worker mapping and validates immutable source snapshots', async () => {
+  test('2/7 requires a worker mapping and validates immutable source snapshots', async () => {
     const api = await authorized(admin);
     const missing = await api.post(`/api/v1/drivers/payroll-input-batches/${batch.id}/validate`, {
       data: { version: batch.version },
@@ -101,7 +103,7 @@ test.describe.serial('US-46 real Driver payroll-input acceptance', () => {
     expect(batch.lifecycle).toBe('VALIDATED'); await api.dispose();
   });
 
-  test('3/6 denies self-approval and allows an independent approver', async () => {
+  test('3/7 denies self-approval and allows an independent approver', async () => {
     const api = await authorized(admin);
     const denied = await api.post(`/api/v1/drivers/payroll-input-batches/${batch.id}/approve`, {
       data: { version: batch.version },
@@ -116,7 +118,7 @@ test.describe.serial('US-46 real Driver payroll-input acceptance', () => {
     expect(batch.lifecycle).toBe('APPROVED'); await api.dispose(); await approverApi.dispose();
   });
 
-  test('4/6 exports once through the durable integration exchange and verifies private canonical JSON', async ({ page }) => {
+  test('4/7 exports once through the durable integration exchange and verifies private canonical JSON', async ({ page }) => {
     const api = await authorized(admin);
     const mappingM2Response = await api.put(`/api/v1/drivers/${driverId}/payroll-worker-mapping`, {
       headers: { 'Idempotency-Key': `${suffix}-mapping-2` }, data: {
@@ -140,12 +142,21 @@ test.describe.serial('US-46 real Driver payroll-input acceptance', () => {
     await api.post('/api/e2e/integrations/process');
     const exchange = (await exchanges(api)).find(item => item.sourceEventId === stableEvent)!;
     expect(exchange.status).toBe('SUCCEEDED');
-    const payload = JSON.parse(await readFile(path.join(sandbox, `${exchange.id}.json`), 'utf8')) as Record<string, unknown>;
+    const file = await readFile(path.join(sandbox, `${exchange.id}.json`));
+    expect(createHash('sha256').update(file).digest('hex')).toBe(exchange.payloadHash);
+    expect(exchange.targetFilename).toBe(`${exchange.id}.json`);
+    const canonical = file.toString('utf8');
+    const payload = JSON.parse(canonical) as Record<string, unknown>;
+    expect(JSON.stringify(payload)).toBe(canonical);
     expect(Object.keys(payload).sort()).toEqual(['batchId', 'batchType', 'currency', 'cutoffAt', 'drivers',
       'generatedAt', 'periodEndExclusive', 'periodStart', 'schemaVersion', 'totals']);
     expect(JSON.stringify(payload)).not.toMatch(/email|phone|address|medical|licen[cs]e|drug|bank|tax|pension|salary/i);
     expect(JSON.stringify(payload)).toContain(`WORKER-${suffix}`);
     expect(JSON.stringify(payload)).not.toContain(`WORKER-NEW-${suffix}`);
+    expect(JSON.stringify(payload)).toContain(driverId);
+    expect(JSON.stringify(payload)).toContain(tripId);
+    expect(payload.totals).toMatchObject({ tripEarnings: '100.01', allowances: '20.00', overtime: '30.68',
+      deductions: '5.00', provisionalNetInput: '145.69' });
     await expect.poll(async () => ((await (await api.get(`/api/v1/drivers/payroll-input-batches/${batch.id}`))
       .json()) as Batch).lifecycle).toBe('EXPORTED');
     await authenticatePage(page, admin); await page.goto('/drivers/payroll-input-batches');
@@ -156,7 +167,7 @@ test.describe.serial('US-46 real Driver payroll-input acceptance', () => {
     await api.dispose();
   });
 
-  test('5/6 creates an explicit compensating correction without rewriting the release', async () => {
+  test('5/7 creates an explicit compensating correction without rewriting the release', async () => {
     const api = await authorized(admin); const correction = await api.post(
       `/api/v1/drivers/payroll-input-batches/${batch.id}/corrections`, {
         headers: { 'Idempotency-Key': `${suffix}-correction` }, data: {
@@ -186,6 +197,11 @@ test.describe.serial('US-46 real Driver payroll-input acceptance', () => {
     await expect.poll(async () => (await exchanges(api)).find(
       item => item.sourceEventId === correctionBatch.exportEventId)?.id, { timeout: 20_000 }).toBeTruthy();
     await api.post('/api/e2e/integrations/process');
+    const correctionExchange = (await exchanges(api)).find(
+      item => item.sourceEventId === correctionBatch.exportEventId)!;
+    const correctionFile = await readFile(path.join(sandbox, `${correctionExchange.id}.json`));
+    expect(createHash('sha256').update(correctionFile).digest('hex')).toBe(correctionExchange.payloadHash);
+    expect(correctionFile.toString('utf8')).toContain(original.lines[0].id);
     await expect.poll(async () => ((await (await api.get(
       `/api/v1/drivers/payroll-input-batches/${correctionBatch.id}`)).json()) as Batch).lifecycle).toBe('EXPORTED');
     const unchanged = await (await api.get(`/api/v1/drivers/payroll-input-batches/${batch.id}`)).json() as Batch;
@@ -193,7 +209,7 @@ test.describe.serial('US-46 real Driver payroll-input acceptance', () => {
     expect(unchanged.lines).toEqual(original.lines); await approverApi.dispose(); await api.dispose();
   });
 
-  test('6/6 enforces literal API RBAC and safe cross-tenant isolation', async () => {
+  test('6/7 enforces literal API RBAC and safe cross-tenant isolation', async () => {
     const limitedApi = await authorized(limited);
     expect((await limitedApi.get('/api/v1/drivers/payroll-input-batches')).status()).toBe(200);
     expect((await limitedApi.post('/api/v1/drivers/payroll-input-batches', {
@@ -215,12 +231,45 @@ test.describe.serial('US-46 real Driver payroll-input acceptance', () => {
     await limitedApi.dispose(); await otherApi.dispose();
   });
 
+  test('7/7 rejects a real canonical payload over 32 KiB during VALIDATE and keeps it unreleased', async ({ page }) => {
+    const oversizedTrips = seedOversizedPayrollTripFixtures(120);
+    const api = await authorized(admin);
+    const created = await api.post('/api/v1/drivers/payroll-input-batches', {
+      headers: { 'Idempotency-Key': `${suffix}-oversized-batch` }, data: {
+        type: 'REGULAR', periodStart: date(-30), periodEndExclusive: date(1),
+        cutoffAt: new Date().toISOString(), currency: 'LKR',
+      },
+    });
+    expect(created.status(), await created.text()).toBe(201);
+    let oversized = await created.json() as Batch;
+    const replaced = await api.put(`/api/v1/drivers/payroll-input-batches/${oversized.id}/lines`, { data: {
+      version: oversized.version,
+      lines: oversizedTrips.map((trip, index) => ({ ...line('TRIP_EARNING', 'TRIP_RATE', '1', '1'),
+        tripId: trip.id, tripNumber: trip.number,
+        description: `Authorized source-backed operational input ${index.toString().padStart(3, '0')} ${'x'.repeat(440)}` })),
+    } });
+    expect(replaced.status(), await replaced.text()).toBe(200); oversized = await replaced.json() as Batch;
+    const validation = await api.post(`/api/v1/drivers/payroll-input-batches/${oversized.id}/validate`, {
+      data: { version: oversized.version },
+    });
+    expect(validation.status(), await validation.text()).toBe(400);
+    expect((await validation.json() as { code: string }).code).toBe('DRIVER_PAYROLL_VALIDATION_FAILED');
+    const persisted = await (await api.get(`/api/v1/drivers/payroll-input-batches/${oversized.id}`)).json() as Batch;
+    expect(persisted.lifecycle).toBe('DRAFT'); expect(persisted.exportEventId).toBeFalsy();
+    expect((await exchanges(api)).some(item => item.sourceEventId === persisted.exportEventId)).toBe(false);
+    await authenticatePage(page, admin); await page.goto('/drivers/payroll-input-batches');
+    await page.locator('tbody tr').first().click();
+    await expect(page.getByRole('button', { name: 'Export controlled JSON' })).toHaveCount(0);
+    await api.dispose();
+  });
+
   function authorized(auth: Auth) { return request.newContext({ baseURL: backend,
     extraHTTPHeaders: { Authorization: `Bearer ${auth.accessToken}` } }); }
   async function exchanges(api: Awaited<ReturnType<typeof request.newContext>>) {
     const response = await api.get(`/api/v1/integrations/${integrationId}/exchanges?size=100`);
     expect(response.status(), await response.text()).toBe(200);
-    return (await response.json() as { content: Array<{ id: string; sourceEventId: string; status: string }> }).content;
+    return (await response.json() as { content: Array<{ id: string; sourceEventId: string; status: string;
+      payloadHash: string; targetFilename?: string }> }).content;
   }
 });
 
@@ -254,4 +303,29 @@ function integrationPayload() { return { name: `US46 controlled payroll ${suffix
 async function authenticatePage(page: import('@playwright/test').Page, auth: Auth) {
   await page.addInitScript(value => { localStorage.setItem('transport.accessToken', value.accessToken);
     localStorage.setItem('transport.refreshToken', value.refreshToken); }, auth);
+}
+
+function seedOversizedPayrollTripFixtures(count: number) {
+  const database = process.env.PGDATABASE;
+  const user = process.env.PGUSER;
+  if (database !== 'transport_logistics_acceptance' || !user) {
+    throw new Error('US-46 fixture writes require explicit transport_logistics_acceptance and PGUSER');
+  }
+  if (count !== 120) throw new Error('US-46 oversized fixture count must remain exactly 120');
+  const trips = Array.from({ length: count }, (_, index) => {
+    const tail = (index + 1).toString().padStart(12, '0');
+    return { id: `74600000-0000-4000-8000-${tail}`, number: `US46-LARGE-${tail}` };
+  });
+  const values = trips.map(trip => `('${trip.id}','${trip.number}','NORMAL','COMPLETED',`
+    + `'33000000-0000-0000-0000-000000000001','33000000-0000-0000-0000-000000000002',`
+    + `CURRENT_TIMESTAMP-INTERVAL '2 days',CURRENT_TIMESTAMP-INTERVAL '1 day',`
+    + `'${driverId}',CURRENT_TIMESTAMP-INTERVAL '2 days',CURRENT_TIMESTAMP-INTERVAL '1 day',`
+    + `CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,'4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a')`).join(',');
+  const sql = `INSERT INTO trip(id,trip_number,priority,status,origin_location_id,destination_location_id,`
+    + `requested_start_time,requested_end_time,driver_id,actual_start_time,actual_end_time,created_at,updated_at,tenant_id) `
+    + `VALUES ${values} ON CONFLICT DO NOTHING`;
+  execFileSync('docker', ['compose', 'exec', '-T', 'postgres', 'psql', '-X', '--no-psqlrc', '-U', user,
+    '-d', database, '-v', 'ON_ERROR_STOP=1', '-c', sql],
+  { encoding: 'utf8', env: process.env, stdio: ['ignore', 'pipe', 'pipe'] });
+  return trips;
 }

@@ -3,6 +3,7 @@ package com.transportlogistics.app.integration.adapters.outbound.persistence;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.transportlogistics.app.integration.domain.model.IntegrationAuditEvent;
 import com.transportlogistics.app.integration.domain.model.IntegrationConfiguration;
 import com.transportlogistics.app.integration.domain.model.IntegrationExchange;
@@ -245,10 +246,19 @@ class IntegrationPersistenceAdapter implements IntegrationConfigurationRepositor
     private IntegrationExchange exchangeToDomain(IntegrationExchangeEntity source) {
         return new IntegrationExchange(source.getId(), source.getTenantId(), source.getConfigurationId(),
             source.getSourceEventId(), source.getSourceEventType(), source.getMappingVersionId(),
-            source.getMappingDefinitionHash(), source.getCanonicalPayload(), source.getPayloadHash(),
+            source.getMappingDefinitionHash(), canonicalPayload(source.getCanonicalPayload()), source.getPayloadHash(),
             source.getStatus(), source.getAttemptCount(), source.getNextAttemptAt(), source.getLockedUntil(),
             source.getExternalCorrelationId(), source.getTargetFilename(), source.getLastErrorCode(),
             source.getCreatedAt(), source.getUpdatedAt(), source.getCompletedAt(), source.getVersion());
+    }
+
+    private String canonicalPayload(String storedJsonb) {
+        try {
+            Object value = json.readValue(storedJsonb, Object.class);
+            return json.writer().with(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS).writeValueAsString(value);
+        } catch (JsonProcessingException exception) {
+            throw new IllegalStateException("Persisted Integration canonical payload is invalid", exception);
+        }
     }
 
     private IntegrationExchangeAttemptEntity attemptToEntity(IntegrationExchangeAttempt source) {

@@ -7,6 +7,8 @@ public interface DriverPayrollStore {
  Optional<DriverPayrollInputBatch> findByIdempotency(UUID tenantId, String key);
  List<DriverPayrollInputBatch> list(UUID tenantId, int page, int size);
  DriverPayrollInputBatch insert(DriverPayrollInputBatch batch, String key);
+ void lockBatchCommand(UUID tenantId, String idempotencyKey);
+ void lockReleasedSource(UUID tenantId, UUID driverId, UUID tripId, String category, UUID originalLineId);
  DriverPayrollInputBatch update(DriverPayrollInputBatch batch, long expectedVersion);
  Optional<DriverPayrollWorkerMapping> mapping(UUID tenantId, UUID driverId);
  DriverPayrollWorkerMapping saveMapping(DriverPayrollWorkerMapping mapping, long expectedVersion);
