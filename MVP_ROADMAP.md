@@ -21,7 +21,7 @@
 > - **Overall Release Band:** 70 / 87 COMPLETE (17 REPRIORITIZED / 87 TOTAL)
 > - **Current Milestone:** MVP 1.4 Last-Mile Delivery — 8 / 8 COMPLETE, 100%, CLOSED.
 > - **Active Focus:** Wave B is open; US-35, US-37 and US-38 are accepted, US-46 implementation is complete with acceptance pending, and US-47 remains.
-> - **Immediate Next Action:** Run `US-46-DRIVER-PAYROLL-LINK-TECHNICAL-CLOSURE-001`.
+> - **Immediate Next Action:** Run `US-46-DRIVER-PAYROLL-LINK-TECHNICAL-REMEDIATION-001` under the approved V71 authorization.
 
 ---
 
@@ -156,7 +156,7 @@ Development startup now consistently provisions the idempotent PostgreSQL sample
 | `US-43` | Monitor Driver Hours of Service | Drive time limits, mandatory rest enforcement | 🟢 `COMPLETE` | `DriverHosTest`, V40 |
 | `US-44` | Manage Driver Violations | Speeding, route deviation, safety incidents | 🟢 `COMPLETE` | `DriverViolationTest`, V41 |
 | `US-45` | Manage Driver Medicals & Drug Tests | Periodic fitness-to-drive certifications | 🟢 `COMPLETE` | `DriverMedicalTest`, V42 |
-| `US-46` | Process Driver Payroll Link | Traceable trip earnings, allowances, overtime and deductions exported to Payroll/HRMS | 🟡 `IMPLEMENTATION_COMPLETE / ACCEPTANCE_PENDING` | V68–V70; Maven 1,359/0/0/15; architecture 46/46; Chromium 6/6; controlled US-73 JSON file exchange |
+| `US-46` | Process Driver Payroll Link | Traceable trip earnings, allowances, overtime and deductions exported to Payroll/HRMS | 🟡 `IMPLEMENTATION_COMPLETE / ACCEPTANCE_PENDING` | Technical closure found gaps; V71 forward remediation authorized; accounting unchanged |
 
 ---
 
@@ -235,11 +235,11 @@ Development startup now consistently provisions the idempotent PostgreSQL sample
 
 ```
 Current Status: 70 / 87 COMPLETE; 17 stories remain across Waves B–E
-Queue Head:     US-46-DRIVER-PAYROLL-LINK-TECHNICAL-CLOSURE-001
+Queue Head:     US-46-DRIVER-PAYROLL-LINK-TECHNICAL-REMEDIATION-001
 ```
 
 1. **Wave A — Integration and exception-control foundations:** 2 / 2 COMPLETE / CLOSED (US-73 and US-78).
-2. **Wave B — Fuel control and financial links:** US-35, US-37 and US-38 COMPLETE; US-46 implementation complete with acceptance pending; US-47 remains.
+2. **Wave B — Fuel control and financial links:** US-35, US-37 and US-38 COMPLETE; US-46 V71 technical remediation authorized with acceptance pending; US-47 remains.
 3. **Wave C — GPS and telematics:** US-48, then US-49/50/51/52/55, then US-53, then US-54.
 4. **Wave D — Compliance and field mobility:** US-72, US-76.
 5. **Wave E — Analytics, integrity, resilience, disruption and user risk:** US-85, US-84, US-87, US-82, US-86.
