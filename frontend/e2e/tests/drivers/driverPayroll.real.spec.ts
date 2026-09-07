@@ -11,10 +11,11 @@ type Auth = { accessToken: string; refreshToken: string };
 type Batch = { id: string; lifecycle: string; version: number; exportEventId?: string;
   totals: { tripEarnings: string; allowances: string; overtime: string; deductions: string;
     provisionalNetInput: string }; lines: Array<{ id: string }> };
+type Mapping = { id: string; externalWorkerReference: string; version: number; updatedAt: string };
 
 test.describe.serial('US-46 real Driver payroll-input acceptance', () => {
   let admin: Auth; let approver: Auth; let limited: Auth; let tenantB: Auth;
-  let batch: Batch; let original: Batch; let integrationId: string;
+  let batch: Batch; let original: Batch; let integrationId: string; let mappingM1: Mapping;
 
   test.beforeAll(async () => {
     admin = await login(); const api = await authorized(admin);
@@ -76,7 +77,23 @@ test.describe.serial('US-46 real Driver payroll-input acceptance', () => {
         active: true, version: 0,
       },
     });
-    expect(mapping.status(), await mapping.text()).toBe(200);
+    expect(mapping.status(), await mapping.text()).toBe(200); mappingM1 = await mapping.json() as Mapping;
+    const replay = await api.put(`/api/v1/drivers/${driverId}/payroll-worker-mapping`, {
+      headers: { 'Idempotency-Key': `${suffix}-mapping` }, data: {
+        externalSystemAlias: 'CONTROLLED_PAYROLL', externalWorkerReference: `WORKER-${suffix}`,
+        active: true, version: 0,
+      },
+    });
+    expect(replay.status(), await replay.text()).toBe(200);
+    expect(await replay.json()).toEqual(mappingM1);
+    const conflict = await api.put(`/api/v1/drivers/${driverId}/payroll-worker-mapping`, {
+      headers: { 'Idempotency-Key': `${suffix}-mapping` }, data: {
+        externalSystemAlias: 'CONTROLLED_PAYROLL', externalWorkerReference: `OTHER-${suffix}`,
+        active: true, version: 0,
+      },
+    });
+    expect(conflict.status(), await conflict.text()).toBe(409);
+    expect((await conflict.json() as { code: string }).code).toBe('DRIVER_PAYROLL_IDEMPOTENCY_CONFLICT');
     const validated = await api.post(`/api/v1/drivers/payroll-input-batches/${batch.id}/validate`, {
       data: { version: batch.version },
     });
@@ -101,6 +118,13 @@ test.describe.serial('US-46 real Driver payroll-input acceptance', () => {
 
   test('4/6 exports once through the durable integration exchange and verifies private canonical JSON', async ({ page }) => {
     const api = await authorized(admin);
+    const mappingM2Response = await api.put(`/api/v1/drivers/${driverId}/payroll-worker-mapping`, {
+      headers: { 'Idempotency-Key': `${suffix}-mapping-2` }, data: {
+        externalSystemAlias: 'CONTROLLED_PAYROLL', externalWorkerReference: `WORKER-NEW-${suffix}`,
+        active: true, version: mappingM1.version,
+      },
+    });
+    expect(mappingM2Response.status(), await mappingM2Response.text()).toBe(200);
     const exported = await api.post(`/api/v1/drivers/payroll-input-batches/${batch.id}/export`, {
       data: { version: batch.version },
     });
@@ -120,9 +144,14 @@ test.describe.serial('US-46 real Driver payroll-input acceptance', () => {
     expect(Object.keys(payload).sort()).toEqual(['batchId', 'batchType', 'currency', 'cutoffAt', 'drivers',
       'generatedAt', 'periodEndExclusive', 'periodStart', 'schemaVersion', 'totals']);
     expect(JSON.stringify(payload)).not.toMatch(/email|phone|address|medical|licen[cs]e|drug|bank|tax|pension|salary/i);
+    expect(JSON.stringify(payload)).toContain(`WORKER-${suffix}`);
+    expect(JSON.stringify(payload)).not.toContain(`WORKER-NEW-${suffix}`);
+    await expect.poll(async () => ((await (await api.get(`/api/v1/drivers/payroll-input-batches/${batch.id}`))
+      .json()) as Batch).lifecycle).toBe('EXPORTED');
     await authenticatePage(page, admin); await page.goto('/drivers/payroll-input-batches');
     await page.locator('tbody tr').first().click();
-    await expect(page.getByText('Delivery requested; settlement not claimed')).toBeVisible();
+    await expect(page.getByRole('row', { name: /Safe delivery status EXPORTED/ })).toBeVisible();
+    await expect(page.getByText(/Payroll\/HRMS remains authoritative.*settlement.*payment/)).toBeVisible();
     original = await (await api.get(`/api/v1/drivers/payroll-input-batches/${batch.id}`)).json() as Batch;
     await api.dispose();
   });
@@ -138,9 +167,30 @@ test.describe.serial('US-46 real Driver payroll-input acceptance', () => {
         },
       });
     expect(correction.status(), await correction.text()).toBe(201);
-    expect((await correction.json() as Batch).lifecycle).toBe('DRAFT');
+    let correctionBatch = await correction.json() as Batch;
+    expect(correctionBatch.lifecycle).toBe('DRAFT');
+    const validated = await api.post(`/api/v1/drivers/payroll-input-batches/${correctionBatch.id}/validate`, {
+      data: { version: correctionBatch.version },
+    });
+    expect(validated.status(), await validated.text()).toBe(200); correctionBatch = await validated.json() as Batch;
+    const approverApi = await authorized(approver);
+    const approved = await approverApi.post(
+      `/api/v1/drivers/payroll-input-batches/${correctionBatch.id}/approve`, {
+        data: { version: correctionBatch.version },
+      });
+    expect(approved.status(), await approved.text()).toBe(200); correctionBatch = await approved.json() as Batch;
+    const exported = await api.post(`/api/v1/drivers/payroll-input-batches/${correctionBatch.id}/export`, {
+      data: { version: correctionBatch.version },
+    });
+    expect(exported.status(), await exported.text()).toBe(200); correctionBatch = await exported.json() as Batch;
+    await expect.poll(async () => (await exchanges(api)).find(
+      item => item.sourceEventId === correctionBatch.exportEventId)?.id, { timeout: 20_000 }).toBeTruthy();
+    await api.post('/api/e2e/integrations/process');
+    await expect.poll(async () => ((await (await api.get(
+      `/api/v1/drivers/payroll-input-batches/${correctionBatch.id}`)).json()) as Batch).lifecycle).toBe('EXPORTED');
     const unchanged = await (await api.get(`/api/v1/drivers/payroll-input-batches/${batch.id}`)).json() as Batch;
-    expect(unchanged.lines).toEqual(original.lines); await api.dispose();
+    expect(unchanged.lifecycle).toBe('SUPERSEDED');
+    expect(unchanged.lines).toEqual(original.lines); await approverApi.dispose(); await api.dispose();
   });
 
   test('6/6 enforces literal API RBAC and safe cross-tenant isolation', async () => {
@@ -156,6 +206,12 @@ test.describe.serial('US-46 real Driver payroll-input acceptance', () => {
     const denied = await otherApi.get(`/api/v1/drivers/payroll-input-batches/${batch.id}`);
     expect([400, 404]).toContain(denied.status());
     expect((await denied.json() as { code: string }).code).toBe('DRIVER_PAYROLL_BATCH_NOT_FOUND');
+    expect([400, 404]).toContain(
+      (await otherApi.get(`/api/v1/drivers/payroll-input-batches/${batch.id}/history`)).status());
+    expect([400, 404]).toContain((await otherApi.post(
+      `/api/v1/drivers/payroll-input-batches/${batch.id}/approve`, { data: { version: batch.version } })).status());
+    expect([400, 404]).toContain((await otherApi.post(
+      `/api/v1/drivers/payroll-input-batches/${batch.id}/export`, { data: { version: batch.version } })).status());
     await limitedApi.dispose(); await otherApi.dispose();
   });
 

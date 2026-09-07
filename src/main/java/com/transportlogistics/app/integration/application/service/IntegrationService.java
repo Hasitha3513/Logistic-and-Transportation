@@ -12,6 +12,7 @@ import com.transportlogistics.app.integration.ports.outbound.IntegrationAttemptR
 import com.transportlogistics.app.integration.ports.outbound.IntegrationAuditRepository;
 import com.transportlogistics.app.integration.ports.outbound.IntegrationConfigurationRepository;
 import com.transportlogistics.app.integration.ports.outbound.IntegrationEndpointPort;
+import com.transportlogistics.app.integration.IntegrationDeliveryObserver;
 import com.transportlogistics.app.integration.ports.outbound.IntegrationEventPublisher;
 import com.transportlogistics.app.integration.ports.outbound.IntegrationExchangeRepository;
 import com.transportlogistics.app.integration.ports.outbound.IntegrationMappingRepository;
@@ -49,6 +50,7 @@ public final class IntegrationService implements IntegrationManagementUseCase, I
     private final IntegrationEventPublisher events;
     private final IntegrationRateLimiter rateLimiter;
     private final IntegrationTransaction transactions;
+    private final IntegrationDeliveryObserver deliveryObserver;
     private final Clock clock;
 
     public IntegrationService(IntegrationConfigurationRepository configurations,
@@ -61,6 +63,7 @@ public final class IntegrationService implements IntegrationManagementUseCase, I
                               IntegrationEventPublisher events,
                               IntegrationRateLimiter rateLimiter,
                               IntegrationTransaction transactions,
+                              IntegrationDeliveryObserver deliveryObserver,
                               Clock clock) {
         this.configurations = configurations;
         this.mappings = mappings;
@@ -72,6 +75,7 @@ public final class IntegrationService implements IntegrationManagementUseCase, I
         this.events = events;
         this.rateLimiter = rateLimiter;
         this.transactions = transactions;
+        this.deliveryObserver = deliveryObserver;
         this.clock = clock;
     }
 
@@ -298,6 +302,9 @@ public final class IntegrationService implements IntegrationManagementUseCase, I
                 configurations.save(configuration.exchangeSucceeded(completedAt));
                 audit(systemContext(exchange), IntegrationAuditEvent.Action.ATTEMPT, EXCHANGE, exchange.id(),
                     null, exchange.payloadHash(), "SUCCESS");
+                deliveryObserver.delivered(exchange.tenantId(), exchange.sourceEventId(), exchange.sourceEventType(),
+                    exchange.payloadHash(), result.targetFilename(), completedAt);
+                return null;
             });
         } catch (IntegrationEndpointPort.EndpointFailure failure) {
             OffsetDateTime completedAt = now();

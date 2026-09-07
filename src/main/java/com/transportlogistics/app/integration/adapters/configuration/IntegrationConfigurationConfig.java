@@ -5,6 +5,7 @@ import com.transportlogistics.app.integration.ports.outbound.IntegrationAttemptR
 import com.transportlogistics.app.integration.ports.outbound.IntegrationAuditRepository;
 import com.transportlogistics.app.integration.ports.outbound.IntegrationConfigurationRepository;
 import com.transportlogistics.app.integration.ports.outbound.IntegrationEndpointPort;
+import com.transportlogistics.app.integration.IntegrationDeliveryObserver;
 import com.transportlogistics.app.integration.ports.outbound.IntegrationEventPublisher;
 import com.transportlogistics.app.integration.ports.outbound.IntegrationExchangeRepository;
 import com.transportlogistics.app.integration.ports.outbound.IntegrationMappingRepository;
@@ -29,9 +30,10 @@ class IntegrationConfigurationConfig {
                                           IntegrationEventPublisher events,
                                           IntegrationRateLimiter rateLimiter,
                                           IntegrationTransaction transactions,
+                                          IntegrationDeliveryObserver deliveryObserver,
                                           Clock clock) {
         return new IntegrationService(configurations, mappings, exchanges, attempts, audits, endpoint, payloads,
-            events, rateLimiter, transactions, clock);
+            events, rateLimiter, transactions, deliveryObserver, clock);
     }
 
 }

@@ -54,6 +54,20 @@ public record DriverPayrollInputBatch(UUID id, UUID tenantId, Type type, UUID co
             eventId, validationHash, null, version, now);
     }
 
+    public DriverPayrollInputBatch exported(OffsetDateTime now) {
+        if (lifecycle == Lifecycle.EXPORTED) return this;
+        if (lifecycle != Lifecycle.EXPORT_REQUESTED) invalidState();
+        return copy(Lifecycle.EXPORTED, lines, totals, approvedBy, approvedAt, exportConfigurationId,
+            exportEventId, validationHash, null, version, now);
+    }
+
+    public DriverPayrollInputBatch superseded(OffsetDateTime now) {
+        if (lifecycle == Lifecycle.SUPERSEDED) return this;
+        if (lifecycle != Lifecycle.EXPORTED) invalidState();
+        return copy(Lifecycle.SUPERSEDED, lines, totals, approvedBy, approvedAt, exportConfigurationId,
+            exportEventId, validationHash, null, version, now);
+    }
+
     private DriverPayrollInputBatch copy(Lifecycle state, List<DriverPayrollInputLine> nextLines, Totals nextTotals,
                                          UUID approver, OffsetDateTime approvalTime, UUID configurationId,
                                          UUID eventId, String hash, UUID unused, long nextVersion, OffsetDateTime now) {

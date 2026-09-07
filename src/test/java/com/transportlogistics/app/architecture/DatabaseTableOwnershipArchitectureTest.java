@@ -142,6 +142,7 @@ class DatabaseTableOwnershipArchitectureTest {
                 "driver_medical_record", "driver_drug_test", "vehicle_category", "vehicle_type", "vehicle",
                 "vehicle_document", "vehicle_reading", "vehicle_meter_reset", "maintenance_schedule", "lubricant_log",
                 "driver_payroll_input_batch", "driver_payroll_input_line", "driver_payroll_worker_mapping",
+                "driver_payroll_worker_mapping_command",
                 "driver_payroll_input_history");
         own(ownership, "routing", "route", "route_stop", "route_revision", "route_revision_stop", "route_disruption");
         own(ownership, "trip", "trip", "trip_status_history", "trip_dispatch", "trip_operational_event");
