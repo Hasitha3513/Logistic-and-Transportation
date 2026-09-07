@@ -246,6 +246,38 @@ public final class IntegrationService implements IntegrationManagementUseCase, I
     }
 
     @Override
+    public void acceptPayroll(ExchangeFact fact) {
+        transactions.execute(() -> {
+            if (!"DRIVER_PAYROLL_INPUT_V1".equals(fact.eventType()) || fact.version() != 1
+                    || !"DRIVER_PAYROLL_INPUT_BATCH".equals(fact.aggregateType())) {
+                throw new BusinessRuleException("INTEGRATION_PAYLOAD_INVALID", "Unsupported payroll contract");
+            }
+            IntegrationConfiguration configuration = configurations.list(fact.tenantId(), 0, 100).stream()
+                .filter(c -> c.lifecycle() == IntegrationConfiguration.Lifecycle.ACTIVE
+                    && c.dataClassification() == IntegrationConfiguration.DataClassification.FINANCIAL_CONFIDENTIAL)
+                .filter(c -> c.currentMappingId() != null && "DRIVER_PAYROLL_INPUT_V1".equals(
+                    requiredMapping(fact.tenantId(), c.currentMappingId()).sourceContract()))
+                .findFirst().orElseThrow(() -> new BusinessRuleException("INTEGRATION_CONFIGURATION_NOT_FOUND",
+                    "Active payroll integration configuration is absent"));
+            IntegrationMapping mapping = requiredMapping(fact.tenantId(), configuration.currentMappingId());
+            String canonicalPayload = payloads.serialize(mapping.apply(fact.payload()));
+            if (canonicalPayload.getBytes(StandardCharsets.UTF_8).length > MAX_PAYLOAD_BYTES) {
+                throw new BusinessRuleException("INTEGRATION_PAYLOAD_INVALID", "Canonical payload exceeds 32 KiB");
+            }
+            OffsetDateTime acceptedAt = now();
+            var exchange = new IntegrationExchange(UUID.randomUUID(), fact.tenantId(), configuration.id(),
+                fact.eventId(), fact.eventType(), mapping.id(), mapping.definitionHash(), canonicalPayload,
+                payloads.hash(canonicalPayload), IntegrationExchange.Status.PENDING, 0, acceptedAt, null, null, null,
+                null, acceptedAt, acceptedAt, null, 0);
+            var accepted = exchanges.saveIfAbsent(exchange);
+            audit(new Context(fact.tenantId(), SYSTEM_ACTOR, fact.eventId().toString()),
+                IntegrationAuditEvent.Action.DURABLE_FACT_ACCEPT, EXCHANGE, accepted.id(), null,
+                accepted.payloadHash(), "SUCCESS");
+            return null;
+        });
+    }
+
+    @Override
     public void processDue(UUID tenantId) {
         exchanges.claimDue(tenantId, now(), MAX_BATCH).forEach(this::deliver);
     }

@@ -64,6 +64,7 @@ export const navigation: NavigationItem[] = [
     icon: <UserOutlined />,
     children: [
       { key: 'driver-list', label: 'Drivers', route: '/drivers', requiredPermission: 'DRIVER_VIEW' },
+      { key: 'driver-payroll', label: 'Payroll Inputs', route: '/drivers/payroll-input-batches', requiredPermission: 'DRIVER_PAYROLL_VIEW' },
     ],
   },
   {

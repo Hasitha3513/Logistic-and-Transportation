@@ -13,4 +13,6 @@ interface IntegrationConfigurationJpaRepository extends JpaRepository<Integratio
     boolean existsByTenantIdAndNormalizedNameAndIdNot(UUID tenantId, String normalizedName, UUID id);
     List<IntegrationConfigurationEntity> findByTenantIdOrderByNormalizedName(UUID tenantId, Pageable pageable);
     long countByTenantId(UUID tenantId);
+    List<IntegrationConfigurationEntity> findByTenantIdAndLifecycle(UUID tenantId,
+        com.transportlogistics.app.integration.domain.model.IntegrationConfiguration.Lifecycle lifecycle);
 }

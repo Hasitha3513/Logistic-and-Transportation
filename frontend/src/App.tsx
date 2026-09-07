@@ -53,6 +53,7 @@ import OperationalExceptionQueuePage from './features/operations/operationalExce
 import FuelPerformancePage from './features/fuel/performance/pages/FuelPerformancePage';
 import FuelCardsPage from './features/fuel/cards/pages/FuelCardsPage';
 import FuelExceptionsPage from './features/fuel/exceptions/pages/FuelExceptionsPage';
+import DriverPayrollPage from './features/fleet/driverPayroll/pages/DriverPayrollPage';
 
 function ProtectedRoute() {
   const { user, isLoading } = useAuth();
@@ -96,6 +97,7 @@ export default function App() {
         <Route path="fleet/vehicle-categories" element={<ResourceListPage {...resourcePages.categories} />} />
         <Route path="fleet/vehicle-types" element={<ResourceListPage {...resourcePages.types} />} />
         <Route path="drivers" element={<ResourceListPage {...resourcePages.drivers} />} />
+        <Route path="drivers/payroll-input-batches" element={<DriverPayrollPage />} />
         <Route path="routes" element={<ResourceListPage {...resourcePages.routes} />} />
         <Route path="trips" element={<TripListPage />} />
         <Route path="trips/new" element={<TripEditorPage />} />

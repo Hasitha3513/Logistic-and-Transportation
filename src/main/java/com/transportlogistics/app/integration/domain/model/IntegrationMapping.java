@@ -25,6 +25,7 @@ public record IntegrationMapping(
 ) {
     public static final String PROBE_CONTRACT = "US73_PLATFORM_PROBE";
     public static final String PROBE_SCHEMA = "US73_FILE_PROBE";
+    public static final String PAYROLL_CONTRACT = "DRIVER_PAYROLL_INPUT_V1";
     private static final Set<String> SOURCE_FIELDS = Set.of("probeId", "probeType", "sequence");
     private static final Set<String> TARGET_FIELDS = Set.of("probe_id", "probe_type", "sequence");
     private static final Pattern FIELD = Pattern.compile("[A-Za-z][A-Za-z0-9_.]{0,99}");
@@ -56,6 +57,13 @@ public record IntegrationMapping(
     }
 
     public Map<String, Object> apply(Map<String, ?> source) {
+        if (PAYROLL_CONTRACT.equals(sourceContract)) {
+            if (!source.keySet().equals(Set.of("schemaVersion", "batchId", "batchType", "periodStart",
+                    "periodEndExclusive", "cutoffAt", "generatedAt", "currency", "totals", "drivers"))) {
+                throw invalid("Payroll payload fields do not match the registered contract");
+            }
+            return new LinkedHashMap<>(source);
+        }
         if (!source.keySet().equals(SOURCE_FIELDS)) {
             throw invalid("Probe payload fields do not match the registered contract");
         }
@@ -88,11 +96,13 @@ public record IntegrationMapping(
 
     private static void validate(String sourceContract, int sourceVersion, String targetSchema, int targetVersion,
                                  int mappingVersion, List<Rule> rules) {
-        if (!PROBE_CONTRACT.equals(sourceContract) || sourceVersion != 1 || !PROBE_SCHEMA.equals(targetSchema)
-                || targetVersion != 1 || mappingVersion < 1) {
+        boolean probe = PROBE_CONTRACT.equals(sourceContract) && PROBE_SCHEMA.equals(targetSchema);
+        boolean payroll = PAYROLL_CONTRACT.equals(sourceContract) && PAYROLL_CONTRACT.equals(targetSchema);
+        if ((!probe && !payroll) || sourceVersion != 1 || targetVersion != 1 || mappingVersion < 1) {
             throw invalid("Mapping contract, schema, or version is not registered");
         }
         if (rules.isEmpty() || rules.size() > 100) throw invalid("Mapping requires 1 to 100 rules");
+        if (payroll) return;
         Set<String> targets = new java.util.HashSet<>();
         for (Rule rule : rules) {
             if (rule.sourceField() != null && !SOURCE_FIELDS.contains(rule.sourceField())) {

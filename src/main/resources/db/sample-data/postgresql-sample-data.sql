@@ -27,6 +27,15 @@ CROSS JOIN app_permission permission
 WHERE role.name = 'ADMIN'
 ON CONFLICT DO NOTHING;
 
+-- Local bootstrap creates this role after Flyway; keep its fixture authority synchronized
+-- with active permissions without relying on fixed role identifiers.
+INSERT INTO app_role_permission (role_id, permission_code)
+SELECT role.id, permission.code
+FROM app_role role
+CROSS JOIN app_permission permission
+WHERE role.name = 'LOCAL_MVP_ADMIN'
+ON CONFLICT DO NOTHING;
+
 -- 3. app_user
 INSERT INTO app_user (id, username, email, password_hash, first_name, last_name, phone, active, created_at, updated_at) VALUES
   ('10000000-0000-0000-0000-000000000001', 'user.kasun', 'kasun@transport.local', '$2a$10$lgPvpk4ZpSW3WYNsJtIcteupI7PK1Ar0JASn0nLYYXRMMG5mmdGYS', 'Kasun', 'Perera', '+94771000000', TRUE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),

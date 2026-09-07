@@ -90,6 +90,38 @@ class SecurityConfig {
 
                         .requestMatchers(HttpMethod.GET, "/drivers/available", "/drivers/*/availability")
                         .hasAuthority("DRIVER_AVAILABILITY_VIEW")
+                        .requestMatchers(HttpMethod.GET, "/drivers/payroll-input-batches",
+                                "/drivers/payroll-input-batches/**", "/drivers/*/payroll-worker-mapping",
+                                "/v1/drivers/payroll-input-batches", "/v1/drivers/payroll-input-batches/**",
+                                "/v1/drivers/*/payroll-worker-mapping",
+                                "/api/v1/drivers/payroll-input-batches",
+                                "/api/v1/drivers/payroll-input-batches/**",
+                                "/api/v1/drivers/*/payroll-worker-mapping")
+                        .hasAuthority("DRIVER_PAYROLL_VIEW")
+                        .requestMatchers(HttpMethod.PUT, "/drivers/payroll-input-batches/*/lines",
+                                "/drivers/*/payroll-worker-mapping", "/v1/drivers/payroll-input-batches/*/lines",
+                                "/v1/drivers/*/payroll-worker-mapping",
+                                "/api/v1/drivers/payroll-input-batches/*/lines",
+                                "/api/v1/drivers/*/payroll-worker-mapping")
+                        .hasAuthority("DRIVER_PAYROLL_PREPARE")
+                        .requestMatchers(HttpMethod.POST, "/drivers/payroll-input-batches",
+                                "/drivers/payroll-input-batches/*/validate",
+                                "/drivers/payroll-input-batches/*/corrections",
+                                "/v1/drivers/payroll-input-batches",
+                                "/v1/drivers/payroll-input-batches/*/validate",
+                                "/v1/drivers/payroll-input-batches/*/corrections",
+                                "/api/v1/drivers/payroll-input-batches",
+                                "/api/v1/drivers/payroll-input-batches/*/validate",
+                                "/api/v1/drivers/payroll-input-batches/*/corrections")
+                        .hasAuthority("DRIVER_PAYROLL_PREPARE")
+                        .requestMatchers(HttpMethod.POST, "/drivers/payroll-input-batches/*/approve",
+                                "/v1/drivers/payroll-input-batches/*/approve",
+                                "/api/v1/drivers/payroll-input-batches/*/approve")
+                        .hasAuthority("DRIVER_PAYROLL_APPROVE")
+                        .requestMatchers(HttpMethod.POST, "/drivers/payroll-input-batches/*/export",
+                                "/v1/drivers/payroll-input-batches/*/export",
+                                "/api/v1/drivers/payroll-input-batches/*/export")
+                        .hasAuthority("DRIVER_PAYROLL_EXPORT")
                         .requestMatchers(HttpMethod.GET, "/drivers", "/drivers/*", "/drivers/*/licenses",
                                 "/drivers/*/exceptions", "/drivers/*/exceptions/*",
                                 "/drivers/*/violations", "/drivers/*/violations/*",

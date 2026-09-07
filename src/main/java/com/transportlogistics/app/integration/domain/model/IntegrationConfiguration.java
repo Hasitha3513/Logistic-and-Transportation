@@ -99,6 +99,10 @@ public record IntegrationConfiguration(
         if (lifecycle == Lifecycle.ACTIVE) {
             return this;
         }
+        if (dataClassification == DataClassification.FINANCIAL_CONFIDENTIAL && createdBy.equals(actor)) {
+            throw new BusinessRuleException("INTEGRATION_FINANCIAL_SOD_VIOLATION",
+                "A financial integration must be activated by an actor other than its creator");
+        }
         if (currentMappingId == null || lastTestedAt == null || lastTestedVersion == null
                 || lastTestedVersion != version || lastTestedAt.isBefore(now.minus(TEST_FRESHNESS))) {
             throw invalid("A successful test for the current version within 15 minutes is required");
@@ -157,7 +161,8 @@ public record IntegrationConfiguration(
     public static void validateCapability(Type type, Protocol protocol, Direction direction,
                                           DataClassification classification, RetryPolicy retryPolicy) {
         if (type != Type.FILE_EXCHANGE || protocol != Protocol.FILE_JSON_V1 || direction != Direction.OUTBOUND
-                || classification != DataClassification.INTERNAL_OPERATIONAL_NON_SENSITIVE
+                || (classification != DataClassification.INTERNAL_OPERATIONAL_NON_SENSITIVE
+                    && classification != DataClassification.FINANCIAL_CONFIDENTIAL)
                 || retryPolicy != RetryPolicy.US73_BOUNDED_V1) {
             throw new BusinessRuleException("INTEGRATION_CAPABILITY_UNSUPPORTED",
                 "Unsupported US-73 integration capability");
@@ -185,7 +190,7 @@ public record IntegrationConfiguration(
     public enum Type { FILE_EXCHANGE }
     public enum Protocol { FILE_JSON_V1 }
     public enum Direction { OUTBOUND, INBOUND, BIDIRECTIONAL }
-    public enum DataClassification { INTERNAL_OPERATIONAL_NON_SENSITIVE, FINANCIAL, RESTRICTED }
+    public enum DataClassification { INTERNAL_OPERATIONAL_NON_SENSITIVE, FINANCIAL_CONFIDENTIAL, FINANCIAL, RESTRICTED }
     public enum RetryPolicy { US73_BOUNDED_V1 }
     public enum Lifecycle { DRAFT, ACTIVE, DISABLED }
     public enum Health { UNKNOWN, HEALTHY, DEGRADED, UNAVAILABLE, AUTH_FAILED }

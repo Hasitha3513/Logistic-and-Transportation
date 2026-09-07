@@ -140,7 +140,9 @@ class DatabaseTableOwnershipArchitectureTest {
         own(ownership, "organization", "customer", "department", "location", "project", "vendor");
         own(ownership, "fleet", "driver", "driver_license", "driver_exception", "driver_violation",
                 "driver_medical_record", "driver_drug_test", "vehicle_category", "vehicle_type", "vehicle",
-                "vehicle_document", "vehicle_reading", "vehicle_meter_reset", "maintenance_schedule", "lubricant_log");
+                "vehicle_document", "vehicle_reading", "vehicle_meter_reset", "maintenance_schedule", "lubricant_log",
+                "driver_payroll_input_batch", "driver_payroll_input_line", "driver_payroll_worker_mapping",
+                "driver_payroll_input_history");
         own(ownership, "routing", "route", "route_stop", "route_revision", "route_revision_stop", "route_disruption");
         own(ownership, "trip", "trip", "trip_status_history", "trip_dispatch", "trip_operational_event");
         own(ownership, "fuel", "fuel_station", "fuel_limit_policy", "fuel_issue", "fuel_issue_history",

@@ -1,0 +1,18 @@
+package com.transportlogistics.app.fleet.payroll.ports.outbound;
+import com.transportlogistics.app.fleet.payroll.domain.*;
+import java.time.OffsetDateTime;
+import java.util.*;
+public interface DriverPayrollStore {
+ Optional<DriverPayrollInputBatch> find(UUID tenantId, UUID id);
+ Optional<DriverPayrollInputBatch> findByIdempotency(UUID tenantId, String key);
+ List<DriverPayrollInputBatch> list(UUID tenantId, int page, int size);
+ DriverPayrollInputBatch insert(DriverPayrollInputBatch batch, String key);
+ DriverPayrollInputBatch update(DriverPayrollInputBatch batch, long expectedVersion);
+ Optional<DriverPayrollWorkerMapping> mapping(UUID tenantId, UUID driverId);
+ DriverPayrollWorkerMapping saveMapping(DriverPayrollWorkerMapping mapping, long expectedVersion);
+ boolean releasedSourceExists(UUID tenantId, UUID driverId, UUID tripId, String category, UUID excludingBatch);
+ List<History> history(UUID tenantId, UUID batchId);
+ void history(UUID tenantId, UUID batchId, String action, String fromState, String toState, UUID actor,
+              String detail, OffsetDateTime at);
+ record History(UUID id,String action,String fromState,String toState,UUID actorId,String detail,OffsetDateTime createdAt){}
+}

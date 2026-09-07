@@ -21,6 +21,11 @@ public class IntegrationDurableEventHandler implements DurableEventHandler {
     @Transactional
     public void handle(DurableEventEnvelope event) {
         try {
+            if ("DRIVER_PAYROLL_INPUT_V1".equals(event.eventType())) {
+                exchanges.acceptPayroll(new IntegrationExchangeUseCase.ExchangeFact(event.eventId(), event.tenantId(),
+                    event.eventType(), event.version(), event.aggregateType(), event.occurredAt(), event.payload()));
+                return;
+            }
             exchanges.acceptProbe(new IntegrationExchangeUseCase.ProbeFact(event.eventId(), event.tenantId(),
                 event.aggregateId(), event.eventType(), event.version(), event.aggregateType(), event.occurredAt(),
                 event.payload()));
