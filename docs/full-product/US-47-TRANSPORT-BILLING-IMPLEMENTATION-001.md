@@ -18,13 +18,13 @@ Published provider-neutral source contracts accept only a `CLOSED` Trip or an ex
 - Tax is `SUPPLIED` or `NOT_SUPPLIED`; Billing reconciles supplied arithmetic but performs no jurisdictional tax calculation.
 - Regular cost-centre allocations total exactly 100.0000% and are operational references, not GL accounts.
 - `DRAFT → VALIDATED → APPROVED → FINALIZED → EXPORT_REQUESTED → EXPORTED`, with reasoned pre-approval cancellation and post-finalization exact reversal. Draft editing invalidates validation. Preparer and approver must differ.
-- Tenant/year numbers use `TB-YYYY-NNNNNN`. Mutable commands use optimistic versions. Required commands persist Tenant/scope/key/request hashes and serialize identical-key races with PostgreSQL advisory transaction locks.
+- Tenant/year numbers use `TB-YYYY-NNNNNN`. Mutable commands use optimistic versions. Required commands persist Tenant/scope/key/request hashes and serialize identical-key races with PostgreSQL advisory transaction locks. Reversal creation additionally locks `tenantId + ":billing:REVERSE_ORIGINAL:" + originalBillingRecordId`, preventing different idempotency keys from creating competing reversals.
 
 ## API, RBAC, persistence, and integration
 
 The exact `/api/v1/billing/records` list/create/detail/replace-lines/validate/approve/cancel/finalize/reversals/export/history family is implemented. Literal-route security tests cover the five permissions: `BILLING_VIEW`, `BILLING_PREPARE`, `BILLING_APPROVE`, `BILLING_FINALIZE`, and `BILLING_EXPORT`.
 
-Flyway `V72__transport_billing_us47.sql` adds `freight_billing_fact` plus the six Tenant-owned Billing tables, Tenant-consistent composite keys, source/billing-number/reversal/idempotency uniqueness, monetary constraints, immutable finalized-child/history triggers, Tenant-leading indexes, and permission seeds. V1→V72 is clean. No prior migration changed.
+Flyway `V72__transport_billing_us47.sql` adds `freight_billing_fact` plus the six Tenant-owned Billing tables, Tenant-consistent composite keys, source/billing-number/idempotency uniqueness, reversal referential constraints, monetary constraints, immutable finalized-child/history triggers, Tenant-leading indexes, and permission seeds. V1→V72 is clean. No prior migration changed.
 
 `TransportBillingExportRequestedV1` uses the shared P1-01 outbox with aggregate `TRANSPORT_BILLING_RECORD`, family `TRANSPORT_BILLING_V1`, `FINANCIAL_CONFIDENTIAL`, and controlled US-73 `FILE_JSON_V1`. Canonical UTF-8 JSON is deterministic, sorted where repeated, private, and fails closed above 32 KiB. `EXPORTED` is set only from controlled delivery/hash evidence and means delivery only—not posting, importing, payment, or settlement.
 
@@ -36,11 +36,13 @@ The Billing route and navigation live under the existing `AppLayout`. The featur
 
 - Domain, PostgreSQL V72, literal security, integration mapping, and architecture focused selection: PASS.
 - PostgreSQL: only `transport_logistics_acceptance`; repeated clean V1→V72; development database was not authoritative evidence.
-- Full Maven: 1,389 tests, 0 failures, 0 errors, 15 skipped; `BUILD SUCCESS`; 06:29.
-- Architecture: 46 / 46 PASS in the final full suite.
+- Dedicated `TransportBillingConcurrencyPostgreSqlAcceptanceTest`: 9 / 9 PASS. It uses a `CyclicBarrier`, independent Spring/PostgreSQL transactions, and no sleep-based correctness synchronization. Covered races are duplicate source, idempotent create, same-key/different-request conflict, edit vs approval, double approval, double finalization, finalization vs cancellation, double reversal, and double export. Tenant-scoped lock identity, optimistic conflict behavior, single success history, source immutability, and one shared-outbox export identity are asserted.
+- Complete focused Billing suite: 17 tests, 0 failures, 0 errors, 0 skipped; `BUILD SUCCESS`; 00:53.
+- Full Maven: 1,398 tests, 0 failures, 0 errors, 15 skipped; `BUILD SUCCESS`; 06:47.
+- Architecture: 46 / 46 PASS in a fresh dedicated run.
 - Checkstyle: 0 violations. PMD: PASS. SpotBugs: 0 findings.
 - Frontend TypeScript: PASS. Vitest: 63 files and 263 / 263 tests PASS. Production build: PASS. US-47 changed-file ESLint: 0 errors.
-- Real PostgreSQL-backed Chromium: 7 / 7 PASS in 33.3 seconds. Evidence includes CLOSED Trip and explicit Freight eligibility, all four categories, tax/cost centre, SoD, finalization/export/file/hash/EXPORTED, invalid/stale/duplicate rejection, exact immutable reversal, durable replay/conflict, Tenant-B/RBAC denial, canonical privacy, and UI.
+- Real PostgreSQL-backed Chromium: 7 / 7 PASS in 36.3 seconds. Evidence includes CLOSED Trip and explicit Freight eligibility, all four categories, tax/cost centre, SoD, finalization/export/file/hash/EXPORTED, invalid/stale/duplicate rejection, exact immutable reversal, durable replay/conflict, Tenant-B/RBAC denial, canonical privacy, and UI.
 - `git diff --check`: PASS.
 
 ## Scope exclusions

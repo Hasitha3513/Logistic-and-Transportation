@@ -163,7 +163,7 @@ Development startup now consistently provisions the idempotent PostgreSQL sample
 ### 📡 Module 7: GPS & Telematics (US-47 to US-55)
 | ID | User Story Title | Scope / Feature | Status | Verification Evidence |
 | :---: | :--- | :--- | :---: | :--- |
-| `US-47` | Manage Transport Billing | Trip/freight costing, charges, adjustments, cost centres and operational billing finalization | 🟡 `IMPLEMENTATION_COMPLETE / ACCEPTANCE_PENDING` | V72; Maven 1,389/0/0/15; architecture 46/46; Chromium 7/7; controlled US-73 file/hash; technical closure next; accounting unchanged |
+| `US-47` | Manage Transport Billing | Trip/freight costing, charges, adjustments, cost centres and operational billing finalization | 🟡 `IMPLEMENTATION_COMPLETE / ACCEPTANCE_PENDING` | V72; concurrency 9/9; Maven 1,398/0/0/15; architecture 46/46; Chromium 7/7; controlled US-73 file/hash; technical closure next; accounting unchanged |
 | `US-48` | Track Vehicles Live | Provider-neutral telemetry ingestion, live/last-known state, connectivity, accuracy and freshness | 🟡 `WAVE C / READY_FOR_PRODUCT_DECISIONS` | GPS provider/device required for real acceptance |
 | `US-49` | Manage Geofences | Depot, customer-site and unauthorized-zone entry/exit detection | 🟡 `WAVE C / BLOCKED_BY_DEPENDENCY` | Requires US-48 |
 | `US-50` | Monitor Speed | Threshold, road-rule and repeat-speed monitoring | 🟡 `WAVE C / BLOCKED_BY_DEPENDENCY` | Requires US-48 |

@@ -109,6 +109,7 @@ public final class TransportBillingService implements TransportBillingUseCase, B
         if(reason==null||reason.isBlank()||reason.length()>160)throw rule("BILLING_REVERSAL_INVALID");
         store.lockIdempotency(c.tenantId(),"REVERSE",key(key));
         var replay=replay(c,"REVERSE",key,id,version,reason);if(replay!=null)return replay;
+        store.lockIdempotency(c.tenantId(),"REVERSE_ORIGINAL",id.toString());
         var original=get(c.tenantId(),id);check(original,version);
         if(original.recordType()!=RecordType.REGULAR||!Set.of(Lifecycle.FINALIZED,Lifecycle.EXPORT_REQUESTED,Lifecycle.EXPORTED).contains(original.lifecycle())||store.reversalExists(c.tenantId(),id,null))throw rule("BILLING_REVERSAL_INVALID");
         var at=now(); var reversal=new TransportBillingRecord(UUID.randomUUID(),c.tenantId(),store.nextNumber(c.tenantId(),at.getYear()),
