@@ -3,8 +3,8 @@
 <div align="center">
 
 ![Total Stories](https://img.shields.io/badge/Total%20Stories-87-0969da.svg?style=for-the-badge&logo=target)
-![Completed](https://img.shields.io/badge/Completed-71%20%2F%2087-2da44e.svg?style=for-the-badge&logo=checkmarx)
-![Progress](https://img.shields.io/badge/Progress-81.6%25-brightgreen.svg?style=for-the-badge&logo=speedtest)
+![Completed](https://img.shields.io/badge/Completed-72%20%2F%2087-2da44e.svg?style=for-the-badge&logo=checkmarx)
+![Progress](https://img.shields.io/badge/Progress-82.8%25-brightgreen.svg?style=for-the-badge&logo=speedtest)
 ![MVP 1.4 Closed](https://img.shields.io/badge/MVP%201.4%20Last--Mile-8%20%2F%208-2da44e.svg?style=for-the-badge&logo=pinboard)
 ![Database](https://img.shields.io/badge/PostgreSQL%20%2F%20Flyway-V72-8a63d2.svg?style=for-the-badge&logo=postgresql)
 
@@ -14,35 +14,35 @@
 
 > [!IMPORTANT]
 > **Authoritative Baseline & Current State:**
-> - **Last Reconciled:** `2026-09-07`
+> - **Last Reconciled:** `2026-09-08`
 > - **Authority Order:** Original Requirements (`Traspotation & logistic.docx`), Frozen Architecture/Contracts, Verified Production Code/Tests, then Roadmap.
 > - **MVP 1.3 Delivery Operations:** 7 / 7 COMPLETE (100%) - CLOSED
 > - **MVP 1.4 Last-Mile Delivery:** 8 / 8 COMPLETE (US-63 through US-70 Accepted & Closed)
-> - **Overall Release Band:** 71 / 87 COMPLETE (16 REPRIORITIZED / 87 TOTAL)
+> - **Overall Release Band:** 72 / 87 COMPLETE (15 REPRIORITIZED / 87 TOTAL)
 > - **Current Milestone:** MVP 1.4 Last-Mile Delivery — 8 / 8 COMPLETE, 100%, CLOSED.
-> - **Active Focus:** Wave B is open; US-35, US-37, US-38, and US-46 are accepted; US-47 implementation is complete with acceptance pending.
-> - **Immediate Next Action:** Run `US-47-TRANSPORT-BILLING-TECHNICAL-CLOSURE-001`.
+> - **Active Focus:** Wave B is 5 / 5 COMPLETE / CLOSED; Wave C is active.
+> - **Immediate Next Action:** Run `US-48-LIVE-VEHICLE-TRACKING-IMPLEMENTATION-001`.
 
 ---
 
 ## 📊 1. Executive Metrics & Milestone Progress
 
 ```
-Overall Progress: [█████████████████████████████████████████████████░] 71 / 87 Stories Complete (81.6%)
+Overall Progress: [█████████████████████████████████████████████████░] 72 / 87 Stories Complete (82.8%)
 MVP 1.3 Band:     [██████████████████████████████████████████████████] 7 / 7 Complete (100.0%) - CLOSED
 MVP 1.4 Band:     [██████████████████████████████████████████████████] 8 / 8 Complete (100.0%) - CLOSED
 ```
 
 | Metric | Target | Current Count | Percentage | Status Indicator |
 | :--- | :---: | :---: | :---: | :--- |
-| **Completed Stories (Accepted)** | 87 | **71** | `81.6%` | 🟢 `ON TRACK / VERIFIED` |
+| **Completed Stories (Accepted)** | 87 | **72** | `82.8%` | 🟢 `ON TRACK / VERIFIED` |
 | **Next Active / Acceptance Required** | — | **0** | `0.0%` | 🟢 `NONE` |
 | **Not Started (MVP 1.4 Active Scope)** | 1 | **0** | `0.0%` | 🟢 `NONE` |
-| **Reprioritized Remaining Stories** | 16 | **16** | `18.4%` | 🟡 `PLANNED IN GOVERNED WAVES` |
+| **Reprioritized Remaining Stories** | 15 | **15** | `17.2%` | 🟡 `PLANNED IN GOVERNED WAVES` |
 | **Total Registered User Stories** | **87** | **87** | **`100%`** | 🔒 `FROZEN REGISTER (US-01..US-87)` |
 
 > [!NOTE]
-> Stories `US-88`, `US-89`, and `US-90` are strictly undefined. The story accounting register is bounded exactly from `US-01` through `US-87` (`71 COMPLETE + 16 REMAINING = 87`).
+> Stories `US-88`, `US-89`, and `US-90` are strictly undefined. The story accounting register is bounded exactly from `US-01` through `US-87` (`72 COMPLETE + 15 REMAINING = 87`).
 
 ---
 
@@ -57,7 +57,7 @@ MVP 1.4 Band:     [████████████████████�
 | **MVP 1.2** | **Fuel Management** | Fuel Issues, Purchases, Mileage, Bunkers, Fuel Cards, Analytics, Exceptions (US-31–38) | 8 | 6 / 8 | 🟡 `MVP CLOSED; 2 STORIES REPRIORITIZED IN WAVE B` |
 | **MVP 1.3** | **Delivery Operations** | Delivery Orders, Online POD, Offline POD, Failed Deliveries, Redelivery, Analytics, Exceptions (US-56–62) | 7 | 7 / 7 | 🟢 `COMPLETE (100%) - CLOSED` |
 | **MVP 1.4** | **Last-Mile Delivery** | Delivery Zones, Delivery Slots, Riders, Batch Orders, ETA, Exceptions, Notifications, Self-Service (US-63–70) | 8 | 8 / 8 | 🟢 `COMPLETE (100%) - CLOSED` |
-| **Full Product** | **Waves A–E** | Integration/Exceptions; Fuel/Finance; GPS; Compliance/Mobile; Analytics/Integrity/Resilience/Risk | 22 | 3 / 22 | 🟡 `IN PROGRESS — WAVE B OPEN` |
+| **Full Product** | **Waves A–E** | Integration/Exceptions; Fuel/Finance; GPS; Compliance/Mobile; Analytics/Integrity/Resilience/Risk | 22 | 7 / 22 | 🟡 `IN PROGRESS — WAVE C ACTIVE` |
 
 ### Phase 0 Architecture Remediation
 
@@ -163,8 +163,8 @@ Development startup now consistently provisions the idempotent PostgreSQL sample
 ### 📡 Module 7: GPS & Telematics (US-47 to US-55)
 | ID | User Story Title | Scope / Feature | Status | Verification Evidence |
 | :---: | :--- | :--- | :---: | :--- |
-| `US-47` | Manage Transport Billing | Trip/freight costing, charges, adjustments, cost centres and operational billing finalization | 🟡 `IMPLEMENTATION_COMPLETE / ACCEPTANCE_PENDING` | V72; concurrency 9/9; Maven 1,398/0/0/15; architecture 46/46; Chromium 7/7; controlled US-73 file/hash; technical closure next; accounting unchanged |
-| `US-48` | Track Vehicles Live | Provider-neutral telemetry ingestion, live/last-known state, connectivity, accuracy and freshness | 🟡 `WAVE C / READY_FOR_PRODUCT_DECISIONS` | GPS provider/device required for real acceptance |
+| `US-47` | Manage Transport Billing | Trip/freight costing, charges, adjustments, cost centres and operational billing finalization | 🟢 `COMPLETE` | Final acceptance PASS; V72; focused 17/17; concurrency 9/9; Maven 1,398/0/0/15 in 06:38; architecture 46/46; Chromium 7/7; `US-47-TRANSPORT-BILLING-FINAL-ACCEPTANCE-001.md` |
+| `US-48` | Track Vehicles Live | Provider-neutral telemetry ingestion, live/last-known state, connectivity, accuracy and freshness | 🟡 `PRODUCT_DECISIONS_FROZEN / IMPLEMENTATION_NOT_STARTED` | Dedicated Tracking boundary; HTTP JSON ingress; immutable PostgreSQL history; polling; real physical GPS device/provider required for final acceptance |
 | `US-49` | Manage Geofences | Depot, customer-site and unauthorized-zone entry/exit detection | 🟡 `WAVE C / BLOCKED_BY_DEPENDENCY` | Requires US-48 |
 | `US-50` | Monitor Speed | Threshold, road-rule and repeat-speed monitoring | 🟡 `WAVE C / BLOCKED_BY_DEPENDENCY` | Requires US-48 |
 | `US-51` | Monitor Idle Time | Engine-on versus movement duration and qualified fuel-waste estimates | 🟡 `WAVE C / BLOCKED_BY_DEPENDENCY` | Requires US-48 engine-state telemetry |
@@ -234,12 +234,12 @@ Development startup now consistently provisions the idempotent PostgreSQL sample
 ## 🎯 4. Immediate Execution Queue
 
 ```
-Current Status: 71 / 87 COMPLETE; 16 stories remain across Waves B–E
-Queue Head:     US-47-TRANSPORT-BILLING-TECHNICAL-CLOSURE-001
+Current Status: 72 / 87 COMPLETE; 15 stories remain across Waves C–E
+Queue Head:     US-48-LIVE-VEHICLE-TRACKING-IMPLEMENTATION-001
 ```
 
 1. **Wave A — Integration and exception-control foundations:** 2 / 2 COMPLETE / CLOSED (US-73 and US-78).
-2. **Wave B — Fuel control and financial links:** US-35, US-37, US-38, and US-46 COMPLETE; US-47 implementation complete with technical closure next.
+2. **Wave B — Fuel control and financial links:** 5 / 5 COMPLETE / CLOSED (US-35, US-37, US-38, US-46, US-47).
 3. **Wave C — GPS and telematics:** US-48, then US-49/50/51/52/55, then US-53, then US-54.
 4. **Wave D — Compliance and field mobility:** US-72, US-76.
 5. **Wave E — Analytics, integrity, resilience, disruption and user risk:** US-85, US-84, US-87, US-82, US-86.
