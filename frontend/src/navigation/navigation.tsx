@@ -14,6 +14,7 @@ import {
   SendOutlined,
   WarningOutlined,
   DollarOutlined,
+  AimOutlined,
 } from '@ant-design/icons';
 
 export interface NavigationItem {
@@ -127,6 +128,13 @@ export const navigation: NavigationItem[] = [
     route: '/billing/records',
     icon: <DollarOutlined />,
     requiredPermission: 'BILLING_VIEW',
+  },
+  {
+    key: 'tracking',
+    label: 'Live Tracking',
+    route: '/tracking/vehicles',
+    icon: <AimOutlined />,
+    requiredPermission: 'TRACKING_VIEW',
   },
   {
     key: 'operations',

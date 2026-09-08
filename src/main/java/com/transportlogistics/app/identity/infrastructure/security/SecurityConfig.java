@@ -42,6 +42,8 @@ class SecurityConfig {
                                 "/v3/api-docs/**", "/error").permitAll()
                         .requestMatchers("/public/v1/delivery-self-service/**",
                                 "/api/public/v1/delivery-self-service/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/integration/v1/tracking/positions",
+                                "/api/integration/v1/tracking/positions").permitAll()
                         .requestMatchers("/auth/me", "/auth/logout").authenticated()
                         .requestMatchers("/actuator/**").hasAuthority("IDENTITY_MANAGE")
                         .requestMatchers("/users/**", "/roles/**").hasAuthority("IDENTITY_MANAGE")
@@ -145,6 +147,21 @@ class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/billing/records/*/export",
                                 "/v1/billing/records/*/export", "/api/v1/billing/records/*/export")
                         .hasAuthority("BILLING_EXPORT")
+                        .requestMatchers(HttpMethod.GET, "/tracking/vehicles", "/tracking/vehicles/*/latest",
+                                "/v1/tracking/vehicles", "/v1/tracking/vehicles/*/latest",
+                                "/api/v1/tracking/vehicles", "/api/v1/tracking/vehicles/*/latest",
+                                "/tracking/devices", "/tracking/devices/*", "/v1/tracking/devices",
+                                "/v1/tracking/devices/*", "/api/v1/tracking/devices", "/api/v1/tracking/devices/*")
+                        .hasAuthority("TRACKING_VIEW")
+                        .requestMatchers(HttpMethod.GET, "/tracking/vehicles/*/positions",
+                                "/v1/tracking/vehicles/*/positions", "/api/v1/tracking/vehicles/*/positions")
+                        .hasAuthority("TRACKING_HISTORY_VIEW")
+                        .requestMatchers(HttpMethod.POST, "/tracking/devices/**", "/v1/tracking/devices/**",
+                                "/api/v1/tracking/devices/**")
+                        .hasAuthority("TRACKING_DEVICE_MANAGE")
+                        .requestMatchers(HttpMethod.PUT, "/tracking/devices/*", "/v1/tracking/devices/*",
+                                "/api/v1/tracking/devices/*")
+                        .hasAuthority("TRACKING_DEVICE_MANAGE")
                         .requestMatchers(HttpMethod.GET, "/drivers", "/drivers/*", "/drivers/*/licenses",
                                 "/drivers/*/exceptions", "/drivers/*/exceptions/*",
                                 "/drivers/*/violations", "/drivers/*/violations/*",

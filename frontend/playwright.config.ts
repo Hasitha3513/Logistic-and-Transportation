@@ -52,7 +52,7 @@ export default defineConfig({
   ],
   webServer: [
     {
-      command: `${mavenWrapper} -q -f ../pom.xml spring-boot:run "-Dspring-boot.run.profiles=postgres,e2e" "-Dspring-boot.run.arguments=--server.port=8088 --app.dev.identity-bootstrap.enabled=true --app.dev.identity-bootstrap.username=${e2eAdminUsername} --app.dev.identity-bootstrap.password=${e2eAdminPassword} --app.dev.identity-bootstrap.email=e2e.admin@example.test --security.jwt.secret=${e2eJwtSecret} --app.dev.sample-data.enabled=true --app.integration.outbox.enabled=true"`,
+      command: `${mavenWrapper} -q -f ../pom.xml spring-boot:run "-Dspring-boot.run.profiles=postgres,e2e" "-Dspring-boot.run.arguments=--server.port=8088 --app.dev.identity-bootstrap.enabled=true --app.dev.identity-bootstrap.username=${e2eAdminUsername} --app.dev.identity-bootstrap.password=${e2eAdminPassword} --app.dev.identity-bootstrap.email=e2e.admin@example.test --security.jwt.secret=${e2eJwtSecret} --app.dev.sample-data.enabled=true --app.integration.outbox.enabled=true --app.tracking.provider-secrets.FIXTURE=us48-controlled-provider-secret"`,
       url: 'http://localhost:8088/api/health',
       timeout: 180_000,
       reuseExistingServer: true,

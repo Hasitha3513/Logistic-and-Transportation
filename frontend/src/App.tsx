@@ -55,6 +55,7 @@ import FuelCardsPage from './features/fuel/cards/pages/FuelCardsPage';
 import FuelExceptionsPage from './features/fuel/exceptions/pages/FuelExceptionsPage';
 import DriverPayrollPage from './features/fleet/driverPayroll/pages/DriverPayrollPage';
 import TransportBillingPage from './features/billing/pages/TransportBillingPage';
+import LiveTrackingPage from './features/tracking/pages/LiveTrackingPage';
 
 function ProtectedRoute() {
   const { user, isLoading } = useAuth();
@@ -84,6 +85,7 @@ function HomePage() {
   if (hasPermission('DELIVERY_VIEW')) return <Navigate to="/deliveries" replace />;
   if (hasPermission('OPERATIONAL_EXCEPTION_VIEW')) return <Navigate to="/operations/exceptions" replace />;
   if (hasPermission('BILLING_VIEW')) return <Navigate to="/billing/records" replace />;
+  if (hasPermission('TRACKING_VIEW')) return <Navigate to="/tracking/vehicles" replace />;
   if (hasPermission('IDENTITY_MANAGE')) return <Navigate to="/administration/users" replace />;
   return <Navigate to="/workspace" replace />;
 }
@@ -157,6 +159,7 @@ export default function App() {
         <Route path="integrations/:id" element={<IntegrationDetailPage />} />
         <Route path="operations/exceptions" element={<OperationalExceptionQueuePage />} />
         <Route path="billing/records" element={<TransportBillingPage />} />
+        <Route path="tracking/vehicles" element={<LiveTrackingPage />} />
         <Route path="workspace" element={<WorkspacePage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>

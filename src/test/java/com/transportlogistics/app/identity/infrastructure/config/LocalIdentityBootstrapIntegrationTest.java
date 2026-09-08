@@ -37,13 +37,15 @@ class LocalIdentityBootstrapIntegrationTest {
         mvc.perform(get("/auth/me").header("Authorization", "Bearer " + accessToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.firstName").value("Local"))
-                .andExpect(jsonPath("$.permissions.length()").value(175))
+                .andExpect(jsonPath("$.permissions.length()").value(178))
                 .andExpect(jsonPath("$.permissions").value(org.hamcrest.Matchers.hasItem("DRIVER_PAYROLL_VIEW")))
                 .andExpect(jsonPath("$.permissions").value(org.hamcrest.Matchers.hasItem("DRIVER_PAYROLL_PREPARE")))
                 .andExpect(jsonPath("$.permissions").value(org.hamcrest.Matchers.hasItem("DRIVER_PAYROLL_APPROVE")))
                 .andExpect(jsonPath("$.permissions").value(org.hamcrest.Matchers.hasItem("DRIVER_PAYROLL_EXPORT")))
                 .andExpect(jsonPath("$.permissions").value(org.hamcrest.Matchers.hasItems("BILLING_VIEW",
                         "BILLING_PREPARE", "BILLING_APPROVE", "BILLING_FINALIZE", "BILLING_EXPORT")))
+                .andExpect(jsonPath("$.permissions").value(org.hamcrest.Matchers.hasItems("TRACKING_VIEW",
+                        "TRACKING_HISTORY_VIEW", "TRACKING_DEVICE_MANAGE")))
                 .andExpect(jsonPath("$.permissions").value(org.hamcrest.Matchers.hasItem("FUEL_EXCEPTION_VIEW")))
                 .andExpect(jsonPath("$.permissions").value(org.hamcrest.Matchers.hasItem("FUEL_EXCEPTION_MANAGE")))
                 .andExpect(jsonPath("$.permissions").value(org.hamcrest.Matchers.hasItem("FUEL_EXCEPTION_CORRECT")))
