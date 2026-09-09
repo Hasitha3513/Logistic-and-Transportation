@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.transportlogistics.app.shared.domain.BusinessRuleException;
+import com.transportlogistics.app.shared.domain.ConflictException;
 import com.transportlogistics.app.support.PostgreSqlIntegrationTest;
 import com.transportlogistics.app.tracking.application.provider.NewTrackingProviderConnection;
 import com.transportlogistics.app.tracking.application.provider.ProviderConnectionLifecycle;
@@ -126,14 +127,14 @@ class TrackingProviderConnectionPostgreSqlAcceptanceTest extends PostgreSqlInteg
         store.create(newConnection(tenantA, "global-key", "SHARED", "Shared name"));
         assertThatThrownBy(() -> store.create(
                 newConnection(tenantA, "other-key", "SHARED", "Other name")))
-                .isInstanceOf(DataIntegrityViolationException.class);
+                .isInstanceOf(ConflictException.class);
         assertThatThrownBy(() -> store.create(
                 newConnection(tenantA, "third-key", "OTHER", "Shared name")))
-                .isInstanceOf(DataIntegrityViolationException.class);
+                .isInstanceOf(ConflictException.class);
         store.create(newConnection(tenantB, "tenant-b-key", "SHARED", "Shared name"));
         assertThatThrownBy(() -> store.create(
                 newConnection(UUID.randomUUID(), "global-key", "UNIQUE", "Unique")))
-                .isInstanceOf(DataIntegrityViolationException.class);
+                .isInstanceOf(ConflictException.class);
     }
 
     @Test

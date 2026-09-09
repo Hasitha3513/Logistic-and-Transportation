@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.transportlogistics.app.shared.domain.BusinessRuleException;
 import com.transportlogistics.app.support.PostgreSqlIntegrationTest;
 import com.transportlogistics.app.tracking.domain.TrackingModels.EngineState;
+import com.transportlogistics.app.tracking.domain.TrackingModels.DeviceLifecycle;
 import com.transportlogistics.app.tracking.ports.inbound.TrackingUseCase.Associate;
 import com.transportlogistics.app.tracking.ports.inbound.TrackingUseCase.Context;
 import com.transportlogistics.app.tracking.ports.inbound.TrackingUseCase.CreateDevice;
@@ -156,7 +157,10 @@ class TrackingConcurrencyPostgreSqlAcceptanceTest extends PostgreSqlIntegrationT
     }
 
     private UUID createDevice(UUID tenant, String reference) {
-        return store.insertDevice(context(tenant), new CreateDevice(reference, PROVIDER, null), Instant.now()).id();
+        var device = store.insertDevice(
+                context(tenant), new CreateDevice(reference, PROVIDER, null), Instant.now());
+        return store.lifecycle(
+                context(tenant), device.id(), device.version(), DeviceLifecycle.ACTIVE, Instant.now()).id();
     }
 
     private List<?> ingest(Fixture fixture, PositionCommand command) {

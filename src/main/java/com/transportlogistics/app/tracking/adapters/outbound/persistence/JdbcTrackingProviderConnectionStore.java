@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.transportlogistics.app.shared.domain.BusinessRuleException;
+import com.transportlogistics.app.shared.domain.ConflictException;
 import com.transportlogistics.app.tracking.application.provider.NewTrackingProviderConnection;
 import com.transportlogistics.app.tracking.application.provider.ProviderConnectionId;
 import com.transportlogistics.app.tracking.application.provider.ProviderConnectionLifecycle;
@@ -24,6 +25,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -41,18 +43,22 @@ class JdbcTrackingProviderConnectionStore implements TrackingProviderConnectionS
     public TrackingProviderConnection create(NewTrackingProviderConnection connection) {
         UUID id = UUID.randomUUID();
         String configuration = serialize(connection.safeConfiguration());
-        jdbc.update("""
-                INSERT INTO tracking_provider_binding(
-                 id,tenant_id,provider_key_id,provider_alias,credential_reference,lifecycle,
-                 created_at,created_by,updated_at,updated_by,version,provider_type,display_name,
-                 endpoint_uri,safe_configuration,poll_interval_seconds,page_size,test_status)
-                VALUES(?,?,?,?,?,?,?,?,?,?,0,?,?,?,?::jsonb,?,?,'NOT_TESTED')
-                """, id, connection.tenantId(), connection.providerKeyId(),
-                connection.providerAlias(), connection.credentialReference(),
-                connection.lifecycle().name(), Timestamp.from(connection.now()), connection.actorId(),
-                Timestamp.from(connection.now()), connection.actorId(), connection.providerType().value(),
-                connection.displayName(), uri(connection.endpoint()), configuration,
-                connection.pollIntervalSeconds(), connection.pageSize());
+        try {
+            jdbc.update("""
+                    INSERT INTO tracking_provider_binding(
+                     id,tenant_id,provider_key_id,provider_alias,credential_reference,lifecycle,
+                     created_at,created_by,updated_at,updated_by,version,provider_type,display_name,
+                     endpoint_uri,safe_configuration,poll_interval_seconds,page_size,test_status)
+                    VALUES(?,?,?,?,?,?,?,?,?,?,0,?,?,?,?::jsonb,?,?,'NOT_TESTED')
+                    """, id, connection.tenantId(), connection.providerKeyId(),
+                    connection.providerAlias(), connection.credentialReference(),
+                    connection.lifecycle().name(), Timestamp.from(connection.now()), connection.actorId(),
+                    Timestamp.from(connection.now()), connection.actorId(), connection.providerType().value(),
+                    connection.displayName(), uri(connection.endpoint()), configuration,
+                    connection.pollIntervalSeconds(), connection.pageSize());
+        } catch (DataIntegrityViolationException exception) {
+            throw conflict(exception);
+        }
         return find(connection.tenantId(), id).orElseThrow();
     }
 
@@ -86,7 +92,9 @@ class JdbcTrackingProviderConnectionStore implements TrackingProviderConnectionS
             throw new BusinessRuleException(
                     "TRACKING_PROVIDER_CONNECTION_INVALID", "Provider lifecycle transition is invalid");
         }
-        int changed = jdbc.update("""
+        int changed;
+        try {
+            changed = jdbc.update("""
                 UPDATE tracking_provider_binding SET credential_reference=?,provider_type=?,display_name=?,
                  endpoint_uri=?,safe_configuration=?::jsonb,poll_interval_seconds=?,page_size=?,
                  lifecycle=?,test_status=?,last_tested_at=?,last_successful_poll_at=?,
@@ -101,6 +109,9 @@ class JdbcTrackingProviderConnectionStore implements TrackingProviderConnectionS
                 mutation.lastErrorCategory(), timestamp(mutation.nextPollAt()), mutation.leaseOwner(),
                 timestamp(mutation.leaseUntil()), Timestamp.from(now), actorId, tenantId, connectionId,
                 expectedVersion);
+        } catch (DataIntegrityViolationException exception) {
+            throw conflict(exception);
+        }
         if (changed != 1) {
             throw stale();
         }
@@ -150,6 +161,12 @@ class JdbcTrackingProviderConnectionStore implements TrackingProviderConnectionS
     private static BusinessRuleException stale() {
         return new BusinessRuleException(
                 "TRACKING_STALE_VERSION", "Provider connection is missing or stale");
+    }
+
+    private static ConflictException conflict(DataIntegrityViolationException cause) {
+        return new ConflictException(
+                "TRACKING_PROVIDER_CONNECTION_CONFLICT",
+                "Provider connection conflicts with an existing resource", cause);
     }
 
     private static String uri(URI value) {

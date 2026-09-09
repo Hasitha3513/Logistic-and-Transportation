@@ -156,6 +156,10 @@ class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/tracking/vehicles/*/positions",
                                 "/v1/tracking/vehicles/*/positions", "/api/v1/tracking/vehicles/*/positions")
                         .hasAuthority("TRACKING_HISTORY_VIEW")
+                        .requestMatchers("/tracking/provider-types", "/tracking/provider-connections/**",
+                                "/v1/tracking/provider-types", "/v1/tracking/provider-connections/**",
+                                "/api/v1/tracking/provider-types", "/api/v1/tracking/provider-connections/**")
+                        .hasAuthority("TRACKING_DEVICE_MANAGE")
                         .requestMatchers(HttpMethod.POST, "/tracking/devices/**", "/v1/tracking/devices/**",
                                 "/api/v1/tracking/devices/**")
                         .hasAuthority("TRACKING_DEVICE_MANAGE")

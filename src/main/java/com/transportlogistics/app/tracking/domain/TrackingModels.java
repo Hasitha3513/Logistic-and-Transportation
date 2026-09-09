@@ -7,7 +7,7 @@ import java.util.UUID;
 
 public final class TrackingModels {
  private TrackingModels() {}
- public enum DeviceLifecycle { ACTIVE, DISABLED }
+ public enum DeviceLifecycle { DRAFT, ACTIVE, DISABLED, RETIRED }
  public enum EngineState { ON, OFF, UNKNOWN }
  public enum Trust { TRUSTED, UNTRUSTED, UNKNOWN }
  public enum Freshness { LIVE, RECENT, STALE, UNKNOWN }

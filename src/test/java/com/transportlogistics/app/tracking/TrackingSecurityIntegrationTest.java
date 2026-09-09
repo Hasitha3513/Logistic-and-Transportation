@@ -13,6 +13,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.transportlogistics.app.tenancy.CurrentTenant;
 import com.transportlogistics.app.tenancy.TenantExecutionContext;
 import com.transportlogistics.app.tracking.ports.inbound.TrackingUseCase;
+import com.transportlogistics.app.tracking.ports.inbound.TrackingProviderManagementUseCase;
 import com.transportlogistics.app.tracking.ports.outbound.TrackingStore;
 import com.transportlogistics.app.integration.IntegrationSecretResolver;
 import com.transportlogistics.app.tracking.domain.TrackingModels.ProviderBinding;
@@ -48,6 +49,7 @@ class TrackingSecurityIntegrationTest {
     @Autowired MockMvc mvc;
     @Autowired CurrentTenant currentTenant;
     @Autowired TrackingUseCase useCase;
+    @Autowired TrackingProviderManagementUseCase providerManagementUseCase;
     @Autowired TrackingStore store;
     @Autowired IntegrationSecretResolver secretResolver;
     private static final UUID BINDING_ID = UUID.fromString("48000000-0000-0000-0000-000000000074");
@@ -59,13 +61,17 @@ class TrackingSecurityIntegrationTest {
     static class Stubs {
         @Bean @Primary CurrentTenant trackingTestTenant() { return org.mockito.Mockito.mock(CurrentTenant.class); }
         @Bean @Primary TrackingUseCase trackingTestUseCase() { return org.mockito.Mockito.mock(TrackingUseCase.class); }
+        @Bean("trackingTestProviderManagementUseCase") @Primary
+        TrackingProviderManagementUseCase trackingProviderManagementUseCase() {
+            return org.mockito.Mockito.mock(TrackingProviderManagementUseCase.class);
+        }
         @Bean @Primary TrackingStore trackingTestStore() { return org.mockito.Mockito.mock(TrackingStore.class); }
         @Bean @Primary IntegrationSecretResolver trackingTestSecrets() { return org.mockito.Mockito.mock(IntegrationSecretResolver.class); }
     }
 
     @BeforeEach
     void setup() {
-        reset(useCase, store, secretResolver);
+        reset(useCase, providerManagementUseCase, store, secretResolver);
         var context = new TenantExecutionContext(TENANT, UUID.randomUUID(), "tracking.operator", "tracking-test");
         when(currentTenant.current()).thenReturn(Optional.of(context));
         when(currentTenant.required()).thenReturn(context);
@@ -97,6 +103,15 @@ class TrackingSecurityIntegrationTest {
         mvc.perform(post("/api/v1/tracking/devices").contextPath("/api")
                 .contentType(MediaType.APPLICATION_JSON).content("{}"))
                 .andExpect(status().isForbidden());
+        mvc.perform(get("/api/v1/tracking/provider-types").contextPath("/api"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test @WithMockUser(authorities = "TRACKING_DEVICE_MANAGE")
+    void deviceManageAllowsLiteralProviderManagementRoute() throws Exception {
+        when(providerManagementUseCase.providerTypes()).thenReturn(List.of());
+        mvc.perform(get("/api/v1/tracking/provider-types").contextPath("/api"))
+                .andExpect(status().isOk());
     }
 
     @Test @WithMockUser(authorities = "TRACKING_HISTORY_VIEW")
