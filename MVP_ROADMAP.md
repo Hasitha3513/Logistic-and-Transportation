@@ -21,8 +21,8 @@
 > - **Overall Release Band:** 72 / 87 COMPLETE (15 REPRIORITIZED / 87 TOTAL)
 > - **Current Milestone:** MVP 1.4 Last-Mile Delivery — 8 / 8 COMPLETE, 100%, CLOSED.
 > - **Active Focus:** Wave B is 5 / 5 COMPLETE / CLOSED; Wave C is active.
-> - **US-48 Technical State:** `IMPLEMENTATION_COMPLETE / ACCEPTANCE_PENDING`; remediation `COMPLETE`; technical closure `PASS`; current Flyway head V74.
-> - **Immediate Next Action:** Run `US-48-LIVE-VEHICLE-TRACKING-FINAL-ACCEPTANCE-001`; real device/provider final acceptance remains required.
+> - **US-48 Technical State:** `IMPLEMENTATION_COMPLETE / ACCEPTANCE_BLOCKED_EXTERNAL_SYSTEM`; remediation `COMPLETE`; technical closure `PASS`; current Flyway head V74.
+> - **Immediate Next Action:** Resume `US-48-LIVE-VEHICLE-TRACKING-FINAL-ACCEPTANCE-001` only when a physical GPS device and its real provider-generated telemetry path are available. Do not start US-49.
 
 ---
 
@@ -165,7 +165,7 @@ Development startup now consistently provisions the idempotent PostgreSQL sample
 | ID | User Story Title | Scope / Feature | Status | Verification Evidence |
 | :---: | :--- | :--- | :---: | :--- |
 | `US-47` | Manage Transport Billing | Trip/freight costing, charges, adjustments, cost centres and operational billing finalization | 🟢 `COMPLETE` | Final acceptance PASS; V72; focused 17/17; concurrency 9/9; Maven 1,398/0/0/15 in 06:38; architecture 46/46; Chromium 7/7; `US-47-TRANSPORT-BILLING-FINAL-ACCEPTANCE-001.md` |
-| `US-48` | Track Vehicles Live | Provider-neutral telemetry ingestion, live/last-known state, connectivity, accuracy and freshness | 🟡 `IMPLEMENTATION_COMPLETE / ACCEPTANCE_PENDING` | V74 trusted provider/Tenant, retention, observability, audit and rebuild remediation COMPLETE; technical closure PASS; real provider/device acceptance remains pending |
+| `US-48` | Track Vehicles Live | Provider-neutral telemetry ingestion, live/last-known state, connectivity, accuracy and freshness | 🔴 `IMPLEMENTATION_COMPLETE / ACCEPTANCE_BLOCKED_EXTERNAL_SYSTEM` | V74 remediation COMPLETE and technical closure PASS; final acceptance cannot proceed without a physical GPS device and real provider-generated telemetry evidence |
 | `US-49` | Manage Geofences | Depot, customer-site and unauthorized-zone entry/exit detection | 🟡 `WAVE C / BLOCKED_BY_DEPENDENCY` | Requires US-48 |
 | `US-50` | Monitor Speed | Threshold, road-rule and repeat-speed monitoring | 🟡 `WAVE C / BLOCKED_BY_DEPENDENCY` | Requires US-48 |
 | `US-51` | Monitor Idle Time | Engine-on versus movement duration and qualified fuel-waste estimates | 🟡 `WAVE C / BLOCKED_BY_DEPENDENCY` | Requires US-48 engine-state telemetry |
