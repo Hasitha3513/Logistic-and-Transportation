@@ -13,7 +13,8 @@ public record ProviderSafeConfiguration(Map<String, String> values) {
     private static final int MAX_BYTES = 8_192;
     private static final Pattern KEY = Pattern.compile("[A-Za-z][A-Za-z0-9_.-]{0,63}");
     private static final Pattern SECRET_KEY = Pattern.compile(
-            ".*(token|secret|password|credential|private[_.-]?key|api[_.-]?key).*",
+            ".*(token|secret|password|credential|authorization|private[_.-]?key|privatekey"
+                    + "|api[_.-]?key|apikey).*",
             Pattern.CASE_INSENSITIVE);
 
     public ProviderSafeConfiguration {

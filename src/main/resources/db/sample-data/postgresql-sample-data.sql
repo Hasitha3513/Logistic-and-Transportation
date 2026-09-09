@@ -5,13 +5,17 @@ BEGIN;
 
 -- Controlled US-48 provider identity. Only an opaque environment reference is persisted.
 INSERT INTO tracking_provider_binding
- (id,tenant_id,provider_key_id,provider_alias,credential_reference,lifecycle,created_at,created_by,updated_at,updated_by,version)
+ (id,tenant_id,provider_key_id,provider_alias,credential_reference,lifecycle,created_at,created_by,
+  updated_at,updated_by,version,provider_type,display_name)
 VALUES
  ('48000000-0000-0000-0000-000000000074','4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a',
   'us48-fixture-key','FIXTURE','env:US48_FIXTURE_SECRET','ACTIVE',NOW(),
-  '10000000-0000-0000-0000-000000000001',NOW(),'10000000-0000-0000-0000-000000000001',0)
+  '10000000-0000-0000-0000-000000000001',NOW(),'10000000-0000-0000-0000-000000000001',0,
+  'FIXTURE','FIXTURE')
 ON CONFLICT(provider_key_id) DO UPDATE SET
  provider_alias=EXCLUDED.provider_alias,
+ provider_type=EXCLUDED.provider_type,
+ display_name=EXCLUDED.display_name,
  credential_reference=EXCLUDED.credential_reference,
  lifecycle='ACTIVE',
  updated_at=NOW(),
