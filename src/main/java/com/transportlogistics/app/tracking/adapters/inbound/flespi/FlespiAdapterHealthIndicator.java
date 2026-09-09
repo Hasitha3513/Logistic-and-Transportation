@@ -6,23 +6,18 @@ import org.springframework.stereotype.Component;
 
 @Component("trackingFlespi")
 final class FlespiAdapterHealthIndicator implements HealthIndicator {
-    private final FlespiAdapterProperties properties;
     private final FlespiAdapterState state;
 
-    FlespiAdapterHealthIndicator(FlespiAdapterProperties properties, FlespiAdapterState state) {
-        this.properties = properties;
+    FlespiAdapterHealthIndicator(FlespiAdapterState state) {
         this.state = state;
     }
 
     @Override
     public Health health() {
         var snapshot = state.snapshot();
-        if (!properties.isEnabled()) {
-            return Health.up().withDetail("enabled", false).withDetail("configured", false).build();
-        }
-        var builder = snapshot.configured() && snapshot.reachable() ? Health.up() : Health.unknown();
-        return builder.withDetail("enabled", true)
-                .withDetail("configured", snapshot.configured())
+        var builder = snapshot.reachable() ? Health.up() : Health.unknown();
+        return builder.withDetail("adapterRegistered", true)
+                .withDetail("connectionCount", state.connectionCount())
                 .withDetail("reachable", snapshot.reachable())
                 .withDetail("lastSuccessfulPoll", snapshot.lastSuccessfulPoll())
                 .withDetail("lastProviderMessage", snapshot.lastProviderMessage())

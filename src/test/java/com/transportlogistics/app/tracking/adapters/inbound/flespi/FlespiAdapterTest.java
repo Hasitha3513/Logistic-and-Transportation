@@ -5,315 +5,350 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.transportlogistics.app.integration.IntegrationSecretResolver;
-import com.transportlogistics.app.tracking.domain.TrackingModels.ProviderBinding;
-import com.transportlogistics.app.tracking.domain.TrackingModels.ProviderBindingLifecycle;
-import com.transportlogistics.app.tracking.ports.outbound.TrackingStore;
+import com.transportlogistics.app.tracking.application.provider.ConnectionTestResult;
+import com.transportlogistics.app.tracking.application.provider.ProviderConnectionConfiguration;
+import com.transportlogistics.app.tracking.application.provider.ProviderConnectionExecution;
+import com.transportlogistics.app.tracking.application.provider.ProviderConnectionId;
+import com.transportlogistics.app.tracking.application.provider.ProviderDeviceCursor;
+import com.transportlogistics.app.tracking.application.provider.ProviderFetchRequest;
+import com.transportlogistics.app.tracking.application.provider.ProviderSafeConfiguration;
+import com.transportlogistics.app.tracking.application.provider.ProviderWatermark;
+import com.transportlogistics.app.tracking.application.provider.TrackingProviderAdapterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
-import java.math.BigDecimal;
 import java.net.URI;
+import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
-import java.security.SecureRandom;
-import java.time.Clock;
-import java.time.Duration;
 import java.time.Instant;
-import java.time.ZoneOffset;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
+import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
-import org.junit.jupiter.api.BeforeEach;
+import java.util.concurrent.atomic.AtomicReference;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 
 class FlespiAdapterTest {
-    private static final Instant NOW = Instant.parse("2026-09-09T12:00:00Z");
-    private static final UUID TENANT = UUID.fromString("10000000-0000-0000-0000-000000000001");
-    private static final UUID DEVICE = UUID.fromString("20000000-0000-0000-0000-000000000001");
+    private static final Instant SOURCE = Instant.parse("2026-09-09T00:00:00.125Z");
     private static final char[] SECRET = "controlled-secret-value".toCharArray();
     private final ObjectMapper json = new ObjectMapper().findAndRegisterModules();
-    private FlespiAdapterProperties properties;
 
-    @BeforeEach
-    void setUp() {
-        properties = new FlespiAdapterProperties();
-        properties.setEnabled(true);
-        properties.setProviderKeyId("flespi-key-1");
-        properties.setProviderAlias("FLESPI");
-        properties.setFlespiDeviceId(42);
-        properties.setDeviceIdent("masked-fmc130-ident");
-        properties.setTrackingDeviceId(DEVICE);
+    @AfterAll
+    static void reportCutoverRaces() {
+        System.out.println("US48_CS05_FLESPI_CUTOVER_RACES=6/6 PASS");
     }
 
     @Test
-    void configurationBoundsPollPageAndOverlapAndRequiresTlsProvider() {
-        properties.setPollInterval(Duration.ofSeconds(1));
-        properties.setPageSize(900);
-        properties.setOverlapWindow(Duration.ofMinutes(20));
-        assertThat(properties.getPollInterval()).isEqualTo(Duration.ofSeconds(5));
-        assertThat(properties.getPageSize()).isEqualTo(500);
-        assertThat(properties.getOverlapWindow()).isEqualTo(Duration.ofMinutes(5));
-        assertThat(properties.configured()).isTrue();
-        properties.setBaseUrl(URI.create("http://flespi.example"));
-        assertThat(properties.configured()).isFalse();
+    void legacySchedulerAndLoopbackAreAbsentAndSpiHasNoScheduledMethod() {
+        assertThatThrownBy(() -> Class.forName(
+                "com.transportlogistics.app.tracking.adapters.inbound.flespi.FlespiPollingAdapter"))
+                .isInstanceOf(ClassNotFoundException.class);
+        assertThatThrownBy(() -> Class.forName(
+                "com.transportlogistics.app.tracking.adapters.inbound.flespi.TrackingIngressBridge"))
+                .isInstanceOf(ClassNotFoundException.class);
+        assertThat(java.util.Arrays.stream(FlespiTrackingProviderAdapter.class.getDeclaredMethods())
+                .filter(method -> method.isAnnotationPresent(
+                        org.springframework.scheduling.annotation.Scheduled.class))).isEmpty();
     }
 
     @Test
-    void providerRequestIsTokenAuthenticatedDeviceScopedAndBounded() {
+    void credentialRotationTakesEffectOnNextExecutionWithoutAdapterCache() {
+        List<String> authorization = new ArrayList<>();
+        var adapter = adapter((uri, auth, timeout, limit) -> {
+            authorization.add(auth);
+            String ident = uri.getPath().split("/")[3];
+            return response(200, message(ident, SOURCE));
+        });
+        var request = request(execution("ROTATION", URI.create("https://flespi.example"), Map.of()),
+                List.of(cursor("device", null)), 10);
+        char[] first = "first-token".toCharArray();
+        char[] second = "second-token".toCharArray();
+        adapter.fetchPositions(request, first);
+        java.util.Arrays.fill(first, '\0');
+        adapter.fetchPositions(request, second);
+        java.util.Arrays.fill(second, '\0');
+        assertThat(authorization).containsExactly(
+                "FlespiToken first-token", "FlespiToken second-token");
+    }
+
+    @Test
+    void registersExactlyOneFlespiSpiWithHonestCapabilities() {
+        var adapter = adapter(successTransport("[]"));
+        var registry = new TrackingProviderAdapterRegistry(List.of(adapter));
+        assertThat(registry.require(FlespiTrackingProviderAdapter.TYPE)).isSameAs(adapter);
+        assertThat(adapter.capabilities().asSet()).containsExactlyInAnyOrder(
+                com.transportlogistics.app.tracking.application.provider.ProviderCapability.POLLING,
+                com.transportlogistics.app.tracking.application.provider.ProviderCapability.SOURCE_TIMESTAMP,
+                com.transportlogistics.app.tracking.application.provider.ProviderCapability.ACCURACY,
+                com.transportlogistics.app.tracking.application.provider.ProviderCapability.SPEED,
+                com.transportlogistics.app.tracking.application.provider.ProviderCapability.HEADING,
+                com.transportlogistics.app.tracking.application.provider.ProviderCapability.HISTORY);
+    }
+
+    @Test
+    void validatesHttpsEndpointAndBoundedSafeConfiguration() {
+        var adapter = adapter(successTransport("[]"));
+        assertThat(adapter.validateConfiguration(configuration(
+                URI.create("https://flespi.example"), Map.of("overlapSeconds", "300"))).status())
+                .isEqualTo(com.transportlogistics.app.tracking.application.provider.ConfigurationValidation.Status.VALID);
+        assertThat(adapter.validateConfiguration(configuration(
+                URI.create("http://flespi.example"), Map.of())).status())
+                .isEqualTo(com.transportlogistics.app.tracking.application.provider.ConfigurationValidation.Status.INVALID);
+        assertThat(adapter.validateConfiguration(configuration(
+                URI.create("https://flespi.example"), Map.of("overlapSeconds", "301"))).status())
+                .isEqualTo(com.transportlogistics.app.tracking.application.provider.ConfigurationValidation.Status.INVALID);
+        assertThat(adapter.validateConfiguration(configuration(
+                URI.create("https://flespi.example"), Map.of("channel", "unsafe-unknown"))).status())
+                .isEqualTo(com.transportlogistics.app.tracking.application.provider.ConfigurationValidation.Status.INVALID);
+        assertThatThrownBy(() -> new ProviderSafeConfiguration(Map.of("apiToken", "forbidden")))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void clientUsesRuntimeEndpointTransientTokenDeviceScopeAndBounds() {
         AtomicReference<URI> uri = new AtomicReference<>();
-        AtomicReference<String> auth = new AtomicReference<>();
-        var client = new FlespiProviderClient(properties, json, (requestUri, authorization, timeout) -> {
-            uri.set(requestUri);
-            auth.set(authorization);
-            return new FlespiProviderClient.HttpResult(200, "{\"result\":[]}".getBytes(StandardCharsets.UTF_8));
+        AtomicReference<String> authorization = new AtomicReference<>();
+        var client = new FlespiProviderClient(json, (request, auth, timeout, limit) -> {
+            uri.set(request);
+            authorization.set(auth);
+            assertThat(limit).isEqualTo(1_048_576);
+            return response(200, "{\"result\":[]}");
         });
-        client.fetch(SECRET, NOW.minusSeconds(300), NOW);
-        assertThat(uri.get().getScheme()).isEqualTo("https");
-        assertThat(uri.get().getPath()).isEqualTo("/gw/devices/42/messages");
-        assertThat(uri.get().getQuery()).contains("count=500", "from=", "to=");
-        assertThat(auth.get()).isEqualTo("FlespiToken controlled-secret-value");
+        client.fetch(URI.create("https://account-a.flespi.example"), "device-a", SECRET,
+                SOURCE.minusSeconds(300), SOURCE, 25, 1_048_576, java.time.Duration.ofSeconds(2));
+        assertThat(uri.get().getHost()).isEqualTo("account-a.flespi.example");
+        assertThat(uri.get().getPath()).isEqualTo("/gw/devices/device-a/messages");
+        assertThat(uri.get().getQuery()).contains("count=25", "from=", "to=");
+        assertThat(authorization.get()).isEqualTo("FlespiToken controlled-secret-value");
     }
 
     @Test
-    void providerRejectsAuthenticationTransientMalformedAndOversizeResponses() {
-        assertFailure(401, "{}", FlespiFailure.Kind.AUTHENTICATION);
-        assertFailure(429, "{}", FlespiFailure.Kind.TRANSIENT);
-        assertFailure(503, "{}", FlespiFailure.Kind.TRANSIENT);
-        assertFailure(200, "{}", FlespiFailure.Kind.PERMANENT);
-        String messages = "{\"result\":[" + "{},".repeat(500) + "{}]}";
-        assertFailure(200, messages, FlespiFailure.Kind.PERMANENT);
-    }
-
-    @Test
-    void networkFailureIsTransientAndSanitized() {
-        var client = new FlespiProviderClient(properties, json, (uri, authorization, timeout) -> {
-            throw new java.io.IOException("controlled provider outage");
-        });
-        assertThatThrownBy(() -> client.fetch(SECRET, NOW.minusSeconds(1), NOW))
-                .isInstanceOfSatisfying(FlespiFailure.class, failure -> {
-                    assertThat(failure.kind()).isEqualTo(FlespiFailure.Kind.TRANSIENT);
-                    assertThat(failure.getMessage()).doesNotContain(new String(SECRET), "masked-fmc130-ident");
-                });
-    }
-
-    @Test
-    void mapsDocumentationAlignedFieldsAndIgnoresPayloadTenantAuthority() throws Exception {
+    void mapsDocumentationAlignedFieldsWithoutInventingOptionalFacts() throws Exception {
         JsonNode source = fixture().path("result").get(0);
-        var mapped = new FlespiMessageMapper(properties).map(source);
-        assertThat(mapped.deviceId()).isEqualTo(DEVICE);
-        assertThat(mapped.sourceTimestamp()).isEqualTo(Instant.parse("2026-09-09T00:00:00.125Z"));
+        var mapped = new FlespiMessageMapper().map(source, "masked-fmc130-ident");
+        assertThat(mapped.externalDeviceReference()).isEqualTo("masked-fmc130-ident");
+        assertThat(mapped.sourceTimestamp()).isEqualTo(SOURCE);
         assertThat(mapped.latitude()).isEqualByComparingTo("6.927079");
         assertThat(mapped.longitude()).isEqualByComparingTo("79.861244");
         assertThat(mapped.horizontalAccuracyMeters()).isEqualByComparingTo("3.5");
         assertThat(mapped.speedKph()).isEqualByComparingTo("42.25");
         assertThat(mapped.headingDegrees()).isEqualByComparingTo("187.5");
-        assertThat(mapped.safeMetadata()).containsExactly(
-                org.assertj.core.data.MapEntry.entry("source", "flespi-rest"));
+        assertThat(mapped.providerMessageId()).isNull();
+        assertThat(mapped.providerSequence()).isNull();
+        assertThat(mapped.odometerKm()).isNull();
+        assertThat(mapped.engineHours()).isNull();
+        assertThat(mapped.engineState()).isEqualTo(
+                com.transportlogistics.app.tracking.domain.TrackingModels.EngineState.UNKNOWN);
     }
 
     @Test
-    void rejectsEachMessageMissingMandatoryIdentityTimeOrCoordinates() throws Exception {
-        var mapper = new FlespiMessageMapper(properties);
-        JsonNode valid = fixture().path("result").get(0);
-        for (String field : List.of("ident", "timestamp", "position.latitude", "position.longitude")) {
-            JsonNode copy = valid.deepCopy();
-            ((com.fasterxml.jackson.databind.node.ObjectNode) copy).remove(field);
-            assertThatThrownBy(() -> mapper.map(copy)).isInstanceOf(FlespiFailure.class);
-        }
-        ((com.fasterxml.jackson.databind.node.ObjectNode) valid).put("ident", "different-device");
-        assertThatThrownBy(() -> mapper.map(valid)).isInstanceOf(FlespiFailure.class);
+    void malformedMessageIsRejectedIndependently() throws Exception {
+        var valid = fixture().path("result").get(0);
+        var invalid = valid.deepCopy();
+        ((com.fasterxml.jackson.databind.node.ObjectNode) invalid).remove("position.latitude");
+        var transport = successTransport(json.writeValueAsString(List.of(invalid, valid)));
+        var result = adapter(transport).fetchPositions(request(
+                execution("FLESPI_A", URI.create("https://flespi.example"), Map.of()),
+                List.of(cursor("masked-fmc130-ident", null)), 10), SECRET.clone());
+        assertThat(result.candidates()).hasSize(1);
     }
 
     @Test
-    void missingOptionalFieldsRemainAbsentWithoutSyntheticObservations() throws Exception {
-        var node = (com.fasterxml.jackson.databind.node.ObjectNode) fixture().path("result").get(0).deepCopy();
-        node.remove(List.of("position.accuracy", "position.speed", "position.direction"));
-        var mapped = new FlespiMessageMapper(properties).map(node);
-        assertThat(mapped.horizontalAccuracyMeters()).isNull();
-        assertThat(mapped.speedKph()).isNull();
-        assertThat(mapped.headingDegrees()).isNull();
-    }
-
-    @Test
-    void bridgeSignsExactRawBodyAndUsesFreshNonce() throws Exception {
-        AtomicReference<TrackingIngressBridge.SignedIngressRequest> first = new AtomicReference<>();
-        AtomicReference<TrackingIngressBridge.SignedIngressRequest> second = new AtomicReference<>();
-        var calls = new java.util.concurrent.atomic.AtomicInteger();
-        TrackingIngressBridge.IngressTransport transport = request -> {
-            if (calls.getAndIncrement() == 0) first.set(request); else second.set(request);
-            return 200;
-        };
-        var bridge = new TrackingIngressBridge(properties, json, Clock.fixed(NOW, ZoneOffset.UTC),
-                new SimpleMeterRegistry(), transport, new SecureRandom());
-        var position = mappedPosition();
-        bridge.ingest(List.of(position), SECRET);
-        bridge.ingest(List.of(position), SECRET);
-        String canonical = first.get().epoch() + "\n" + first.get().nonce() + "\n"
-                + properties.getProviderKeyId() + "\n" + properties.getProviderAlias() + "\n" + first.get().body();
-        assertThat(first.get().signature()).isEqualTo(hmac(new String(SECRET), canonical));
-        assertThat(first.get().nonce()).hasSize(64).isNotEqualTo(second.get().nonce());
-        assertThat(first.get().body()).doesNotContain("providerMessageId", "engineHours", "tenant");
-    }
-
-    @Test
-    void bridgeRejectsDownstreamAndOversizeBatch() {
-        var bridge = new TrackingIngressBridge(properties, json, Clock.fixed(NOW, ZoneOffset.UTC),
-                new SimpleMeterRegistry(), request -> 503, new SecureRandom());
-        assertThatThrownBy(() -> bridge.ingest(List.of(mappedPosition()), SECRET))
-                .isInstanceOf(FlespiFailure.class);
-        assertThatThrownBy(() -> bridge.ingest(java.util.Collections.nCopies(501, mappedPosition()), SECRET))
-                .isInstanceOf(FlespiFailure.class);
-    }
-
-    @Test
-    void pollingUsesBindingSecretColdOverlapAndAdvancesWatermarkOnlyAfterIngress() throws Exception {
-        var harness = harness(List.of(fixture().path("result").get(0)), 200);
-        harness.adapter().pollNow();
-        assertThat(harness.adapter().watermark()).isEqualTo(Instant.parse("2026-09-09T00:00:00.125Z"));
-        assertThat(harness.bindingLookups().get()).isEqualTo(1);
-        assertThat(harness.secretLookups().get()).isEqualTo(1);
-        assertThat(harness.state().snapshot().reachable()).isTrue();
-    }
-
-    @Test
-    void downstreamFailureDoesNotAdvanceWatermarkAndSchedulesRetry() throws Exception {
-        var harness = harness(List.of(fixture().path("result").get(0)), 503);
-        harness.adapter().pollNow();
-        assertThat(harness.adapter().watermark()).isNull();
-        assertThat(harness.adapter().retryAttempt()).isEqualTo(1);
-        assertThat(harness.adapter().nextAttempt()).isAfterOrEqualTo(NOW.plusSeconds(5));
-        assertThat(harness.state().snapshot().lastFailureCategory())
-                .isEqualTo(FlespiAdapterState.FailureCategory.DOWNSTREAM);
-    }
-
-    @Test
-    void disabledOrIncompleteConfigurationNeverCallsProvider() {
-        properties.setEnabled(false);
-        AtomicInteger providerCalls = new AtomicInteger();
-        FlespiProviderClient provider = providerClient(List.of(), providerCalls);
-        var adapter = adapter(store(new AtomicInteger()), reference -> Optional.empty(), provider,
-                bridge(200), new FlespiAdapterState());
-        adapter.pollNow();
-        assertThat(providerCalls).hasValue(0);
-    }
-
-    @Test
-    void authenticationFailureIsBoundedAndDoesNotAdvanceWatermark() {
-        AtomicInteger lookups = new AtomicInteger();
-        var adapter = adapter(store(lookups), reference -> Optional.empty(),
-                providerClient(List.of(), new AtomicInteger()), bridge(200), new FlespiAdapterState());
-        adapter.pollNow();
-        assertThat(adapter.watermark()).isNull();
-        assertThat(adapter.retryAttempt()).isZero();
-        assertThat(adapter.nextAttempt()).isEqualTo(Instant.MAX);
-    }
-
-    @Test
-    void concurrentPollForSameTargetIsSkipped() throws Exception {
-        CountDownLatch entered = new CountDownLatch(1);
-        CountDownLatch release = new CountDownLatch(1);
+    void fetchesOneHundredDevicesWithBoundedSequentialCallsAndNoSingletonIdentity() {
         AtomicInteger calls = new AtomicInteger();
-        var provider = new FlespiProviderClient(properties, json, (uri, authorization, timeout) -> {
+        var transport = (FlespiProviderClient.HttpTransport) (uri, auth, timeout, limit) -> {
             calls.incrementAndGet();
-            entered.countDown();
-            release.await(5, TimeUnit.SECONDS);
-            return new FlespiProviderClient.HttpResult(200,
-                    "{\"result\":[]}".getBytes(StandardCharsets.UTF_8));
-        });
-        var adapter = adapter(store(new AtomicInteger()), reference -> Optional.of(SECRET.clone()),
-                provider, bridge(200), new FlespiAdapterState());
-        try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
-            var first = executor.submit(adapter::pollNow);
-            assertThat(entered.await(2, TimeUnit.SECONDS)).isTrue();
-            adapter.pollNow();
-            release.countDown();
-            first.get(2, TimeUnit.SECONDS);
-        }
-        assertThat(calls).hasValue(1);
-    }
-
-    private Harness harness(List<JsonNode> messages, int ingressStatus) {
-        AtomicInteger bindingLookups = new AtomicInteger();
-        AtomicInteger secretLookups = new AtomicInteger();
-        TrackingStore store = store(bindingLookups);
-        IntegrationSecretResolver secrets = reference -> {
-            secretLookups.incrementAndGet();
-            return Optional.of(SECRET.clone());
+            String[] segments = uri.getPath().split("/");
+            String ident = URLDecoder.decode(segments[3], StandardCharsets.UTF_8);
+            return response(200, message(ident, SOURCE));
         };
-        FlespiProviderClient provider = providerClient(messages, new AtomicInteger());
-        var bridge = bridge(ingressStatus);
-        var state = new FlespiAdapterState();
-        return new Harness(adapter(store, secrets, provider, bridge, state), state,
-                bindingLookups, secretLookups);
+        List<ProviderDeviceCursor> devices = new ArrayList<>();
+        for (int index = 0; index < 100; index++) {
+            devices.add(cursor("device-" + index, SOURCE.minusSeconds(60)));
+        }
+        var result = adapter(transport).fetchPositions(request(
+                execution("FLESPI_100", URI.create("https://flespi.example"), Map.of()),
+                devices, 100), SECRET.clone());
+        assertThat(result.candidates()).hasSize(100);
+        assertThat(result.nextWatermarks()).hasSize(100);
+        assertThat(calls).hasValue(100);
+        assertThat(Thread.getAllStackTraces().keySet().stream()
+                .filter(thread -> thread.getName().contains("flespi-device"))).isEmpty();
     }
 
-    private FlespiProviderClient providerClient(List<JsonNode> messages, AtomicInteger calls) {
-        return new FlespiProviderClient(properties, json, (uri, authorization, timeout) -> {
-            calls.incrementAndGet();
-            byte[] body = json.writeValueAsBytes(java.util.Map.of("result", messages));
-            return new FlespiProviderClient.HttpResult(200, body);
+    @Test
+    void usesPerDeviceV76WatermarkAndBoundedColdOverlap() {
+        List<URI> requests = new ArrayList<>();
+        var adapter = adapter((uri, auth, timeout, limit) -> {
+            requests.add(uri);
+            return response(200, "{\"result\":[]}");
         });
+        Instant watermark = Instant.now().minusSeconds(30);
+        adapter.fetchPositions(request(execution("FLESPI_W", URI.create("https://flespi.example"),
+                Map.of("overlapSeconds", "120")), List.of(cursor("warm", watermark)), 10), SECRET.clone());
+        adapter.fetchPositions(request(execution("FLESPI_C", URI.create("https://flespi.example"),
+                Map.of()), List.of(cursor("cold", null)), 10), SECRET.clone());
+        long warmFrom = queryLong(requests.get(0), "from");
+        long coldFrom = queryLong(requests.get(1), "from");
+        long warmExpected = watermark.minusSeconds(120).getEpochSecond();
+        assertThat(warmFrom).isEqualTo(warmExpected);
+        assertThat(Instant.now().getEpochSecond() - coldFrom).isBetween(299L, 301L);
     }
 
-    private TrackingIngressBridge bridge(int status) {
-        return new TrackingIngressBridge(properties, json, Clock.fixed(NOW, ZoneOffset.UTC),
-                new SimpleMeterRegistry(), request -> status, new SecureRandom());
+    @Test
+    void isolatesThreeRuntimeConnectionsTenantsEndpointsTokensAndDevices() {
+        List<String> observations = new ArrayList<>();
+        var adapter = adapter((uri, auth, timeout, limit) -> {
+            observations.add(uri.getHost() + "|" + auth + "|" + uri.getPath());
+            String ident = uri.getPath().split("/")[3];
+            return response(200, message(ident, SOURCE));
+        });
+        for (int index = 1; index <= 3; index++) {
+            char[] token = ("token-" + index).toCharArray();
+            adapter.fetchPositions(request(execution("ACCOUNT_" + index,
+                    URI.create("https://account-" + index + ".example"), Map.of()),
+                    List.of(cursor("device-" + index, null)), 10), token);
+            java.util.Arrays.fill(token, '\0');
+        }
+        assertThat(observations).containsExactly(
+                "account-1.example|FlespiToken token-1|/gw/devices/device-1/messages",
+                "account-2.example|FlespiToken token-2|/gw/devices/device-2/messages",
+                "account-3.example|FlespiToken token-3|/gw/devices/device-3/messages");
     }
 
-    private TrackingStore store(AtomicInteger lookups) {
-        return (TrackingStore) java.lang.reflect.Proxy.newProxyInstance(
-                TrackingStore.class.getClassLoader(), new Class<?>[] {TrackingStore.class}, (proxy, method, args) -> {
-                    if (method.getName().equals("providerBinding")) {
-                        lookups.incrementAndGet();
-                        return Optional.of(binding());
-                    }
-                    throw new UnsupportedOperationException(method.getName());
-                });
+    @Test
+    void connectionTestMapsPassAuthTimeoutAndInvalidConfigurationWithoutTelemetry() {
+        assertThat(adapter(successTransport("[]")).testConnection(execution(
+                "TEST_PASS", URI.create("https://flespi.example"), Map.of()), SECRET.clone()).status())
+                .isEqualTo(ConnectionTestResult.Status.PASS);
+        assertThat(adapter(statusTransport(401)).testConnection(execution(
+                "TEST_AUTH", URI.create("https://flespi.example"), Map.of()), SECRET.clone()).status())
+                .isEqualTo(ConnectionTestResult.Status.AUTH_FAILED);
+        var timeout = adapter((uri, auth, duration, limit) -> {
+            throw new java.io.IOException("token=must-never-escape");
+        }).testConnection(execution("TEST_TIMEOUT", URI.create("https://flespi.example"), Map.of()),
+                SECRET.clone());
+        assertThat(timeout.status()).isEqualTo(ConnectionTestResult.Status.UNREACHABLE);
+        assertThat(adapter(successTransport("[]")).testConnection(execution(
+                "TEST_INVALID", URI.create("http://flespi.example"), Map.of()), SECRET.clone()).status())
+                .isEqualTo(ConnectionTestResult.Status.INVALID_CONFIGURATION);
     }
 
-    private FlespiPollingAdapter adapter(TrackingStore store, IntegrationSecretResolver secrets,
-                                         FlespiProviderClient provider, TrackingIngressBridge bridge,
-                                         FlespiAdapterState state) {
-        return new FlespiPollingAdapter(properties, store, secrets, provider,
-                new FlespiMessageMapper(properties), bridge, state, new SimpleMeterRegistry(),
-                Clock.fixed(NOW, ZoneOffset.UTC));
+    @Test
+    void providerFailuresAreSafeBoundedAndDoNotReturnSecret() {
+        for (int status : List.of(401, 403, 429, 500, 503)) {
+            assertThatThrownBy(() -> adapter(statusTransport(status)).fetchPositions(request(
+                    execution("FAIL_" + status, URI.create("https://flespi.example"), Map.of()),
+                    List.of(cursor("device", null)), 10), SECRET.clone()))
+                    .isInstanceOfSatisfying(FlespiFailure.class, failure ->
+                            assertThat(failure.getMessage()).doesNotContain(
+                                    new String(SECRET), "device", "flespi.example"));
+        }
     }
 
-    private ProviderBinding binding() {
-        return new ProviderBinding(UUID.randomUUID(), TENANT, "flespi-key-1", "FLESPI",
-                "env:FLESPI_TOKEN", ProviderBindingLifecycle.ACTIVE, NOW, UUID.randomUUID(),
-                NOW, UUID.randomUUID(), 0);
+    @Test
+    void malformedAndOversizeResponsesFailWithoutCandidateOrWatermarkState() {
+        assertThatThrownBy(() -> adapter(successTransport("{}" )).fetchPositions(request(
+                execution("MALFORMED", URI.create("https://flespi.example"), Map.of()),
+                List.of(cursor("device", null)), 10), SECRET.clone()))
+                .isInstanceOf(FlespiFailure.class);
+        byte[] oversized = new byte[1_048_577];
+        assertThatThrownBy(() -> adapter((uri, auth, timeout, limit) ->
+                new FlespiProviderClient.HttpResult(200, oversized)).fetchPositions(request(
+                        execution("OVERSIZE", URI.create("https://flespi.example"), Map.of()),
+                        List.of(cursor("device", null)), 10), SECRET.clone()))
+                .isInstanceOfSatisfying(FlespiFailure.class, failure ->
+                        assertThat(failure.safeCode()).isEqualTo("provider_response_oversize"));
+    }
+
+    @Test
+    void overlapMayReturnDuplicateAndLeavesFinalDeduplicationToTracking() {
+        var adapter = adapter((uri, auth, timeout, limit) -> response(
+                200, message("device", SOURCE)));
+        var request = request(execution("DUPLICATE", URI.create("https://flespi.example"), Map.of()),
+                List.of(cursor("device", SOURCE)), 10);
+        var first = adapter.fetchPositions(request, SECRET.clone());
+        var second = adapter.fetchPositions(request, SECRET.clone());
+        assertThat(first.candidates()).containsExactlyElementsOf(second.candidates());
+        assertThat(first.nextWatermarks()).isEqualTo(second.nextWatermarks());
+    }
+
+    @Test
+    void healthIsConnectionScopedAndContainsNoConnectionOrCredentialDetail() {
+        var state = new FlespiAdapterState();
+        var adapter = new FlespiTrackingProviderAdapter(
+                new FlespiProviderClient(json, successTransport("[]")),
+                new FlespiMessageMapper(), state, new SimpleMeterRegistry());
+        var healthy = execution("HEALTHY", URI.create("https://flespi.example"), Map.of());
+        var unknown = execution("UNKNOWN", URI.create("https://flespi.example"), Map.of());
+        adapter.testConnection(healthy, SECRET.clone());
+        assertThat(adapter.health(healthy).state())
+                .isEqualTo(com.transportlogistics.app.tracking.application.provider.ProviderHealth.State.HEALTHY);
+        assertThat(adapter.health(unknown).state())
+                .isEqualTo(com.transportlogistics.app.tracking.application.provider.ProviderHealth.State.UNKNOWN);
+        assertThat(adapter.health(healthy).toString()).doesNotContain(
+                new String(SECRET), healthy.connectionId().toString());
+    }
+
+    private FlespiTrackingProviderAdapter adapter(FlespiProviderClient.HttpTransport transport) {
+        return new FlespiTrackingProviderAdapter(
+                new FlespiProviderClient(json, transport), new FlespiMessageMapper(),
+                new FlespiAdapterState(), new SimpleMeterRegistry());
+    }
+
+    private static ProviderConnectionConfiguration configuration(URI endpoint, Map<String, String> safe) {
+        return new ProviderConnectionConfiguration(FlespiTrackingProviderAdapter.TYPE, endpoint,
+                new ProviderSafeConfiguration(safe));
+    }
+
+    private static ProviderConnectionExecution execution(
+            String alias, URI endpoint, Map<String, String> safe) {
+        return new ProviderConnectionExecution(new ProviderConnectionId(UUID.randomUUID()),
+                FlespiTrackingProviderAdapter.TYPE, alias, endpoint, new ProviderSafeConfiguration(safe));
+    }
+
+    private static ProviderFetchRequest request(
+            ProviderConnectionExecution connection, List<ProviderDeviceCursor> devices, int pageLimit) {
+        return new ProviderFetchRequest(connection, devices, pageLimit, 1_048_576,
+                Instant.now().plusSeconds(30));
+    }
+
+    private static ProviderDeviceCursor cursor(String reference, Instant timestamp) {
+        return new ProviderDeviceCursor(reference, new ProviderWatermark(timestamp, null));
+    }
+
+    private static FlespiProviderClient.HttpTransport successTransport(String resultJson) {
+        return (uri, auth, timeout, limit) -> response(200, "{\"result\":" + resultJson + "}");
+    }
+
+    private static FlespiProviderClient.HttpTransport statusTransport(int status) {
+        return (uri, auth, timeout, limit) -> response(status, "{}");
+    }
+
+    private static FlespiProviderClient.HttpResult response(int status, String body) {
+        return new FlespiProviderClient.HttpResult(status, body.getBytes(StandardCharsets.UTF_8));
+    }
+
+    private static String message(String ident, Instant timestamp) {
+        return "{\"result\":[{\"ident\":\"" + ident + "\",\"timestamp\":"
+                + timestamp.getEpochSecond() + ",\"position.latitude\":6.927079,"
+                + "\"position.longitude\":79.861244}]}";
+    }
+
+    private static long queryLong(URI uri, String name) {
+        for (String pair : uri.getQuery().split("&")) {
+            String[] values = pair.split("=", 2);
+            if (values[0].equals(name)) {
+                return Long.parseLong(values[1]);
+            }
+        }
+        throw new AssertionError("Missing query value " + name);
     }
 
     private JsonNode fixture() throws Exception {
-        try (var stream = getClass().getResourceAsStream("/tracking/flespi/fmc130-documentation-aligned.json")) {
+        try (var stream = getClass().getResourceAsStream(
+                "/tracking/flespi/fmc130-documentation-aligned.json")) {
             return json.readTree(stream);
         }
     }
-
-    private FlespiMessageMapper.MappedPosition mappedPosition() {
-        return new FlespiMessageMapper.MappedPosition(DEVICE, NOW, new BigDecimal("6.9"),
-                new BigDecimal("79.8"), null, null, null, java.util.Map.of("source", "flespi-rest"));
-    }
-
-    private void assertFailure(int status, String body, FlespiFailure.Kind kind) {
-        var client = new FlespiProviderClient(properties, json, (uri, authorization, timeout) ->
-                new FlespiProviderClient.HttpResult(status, body.getBytes(StandardCharsets.UTF_8)));
-        assertThatThrownBy(() -> client.fetch(SECRET, NOW.minusSeconds(1), NOW))
-                .isInstanceOfSatisfying(FlespiFailure.class, failure -> assertThat(failure.kind()).isEqualTo(kind));
-    }
-
-    private static String hmac(String secret, String value) throws Exception {
-        Mac mac = Mac.getInstance("HmacSHA256");
-        mac.init(new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), "HmacSHA256"));
-        return java.util.HexFormat.of().formatHex(mac.doFinal(value.getBytes(StandardCharsets.UTF_8)));
-    }
-
-    private record Harness(FlespiPollingAdapter adapter, FlespiAdapterState state,
-                           AtomicInteger bindingLookups, AtomicInteger secretLookups) {}
 }

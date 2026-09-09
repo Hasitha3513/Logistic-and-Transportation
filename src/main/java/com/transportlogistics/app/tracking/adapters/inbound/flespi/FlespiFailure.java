@@ -13,4 +13,13 @@ final class FlespiFailure extends RuntimeException {
 
     Kind kind() { return kind; }
     String safeCode() { return safeCode; }
+
+    FlespiAdapterState.FailureCategory healthCategory() {
+        return switch (kind) {
+            case AUTHENTICATION -> FlespiAdapterState.FailureCategory.AUTHENTICATION;
+            case TRANSIENT -> FlespiAdapterState.FailureCategory.PROVIDER;
+            case MAPPING, PERMANENT -> FlespiAdapterState.FailureCategory.MAPPING;
+            case DOWNSTREAM -> FlespiAdapterState.FailureCategory.DOWNSTREAM;
+        };
+    }
 }

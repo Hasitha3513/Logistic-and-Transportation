@@ -1,21 +1,17 @@
 package com.transportlogistics.app.tracking.adapters.inbound.flespi;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.transportlogistics.app.tracking.application.provider.NormalizedPositionCandidate;
+import com.transportlogistics.app.tracking.domain.TrackingModels.EngineState;
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.util.LinkedHashMap;
-import java.util.Map;
 import org.springframework.stereotype.Component;
 
 @Component
 final class FlespiMessageMapper {
-    private final FlespiAdapterProperties properties;
-
-    FlespiMessageMapper(FlespiAdapterProperties properties) { this.properties = properties; }
-
-    MappedPosition map(JsonNode source) {
+    NormalizedPositionCandidate map(JsonNode source, String externalDeviceReference) {
         String ident = text(source, "ident");
-        if (ident == null || !ident.equals(properties.getDeviceIdent())) throw mapping("device_identity");
+        if (ident == null || !ident.equals(externalDeviceReference)) throw mapping("device_identity");
         Instant sourceTimestamp = timestamp(source.get("timestamp"));
         BigDecimal latitude = decimal(source, "position.latitude");
         BigDecimal longitude = decimal(source, "position.longitude");
@@ -31,10 +27,10 @@ final class FlespiMessageMapper {
         BigDecimal heading = optionalRange(source, "position.direction", BigDecimal.ZERO, new BigDecimal("360"));
         if (heading != null && heading.compareTo(new BigDecimal("360")) == 0) heading = null;
 
-        Map<String, String> metadata = new LinkedHashMap<>();
-        metadata.put("source", "flespi-rest");
-        return new MappedPosition(properties.getTrackingDeviceId(), sourceTimestamp, latitude, longitude,
-                accuracy, speed, heading, Map.copyOf(metadata));
+        return new NormalizedPositionCandidate(
+                externalDeviceReference, sourceTimestamp, latitude, longitude,
+                accuracy, speed, heading, null, EngineState.UNKNOWN,
+                null, null, null, null);
     }
 
     private static Instant timestamp(JsonNode node) {
@@ -72,8 +68,4 @@ final class FlespiMessageMapper {
     private static FlespiFailure mapping(String category) {
         return new FlespiFailure(FlespiFailure.Kind.MAPPING, category, null);
     }
-
-    record MappedPosition(java.util.UUID deviceId, Instant sourceTimestamp, BigDecimal latitude,
-                          BigDecimal longitude, BigDecimal horizontalAccuracyMeters, BigDecimal speedKph,
-                          BigDecimal headingDegrees, Map<String, String> safeMetadata) {}
 }
