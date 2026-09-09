@@ -22,7 +22,7 @@
 > - **Current Milestone:** MVP 1.4 Last-Mile Delivery — 8 / 8 COMPLETE, 100%, CLOSED.
 > - **Active Focus:** Wave B is 5 / 5 COMPLETE / CLOSED; Wave C is active.
 > - **US-48 Technical State:** `IMPLEMENTATION_COMPLETE / ACCEPTANCE_BLOCKED_EXTERNAL_SYSTEM`; remediation `COMPLETE`; technical closure `PASS`; current Flyway head V74.
-> - **Immediate Next Action:** Resume `US-48-LIVE-VEHICLE-TRACKING-FINAL-ACCEPTANCE-001` only when a physical GPS device and its real provider-generated telemetry path are available. Do not start US-49.
+> - **Immediate Next Action:** Procure and activate the selected Teltonika FMC130 + flespi one-device acceptance path, then rerun `US-48-LIVE-VEHICLE-TRACKING-EXTERNAL-ACCEPTANCE-PREPARATION-001`. Do not start US-49.
 
 ---
 
