@@ -36,15 +36,15 @@ class TrackingProviderConnectionPostgreSqlAcceptanceTest extends PostgreSqlInteg
     @Autowired Flyway flyway;
 
     @Test
-    void cleanSchemaReachesV75AndReservesOnlyTheDeviceLifecycleVocabulary() {
-        assertThat(flyway.info().current().getVersion().getVersion()).isEqualTo("75");
+    void cleanSchemaReachesV76AndPreservesTheProviderConnectionAuthority() {
+        assertThat(flyway.info().current().getVersion().getVersion()).isEqualTo("76");
         assertThat(columns("tracking_provider_binding")).contains(
                 "provider_type", "display_name", "endpoint_uri", "safe_configuration",
                 "poll_interval_seconds", "page_size", "test_status", "last_tested_at",
                 "last_successful_poll_at", "last_provider_message_at", "last_error_category",
                 "next_poll_at", "lease_owner", "lease_until");
         assertThat(tableExists("tracking_provider_connection")).isFalse();
-        assertThat(tableExists("tracking_device_provider_binding")).isFalse();
+        assertThat(tableExists("tracking_device_provider_binding")).isTrue();
         assertThatThrownBy(() -> jdbc.update("""
                 INSERT INTO tracking_device(id,tenant_id,external_device_reference,provider_alias,
                  lifecycle,registered_at,registered_by,created_at,updated_at)
