@@ -198,9 +198,19 @@ final class FlespiTrackingProviderAdapter implements TrackingProviderAdapter {
     }
 
     private static boolean validEndpoint(URI value) {
-        return value != null && "https".equalsIgnoreCase(value.getScheme())
-                && value.getHost() != null && value.getUserInfo() == null
-                && value.getRawQuery() == null && value.getFragment() == null;
+        if (value == null || !"https".equalsIgnoreCase(value.getScheme())
+                || value.getHost() == null || value.getUserInfo() != null
+                || value.getRawQuery() != null || value.getFragment() != null
+                || value.getPort() != -1 && value.getPort() != 443) {
+            return false;
+        }
+        String host = value.getHost().toLowerCase(java.util.Locale.ROOT);
+        if (host.endsWith(".")) {
+            host = host.substring(0, host.length() - 1);
+        }
+        // Flespi is a hosted adapter. Restricting it to provider-controlled DNS prevents
+        // loopback/private/metadata targets and makes DNS rebinding dependent on that trusted zone.
+        return host.equals("flespi.io") || host.endsWith(".flespi.io");
     }
 
     private static Duration overlap(Map<String, String> values) {

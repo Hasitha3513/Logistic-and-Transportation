@@ -103,6 +103,8 @@ class JdbcTrackingDeviceProviderBindingStore implements TrackingDeviceProviderBi
                 validateActivation(tenantId, current.trackingDeviceId(), current.providerConnectionId());
             }
             updateLifecycleRow(tenantId, bindingId, expectedVersion, lifecycle, actorId, now);
+            audit(tenantId, actorId, "DEVICE_PROVIDER_BINDING_" + lifecycle.name(), bindingId,
+                    "FROM=" + current.lifecycle().name(), now);
             if (lifecycle == DeviceProviderBindingLifecycle.ACTIVE) {
                 updateCompatibilityProjection(current, now);
             }
@@ -128,7 +130,10 @@ class JdbcTrackingDeviceProviderBindingStore implements TrackingDeviceProviderBi
                     replacement.providerConnectionId());
             updateLifecycleRow(replacement.tenantId(), current.id(), expectedCurrentVersion,
                     DeviceProviderBindingLifecycle.DISABLED, replacement.actorId(), replacement.now());
-            return createInTransaction(replacement);
+            TrackingDeviceProviderBinding created = createInTransaction(replacement);
+            audit(replacement.tenantId(), replacement.actorId(), "DEVICE_PROVIDER_REBOUND",
+                    replacement.trackingDeviceId(), "RESULT=ACTIVE", replacement.now());
+            return created;
         });
     }
 
@@ -196,6 +201,8 @@ class JdbcTrackingDeviceProviderBindingStore implements TrackingDeviceProviderBi
             throw conflict();
         }
         TrackingDeviceProviderBinding created = find(binding.tenantId(), id).orElseThrow();
+        audit(binding.tenantId(), binding.actorId(), "DEVICE_PROVIDER_BOUND", id,
+                "LIFECYCLE=" + binding.lifecycle().name(), binding.now());
         if (binding.lifecycle() == DeviceProviderBindingLifecycle.ACTIVE) {
             updateCompatibilityProjection(created, binding.now());
         }
@@ -271,6 +278,16 @@ class JdbcTrackingDeviceProviderBindingStore implements TrackingDeviceProviderBi
         } catch (DataIntegrityViolationException exception) {
             throw conflict();
         }
+    }
+
+    private void audit(
+            UUID tenantId, UUID actorId, String action, UUID targetId, String detail, Instant now) {
+        jdbc.update("""
+                INSERT INTO tracking_audit_event(
+                 id,tenant_id,actor_id,action,target_type,target_id,safe_detail,occurred_at)
+                VALUES(?,?,?,?,?,?,?,?)
+                """, UUID.randomUUID(), tenantId, actorId, action, "DEVICE_PROVIDER_BINDING",
+                targetId, detail, Timestamp.from(now));
     }
 
     private void lockDevice(UUID tenantId, UUID deviceId) {

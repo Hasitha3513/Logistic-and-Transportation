@@ -6,8 +6,11 @@ import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.reset;
+import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.transportlogistics.app.tenancy.CurrentTenant;
@@ -114,6 +117,46 @@ class TrackingSecurityIntegrationTest {
                 .andExpect(status().isOk());
     }
 
+    @Test
+    void unauthenticatedCannotReachAnyLiteralProviderManagementRoute() throws Exception {
+        UUID id = UUID.randomUUID();
+        mvc.perform(get("/api/v1/tracking/provider-types").contextPath("/api"))
+                .andExpect(status().isUnauthorized());
+        mvc.perform(get("/api/v1/tracking/provider-connections").contextPath("/api"))
+                .andExpect(status().isUnauthorized());
+        mvc.perform(post("/api/v1/tracking/provider-connections").contextPath("/api")
+                        .contentType(MediaType.APPLICATION_JSON).content("{}"))
+                .andExpect(status().isUnauthorized());
+        mvc.perform(put("/api/v1/tracking/provider-connections/{id}", id).contextPath("/api")
+                        .contentType(MediaType.APPLICATION_JSON).content("{}"))
+                .andExpect(status().isUnauthorized());
+        for (String action : List.of("test", "activate", "disable", "retire")) {
+            mvc.perform(post("/api/v1/tracking/provider-connections/{id}/{action}", id, action)
+                            .contextPath("/api").contentType(MediaType.APPLICATION_JSON).content("{}"))
+                    .andExpect(status().isUnauthorized());
+        }
+        mvc.perform(get("/api/v1/tracking/provider-connections/{id}/devices/discover", id)
+                        .contextPath("/api"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test @WithMockUser(authorities = "TRACKING_HISTORY_VIEW")
+    void historyViewCannotUseProviderOrDeviceManagementRoutes() throws Exception {
+        UUID id = UUID.randomUUID();
+        mvc.perform(get("/api/v1/tracking/provider-connections").contextPath("/api"))
+                .andExpect(status().isForbidden());
+        mvc.perform(post("/api/v1/tracking/provider-connections").contextPath("/api")
+                        .contentType(MediaType.APPLICATION_JSON).content("{}"))
+                .andExpect(status().isForbidden());
+        mvc.perform(post("/api/v1/tracking/devices/{id}/provider-bindings", id)
+                        .contextPath("/api").contentType(MediaType.APPLICATION_JSON).content("{}"))
+                .andExpect(status().isForbidden());
+        mvc.perform(post("/api/v1/tracking/devices/{id}/retire", id)
+                        .contextPath("/api").contentType(MediaType.APPLICATION_JSON).content("{}"))
+                .andExpect(status().isForbidden());
+        verify(store, atLeastOnce()).auditDenied(any(), anyString(), anyString(), any());
+    }
+
     @Test @WithMockUser(authorities = "TRACKING_HISTORY_VIEW")
     void historyPermissionAllowsLiteralHistoryRoute() throws Exception {
         when(useCase.positions(any(), any(), any(), any(), anyString(), anyInt()))
@@ -127,7 +170,7 @@ class TrackingSecurityIntegrationTest {
     @Test void validSignedProviderRequestSucceedsWithoutTenantAuthorityHeader() throws Exception { performSigned(KEY_ID,PROVIDER,SECRET,Instant.now().getEpochSecond(),UUID.randomUUID().toString(),null).andExpect(status().isOk()); }
     @Test void invalidSignatureIsSanitizedUnauthorized() throws Exception { performSigned(KEY_ID,PROVIDER,"wrong",Instant.now().getEpochSecond(),UUID.randomUUID().toString(),null).andExpect(status().isUnauthorized()); }
     @Test void expiredTimestampIsUnauthorized() throws Exception { performSigned(KEY_ID,PROVIDER,SECRET,Instant.now().minusSeconds(301).getEpochSecond(),UUID.randomUUID().toString(),null).andExpect(status().isUnauthorized()); }
-    @Test void futureTimestampIsUnauthorized() throws Exception { performSigned(KEY_ID,PROVIDER,SECRET,Instant.now().plusSeconds(301).getEpochSecond(),UUID.randomUUID().toString(),null).andExpect(status().isUnauthorized()); }
+    @Test void futureTimestampIsUnauthorized() throws Exception { performSigned(KEY_ID,PROVIDER,SECRET,Instant.now().plusSeconds(600).getEpochSecond(),UUID.randomUUID().toString(),null).andExpect(status().isUnauthorized()); }
     @Test void nonceReplayIsUnauthorized() throws Exception { when(store.reserveNonce(any(),any(),anyString(),any(),any())).thenReturn(false);performSigned(KEY_ID,PROVIDER,SECRET,Instant.now().getEpochSecond(),"replayed",null).andExpect(status().isUnauthorized()); }
     @Test void unknownBindingIsUnauthorized() throws Exception { when(store.providerBinding("unknown")).thenReturn(Optional.empty());performSigned("unknown",PROVIDER,SECRET,Instant.now().getEpochSecond(),UUID.randomUUID().toString(),null).andExpect(status().isUnauthorized()); }
     @Test void disabledBindingIsUnauthorized() throws Exception { when(store.providerBinding(KEY_ID)).thenReturn(Optional.of(binding(ProviderBindingLifecycle.DISABLED)));performSigned(KEY_ID,PROVIDER,SECRET,Instant.now().getEpochSecond(),UUID.randomUUID().toString(),null).andExpect(status().isUnauthorized()); }

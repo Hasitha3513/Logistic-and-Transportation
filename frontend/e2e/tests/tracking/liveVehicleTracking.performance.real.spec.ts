@@ -27,7 +27,12 @@ test('accepts 200 msg/s sustained and a 1,000 msg/s burst through signed HTTP in
       hardwareSerialReference: `${suffix}-serial-${index}`,
     } });
     expect(deviceResponse.status(), await deviceResponse.text()).toBe(201);
-    const deviceId = (await deviceResponse.json() as { id: string }).id;
+    const createdDevice = await deviceResponse.json() as { id: string; version: number };
+    const deviceId = createdDevice.id;
+    const activated = await api.post(`/api/v1/tracking/devices/${deviceId}/activate`, {
+      data: { version: createdDevice.version },
+    });
+    expect(activated.status(), await activated.text()).toBe(200);
     const association = await api.post(`/api/v1/tracking/devices/${deviceId}/associations`, { data: {
       vehicleId, effectiveFrom: new Date(Date.now() - 60_000).toISOString(),
     } });

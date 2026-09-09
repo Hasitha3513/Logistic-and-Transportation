@@ -121,6 +121,13 @@ class TrackingDeviceProviderBindingPostgreSqlAcceptanceTest extends PostgreSqlIn
                 fixture.tenant(), fixture.connection(), "provider-device-1")).contains(binding);
         assertThat(store.listByProviderConnection(fixture.tenant(), fixture.connection(), 10))
                 .containsExactly(binding);
+        assertThat(jdbc.queryForMap("""
+                SELECT action,safe_detail FROM tracking_audit_event
+                WHERE tenant_id=? AND target_id=?
+                """, fixture.tenant(), binding.id()))
+                .containsEntry("action", "DEVICE_PROVIDER_BOUND")
+                .containsEntry("safe_detail", "LIFECYCLE=ACTIVE")
+                .doesNotContainValue("provider-device-1");
         Instant source = NOW.plusSeconds(10);
         Instant poll = NOW.plusSeconds(30);
         TrackingDeviceProviderBinding updated = store.updateWatermark(

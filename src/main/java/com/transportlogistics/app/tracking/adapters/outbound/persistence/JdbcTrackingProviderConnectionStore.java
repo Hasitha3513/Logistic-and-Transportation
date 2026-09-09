@@ -27,20 +27,28 @@ import java.util.UUID;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.support.TransactionTemplate;
 
 @Component
 class JdbcTrackingProviderConnectionStore implements TrackingProviderConnectionStore {
     private static final int MAX_SAFE_CONFIGURATION_BYTES = 8_192;
     private final JdbcTemplate jdbc;
     private final ObjectMapper json;
+    private final TransactionTemplate transactions;
 
-    JdbcTrackingProviderConnectionStore(JdbcTemplate jdbc, ObjectMapper json) {
+    JdbcTrackingProviderConnectionStore(
+            JdbcTemplate jdbc, ObjectMapper json, TransactionTemplate transactions) {
         this.jdbc = jdbc;
         this.json = json;
+        this.transactions = transactions;
     }
 
     @Override
     public TrackingProviderConnection create(NewTrackingProviderConnection connection) {
+        return transactions.execute(status -> createInTransaction(connection));
+    }
+
+    private TrackingProviderConnection createInTransaction(NewTrackingProviderConnection connection) {
         UUID id = UUID.randomUUID();
         String configuration = serialize(connection.safeConfiguration());
         try {
@@ -59,6 +67,8 @@ class JdbcTrackingProviderConnectionStore implements TrackingProviderConnectionS
         } catch (DataIntegrityViolationException exception) {
             throw conflict(exception);
         }
+        audit(connection.tenantId(), connection.actorId(), "PROVIDER_CONNECTION_CREATED", id,
+                "LIFECYCLE=DRAFT", connection.now());
         return find(connection.tenantId(), id).orElseThrow();
     }
 
@@ -80,6 +90,17 @@ class JdbcTrackingProviderConnectionStore implements TrackingProviderConnectionS
 
     @Override
     public TrackingProviderConnection update(
+            UUID tenantId,
+            UUID connectionId,
+            long expectedVersion,
+            TrackingProviderConnectionMutation mutation,
+            UUID actorId,
+            Instant now) {
+        return transactions.execute(status -> updateInTransaction(
+                tenantId, connectionId, expectedVersion, mutation, actorId, now));
+    }
+
+    private TrackingProviderConnection updateInTransaction(
             UUID tenantId,
             UUID connectionId,
             long expectedVersion,
@@ -115,7 +136,40 @@ class JdbcTrackingProviderConnectionStore implements TrackingProviderConnectionS
         if (changed != 1) {
             throw stale();
         }
+        auditMutation(tenantId, actorId, connectionId, current, mutation, now);
         return find(tenantId, connectionId).orElseThrow();
+    }
+
+    private void auditMutation(
+            UUID tenantId,
+            UUID actorId,
+            UUID connectionId,
+            TrackingProviderConnection current,
+            TrackingProviderConnectionMutation mutation,
+            Instant now) {
+        if (current.lifecycle() != mutation.lifecycle()) {
+            audit(tenantId, actorId, "PROVIDER_CONNECTION_" + mutation.lifecycle().name(),
+                    connectionId, "FROM=" + current.lifecycle().name(), now);
+        } else if (current.testStatus() != mutation.testStatus()
+                || !java.util.Objects.equals(current.lastTestedAt(), mutation.lastTestedAt())) {
+            audit(tenantId, actorId, "PROVIDER_CONNECTION_TESTED", connectionId,
+                    "RESULT=" + mutation.testStatus().name(), now);
+        } else {
+            String detail = java.util.Objects.equals(
+                    current.credentialReference(), mutation.credentialReference())
+                    ? "CONFIGURATION_UPDATED" : "CREDENTIAL_REFERENCE_REPLACED";
+            audit(tenantId, actorId, "PROVIDER_CONNECTION_UPDATED", connectionId, detail, now);
+        }
+    }
+
+    private void audit(
+            UUID tenantId, UUID actorId, String action, UUID targetId, String detail, Instant now) {
+        jdbc.update("""
+                INSERT INTO tracking_audit_event(
+                 id,tenant_id,actor_id,action,target_type,target_id,safe_detail,occurred_at)
+                VALUES(?,?,?,?,?,?,?,?)
+                """, UUID.randomUUID(), tenantId, actorId, action, "PROVIDER_CONNECTION",
+                targetId, detail, Timestamp.from(now));
     }
 
     @SuppressWarnings("PMD.UnusedFormalParameter")

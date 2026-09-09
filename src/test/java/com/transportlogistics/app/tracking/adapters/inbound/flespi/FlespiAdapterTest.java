@@ -59,7 +59,7 @@ class FlespiAdapterTest {
             String ident = uri.getPath().split("/")[3];
             return response(200, message(ident, SOURCE));
         });
-        var request = request(execution("ROTATION", URI.create("https://flespi.example"), Map.of()),
+        var request = request(execution("ROTATION", URI.create("https://flespi.io"), Map.of()),
                 List.of(cursor("device", null)), 10);
         char[] first = "first-token".toCharArray();
         char[] second = "second-token".toCharArray();
@@ -89,16 +89,27 @@ class FlespiAdapterTest {
     void validatesHttpsEndpointAndBoundedSafeConfiguration() {
         var adapter = adapter(successTransport("[]"));
         assertThat(adapter.validateConfiguration(configuration(
-                URI.create("https://flespi.example"), Map.of("overlapSeconds", "300"))).status())
+                URI.create("https://flespi.io"), Map.of("overlapSeconds", "300"))).status())
                 .isEqualTo(com.transportlogistics.app.tracking.application.provider.ConfigurationValidation.Status.VALID);
         assertThat(adapter.validateConfiguration(configuration(
-                URI.create("http://flespi.example"), Map.of())).status())
+                URI.create("http://flespi.io"), Map.of())).status())
+                .isEqualTo(com.transportlogistics.app.tracking.application.provider.ConfigurationValidation.Status.INVALID);
+        for (String unsafe : List.of(
+                "https://127.0.0.1", "https://[::1]", "https://169.254.169.254",
+                "https://10.0.0.1", "https://metadata.google.internal",
+                "https://flespi.io:8443")) {
+            assertThat(adapter.validateConfiguration(configuration(
+                    URI.create(unsafe), Map.of())).status()).as(unsafe)
+                    .isEqualTo(com.transportlogistics.app.tracking.application.provider.ConfigurationValidation.Status.INVALID);
+        }
+        assertThatThrownBy(() -> configuration(
+                URI.create("https://user:secret@flespi.io"), Map.of()))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThat(adapter.validateConfiguration(configuration(
+                URI.create("https://flespi.io"), Map.of("overlapSeconds", "301"))).status())
                 .isEqualTo(com.transportlogistics.app.tracking.application.provider.ConfigurationValidation.Status.INVALID);
         assertThat(adapter.validateConfiguration(configuration(
-                URI.create("https://flespi.example"), Map.of("overlapSeconds", "301"))).status())
-                .isEqualTo(com.transportlogistics.app.tracking.application.provider.ConfigurationValidation.Status.INVALID);
-        assertThat(adapter.validateConfiguration(configuration(
-                URI.create("https://flespi.example"), Map.of("channel", "unsafe-unknown"))).status())
+                URI.create("https://flespi.io"), Map.of("channel", "unsafe-unknown"))).status())
                 .isEqualTo(com.transportlogistics.app.tracking.application.provider.ConfigurationValidation.Status.INVALID);
         assertThatThrownBy(() -> new ProviderSafeConfiguration(Map.of("apiToken", "forbidden")))
                 .isInstanceOf(IllegalArgumentException.class);
@@ -114,9 +125,9 @@ class FlespiAdapterTest {
             assertThat(limit).isEqualTo(1_048_576);
             return response(200, "{\"result\":[]}");
         });
-        client.fetch(URI.create("https://account-a.flespi.example"), "device-a", SECRET,
+        client.fetch(URI.create("https://account-a.flespi.io"), "device-a", SECRET,
                 SOURCE.minusSeconds(300), SOURCE, 25, 1_048_576, java.time.Duration.ofSeconds(2));
-        assertThat(uri.get().getHost()).isEqualTo("account-a.flespi.example");
+        assertThat(uri.get().getHost()).isEqualTo("account-a.flespi.io");
         assertThat(uri.get().getPath()).isEqualTo("/gw/devices/device-a/messages");
         assertThat(uri.get().getQuery()).contains("count=25", "from=", "to=");
         assertThat(authorization.get()).isEqualTo("FlespiToken controlled-secret-value");
@@ -148,7 +159,7 @@ class FlespiAdapterTest {
         ((com.fasterxml.jackson.databind.node.ObjectNode) invalid).remove("position.latitude");
         var transport = successTransport(json.writeValueAsString(List.of(invalid, valid)));
         var result = adapter(transport).fetchPositions(request(
-                execution("FLESPI_A", URI.create("https://flespi.example"), Map.of()),
+                execution("FLESPI_A", URI.create("https://flespi.io"), Map.of()),
                 List.of(cursor("masked-fmc130-ident", null)), 10), SECRET.clone());
         assertThat(result.candidates()).hasSize(1);
     }
@@ -167,7 +178,7 @@ class FlespiAdapterTest {
             devices.add(cursor("device-" + index, SOURCE.minusSeconds(60)));
         }
         var result = adapter(transport).fetchPositions(request(
-                execution("FLESPI_100", URI.create("https://flespi.example"), Map.of()),
+                execution("FLESPI_100", URI.create("https://flespi.io"), Map.of()),
                 devices, 100), SECRET.clone());
         assertThat(result.candidates()).hasSize(100);
         assertThat(result.nextWatermarks()).hasSize(100);
@@ -184,9 +195,9 @@ class FlespiAdapterTest {
             return response(200, "{\"result\":[]}");
         });
         Instant watermark = Instant.now().minusSeconds(30);
-        adapter.fetchPositions(request(execution("FLESPI_W", URI.create("https://flespi.example"),
+        adapter.fetchPositions(request(execution("FLESPI_W", URI.create("https://flespi.io"),
                 Map.of("overlapSeconds", "120")), List.of(cursor("warm", watermark)), 10), SECRET.clone());
-        adapter.fetchPositions(request(execution("FLESPI_C", URI.create("https://flespi.example"),
+        adapter.fetchPositions(request(execution("FLESPI_C", URI.create("https://flespi.io"),
                 Map.of()), List.of(cursor("cold", null)), 10), SECRET.clone());
         long warmFrom = queryLong(requests.get(0), "from");
         long coldFrom = queryLong(requests.get(1), "from");
@@ -206,31 +217,31 @@ class FlespiAdapterTest {
         for (int index = 1; index <= 3; index++) {
             char[] token = ("token-" + index).toCharArray();
             adapter.fetchPositions(request(execution("ACCOUNT_" + index,
-                    URI.create("https://account-" + index + ".example"), Map.of()),
+                    URI.create("https://account-" + index + ".flespi.io"), Map.of()),
                     List.of(cursor("device-" + index, null)), 10), token);
             java.util.Arrays.fill(token, '\0');
         }
         assertThat(observations).containsExactly(
-                "account-1.example|FlespiToken token-1|/gw/devices/device-1/messages",
-                "account-2.example|FlespiToken token-2|/gw/devices/device-2/messages",
-                "account-3.example|FlespiToken token-3|/gw/devices/device-3/messages");
+                "account-1.flespi.io|FlespiToken token-1|/gw/devices/device-1/messages",
+                "account-2.flespi.io|FlespiToken token-2|/gw/devices/device-2/messages",
+                "account-3.flespi.io|FlespiToken token-3|/gw/devices/device-3/messages");
     }
 
     @Test
     void connectionTestMapsPassAuthTimeoutAndInvalidConfigurationWithoutTelemetry() {
         assertThat(adapter(successTransport("[]")).testConnection(execution(
-                "TEST_PASS", URI.create("https://flespi.example"), Map.of()), SECRET.clone()).status())
+                "TEST_PASS", URI.create("https://flespi.io"), Map.of()), SECRET.clone()).status())
                 .isEqualTo(ConnectionTestResult.Status.PASS);
         assertThat(adapter(statusTransport(401)).testConnection(execution(
-                "TEST_AUTH", URI.create("https://flespi.example"), Map.of()), SECRET.clone()).status())
+                "TEST_AUTH", URI.create("https://flespi.io"), Map.of()), SECRET.clone()).status())
                 .isEqualTo(ConnectionTestResult.Status.AUTH_FAILED);
         var timeout = adapter((uri, auth, duration, limit) -> {
             throw new java.io.IOException("token=must-never-escape");
-        }).testConnection(execution("TEST_TIMEOUT", URI.create("https://flespi.example"), Map.of()),
+        }).testConnection(execution("TEST_TIMEOUT", URI.create("https://flespi.io"), Map.of()),
                 SECRET.clone());
         assertThat(timeout.status()).isEqualTo(ConnectionTestResult.Status.UNREACHABLE);
         assertThat(adapter(successTransport("[]")).testConnection(execution(
-                "TEST_INVALID", URI.create("http://flespi.example"), Map.of()), SECRET.clone()).status())
+                "TEST_INVALID", URI.create("http://flespi.io"), Map.of()), SECRET.clone()).status())
                 .isEqualTo(ConnectionTestResult.Status.INVALID_CONFIGURATION);
     }
 
@@ -238,24 +249,24 @@ class FlespiAdapterTest {
     void providerFailuresAreSafeBoundedAndDoNotReturnSecret() {
         for (int status : List.of(401, 403, 429, 500, 503)) {
             assertThatThrownBy(() -> adapter(statusTransport(status)).fetchPositions(request(
-                    execution("FAIL_" + status, URI.create("https://flespi.example"), Map.of()),
+                    execution("FAIL_" + status, URI.create("https://flespi.io"), Map.of()),
                     List.of(cursor("device", null)), 10), SECRET.clone()))
                     .isInstanceOfSatisfying(FlespiFailure.class, failure ->
                             assertThat(failure.getMessage()).doesNotContain(
-                                    new String(SECRET), "device", "flespi.example"));
+                                    new String(SECRET), "device", "flespi.io"));
         }
     }
 
     @Test
     void malformedAndOversizeResponsesFailWithoutCandidateOrWatermarkState() {
         assertThatThrownBy(() -> adapter(successTransport("{}" )).fetchPositions(request(
-                execution("MALFORMED", URI.create("https://flespi.example"), Map.of()),
+                execution("MALFORMED", URI.create("https://flespi.io"), Map.of()),
                 List.of(cursor("device", null)), 10), SECRET.clone()))
                 .isInstanceOf(FlespiFailure.class);
         byte[] oversized = new byte[1_048_577];
         assertThatThrownBy(() -> adapter((uri, auth, timeout, limit) ->
                 new FlespiProviderClient.HttpResult(200, oversized)).fetchPositions(request(
-                        execution("OVERSIZE", URI.create("https://flespi.example"), Map.of()),
+                        execution("OVERSIZE", URI.create("https://flespi.io"), Map.of()),
                         List.of(cursor("device", null)), 10), SECRET.clone()))
                 .isInstanceOfSatisfying(FlespiFailure.class, failure ->
                         assertThat(failure.safeCode()).isEqualTo("provider_response_oversize"));
@@ -265,7 +276,7 @@ class FlespiAdapterTest {
     void overlapMayReturnDuplicateAndLeavesFinalDeduplicationToTracking() {
         var adapter = adapter((uri, auth, timeout, limit) -> response(
                 200, message("device", SOURCE)));
-        var request = request(execution("DUPLICATE", URI.create("https://flespi.example"), Map.of()),
+        var request = request(execution("DUPLICATE", URI.create("https://flespi.io"), Map.of()),
                 List.of(cursor("device", SOURCE)), 10);
         var first = adapter.fetchPositions(request, SECRET.clone());
         var second = adapter.fetchPositions(request, SECRET.clone());
@@ -279,8 +290,8 @@ class FlespiAdapterTest {
         var adapter = new FlespiTrackingProviderAdapter(
                 new FlespiProviderClient(json, successTransport("[]")),
                 new FlespiMessageMapper(), state, new SimpleMeterRegistry());
-        var healthy = execution("HEALTHY", URI.create("https://flespi.example"), Map.of());
-        var unknown = execution("UNKNOWN", URI.create("https://flespi.example"), Map.of());
+        var healthy = execution("HEALTHY", URI.create("https://flespi.io"), Map.of());
+        var unknown = execution("UNKNOWN", URI.create("https://flespi.io"), Map.of());
         adapter.testConnection(healthy, SECRET.clone());
         assertThat(adapter.health(healthy).state())
                 .isEqualTo(com.transportlogistics.app.tracking.application.provider.ProviderHealth.State.HEALTHY);

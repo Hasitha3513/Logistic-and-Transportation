@@ -103,6 +103,14 @@ class TrackingProviderConnectionPostgreSqlAcceptanceTest extends PostgreSqlInteg
         assertThat(updated.testStatus()).isEqualTo(ProviderConnectionTestStatus.PASS);
         assertThat(updated.lastProviderMessageAt()).isEqualTo(tested.plusSeconds(2));
         assertThat(updated.leaseOwner()).isEqualTo("node-a");
+        var audit = jdbc.queryForList("""
+                SELECT action,safe_detail FROM tracking_audit_event
+                WHERE tenant_id=? AND target_id=? ORDER BY occurred_at,action
+                """, connection.tenantId(), connection.id().value());
+        assertThat(audit).hasSize(2);
+        assertThat(audit.toString()).contains("PROVIDER_CONNECTION_CREATED")
+                .contains("PROVIDER_CONNECTION_TESTED")
+                .doesNotContain("env:ROTATED_REFERENCE");
     }
 
     @Test
