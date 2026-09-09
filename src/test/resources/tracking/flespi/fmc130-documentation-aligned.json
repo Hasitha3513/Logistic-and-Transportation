@@ -1,0 +1,15 @@
+{
+  "fixtureClassification": "CONTROLLED_FIXTURE_NOT_REAL_PROVIDER_EVIDENCE",
+  "result": [
+    {
+      "ident": "masked-fmc130-ident",
+      "timestamp": 1788912000.125,
+      "position.latitude": 6.927079,
+      "position.longitude": 79.861244,
+      "position.accuracy": 3.5,
+      "position.speed": 42.25,
+      "position.direction": 187.5,
+      "tenant": "ignored-non-authoritative"
+    }
+  ]
+}

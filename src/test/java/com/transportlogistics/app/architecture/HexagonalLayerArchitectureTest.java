@@ -241,4 +241,12 @@ public class HexagonalLayerArchitectureTest {
                 .check(importedClasses);
     }
 
+    @Test
+    void flespiTypesMustRemainInsideTrackingInboundAdapter() {
+        noClasses().that().resideOutsideOfPackage("..tracking.adapters.inbound.flespi..")
+                .should().dependOnClassesThat().resideInAPackage("..tracking.adapters.inbound.flespi..")
+                .because("provider-specific flespi types must not leak into Tracking core or other modules")
+                .check(importedClasses);
+    }
+
 }
