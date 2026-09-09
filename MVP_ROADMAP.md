@@ -22,7 +22,7 @@
 > - **Current Milestone:** MVP 1.4 Last-Mile Delivery — 8 / 8 COMPLETE, 100%, CLOSED.
 > - **Active Focus:** Wave B is 5 / 5 COMPLETE / CLOSED; Wave C is active.
 > - **US-48 Technical State:** `IMPLEMENTATION_COMPLETE / ACCEPTANCE_BLOCKED_EXTERNAL_SYSTEM`; remediation `COMPLETE`; technical closure `PASS`; current Flyway head V74.
-> - **Immediate Next Action:** Capture and validate physical FMC130-generated flespi telemetry in `US-48-FMC130-FLESPI-EXTERNAL-CAPTURE-001`. The Level-1 adapter is `IMPLEMENTATION_COMPLETE / REAL_CAPTURE_PENDING`; do not start US-49.
+> - **Immediate Next Action:** Implement the approved pluggable supported-adapter architecture beginning with `US-48-PLUGGABLE-DEVICE-ONBOARDING-CS01-PROVIDER-SPI-AND-REGISTRY-001`; real FMC130/Flespi capture remains mandatory and US-49 must not start.
 
 ---
 
@@ -165,7 +165,7 @@ Development startup now consistently provisions the idempotent PostgreSQL sample
 | ID | User Story Title | Scope / Feature | Status | Verification Evidence |
 | :---: | :--- | :--- | :---: | :--- |
 | `US-47` | Manage Transport Billing | Trip/freight costing, charges, adjustments, cost centres and operational billing finalization | 🟢 `COMPLETE` | Final acceptance PASS; V72; focused 17/17; concurrency 9/9; Maven 1,398/0/0/15 in 06:38; architecture 46/46; Chromium 7/7; `US-47-TRANSPORT-BILLING-FINAL-ACCEPTANCE-001.md` |
-| `US-48` | Track Vehicles Live | Provider-neutral telemetry ingestion, live/last-known state, connectivity, accuracy and freshness | 🔴 `IMPLEMENTATION_COMPLETE / ACCEPTANCE_BLOCKED_EXTERNAL_SYSTEM` | V74 remediation and technical closure PASS; flespi Level-1 REST-polling adapter `IMPLEMENTATION_COMPLETE / REAL_CAPTURE_PENDING`; physical FMC130/provider evidence still unavailable |
+| `US-48` | Track Vehicles Live | Provider-neutral telemetry ingestion, live/last-known state, connectivity, accuracy and freshness | 🔴 `IMPLEMENTATION_COMPLETE / ACCEPTANCE_BLOCKED_EXTERNAL_SYSTEM` | `PLUG_AND_PLAY_FOR_SUPPORTED_ADAPTERS` architecture APPROVED; V75 authorized but not implemented; next CS-01 SPI/registry; physical FMC130/provider evidence still unavailable |
 | `US-49` | Manage Geofences | Depot, customer-site and unauthorized-zone entry/exit detection | 🟡 `WAVE C / BLOCKED_BY_DEPENDENCY` | Requires US-48 |
 | `US-50` | Monitor Speed | Threshold, road-rule and repeat-speed monitoring | 🟡 `WAVE C / BLOCKED_BY_DEPENDENCY` | Requires US-48 |
 | `US-51` | Monitor Idle Time | Engine-on versus movement duration and qualified fuel-waste estimates | 🟡 `WAVE C / BLOCKED_BY_DEPENDENCY` | Requires US-48 engine-state telemetry |
@@ -236,7 +236,7 @@ Development startup now consistently provisions the idempotent PostgreSQL sample
 
 ```
 Current Status: 72 / 87 COMPLETE; 15 stories remain across Waves C–E
-Queue Head:     US-48-FMC130-FLESPI-EXTERNAL-CAPTURE-001
+Queue Head:     US-48-PLUGGABLE-DEVICE-ONBOARDING-CS01-PROVIDER-SPI-AND-REGISTRY-001
 ```
 
 1. **Wave A — Integration and exception-control foundations:** 2 / 2 COMPLETE / CLOSED (US-73 and US-78).
