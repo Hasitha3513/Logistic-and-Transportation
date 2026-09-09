@@ -249,4 +249,15 @@ public class HexagonalLayerArchitectureTest {
                 .check(importedClasses);
     }
 
+    @Test
+    void trackingProviderSpiMustRemainFrameworkAndAdapterNeutral() {
+        noClasses().that().resideInAnyPackage(
+                        "..tracking.application.provider..", "..tracking.ports.outbound..")
+                .should().dependOnClassesThat().resideInAnyPackage(
+                        "org.springframework..", "jakarta.persistence..", "org.hibernate..",
+                        "com.fasterxml.jackson..", "..tracking.adapters..")
+                .because("Tracking provider SPI and neutral values must depend inward")
+                .check(importedClasses);
+    }
+
 }
