@@ -260,4 +260,13 @@ public class HexagonalLayerArchitectureTest {
                 .check(importedClasses);
     }
 
+    @Test
+    void trackingInternalProviderIngestionMustRemainInsideTracking() {
+        noClasses().that().resideOutsideOfPackage("..tracking..")
+                .should().dependOnClassesThat().haveFullyQualifiedName(
+                        "com.transportlogistics.app.tracking.ports.inbound.TrackingProviderIngestionPort")
+                .because("the non-web provider ingestion authority is Tracking-internal")
+                .check(importedClasses);
+    }
+
 }
