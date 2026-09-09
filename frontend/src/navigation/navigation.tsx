@@ -131,10 +131,13 @@ export const navigation: NavigationItem[] = [
   },
   {
     key: 'tracking',
-    label: 'Live Tracking',
-    route: '/tracking/vehicles',
+    label: 'Tracking',
     icon: <AimOutlined />,
-    requiredPermission: 'TRACKING_VIEW',
+    children: [
+      { key: 'tracking-vehicles', label: 'Live Vehicles', route: '/tracking/vehicles', requiredPermission: 'TRACKING_VIEW' },
+      { key: 'tracking-devices', label: 'Devices', route: '/tracking/devices', requiredPermission: 'TRACKING_VIEW' },
+      { key: 'tracking-provider-connections', label: 'Provider Connections', route: '/tracking/provider-connections', requiredPermission: 'TRACKING_DEVICE_MANAGE' },
+    ],
   },
   {
     key: 'operations',

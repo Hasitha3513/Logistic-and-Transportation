@@ -56,6 +56,7 @@ import FuelExceptionsPage from './features/fuel/exceptions/pages/FuelExceptionsP
 import DriverPayrollPage from './features/fleet/driverPayroll/pages/DriverPayrollPage';
 import TransportBillingPage from './features/billing/pages/TransportBillingPage';
 import LiveTrackingPage from './features/tracking/pages/LiveTrackingPage';
+import ProviderConnectionsPage from './features/tracking/pages/ProviderConnectionsPage';
 
 function ProtectedRoute() {
   const { user, isLoading } = useAuth();
@@ -160,6 +161,8 @@ export default function App() {
         <Route path="operations/exceptions" element={<OperationalExceptionQueuePage />} />
         <Route path="billing/records" element={<TransportBillingPage />} />
         <Route path="tracking/vehicles" element={<LiveTrackingPage />} />
+        <Route path="tracking/devices" element={<LiveTrackingPage initialTab="devices" />} />
+        <Route path="tracking/provider-connections" element={<ProviderConnectionsPage />} />
         <Route path="workspace" element={<WorkspacePage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>

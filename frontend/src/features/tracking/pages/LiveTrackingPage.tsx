@@ -14,9 +14,9 @@ const age = (timestamp?: string) => timestamp ? `${Math.max(0, Math.floor((Date.
 const deviceSchema = z.object({ externalDeviceReference:z.string().trim().min(1).max(160), providerAlias:z.string().trim().min(1).max(80), hardwareSerialReference:z.string().trim().max(160).optional() });
 type DeviceForm = z.infer<typeof deviceSchema>;
 
-export default function LiveTrackingPage() {
+export default function LiveTrackingPage({initialTab='vehicles'}:{initialTab?:'vehicles'|'devices'}) {
   const { hasPermission } = useAuth();
-  return <Tabs items={[
+  return <Tabs defaultActiveKey={initialTab} items={[
     { key:'vehicles', label:'Vehicle positions', children:<VehiclePositions canReadHistory={hasPermission('TRACKING_HISTORY_VIEW')} /> },
     { key:'devices', label:'Tracking devices', children:<Devices canManage={hasPermission('TRACKING_DEVICE_MANAGE')} /> },
   ]} />;
