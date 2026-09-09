@@ -43,7 +43,7 @@ class ModulithBoundaryEnforcementTest {
             "reporting->fleet", "reporting->freight", "reporting->trip",
             "routing->operations", "routing->organization", "routing->tenancy",
             "system->billing", "system->delivery", "system->fleet", "system->integration", "system->notification", "system->operations", "system->organization", "system->trip",
-            "tracking->fleet", "tracking->tenancy",
+            "tracking->fleet", "tracking->integration", "tracking->tenancy",
             "trip->fleet", "trip->identity", "trip->notification", "trip->routing"
     );
 

@@ -1,7 +1,7 @@
 # US-48 Live Vehicle Tracking — Implementation Evidence
 
 **Status:** `IMPLEMENTATION_COMPLETE / ACCEPTANCE_PENDING`  
-**Migration:** V73  
+**Story migration:** V73; **current repository head:** V74
 **Final acceptance dependency:** `REAL_DEVICE_REAL_PROVIDER`  
 **Accounting:** unchanged at 72 / 87 complete; 15 / 87 remaining
 
@@ -36,4 +36,12 @@
 
 Implementation and controlled-provider technical evidence are complete. Story completion remains pending independent technical closure and final evidence from a physical device and real provider payload. Do not advance accounting or US-49.
 
-**Next task:** `US-48-LIVE-VEHICLE-TRACKING-TECHNICAL-CLOSURE-001`
+## Authorized V74 technical remediation
+
+`US-48-LIVE-VEHICLE-TRACKING-TECHNICAL-REMEDIATION-001` is complete. V74 adds the Tracking-owned globally unique opaque provider-key binding, binding-scoped nonce table, and one-current-policy-per-Tenant retention table. Telemetry Tenant authority now comes exclusively from an ACTIVE binding; the signed canonical value is `epoch + "\n" + nonce + "\n" + providerKeyId + "\n" + providerAlias + "\n" + rawBody`. Secrets are resolved only through the published `IntegrationSecretResolver` and are never persisted.
+
+Configured retention rejects only timestamps strictly before `receivedAt - duration`; equality is accepted and policy/version/retain-until are retained. No policy preserves LATE handling without age-only rejection. An internal transactional, idempotent per-Tenant/Vehicle rebuild restores latest-received/latest-trusted projections from immutable retained history. Safe counters/timers, stale/offline/latest-ingest health facts, provider/binding/retention audit and denied-management audit are present without packet audit storms or high-cardinality/sensitive metric labels.
+
+Fresh remediation evidence: provider security plus boundary tests **17/17 PASS**; PostgreSQL V74/remediation/concurrency **15/15 PASS** (exact races **9/9**); complete Maven **1,430 tests, 0 failures, 0 errors, 15 skipped — BUILD SUCCESS**, 07:08; architecture **49/49**; Checkstyle zero violations; PMD and SpotBugs pass with zero task findings; TypeScript/build pass; Vitest **265/265**; changed-file ESLint zero; real Chromium **10/10**. Signed ingress measured **483.5 msg/s sustained** and **1,087.1 msg/s burst**; latest p95 **2.222 ms** and 24-hour history p95 **0.989 ms**. All authoritative database evidence used `transport_logistics_acceptance` only.
+
+**Next task:** `US-48-LIVE-VEHICLE-TRACKING-TECHNICAL-CLOSURE-001-RERUN`

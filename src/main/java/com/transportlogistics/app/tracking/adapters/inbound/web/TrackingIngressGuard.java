@@ -38,6 +38,8 @@ final class TrackingIngressGuard {
         });
         meters.counter("tracking.ingress.received", "provider", key.providerAlias)
                 .increment(positions);
+        meters.counter("tracking.ingress.rate", "provider", key.providerAlias)
+                .increment(positions);
         if (window.positions.get() > maximumPositionsPerSecond) {
             meters.counter("tracking.ingress.rate_limited", "provider", key.providerAlias).increment();
             throw new TooManyRequestsException("TRACKING_RATE_LIMITED", "Tracking ingestion rate exceeded");

@@ -2,8 +2,8 @@ import { createHmac } from 'node:crypto';
 import { expect, request, test } from '@playwright/test';
 
 const backend = process.env.REAL_E2E_BACKEND_URL ?? 'http://localhost:8088';
-const tenant = '4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a';
 const provider = 'FIXTURE';
+const providerKeyId = 'us48-fixture-key';
 const secret = 'us48-controlled-provider-secret';
 const suffix = `us48-load-${Date.now()}`;
 
@@ -62,10 +62,10 @@ function batch(deviceId: string, offset: number, size: number) {
 
 async function signed(payload: unknown) {
   const body = JSON.stringify(payload); const epoch = Math.floor(Date.now() / 1000); const nonce = crypto.randomUUID();
-  const signature = createHmac('sha256', secret).update(`${epoch}\n${nonce}\n${tenant}\n${body}`).digest('hex');
+  const signature = createHmac('sha256', secret).update(`${epoch}\n${nonce}\n${providerKeyId}\n${provider}\n${body}`).digest('hex');
   const api = await request.newContext({ baseURL: backend });
   return api.post('/api/integration/v1/tracking/positions', { headers: {
-    'Content-Type': 'application/json', 'X-Tracking-Tenant': tenant, 'X-Tracking-Provider': provider,
+    'Content-Type': 'application/json', 'X-Tracking-Provider-Key-Id': providerKeyId, 'X-Tracking-Provider': provider,
     'X-Tracking-Timestamp': String(epoch), 'X-Tracking-Nonce': nonce, 'X-Tracking-Signature': signature,
   }, data: body });
 }
