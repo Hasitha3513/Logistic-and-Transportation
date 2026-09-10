@@ -22,7 +22,7 @@
 > - **Current Milestone:** MVP 1.4 Last-Mile Delivery — 8 / 8 COMPLETE, 100%, CLOSED.
 > - **Active Focus:** Wave B is 5 / 5 COMPLETE / CLOSED; Wave C is active.
 > - **US-48 Technical State:** `IMPLEMENTATION_COMPLETE / ACCEPTANCE_BLOCKED_EXTERNAL_SYSTEM`; pluggable CS01–CS10 are `COMPLETE` and `PLUG_AND_PLAY_FOR_SUPPORTED_ADAPTERS` is technically complete at V76; physical FMC130/Flespi evidence remains outstanding.
-> - **Immediate Next Action:** Execute `US-48-FMC130-FLESPI-EXTERNAL-CAPTURE-001`; external-acceptance preparation is COMPLETE, genuine FMC130/Flespi capture remains `PENDING / BLOCKED_EXTERNAL_SYSTEM`, and US-49 must not start.
+> - **Immediate Next Action:** Execute `US-49-MANAGE-GEOFENCES-PRODUCT-DECISIONS-001`. US-48 external acceptance is `ON_HOLD_EXTERNAL_PREREQUISITE` until physical FMC130/live Flespi facts change; the hold does not waive final physical acceptance or change accounting.
 
 ---
 
@@ -165,14 +165,14 @@ Development startup now consistently provisions the idempotent PostgreSQL sample
 | ID | User Story Title | Scope / Feature | Status | Verification Evidence |
 | :---: | :--- | :--- | :---: | :--- |
 | `US-47` | Manage Transport Billing | Trip/freight costing, charges, adjustments, cost centres and operational billing finalization | 🟢 `COMPLETE` | Final acceptance PASS; V72; focused 17/17; concurrency 9/9; Maven 1,398/0/0/15 in 06:38; architecture 46/46; Chromium 7/7; `US-47-TRANSPORT-BILLING-FINAL-ACCEPTANCE-001.md` |
-| `US-48` | Track Vehicles Live | Provider-neutral telemetry ingestion, live/last-known state, connectivity, accuracy and freshness | 🔴 `IMPLEMENTATION_COMPLETE / ACCEPTANCE_BLOCKED_EXTERNAL_SYSTEM` | `PLUG_AND_PLAY_FOR_SUPPORTED_ADAPTERS` technically complete: CS01–CS10 COMPLETE at V76; external-acceptance preparation COMPLETE; real capture `PENDING / BLOCKED_EXTERNAL_SYSTEM`; physical FMC130/provider evidence still unavailable |
-| `US-49` | Manage Geofences | Depot, customer-site and unauthorized-zone entry/exit detection | 🟡 `WAVE C / BLOCKED_BY_DEPENDENCY` | Requires US-48 |
-| `US-50` | Monitor Speed | Threshold, road-rule and repeat-speed monitoring | 🟡 `WAVE C / BLOCKED_BY_DEPENDENCY` | Requires US-48 |
-| `US-51` | Monitor Idle Time | Engine-on versus movement duration and qualified fuel-waste estimates | 🟡 `WAVE C / BLOCKED_BY_DEPENDENCY` | Requires US-48 engine-state telemetry |
-| `US-52` | Monitor Route Deviations | Planned-versus-actual comparison, severity and audited approval | 🟡 `WAVE C / BLOCKED_BY_DEPENDENCY` | Requires US-48 and Routing contract |
-| `US-53` | Replay Journeys | Historical journey replay, stop analysis and incident forensics | 🟡 `WAVE C / BLOCKED_BY_DEPENDENCY` | Requires US-48 history; overlays US-49–52 |
-| `US-54` | View Tracking Dashboard | Fleet overview, exceptions, heat maps, alerts and stale-state visibility | 🟡 `WAVE C / BLOCKED_BY_DEPENDENCY` | Must follow US-48–53 producers |
-| `US-55` | Handle GPS Edge Cases | Signal loss, spoofing, tampering, delayed packets, battery drain and trusted-state protection | 🟡 `WAVE C / BLOCKED_BY_DEPENDENCY` | Requires US-48; integrates US-78 |
+| `US-48` | Track Vehicles Live | Provider-neutral telemetry ingestion, live/last-known state, connectivity, accuracy and freshness | 🔴 `IMPLEMENTATION_COMPLETE / ACCEPTANCE_BLOCKED_EXTERNAL_SYSTEM` | CS01–CS10 technically complete at V76; external capture `ON_HOLD_EXTERNAL_PREREQUISITE`; rerun only when physical FMC130/live Flespi facts change; physical acceptance remains mandatory |
+| `US-49` | Manage Geofences | Depot, customer-site and unauthorized-zone entry/exit detection | 🟡 `TECHNICAL_DEPENDENCY_SATISFIED / READY_FOR_PRODUCT_DECISIONS` | Frozen US-48 Vehicle/trusted WGS84/source-time contracts are sufficient; no acceptance inheritance |
+| `US-50` | Monitor Speed | Threshold, road-rule and repeat-speed monitoring | 🟡 `TECHNICAL_DEPENDENCY_SATISFIED / READY_FOR_PRODUCT_DECISIONS` | Frozen optional speed/Vehicle/time/trust contracts are sufficient for implementation; real speed fidelity remains a final-evidence gate |
+| `US-51` | Monitor Idle Time | Engine-on versus movement duration and qualified fuel-waste estimates | 🟡 `WAVE C / BLOCKED_BY_REQUIRED_TELEMETRY_CAPABILITY` | Current FLESPI does not advertise IGNITION and no accepted alternate engine-state source exists |
+| `US-52` | Monitor Route Deviations | Planned-versus-actual comparison, severity and audited approval | 🟡 `TECHNICAL_DEPENDENCY_SATISFIED / READY_FOR_PRODUCT_DECISIONS` | Frozen trusted-position/source-time and accepted Routing contracts are sufficient |
+| `US-53` | Replay Journeys | Historical journey replay, stop analysis and incident forensics | 🟡 `TECHNICAL_DEPENDENCY_SATISFIED / READY_AFTER_EARLIER_WAVE_C_DECISIONS` | Immutable Tracking history is sufficient; optional overlays must follow their producers |
+| `US-54` | View Tracking Dashboard | Fleet overview, exceptions, heat maps, alerts and stale-state visibility | 🟡 `WAVE C / BLOCKED_BY_US49_TO_US53_PRODUCERS` | Consolidated consumer; must not recreate detector logic |
+| `US-55` | Handle GPS Edge Cases | Signal loss, spoofing, tampering, delayed packets, battery drain and trusted-state protection | 🟡 `WAVE C / BLOCKED_BY_REQUIRED_TELEMETRY_AND_PRODUCT_DECISIONS` | Signal-loss/delay contracts exist, but spoofing/tamper/battery signals are not established |
 
 ---
 
@@ -236,12 +236,12 @@ Development startup now consistently provisions the idempotent PostgreSQL sample
 
 ```
 Current Status: 72 / 87 COMPLETE; 15 stories remain across Waves C–E
-Queue Head:     US-48-FMC130-FLESPI-EXTERNAL-CAPTURE-001
+Queue Head:     US-49-MANAGE-GEOFENCES-PRODUCT-DECISIONS-001
 ```
 
 1. **Wave A — Integration and exception-control foundations:** 2 / 2 COMPLETE / CLOSED (US-73 and US-78).
 2. **Wave B — Fuel control and financial links:** 5 / 5 COMPLETE / CLOSED (US-35, US-37, US-38, US-46, US-47).
-3. **Wave C — GPS and telematics:** US-48, then US-49/50/51/52/55, then US-53, then US-54.
+3. **Wave C — GPS and telematics:** US-48 physical acceptance is on external-prerequisite hold; proceed with US-49, then US-50/52, then US-53. US-51 and full US-55 require telemetry/product decisions; US-54 follows US-49–53 producers.
 4. **Wave D — Compliance and field mobility:** US-72, US-76.
 5. **Wave E — Analytics, integrity, resilience, disruption and user risk:** US-85, US-84, US-87, US-82, US-86.
 6. After 87/87: `FULL-SOURCE-PARITY-AUDIT-001`, then `FULL-PLATFORM-END-TO-END-ACCEPTANCE-001` after authorized parity disposition.
