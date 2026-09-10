@@ -171,6 +171,27 @@ public class HexagonalLayerArchitectureTest {
     }
 
     @Test
+    void trackingGeofenceDomainMustRemainFrameworkFree() {
+        classes()
+                .that().resideInAPackage("..tracking.domain.geofence..")
+                .should().onlyDependOnClassesThat().resideInAnyPackage(
+                        "java..", "..tracking.domain..")
+                .because("US-49 geofence rules are pure Tracking domain logic")
+                .check(importedClasses);
+    }
+
+    @Test
+    void trackingGeofencePortsMustRemainFrameworkAndAdapterFree() {
+        noClasses()
+                .that().resideInAnyPackage("..tracking.ports.inbound..", "..tracking.ports.outbound..")
+                .should().dependOnClassesThat().resideInAnyPackage(
+                        "org.springframework..", "jakarta.persistence..", "org.hibernate..",
+                        "com.fasterxml.jackson..", "..tracking.adapters..")
+                .because("Tracking ports are provider-neutral hexagonal contracts")
+                .check(importedClasses);
+    }
+
+    @Test
     void freightDomainPortsAndApplicationMustRemainFrameworkFree() {
         noClasses()
                 .that().resideInAnyPackage("..freight..domain..", "..freight..ports..", "..freight..application..")

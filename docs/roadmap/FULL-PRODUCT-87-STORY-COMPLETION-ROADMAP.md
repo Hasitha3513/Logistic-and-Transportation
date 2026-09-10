@@ -17,7 +17,7 @@ This is 15 stories, so the invariant is `72 + 15 = 87`. `US-88`, `US-89`, and `U
 
 The existing roadmap had correct IDs but non-authoritative labels for several remaining stories. This plan restores the DOCX/UML titles and meanings, notably US-35/37/38 and US-48..55. It does not reopen accepted stories or change their acceptance decisions.
 
-**Waves A and B are COMPLETE / CLOSED; Wave C is active.** US-73 and US-78 are accepted. US-35, US-37, US-38, US-46, and US-47 final acceptance pass. US-48 is technically complete at V76 but physical acceptance is `ON_HOLD_EXTERNAL_PREREQUISITE`; US-49 decisions are frozen and the next task is `US-49-MANAGE-GEOFENCES-CS01-DOMAIN-PORTS-001`.
+**Waves A and B are COMPLETE / CLOSED; Wave C is active.** US-73 and US-78 are accepted. US-35, US-37, US-38, US-46, and US-47 final acceptance pass. US-48 is technically complete at V76 but physical acceptance is `ON_HOLD_EXTERNAL_PREREQUISITE`; US-49 CS01 domain and ports are complete and the next task is `US-49-MANAGE-GEOFENCES-CS02-V77-PERSISTENCE-001`.
 
 ## 2. Source reconciliation and non-negotiable boundaries
 
@@ -290,6 +290,6 @@ After 87/87 and disposition of parity findings, execute a real Tenant-isolated o
 
 Exactly one queue head is authorized by this roadmap:
 
-`US-49-MANAGE-GEOFENCES-CS01-DOMAIN-PORTS-001`
+`US-49-MANAGE-GEOFENCES-CS02-V77-PERSISTENCE-001`
 
-US-48 external acceptance remains on hold until physical FMC130/live Flespi prerequisites change. US-49 CS01 must implement only the frozen domain and port decisions and receives no inherited acceptance or completion credit.
+US-48 external acceptance remains on hold until physical FMC130/live Flespi prerequisites change. US-49 CS01 is verified complete without story acceptance credit; CS02 owns the reserved V77 persistence change.

@@ -22,7 +22,7 @@
 > - **Current Milestone:** MVP 1.4 Last-Mile Delivery — 8 / 8 COMPLETE, 100%, CLOSED.
 > - **Active Focus:** Wave B is 5 / 5 COMPLETE / CLOSED; Wave C is active.
 > - **US-48 Technical State:** `IMPLEMENTATION_COMPLETE / ACCEPTANCE_BLOCKED_EXTERNAL_SYSTEM`; pluggable CS01–CS10 are `COMPLETE` and `PLUG_AND_PLAY_FOR_SUPPORTED_ADAPTERS` is technically complete at V76; physical FMC130/Flespi evidence remains outstanding.
-> - **Immediate Next Action:** Execute `US-49-MANAGE-GEOFENCES-CS01-DOMAIN-PORTS-001`; US-49 product decisions are frozen, while US-48 physical acceptance remains `ON_HOLD_EXTERNAL_PREREQUISITE` with no accounting change.
+> - **Immediate Next Action:** Execute `US-49-MANAGE-GEOFENCES-CS02-V77-PERSISTENCE-001`; CS01 domain and ports are verified complete, while US-48 physical acceptance remains `ON_HOLD_EXTERNAL_PREREQUISITE` with no accounting change.
 
 ---
 
@@ -236,7 +236,7 @@ Development startup now consistently provisions the idempotent PostgreSQL sample
 
 ```
 Current Status: 72 / 87 COMPLETE; 15 stories remain across Waves C–E
-Queue Head:     US-49-MANAGE-GEOFENCES-CS01-DOMAIN-PORTS-001
+Queue Head:     US-49-MANAGE-GEOFENCES-CS02-V77-PERSISTENCE-001
 ```
 
 1. **Wave A — Integration and exception-control foundations:** 2 / 2 COMPLETE / CLOSED (US-73 and US-78).

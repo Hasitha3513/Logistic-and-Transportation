@@ -9,6 +9,8 @@ import java.util.UUID;
 public interface LocationLookup {
     Optional<LocationReference> find(UUID locationId);
 
+    Optional<LocationReference> find(UUID tenantId, UUID locationId);
+
     record LocationReference(UUID id, String code, String name, String address, Double latitude, Double longitude, boolean active) {
     }
 }

@@ -17,15 +17,26 @@ class LocationConfig {
     }
 
     @Bean
-    LocationLookup locationLookup(LocationUseCase locations) {
-        return id -> {
-            try {
-                var loc = locations.get(id);
-                return Optional.of(new LocationLookup.LocationReference(
-                        loc.id(), loc.code(), loc.name(), loc.address(), loc.latitude(), loc.longitude(), loc.active()
-                ));
-            } catch (com.transportlogistics.app.shared.domain.NotFoundException ignored) {
-                return Optional.empty();
+    LocationLookup locationLookup(LocationUseCase locationUseCase, LocationRepository locations) {
+        return new LocationLookup() {
+            @Override
+            public Optional<LocationReference> find(java.util.UUID id) {
+                try {
+                    var loc = locationUseCase.get(id);
+                    return Optional.of(reference(loc));
+                } catch (com.transportlogistics.app.shared.domain.NotFoundException ignored) {
+                    return Optional.empty();
+                }
+            }
+
+            @Override
+            public Optional<LocationReference> find(java.util.UUID tenantId, java.util.UUID id) {
+                return locations.findById(tenantId, id).map(this::reference);
+            }
+
+            private LocationReference reference(com.transportlogistics.app.organization.domain.model.Location location) {
+                return new LocationReference(location.id(), location.code(), location.name(), location.address(),
+                        location.latitude(), location.longitude(), location.active());
             }
         };
     }

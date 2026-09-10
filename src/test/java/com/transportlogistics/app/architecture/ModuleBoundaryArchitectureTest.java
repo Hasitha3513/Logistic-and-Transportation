@@ -82,4 +82,15 @@ public class ModuleBoundaryArchitectureTest {
                 .because("Delivery must consume external facts through public contracts or Delivery-owned ports")
                 .check(importedClasses);
     }
+
+    @Test
+    void trackingMustNotAccessDeliveryOrOrganizationInternals() {
+        noClasses()
+                .that().resideInAPackage("..tracking..")
+                .should().dependOnClassesThat().resideInAnyPackage(
+                        "..delivery..", "..organization.application..", "..organization.domain..",
+                        "..organization.infrastructure..")
+                .because("US-49 uses Tracking-owned geometry and published logical lookup contracts")
+                .check(importedClasses);
+    }
 }
