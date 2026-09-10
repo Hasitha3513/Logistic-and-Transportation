@@ -16,6 +16,7 @@ import com.transportlogistics.app.tracking.domain.geofence.GeofenceType;
 import com.transportlogistics.app.tracking.domain.geofence.VehicleGeofenceState;
 import com.transportlogistics.app.tracking.domain.geofence.Wgs84Coordinate;
 import com.transportlogistics.app.tracking.ports.outbound.GeofenceRepositoryPort;
+import com.transportlogistics.app.tracking.ports.outbound.GeofenceManagementSupportPort;
 import com.transportlogistics.app.tracking.ports.outbound.GeofenceTransitionRepositoryPort;
 import com.transportlogistics.app.tracking.ports.outbound.VehicleGeofenceStateRepositoryPort;
 import java.nio.charset.StandardCharsets;
@@ -35,9 +36,10 @@ import org.springframework.transaction.support.TransactionTemplate;
 
 @Component
 class JdbcGeofencePersistenceAdapter implements GeofenceRepositoryPort,
-        VehicleGeofenceStateRepositoryPort, GeofenceTransitionRepositoryPort {
+        VehicleGeofenceStateRepositoryPort, GeofenceTransitionRepositoryPort,
+        GeofenceManagementSupportPort {
     private static final int MAX_PAGE = 500;
-    private static final int MAX_TRANSITION_PAGE = 100;
+    private static final int MAX_TRANSITION_PAGE = 101;
     private static final int MAX_POLYGON_BYTES = 16_384;
     private final JdbcTemplate jdbc;
     private final TransactionTemplate transactions;
@@ -133,6 +135,19 @@ class JdbcGeofencePersistenceAdapter implements GeofenceRepositoryPort,
                 ORDER BY name,id LIMIT ? OFFSET ?
                 """, this::mapGeofence, tenantId, name(type), name(type), name(lifecycle),
                 name(lifecycle), locationId, locationId, size, page * size));
+    }
+
+    @Override
+    public long count(UUID tenantId, GeofenceType type, GeofenceLifecycle lifecycle,
+                      UUID locationId) {
+        Long count = jdbc.queryForObject("""
+                SELECT count(*) FROM tracking_geofence
+                WHERE tenant_id=? AND (CAST(? AS varchar) IS NULL OR type=?)
+                  AND (CAST(? AS varchar) IS NULL OR lifecycle=?)
+                  AND (CAST(? AS uuid) IS NULL OR location_id=CAST(? AS uuid))
+                """, Long.class, tenantId, name(type), name(type), name(lifecycle), name(lifecycle),
+                locationId, locationId);
+        return count == null ? 0 : count;
     }
 
     @Override
@@ -247,11 +262,79 @@ class JdbcGeofencePersistenceAdapter implements GeofenceRepositoryPort,
         requirePage(page, size, MAX_PAGE);
         return List.copyOf(jdbc.query("""
                 SELECT * FROM tracking_vehicle_geofence_state WHERE tenant_id=?
+                  AND stable_state IS NOT NULL
                   AND (CAST(? AS uuid) IS NULL OR vehicle_id=CAST(? AS uuid))
                   AND (CAST(? AS uuid) IS NULL OR geofence_id=CAST(? AS uuid))
                 ORDER BY geofence_id,vehicle_id LIMIT ? OFFSET ?
                 """, this::mapState, tenantId, vehicleId, vehicleId, geofenceId, geofenceId,
                 size, page * size));
+    }
+
+    @Override
+    public long count(UUID tenantId, UUID vehicleId, UUID geofenceId) {
+        Long count = jdbc.queryForObject("""
+                SELECT count(*) FROM tracking_vehicle_geofence_state WHERE tenant_id=?
+                  AND stable_state IS NOT NULL
+                  AND (CAST(? AS uuid) IS NULL OR vehicle_id=CAST(? AS uuid))
+                  AND (CAST(? AS uuid) IS NULL OR geofence_id=CAST(? AS uuid))
+                """, Long.class, tenantId, vehicleId, vehicleId, geofenceId, geofenceId);
+        return count == null ? 0 : count;
+    }
+
+    @Override
+    public Claim claim(UUID tenantId, String scope, String key, String requestHash,
+                       UUID targetId, UUID actorId, Instant now) {
+        UUID claimId = UUID.nameUUIDFromBytes((tenantId + "|GEOFENCE|" + scope + "|" + key)
+                .getBytes(StandardCharsets.UTF_8));
+        String detail = "HASH=" + requestHash + ";VERSION=PENDING";
+        int inserted = jdbc.update("""
+                INSERT INTO tracking_audit_event(
+                 id,tenant_id,actor_id,action,target_type,target_id,safe_detail,occurred_at)
+                VALUES(?, ?, ?, 'GEOFENCE_COMMAND_CLAIMED', ?, ?, ?, ?)
+                ON CONFLICT(id) DO NOTHING
+                """, claimId, tenantId, actorId, "GEOFENCE_" + scope, targetId, detail,
+                timestamp(now));
+        if (inserted == 1) {
+            return new Claim(claimId, targetId, requestHash, null, true);
+        }
+        return jdbc.query("""
+                SELECT target_id,safe_detail FROM tracking_audit_event
+                WHERE id=? AND tenant_id=? AND action='GEOFENCE_COMMAND_CLAIMED'
+                """, row -> {
+                    if (!row.next()) {
+                        throw new BusinessRuleException(
+                                "IDEMPOTENCY_KEY_CONFLICT", "Idempotency key is unavailable");
+                    }
+                    String stored = row.getString("safe_detail");
+                    String hash = stored.substring(5, stored.indexOf(';'));
+                    String version = stored.substring(stored.indexOf("VERSION=") + 8);
+                    Long resultVersion = "PENDING".equals(version) ? null : Long.valueOf(version);
+                    return new Claim(claimId, row.getObject("target_id", UUID.class), hash,
+                            resultVersion, false);
+                }, claimId, tenantId);
+    }
+
+    @Override
+    public void complete(UUID claimId, long resultVersion) {
+        int changed = jdbc.update("""
+                UPDATE tracking_audit_event
+                SET safe_detail=regexp_replace(safe_detail,'VERSION=[^;]+','VERSION=' || ?)
+                WHERE id=? AND action='GEOFENCE_COMMAND_CLAIMED'
+                """, Long.toString(resultVersion), claimId);
+        if (changed != 1) {
+            throw new IllegalStateException("Geofence command claim is unavailable");
+        }
+    }
+
+    @Override
+    public void audit(UUID tenantId, UUID actorId, String action, UUID geofenceId,
+                      String safeDetail, Instant now) {
+        jdbc.update("""
+                INSERT INTO tracking_audit_event(
+                 id,tenant_id,actor_id,action,target_type,target_id,safe_detail,occurred_at)
+                VALUES(?,?,?,?,'GEOFENCE',?,?,?)
+                """, UUID.randomUUID(), tenantId, actorId, action, geofenceId, safeDetail,
+                timestamp(now));
     }
 
     @Override

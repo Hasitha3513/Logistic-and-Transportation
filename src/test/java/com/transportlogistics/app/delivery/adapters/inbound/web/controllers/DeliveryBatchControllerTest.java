@@ -20,6 +20,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.OffsetDateTime;
@@ -37,6 +38,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc(addFilters = false)
+@WithMockUser(authorities = {
+        "DELIVERY_BATCH_CREATE", "DELIVERY_BATCH_VIEW", "DELIVERY_BATCH_UPDATE",
+        "DELIVERY_BATCH_ASSIGN", "DELIVERY_BATCH_DISPATCH", "DELIVERY_BATCH_CANCEL"
+})
 class DeliveryBatchControllerTest {
 
     @Autowired

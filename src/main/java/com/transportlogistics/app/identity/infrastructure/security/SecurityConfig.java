@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -15,6 +16,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
+@EnableMethodSecurity
 @EnableConfigurationProperties(JwtProperties.class)
 class SecurityConfig {
     @Bean
@@ -166,6 +168,23 @@ class SecurityConfig {
                         .requestMatchers(HttpMethod.PUT, "/tracking/devices/*", "/v1/tracking/devices/*",
                                 "/api/v1/tracking/devices/*")
                         .hasAuthority("TRACKING_DEVICE_MANAGE")
+                        .requestMatchers(HttpMethod.GET, "/v1/tracking/geofences/transitions",
+                                "/v1/tracking/geofences/unauthorized-transitions",
+                                "/api/v1/tracking/geofences/transitions",
+                                "/api/v1/tracking/geofences/unauthorized-transitions")
+                        .hasAuthority("GEOFENCE_EVENT_VIEW")
+                        .requestMatchers(HttpMethod.GET, "/v1/tracking/geofences",
+                                "/v1/tracking/geofences/*", "/v1/tracking/geofences/memberships",
+                                "/api/v1/tracking/geofences", "/api/v1/tracking/geofences/*",
+                                "/api/v1/tracking/geofences/memberships")
+                        .hasAuthority("GEOFENCE_VIEW")
+                        .requestMatchers(HttpMethod.POST, "/v1/tracking/geofences",
+                                "/v1/tracking/geofences/**", "/api/v1/tracking/geofences",
+                                "/api/v1/tracking/geofences/**")
+                        .hasAuthority("GEOFENCE_MANAGE")
+                        .requestMatchers(HttpMethod.PUT, "/v1/tracking/geofences/*",
+                                "/api/v1/tracking/geofences/*")
+                        .hasAuthority("GEOFENCE_MANAGE")
                         .requestMatchers(HttpMethod.GET, "/drivers", "/drivers/*", "/drivers/*/licenses",
                                 "/drivers/*/exceptions", "/drivers/*/exceptions/*",
                                 "/drivers/*/violations", "/drivers/*/violations/*",

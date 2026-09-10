@@ -22,7 +22,7 @@
 > - **Current Milestone:** MVP 1.4 Last-Mile Delivery — 8 / 8 COMPLETE, 100%, CLOSED.
 > - **Active Focus:** Wave B is 5 / 5 COMPLETE / CLOSED; Wave C is active.
 > - **US-48 Technical State:** `IMPLEMENTATION_COMPLETE / ACCEPTANCE_BLOCKED_EXTERNAL_SYSTEM`; pluggable CS01–CS10 are `COMPLETE` and `PLUG_AND_PLAY_FOR_SUPPORTED_ADAPTERS` is technically complete at V76; physical FMC130/Flespi evidence remains outstanding.
-> - **Immediate Next Action:** Execute `US-49-MANAGE-GEOFENCES-CS04-APIS-RBAC-AUDIT-001-RERUN`; CS01–CS03 and CS04A V78 permission seeding are verified complete, while US-48 physical acceptance remains `ON_HOLD_EXTERNAL_PREREQUISITE` with no accounting change.
+> - **Immediate Next Action:** Execute `US-49-MANAGE-GEOFENCES-CS05-NOTIFICATION-INTEGRATION-001`; CS01–CS04A are verified complete at V78, while US-48 physical acceptance remains `ON_HOLD_EXTERNAL_PREREQUISITE` with no accounting change.
 
 ---
 
@@ -166,7 +166,7 @@ Development startup now consistently provisions the idempotent PostgreSQL sample
 | :---: | :--- | :--- | :---: | :--- |
 | `US-47` | Manage Transport Billing | Trip/freight costing, charges, adjustments, cost centres and operational billing finalization | 🟢 `COMPLETE` | Final acceptance PASS; V72; focused 17/17; concurrency 9/9; Maven 1,398/0/0/15 in 06:38; architecture 46/46; Chromium 7/7; `US-47-TRANSPORT-BILLING-FINAL-ACCEPTANCE-001.md` |
 | `US-48` | Track Vehicles Live | Provider-neutral telemetry ingestion, live/last-known state, connectivity, accuracy and freshness | 🔴 `IMPLEMENTATION_COMPLETE / ACCEPTANCE_BLOCKED_EXTERNAL_SYSTEM` | CS01–CS10 technically complete at V76; external capture `ON_HOLD_EXTERNAL_PREREQUISITE`; rerun only when physical FMC130/live Flespi facts change; physical acceptance remains mandatory |
-| `US-49` | Manage Geofences | Depot, customer-site and unauthorized-zone entry/exit detection | 🟡 `IMPLEMENTATION_IN_PROGRESS` | CS01–CS03 and CS04A COMPLETE: V77 persistence/evaluation plus V78 exact three-permission administrative seed; CS04 API/RBAC/audit rerun is next; no US-48 acceptance inheritance |
+| `US-49` | Manage Geofences | Depot, customer-site and unauthorized-zone entry/exit detection | 🟡 `IMPLEMENTATION_IN_PROGRESS` | CS01–CS04A COMPLETE: V77 persistence/evaluation, V78 permissions, Tenant-safe management/query APIs, runtime RBAC, idempotency and safe audit; CS05 Notification integration is next; no US-48 acceptance inheritance |
 | `US-50` | Monitor Speed | Threshold, road-rule and repeat-speed monitoring | 🟡 `TECHNICAL_DEPENDENCY_SATISFIED / READY_FOR_PRODUCT_DECISIONS` | Frozen optional speed/Vehicle/time/trust contracts are sufficient for implementation; real speed fidelity remains a final-evidence gate |
 | `US-51` | Monitor Idle Time | Engine-on versus movement duration and qualified fuel-waste estimates | 🟡 `WAVE C / BLOCKED_BY_REQUIRED_TELEMETRY_CAPABILITY` | Current FLESPI does not advertise IGNITION and no accepted alternate engine-state source exists |
 | `US-52` | Monitor Route Deviations | Planned-versus-actual comparison, severity and audited approval | 🟡 `TECHNICAL_DEPENDENCY_SATISFIED / READY_FOR_PRODUCT_DECISIONS` | Frozen trusted-position/source-time and accepted Routing contracts are sufficient |
@@ -236,7 +236,7 @@ Development startup now consistently provisions the idempotent PostgreSQL sample
 
 ```
 Current Status: 72 / 87 COMPLETE; 15 stories remain across Waves C–E
-Queue Head:     US-49-MANAGE-GEOFENCES-CS04-APIS-RBAC-AUDIT-001-RERUN
+Queue Head:     US-49-MANAGE-GEOFENCES-CS05-NOTIFICATION-INTEGRATION-001
 ```
 
 1. **Wave A — Integration and exception-control foundations:** 2 / 2 COMPLETE / CLOSED (US-73 and US-78).

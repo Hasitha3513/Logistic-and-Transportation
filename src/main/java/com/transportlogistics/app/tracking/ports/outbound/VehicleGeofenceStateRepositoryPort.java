@@ -12,4 +12,6 @@ public interface VehicleGeofenceStateRepositoryPort {
 
     List<VehicleGeofenceState> find(UUID tenantId, UUID vehicleId,
                                     UUID geofenceId, int page, int size);
+
+    long count(UUID tenantId, UUID vehicleId, UUID geofenceId);
 }
