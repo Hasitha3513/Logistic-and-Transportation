@@ -12,6 +12,12 @@ test('accepts 200 msg/s sustained and a 1,000 msg/s burst through signed HTTP in
   const api = await request.newContext({ baseURL: backend, extraHTTPHeaders: { Authorization: `Bearer ${admin}` } });
   const categories = entities(await ok(api.get('/api/vehicle-categories')));
   const types = entities(await ok(api.get('/api/vehicle-types')));
+  const connections = await ok(api.get('/api/v1/tracking/provider-connections?page=0&size=100')) as {
+    items: Array<{ id: string; providerAlias: string; lifecycle: string }>;
+  };
+  const fixtureConnectionId = connections.items.find(item => item.providerAlias === provider
+    && item.lifecycle === 'ACTIVE')?.id;
+  expect(fixtureConnectionId).toBeTruthy();
   const devices: string[] = [];
   for (let index = 0; index < 2; index++) {
     const vehicleResponse = await api.post('/api/vehicles', { data: {
@@ -27,16 +33,22 @@ test('accepts 200 msg/s sustained and a 1,000 msg/s burst through signed HTTP in
       hardwareSerialReference: `${suffix}-serial-${index}`,
     } });
     expect(deviceResponse.status(), await deviceResponse.text()).toBe(201);
-    const createdDevice = await deviceResponse.json() as { id: string; version: number };
+    let createdDevice = await deviceResponse.json() as { id: string; version: number };
     const deviceId = createdDevice.id;
-    const activated = await api.post(`/api/v1/tracking/devices/${deviceId}/activate`, {
-      data: { version: createdDevice.version },
-    });
-    expect(activated.status(), await activated.text()).toBe(200);
+    const binding = await api.post(`/api/v1/tracking/devices/${deviceId}/provider-bindings`, { data: {
+      providerConnectionId: fixtureConnectionId, externalDeviceReference: `${suffix}-${index}`,
+      safeConfiguration: {}, lifecycle: 'ACTIVE',
+    } });
+    expect(binding.status(), await binding.text()).toBe(201);
     const association = await api.post(`/api/v1/tracking/devices/${deviceId}/associations`, { data: {
       vehicleId, effectiveFrom: new Date(Date.now() - 60_000).toISOString(),
     } });
     expect(association.status(), await association.text()).toBe(201);
+    createdDevice = await ok(api.get(`/api/v1/tracking/devices/${deviceId}`)) as { id: string; version: number };
+    const activated = await api.post(`/api/v1/tracking/devices/${deviceId}/activate`, {
+      data: { version: createdDevice.version },
+    });
+    expect(activated.status(), await activated.text()).toBe(200);
     devices.push(deviceId);
   }
 

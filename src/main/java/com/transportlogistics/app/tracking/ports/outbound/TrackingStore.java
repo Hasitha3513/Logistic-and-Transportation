@@ -29,6 +29,7 @@ public interface TrackingStore {
  List<Device> devices(UUID tenantId,int page,int size);
  Association associate(Context context,UUID deviceId,Associate command,Instant now);
  Association endAssociation(Context context,UUID deviceId,UUID associationId,Instant effectiveTo,Instant now);
+ Optional<Association> activeAssociation(UUID tenantId,UUID deviceId);
  List<State> states(UUID tenantId,int page,int size,Instant now);
  Optional<State> state(UUID tenantId,UUID vehicleId,Instant now);
  HistoryPage positions(UUID tenantId,UUID vehicleId,Instant from,Instant to,String cursor,int limit);

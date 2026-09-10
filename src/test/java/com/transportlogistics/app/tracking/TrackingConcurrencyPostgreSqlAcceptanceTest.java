@@ -153,14 +153,35 @@ class TrackingConcurrencyPostgreSqlAcceptanceTest extends PostgreSqlIntegrationT
         var device = createDevice(tenant, "device-" + tenant);
         var vehicle = UUID.randomUUID();
         store.associate(context(tenant), device, new Associate(vehicle, effectiveFrom), Instant.now());
+        activatePrepared(tenant, device);
         return new Fixture(tenant, device, vehicle);
     }
 
     private UUID createDevice(UUID tenant, String reference) {
         var device = store.insertDevice(
                 context(tenant), new CreateDevice(reference, PROVIDER, null), Instant.now());
-        return store.lifecycle(
-                context(tenant), device.id(), device.version(), DeviceLifecycle.ACTIVE, Instant.now()).id();
+        return device.id();
+    }
+
+    private void activatePrepared(UUID tenant, UUID device) {
+        UUID provider = UUID.randomUUID();
+        jdbc.update("""
+                INSERT INTO tracking_provider_binding(
+                 id,tenant_id,provider_key_id,provider_alias,credential_reference,lifecycle,
+                 created_at,created_by,updated_at,updated_by,provider_type,display_name,
+                 safe_configuration,poll_interval_seconds,page_size,test_status,version)
+                VALUES(?,?,?,?,?,'ACTIVE',now(),?,now(),?,'FLESPI',?,?::jsonb,5,100,'PASS',0)
+                """, provider, tenant, "key-" + provider, PROVIDER, "env:TRACKING_TEST", ACTOR,
+                ACTOR, "Fixture provider", "{}");
+        jdbc.update("""
+                INSERT INTO tracking_device_provider_binding(
+                 id,tenant_id,tracking_device_id,provider_binding_id,external_device_reference,
+                 safe_configuration,lifecycle,next_poll_at,created_at,updated_at,created_by,updated_by)
+                VALUES(?,?,?,?,?,?::jsonb,'ACTIVE',now(),now(),now(),?,?)
+                """, UUID.randomUUID(), tenant, device, provider, "provider-" + device, "{}", ACTOR,
+                ACTOR);
+        var current = store.device(tenant, device).orElseThrow();
+        store.lifecycle(context(tenant), device, current.version(), DeviceLifecycle.ACTIVE, Instant.now());
     }
 
     private List<?> ingest(Fixture fixture, PositionCommand command) {

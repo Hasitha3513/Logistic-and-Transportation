@@ -42,6 +42,9 @@ public interface TrackingProviderManagementUseCase {
 
     TrackingDeviceProviderBinding rebind(Context context, RebindDevice command);
 
+    java.util.Optional<TrackingDeviceProviderBinding> currentBinding(
+            UUID tenantId, UUID trackingDeviceId);
+
     record Context(UUID tenantId, UUID actorId, String correlationId) { }
 
     record CreateConnection(

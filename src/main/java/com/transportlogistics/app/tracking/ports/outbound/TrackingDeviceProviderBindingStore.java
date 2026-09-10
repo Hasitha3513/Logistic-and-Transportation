@@ -16,6 +16,8 @@ public interface TrackingDeviceProviderBindingStore {
 
     Optional<TrackingDeviceProviderBinding> findActiveByDevice(UUID tenantId, UUID trackingDeviceId);
 
+    Optional<TrackingDeviceProviderBinding> findCurrentByDevice(UUID tenantId, UUID trackingDeviceId);
+
     Optional<TrackingDeviceProviderBinding> findByExternalReference(
             UUID tenantId, ProviderConnectionId connectionId, String externalDeviceReference);
 

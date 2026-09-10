@@ -22,6 +22,7 @@ public final class TrackingService implements TrackingUseCase {
  @Override public List<Device> devices(UUID t,int p,int s,boolean reveal){return store.devices(t,Math.max(0,p),Math.min(Math.max(s,1),100)).stream().map(d->mask(d,reveal)).toList();}
  @Override public Association associate(Context c,UUID d,Associate x){if(fleet.findVehicle(x.vehicleId()).filter(v->v.active()).isEmpty())throw notFound("TRACKING_VEHICLE_NOT_FOUND");return store.associate(c,d,x,clock.instant());}
  @Override public Association endAssociation(Context c,UUID d,UUID a,Instant at){return store.endAssociation(c,d,a,at,clock.instant());}
+ @Override public Optional<Association> activeAssociation(UUID t,UUID d){return store.activeAssociation(t,d);}
  @Override public List<State> vehicles(UUID t,int p,int s,Instant now){return store.states(t,Math.max(0,p),Math.min(Math.max(s,1),100),now);}
  @Override public State latest(UUID t,UUID v,Instant now){return store.state(t,v,now).orElseThrow(()->notFound("TRACKING_VEHICLE_NOT_FOUND"));}
  @Override public HistoryPage positions(UUID t,UUID v,Instant f,Instant to,String c,int l){if(f==null||to==null||!f.isBefore(to)||Duration.between(f,to).compareTo(Duration.ofHours(24))>0)throw new BusinessRuleException("TRACKING_POSITION_INVALID","History requires a valid window of at most 24 hours");return store.positions(t,v,f,to,c,Math.min(Math.max(l,1),500));}

@@ -207,6 +207,14 @@ public final class TrackingProviderManagementService implements TrackingProvider
                 command.currentBindingVersion());
     }
 
+    @Override
+    public java.util.Optional<TrackingDeviceProviderBinding> currentBinding(
+            UUID tenantId, UUID trackingDeviceId) {
+        Objects.requireNonNull(tenantId, "tenantId");
+        Objects.requireNonNull(trackingDeviceId, "trackingDeviceId");
+        return bindings.findCurrentByDevice(tenantId, trackingDeviceId);
+    }
+
     private void validate(
             com.transportlogistics.app.tracking.application.provider.ProviderType type,
             java.net.URI endpoint,

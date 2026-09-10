@@ -62,6 +62,18 @@ class JdbcTrackingDeviceProviderBindingStore implements TrackingDeviceProviderBi
     }
 
     @Override
+    public Optional<TrackingDeviceProviderBinding> findCurrentByDevice(
+            UUID tenantId, UUID trackingDeviceId) {
+        return one("""
+                SELECT * FROM tracking_device_provider_binding
+                WHERE tenant_id=? AND tracking_device_id=? AND lifecycle<>'RETIRED'
+                ORDER BY CASE lifecycle WHEN 'ACTIVE' THEN 0 WHEN 'DRAFT' THEN 1 ELSE 2 END,
+                         updated_at DESC,id DESC
+                LIMIT 1
+                """, tenantId, trackingDeviceId);
+    }
+
+    @Override
     public Optional<TrackingDeviceProviderBinding> findByExternalReference(
             UUID tenantId, ProviderConnectionId connectionId, String externalDeviceReference) {
         String reference = TrackingDeviceProviderBinding.required(
@@ -211,14 +223,17 @@ class JdbcTrackingDeviceProviderBindingStore implements TrackingDeviceProviderBi
 
     private void validateParentsExist(
             UUID tenantId, UUID deviceId, ProviderConnectionId connectionId) {
-        deviceLifecycle(tenantId, deviceId);
+        if ("RETIRED".equals(deviceLifecycle(tenantId, deviceId))) {
+            throw invalid("Retired Tracking device cannot be bound");
+        }
         provider(tenantId, connectionId);
     }
 
     private void validateActivation(
             UUID tenantId, UUID deviceId, ProviderConnectionId connectionId) {
-        if (!"ACTIVE".equals(deviceLifecycle(tenantId, deviceId))) {
-            throw invalid("Tracking device is not active");
+        String lifecycle = deviceLifecycle(tenantId, deviceId);
+        if (!("DRAFT".equals(lifecycle) || "ACTIVE".equals(lifecycle))) {
+            throw invalid("Tracking device is not eligible for an active provider binding");
         }
         if (!"ACTIVE".equals(provider(tenantId, connectionId).lifecycle())) {
             throw invalid("Provider connection is not active");

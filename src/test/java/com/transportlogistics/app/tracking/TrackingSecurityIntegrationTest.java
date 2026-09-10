@@ -12,6 +12,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
 import com.transportlogistics.app.tenancy.CurrentTenant;
 import com.transportlogistics.app.tenancy.TenantExecutionContext;
@@ -21,6 +22,9 @@ import com.transportlogistics.app.tracking.ports.outbound.TrackingStore;
 import com.transportlogistics.app.integration.IntegrationSecretResolver;
 import com.transportlogistics.app.tracking.domain.TrackingModels.ProviderBinding;
 import com.transportlogistics.app.tracking.domain.TrackingModels.ProviderBindingLifecycle;
+import com.transportlogistics.app.tracking.domain.TrackingModels.Device;
+import com.transportlogistics.app.tracking.domain.TrackingModels.DeviceLifecycle;
+import com.transportlogistics.app.tracking.application.provider.*;
 import java.nio.charset.StandardCharsets;
 import java.util.HexFormat;
 import javax.crypto.Mac;
@@ -115,6 +119,53 @@ class TrackingSecurityIntegrationTest {
         when(providerManagementUseCase.providerTypes()).thenReturn(List.of());
         mvc.perform(get("/api/v1/tracking/provider-types").contextPath("/api"))
                 .andExpect(status().isOk());
+    }
+
+    @Test @WithMockUser(authorities = {"TRACKING_VIEW", "TRACKING_DEVICE_MANAGE"})
+    void deviceDetailReturnsSafeCurrentBindingNeededForRefreshRecovery() throws Exception {
+        UUID deviceId = UUID.randomUUID();
+        UUID connectionId = UUID.randomUUID();
+        UUID currentBindingId = UUID.randomUUID();
+        Device device = new Device(deviceId, TENANT, "full-device-reference", "FLESPI", null,
+                DeviceLifecycle.DRAFT, Instant.EPOCH, UUID.randomUUID(), null, 3);
+        when(useCase.get(TENANT, deviceId, true)).thenReturn(device);
+        when(useCase.activeAssociation(TENANT, deviceId)).thenReturn(Optional.empty());
+        when(providerManagementUseCase.currentBinding(TENANT, deviceId)).thenReturn(Optional.of(
+                new TrackingDeviceProviderBinding(currentBindingId, TENANT, deviceId,
+                        new ProviderConnectionId(connectionId), "provider-device-reference",
+                        ProviderSafeConfiguration.empty(), DeviceProviderBindingLifecycle.ACTIVE,
+                        null, null, null, Instant.EPOCH, UUID.randomUUID(), Instant.EPOCH,
+                        UUID.randomUUID(), 7)));
+        when(providerManagementUseCase.get(TENANT, new ProviderConnectionId(connectionId)))
+                .thenReturn(new TrackingProviderConnection(new ProviderConnectionId(connectionId), TENANT,
+                        "provider-key", "FLESPI", "env:SECRET", ProviderType.of("FLESPI"),
+                        "Fleet Flespi", null, ProviderSafeConfiguration.empty(), 5, 100,
+                        ProviderConnectionLifecycle.ACTIVE, ProviderConnectionTestStatus.PASS,
+                        null, null, null, null, null, null, null, Instant.EPOCH, UUID.randomUUID(),
+                        Instant.EPOCH, UUID.randomUUID(), 4));
+
+        mvc.perform(get("/api/v1/tracking/devices/{id}", deviceId).contextPath("/api"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.currentProviderBinding.bindingId")
+                        .value(currentBindingId.toString()))
+                .andExpect(jsonPath("$.currentProviderBinding.providerConnectionId")
+                        .value(connectionId.toString()))
+                .andExpect(jsonPath("$.currentProviderBinding.bindingLifecycle").value("ACTIVE"))
+                .andExpect(jsonPath("$.currentProviderBinding.bindingVersion").value(7))
+                .andExpect(jsonPath("$.currentProviderBinding.maskedExternalDeviceReference")
+                        .value("****ence"))
+                .andExpect(jsonPath("$.currentProviderBinding.credentialReference").doesNotExist());
+    }
+
+    @Test @WithMockUser(authorities = "TRACKING_VIEW")
+    void viewOnlyDeviceDetailDoesNotExposeManagementBindingVersion() throws Exception {
+        UUID deviceId = UUID.randomUUID();
+        when(useCase.get(TENANT, deviceId, false)).thenReturn(new Device(deviceId, TENANT, "****ence",
+                "FLESPI", null, DeviceLifecycle.DRAFT, Instant.EPOCH, UUID.randomUUID(), null, 0));
+        when(useCase.activeAssociation(TENANT, deviceId)).thenReturn(Optional.empty());
+        mvc.perform(get("/api/v1/tracking/devices/{id}", deviceId).contextPath("/api"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.currentProviderBinding").doesNotExist());
     }
 
     @Test

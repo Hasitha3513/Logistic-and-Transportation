@@ -12,6 +12,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 public interface TrackingUseCase {
@@ -22,6 +23,7 @@ public interface TrackingUseCase {
  List<Device> devices(UUID tenantId,int page,int size,boolean revealReferences);
  Association associate(Context context,UUID deviceId,Associate command);
  Association endAssociation(Context context,UUID deviceId,UUID associationId,Instant effectiveTo);
+ Optional<Association> activeAssociation(UUID tenantId,UUID deviceId);
  List<State> vehicles(UUID tenantId,int page,int size,Instant now);
  State latest(UUID tenantId,UUID vehicleId,Instant now);
  HistoryPage positions(UUID tenantId,UUID vehicleId,Instant from,Instant to,String cursor,int limit);

@@ -3,7 +3,20 @@ export type Connectivity = 'CONNECTED' | 'DEGRADED' | 'OFFLINE' | 'UNKNOWN';
 export type Trust = 'TRUSTED' | 'UNTRUSTED' | 'UNKNOWN';
 export interface Position { id:string; vehicleId:string; sourceTimestamp:string; receivedAt:string; latitude:number; longitude:number; accuracyMeters?:number; horizontalAccuracyMeters?:number; trust:Trust; quality:string; ordering:string }
 export interface TrackingState { vehicleId:string; latestReceived?:Position; latestTrusted?:Position; freshness:Freshness; connectivity:Connectivity; policyVersion:string; evaluatedAt:string }
-export interface TrackingDevice { id:string; externalReference:string; providerAlias:string; hardwareSerialReference?:string; lifecycle:'ACTIVE'|'DISABLED'; lastSeenAt?:string; version:number }
+export type TrackingDeviceLifecycle = 'DRAFT' | 'ACTIVE' | 'DISABLED' | 'RETIRED';
+export interface CurrentProviderBinding {
+  bindingId:string; providerConnectionId:string; bindingLifecycle:ProviderConnectionLifecycle;
+  bindingVersion:number; providerDisplayName:string; providerType:string; providerAlias:string;
+  connectionLifecycle:ProviderConnectionLifecycle; maskedExternalDeviceReference:string;
+  safeConfiguration:Record<string,string>;
+}
+export interface CurrentVehicleAssociation { associationId:string; vehicleId:string; effectiveFrom:string }
+export interface TrackingDevice {
+  id:string; externalReference:string; providerAlias:string; hardwareSerialReference?:string;
+  lifecycle:TrackingDeviceLifecycle; registeredAt?:string; lastSeenAt?:string; version:number;
+  currentProviderBinding?:CurrentProviderBinding|null;
+  currentVehicleAssociation?:CurrentVehicleAssociation|null;
+}
 export interface TrackingHistoryPage { items: Position[]; nextCursor?: string }
 
 export type ProviderConnectionLifecycle = 'DRAFT' | 'ACTIVE' | 'DISABLED' | 'RETIRED';
@@ -29,3 +42,7 @@ export interface ProviderConnectionUpdateInput {
 export interface ProviderConnectionTestResult { connection:TrackingProviderConnection; status:ProviderConnectionTestStatus; detailCode?:string }
 export interface DiscoveredTrackingDevice { maskedExternalDeviceReference:string; displayName?:string; capabilities:string[] }
 export interface TrackingDiscoveryResult { status:string; devices:DiscoveredTrackingDevice[]; nextCursor?:string }
+export interface DeviceProviderBindingInput {
+  providerConnectionId:string; externalDeviceReference:string; safeConfiguration:Record<string,string>;
+  lifecycle:'ACTIVE'; currentBindingVersion?:number;
+}
