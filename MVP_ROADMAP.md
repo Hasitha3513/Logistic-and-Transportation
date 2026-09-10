@@ -22,7 +22,7 @@
 > - **Current Milestone:** MVP 1.4 Last-Mile Delivery — 8 / 8 COMPLETE, 100%, CLOSED.
 > - **Active Focus:** Wave B is 5 / 5 COMPLETE / CLOSED; Wave C is active.
 > - **US-48 Technical State:** `IMPLEMENTATION_COMPLETE / ACCEPTANCE_BLOCKED_EXTERNAL_SYSTEM`; pluggable CS01–CS10 are `COMPLETE` and `PLUG_AND_PLAY_FOR_SUPPORTED_ADAPTERS` is technically complete at V76; physical FMC130/Flespi evidence remains outstanding.
-> - **Immediate Next Action:** Continue with `US-48-LIVE-VEHICLE-TRACKING-EXTERNAL-ACCEPTANCE-PREPARATION-001`; real FMC130/Flespi capture remains mandatory, and US-49 must not start.
+> - **Immediate Next Action:** Execute `US-48-FMC130-FLESPI-EXTERNAL-CAPTURE-001`; external-acceptance preparation is COMPLETE, genuine FMC130/Flespi capture remains `PENDING / BLOCKED_EXTERNAL_SYSTEM`, and US-49 must not start.
 
 ---
 
@@ -165,7 +165,7 @@ Development startup now consistently provisions the idempotent PostgreSQL sample
 | ID | User Story Title | Scope / Feature | Status | Verification Evidence |
 | :---: | :--- | :--- | :---: | :--- |
 | `US-47` | Manage Transport Billing | Trip/freight costing, charges, adjustments, cost centres and operational billing finalization | 🟢 `COMPLETE` | Final acceptance PASS; V72; focused 17/17; concurrency 9/9; Maven 1,398/0/0/15 in 06:38; architecture 46/46; Chromium 7/7; `US-47-TRANSPORT-BILLING-FINAL-ACCEPTANCE-001.md` |
-| `US-48` | Track Vehicles Live | Provider-neutral telemetry ingestion, live/last-known state, connectivity, accuracy and freshness | 🔴 `IMPLEMENTATION_COMPLETE / ACCEPTANCE_BLOCKED_EXTERNAL_SYSTEM` | `PLUG_AND_PLAY_FOR_SUPPORTED_ADAPTERS` technically complete: CS01–CS10 COMPLETE at V76; CS10 PostgreSQL 47/47, Tracking Java 112/112, Chromium 24/24, three bursts 1,601.5/1,752.8/1,516.2 msg/s; physical FMC130/provider evidence still unavailable |
+| `US-48` | Track Vehicles Live | Provider-neutral telemetry ingestion, live/last-known state, connectivity, accuracy and freshness | 🔴 `IMPLEMENTATION_COMPLETE / ACCEPTANCE_BLOCKED_EXTERNAL_SYSTEM` | `PLUG_AND_PLAY_FOR_SUPPORTED_ADAPTERS` technically complete: CS01–CS10 COMPLETE at V76; external-acceptance preparation COMPLETE; real capture `PENDING / BLOCKED_EXTERNAL_SYSTEM`; physical FMC130/provider evidence still unavailable |
 | `US-49` | Manage Geofences | Depot, customer-site and unauthorized-zone entry/exit detection | 🟡 `WAVE C / BLOCKED_BY_DEPENDENCY` | Requires US-48 |
 | `US-50` | Monitor Speed | Threshold, road-rule and repeat-speed monitoring | 🟡 `WAVE C / BLOCKED_BY_DEPENDENCY` | Requires US-48 |
 | `US-51` | Monitor Idle Time | Engine-on versus movement duration and qualified fuel-waste estimates | 🟡 `WAVE C / BLOCKED_BY_DEPENDENCY` | Requires US-48 engine-state telemetry |
@@ -236,7 +236,7 @@ Development startup now consistently provisions the idempotent PostgreSQL sample
 
 ```
 Current Status: 72 / 87 COMPLETE; 15 stories remain across Waves C–E
-Queue Head:     US-48-LIVE-VEHICLE-TRACKING-EXTERNAL-ACCEPTANCE-PREPARATION-001
+Queue Head:     US-48-FMC130-FLESPI-EXTERNAL-CAPTURE-001
 ```
 
 1. **Wave A — Integration and exception-control foundations:** 2 / 2 COMPLETE / CLOSED (US-73 and US-78).
