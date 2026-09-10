@@ -32,6 +32,19 @@ public record VehicleGeofenceState(UUID tenantId, UUID geofenceId, UUID vehicleI
                 null, null, 0, null, null, null, 0);
     }
 
+    public static VehicleGeofenceState initializeOutside(
+            UUID tenantId, UUID geofenceId, UUID vehicleId, long definitionVersion,
+            GeofencePosition position, Instant evaluatedAt) {
+        if (!tenantId.equals(position.tenantId()) || !vehicleId.equals(position.vehicleId())
+                || !GeofencePositionEligibility.isEligible(position, evaluatedAt)) {
+            throw new GeofenceRuleException("GEOFENCE_SCOPE_INVALID",
+                    "Outside initialization requires an eligible position in the same scope");
+        }
+        return new VehicleGeofenceState(tenantId, geofenceId, vehicleId, definitionVersion,
+                GeofenceMembership.OUTSIDE, null, 0, null, position.positionId(),
+                position.sourceTimestamp(), 1);
+    }
+
     public GeofenceEvaluationResult observe(Geofence geofence, GeofencePosition position,
                                             Instant evaluatedAt) {
         requireSameScope(geofence, position);

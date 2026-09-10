@@ -86,7 +86,8 @@ class JdbcGeofenceEvaluationJobRepository implements GeofenceEvaluationJobReposi
                 UPDATE tracking_geofence_evaluation_job
                 SET status='PENDING',lease_owner=NULL,lease_until=NULL,updated_at=?
                 WHERE tenant_id=? AND position_id=? AND status='PROCESSING' AND lease_owner=?
-                """, timestamp(now), tenantId, positionId, leaseOwner) == 1;
+                  AND lease_until>?
+                """, timestamp(now), tenantId, positionId, leaseOwner, timestamp(now)) == 1;
     }
 
     @Override
@@ -96,19 +97,53 @@ class JdbcGeofenceEvaluationJobRepository implements GeofenceEvaluationJobReposi
                 UPDATE tracking_geofence_evaluation_job
                 SET status='COMPLETED',lease_owner=NULL,lease_until=NULL,updated_at=?
                 WHERE tenant_id=? AND position_id=? AND status='PROCESSING' AND lease_owner=?
-                """, timestamp(completedAt), tenantId, positionId, leaseOwner);
+                  AND lease_until>?
+                """, timestamp(completedAt), tenantId, positionId, leaseOwner,
+                timestamp(completedAt));
         requireChanged(changed);
     }
 
     @Override
-    public void retry(UUID tenantId, UUID positionId, String leaseOwner, Instant nextAttemptAt) {
+    public void retry(UUID tenantId, UUID positionId, String leaseOwner, Instant now,
+                      Instant nextAttemptAt) {
         requireOwner(leaseOwner);
         int changed = jdbc.update("""
                 UPDATE tracking_geofence_evaluation_job
-                SET status='PENDING',next_attempt_at=?,lease_owner=NULL,lease_until=NULL,updated_at=now()
+                SET status='PENDING',next_attempt_at=?,lease_owner=NULL,lease_until=NULL,updated_at=?
                 WHERE tenant_id=? AND position_id=? AND status='PROCESSING' AND lease_owner=?
-                """, timestamp(nextAttemptAt), tenantId, positionId, leaseOwner);
+                  AND lease_until>?
+                """, timestamp(nextAttemptAt), timestamp(now), tenantId, positionId, leaseOwner,
+                timestamp(now));
         requireChanged(changed);
+    }
+
+    @Override
+    public void fail(UUID tenantId, UUID positionId, String leaseOwner, Instant failedAt) {
+        requireOwner(leaseOwner);
+        int changed = jdbc.update("""
+                UPDATE tracking_geofence_evaluation_job
+                SET status='FAILED',next_attempt_at='infinity',lease_owner=NULL,lease_until=NULL,
+                    updated_at=?
+                WHERE tenant_id=? AND position_id=? AND status='PROCESSING' AND lease_owner=?
+                  AND lease_until>?
+                """, timestamp(failedAt), tenantId, positionId, leaseOwner, timestamp(failedAt));
+        requireChanged(changed);
+    }
+
+    @Override
+    public JobBacklog backlog(Instant now) {
+        return jdbc.queryForObject("""
+                SELECT count(*) FILTER (WHERE next_attempt_at<=? AND (
+                         status='PENDING' OR status='FAILED'
+                         OR (status='PROCESSING' AND lease_until<=?))) queued,
+                       count(*) FILTER (WHERE status='PROCESSING' AND lease_until>?) claimed,
+                       min(next_attempt_at) FILTER (WHERE next_attempt_at<=? AND (
+                         status='PENDING' OR status='FAILED'
+                         OR (status='PROCESSING' AND lease_until<=?))) oldest_due
+                FROM tracking_geofence_evaluation_job
+                """, (row, number) -> new JobBacklog(row.getLong("queued"),
+                        row.getLong("claimed"), instant(row, "oldest_due")), timestamp(now),
+                timestamp(now), timestamp(now), timestamp(now), timestamp(now));
     }
 
     @SuppressWarnings("PMD.UnusedFormalParameter")

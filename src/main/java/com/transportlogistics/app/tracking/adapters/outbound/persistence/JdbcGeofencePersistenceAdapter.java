@@ -137,15 +137,37 @@ class JdbcGeofencePersistenceAdapter implements GeofenceRepositoryPort,
 
     @Override
     public List<Geofence> findActiveCandidates(
-            UUID tenantId, double longitude, double latitude, int limit) {
+            UUID tenantId, UUID vehicleId, double longitude, double latitude, int limit) {
         requireLimit(limit, MAX_PAGE);
         return List.copyOf(jdbc.query("""
-                SELECT * FROM tracking_geofence
-                WHERE tenant_id=? AND lifecycle='ACTIVE'
-                  AND min_longitude<=? AND max_longitude>=?
-                  AND min_latitude<=? AND max_latitude>=?
-                ORDER BY id LIMIT ?
-                """, this::mapGeofence, tenantId, longitude, longitude, latitude, latitude, limit));
+                SELECT geofence.* FROM tracking_geofence geofence
+                WHERE geofence.tenant_id=? AND geofence.lifecycle='ACTIVE' AND (
+                  (geofence.min_longitude<=? AND geofence.max_longitude>=?
+                   AND geofence.min_latitude<=? AND geofence.max_latitude>=?)
+                  OR EXISTS(SELECT 1 FROM tracking_vehicle_geofence_state state
+                    WHERE state.tenant_id=geofence.tenant_id
+                      AND state.geofence_id=geofence.id AND state.vehicle_id=?))
+                ORDER BY geofence.id LIMIT ?
+                """, this::mapGeofence, tenantId, longitude, longitude, latitude, latitude,
+                vehicleId, limit));
+    }
+
+    @Override
+    public List<ActiveGeofenceReference> findActiveOutsideWithoutState(
+            UUID tenantId, UUID vehicleId, double longitude, double latitude, int limit) {
+        requireLimit(limit, MAX_PAGE);
+        return List.copyOf(jdbc.query("""
+                SELECT geofence.id,geofence.version FROM tracking_geofence geofence
+                WHERE geofence.tenant_id=? AND geofence.lifecycle='ACTIVE'
+                  AND NOT (geofence.min_longitude<=? AND geofence.max_longitude>=?
+                    AND geofence.min_latitude<=? AND geofence.max_latitude>=?)
+                  AND NOT EXISTS(SELECT 1 FROM tracking_vehicle_geofence_state state
+                    WHERE state.tenant_id=geofence.tenant_id
+                      AND state.geofence_id=geofence.id AND state.vehicle_id=?)
+                ORDER BY geofence.id LIMIT ?
+                """, (row, number) -> new ActiveGeofenceReference(
+                        uuid(row, "id"), row.getLong("version")), tenantId, longitude,
+                longitude, latitude, latitude, vehicleId, limit));
     }
 
     @Override
@@ -161,6 +183,8 @@ class JdbcGeofencePersistenceAdapter implements GeofenceRepositoryPort,
     @Override
     public Optional<VehicleGeofenceState> findForUpdate(
             UUID tenantId, UUID geofenceId, UUID vehicleId) {
+        jdbc.queryForObject("SELECT pg_advisory_xact_lock(hashtextextended(?::text,50))",
+                String.class, tenantId + ":" + geofenceId + ":" + vehicleId);
         return jdbc.query("""
                 SELECT * FROM tracking_vehicle_geofence_state
                 WHERE tenant_id=? AND geofence_id=? AND vehicle_id=? FOR UPDATE

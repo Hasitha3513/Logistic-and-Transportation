@@ -124,11 +124,17 @@ class GeofencePersistencePostgreSqlAcceptanceTest extends PostgreSqlIntegrationT
         geofences.save(draft, 0);
         draft.activate(NOW.plusSeconds(1), ACTOR);
         geofences.save(draft, 0);
-        assertThat(geofences.findActiveCandidates(tenant, 79.5, 6.5, 10))
+        assertThat(geofences.findActiveCandidates(tenant, UUID.randomUUID(), 79.5, 6.5, 10))
                 .extracting(Geofence::id).containsExactly(draft.id());
-        assertThat(geofences.findActiveCandidates(UUID.randomUUID(), 79.5, 6.5, 10)).isEmpty();
+        assertThat(geofences.findActiveCandidates(
+                UUID.randomUUID(), UUID.randomUUID(), 79.5, 6.5, 10)).isEmpty();
+        assertThat(geofences.findActiveOutsideWithoutState(
+                tenant, UUID.randomUUID(), 81, 8, 10)).singleElement()
+                .extracting(GeofenceRepositoryPort.ActiveGeofenceReference::geofenceId)
+                .isEqualTo(draft.id());
         assertThat(geofences.countActiveForUpdate(tenant)).isEqualTo(1);
-        assertThatThrownBy(() -> geofences.findActiveCandidates(tenant, 79.5, 6.5, 501))
+        assertThatThrownBy(() -> geofences.findActiveCandidates(
+                tenant, UUID.randomUUID(), 79.5, 6.5, 501))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
@@ -194,7 +200,7 @@ class GeofencePersistencePostgreSqlAcceptanceTest extends PostgreSqlIntegrationT
         assertThat(jobs.release(fixture.tenant(), fixture.position(), "worker-b", NOW)).isFalse();
         assertThat(jobs.renew(fixture.tenant(), fixture.position(), "worker-a", NOW,
                 NOW.plusSeconds(40))).isTrue();
-        jobs.retry(fixture.tenant(), fixture.position(), "worker-a", NOW.plusSeconds(5));
+        jobs.retry(fixture.tenant(), fixture.position(), "worker-a", NOW, NOW.plusSeconds(5));
         GeofenceEvaluationJob retried = jobs.claimDue(
                 "worker-b", NOW.plusSeconds(5), NOW.plusSeconds(35), 1).getFirst();
         assertThat(retried.attempt()).isEqualTo(2);

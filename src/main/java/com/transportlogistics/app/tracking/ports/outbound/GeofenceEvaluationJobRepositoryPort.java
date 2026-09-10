@@ -21,5 +21,13 @@ public interface GeofenceEvaluationJobRepositoryPort {
 
     void complete(UUID tenantId, UUID positionId, String leaseOwner, Instant completedAt);
 
-    void retry(UUID tenantId, UUID positionId, String leaseOwner, Instant nextAttemptAt);
+    void retry(UUID tenantId, UUID positionId, String leaseOwner, Instant now,
+               Instant nextAttemptAt);
+
+    void fail(UUID tenantId, UUID positionId, String leaseOwner, Instant failedAt);
+
+    JobBacklog backlog(Instant now);
+
+    record JobBacklog(long queued, long claimed, Instant oldestDueAt) {
+    }
 }

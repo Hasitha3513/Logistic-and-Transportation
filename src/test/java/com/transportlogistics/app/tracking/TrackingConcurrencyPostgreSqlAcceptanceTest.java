@@ -41,6 +41,7 @@ class TrackingConcurrencyPostgreSqlAcceptanceTest extends PostgreSqlIntegrationT
         var results = race(() -> ingest(fixture, command), () -> ingest(fixture, command));
         assertThat(results).allMatch(value -> value instanceof List<?>);
         assertThat(count("tracking_position", fixture.tenantId())).isEqualTo(1);
+        assertThat(count("tracking_geofence_evaluation_job", fixture.tenantId())).isEqualTo(1);
     }
 
     @Test
@@ -133,6 +134,7 @@ class TrackingConcurrencyPostgreSqlAcceptanceTest extends PostgreSqlIntegrationT
         })).isInstanceOf(IllegalStateException.class);
         assertThat(count("tracking_position", fixture.tenantId())).isZero();
         assertThat(count("tracking_vehicle_latest", fixture.tenantId())).isZero();
+        assertThat(count("tracking_geofence_evaluation_job", fixture.tenantId())).isZero();
     }
 
     @Test

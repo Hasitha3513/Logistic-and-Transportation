@@ -17,8 +17,14 @@ public interface GeofenceRepositoryPort {
     List<Geofence> find(UUID tenantId, GeofenceType type, GeofenceLifecycle lifecycle,
                         UUID locationId, int page, int size);
 
-    List<Geofence> findActiveCandidates(UUID tenantId, double longitude, double latitude,
-                                        int limit);
+    List<Geofence> findActiveCandidates(UUID tenantId, UUID vehicleId, double longitude,
+                                        double latitude, int limit);
+
+    List<ActiveGeofenceReference> findActiveOutsideWithoutState(
+            UUID tenantId, UUID vehicleId, double longitude, double latitude, int limit);
 
     long countActiveForUpdate(UUID tenantId);
+
+    record ActiveGeofenceReference(UUID geofenceId, long definitionVersion) {
+    }
 }
