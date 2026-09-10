@@ -18,7 +18,7 @@ class DeliveryNotificationPostgreSqlAcceptanceTest extends PostgreSqlIntegration
     void v58AssetsRemainValidAtCurrentV76Head() {
         assertThat(jdbc.queryForObject("select max(version::integer) from flyway_schema_history where success",
             Integer.class))
-            .isEqualTo(76);
+            .isEqualTo(77);
         assertThat(jdbc.queryForObject("select count(*) from flyway_schema_history where version='58' and success",
             Integer.class)).isEqualTo(1);
         assertThat(jdbc.queryForObject("select count(*) from notification_template "

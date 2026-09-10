@@ -14,6 +14,11 @@ public interface GeofenceEvaluationJobRepositoryPort {
     List<GeofenceEvaluationJob> claimDue(String leaseOwner, Instant now,
                                          Instant leaseUntil, int limit);
 
+    boolean renew(UUID tenantId, UUID positionId, String leaseOwner, Instant now,
+                  Instant leaseUntil);
+
+    boolean release(UUID tenantId, UUID positionId, String leaseOwner, Instant now);
+
     void complete(UUID tenantId, UUID positionId, String leaseOwner, Instant completedAt);
 
     void retry(UUID tenantId, UUID positionId, String leaseOwner, Instant nextAttemptAt);

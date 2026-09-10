@@ -12,9 +12,13 @@ public interface GeofenceRepositoryPort {
 
     Optional<Geofence> find(UUID tenantId, UUID geofenceId);
 
+    Optional<Geofence> findForUpdate(UUID tenantId, UUID geofenceId);
+
     List<Geofence> find(UUID tenantId, GeofenceType type, GeofenceLifecycle lifecycle,
                         UUID locationId, int page, int size);
 
     List<Geofence> findActiveCandidates(UUID tenantId, double longitude, double latitude,
                                         int limit);
+
+    long countActiveForUpdate(UUID tenantId);
 }

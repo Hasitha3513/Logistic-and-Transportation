@@ -37,8 +37,8 @@ class TrackingProviderConnectionPostgreSqlAcceptanceTest extends PostgreSqlInteg
     @Autowired Flyway flyway;
 
     @Test
-    void cleanSchemaReachesV76AndPreservesTheProviderConnectionAuthority() {
-        assertThat(flyway.info().current().getVersion().getVersion()).isEqualTo("76");
+    void cleanSchemaReachesCurrentHeadAndPreservesTheProviderConnectionAuthority() {
+        assertThat(flyway.info().current().getVersion().getVersion()).isEqualTo("77");
         assertThat(columns("tracking_provider_binding")).contains(
                 "provider_type", "display_name", "endpoint_uri", "safe_configuration",
                 "poll_interval_seconds", "page_size", "test_status", "last_tested_at",
