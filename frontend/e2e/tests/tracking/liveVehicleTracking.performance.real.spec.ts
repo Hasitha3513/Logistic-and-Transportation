@@ -19,6 +19,7 @@ test('accepts 200 msg/s sustained and a 1,000 msg/s burst through signed HTTP in
     && item.lifecycle === 'ACTIVE')?.id;
   expect(fixtureConnectionId).toBeTruthy();
   const devices: string[] = [];
+  const vehicles: string[] = [];
   for (let index = 0; index < 2; index++) {
     const vehicleResponse = await api.post('/api/vehicles', { data: {
       registrationNumber: `${suffix}-${index}`.toUpperCase(), categoryId: categories[0].id, typeId: types[0].id,
@@ -50,6 +51,7 @@ test('accepts 200 msg/s sustained and a 1,000 msg/s burst through signed HTTP in
     });
     expect(activated.status(), await activated.text()).toBe(200);
     devices.push(deviceId);
+    vehicles.push(vehicleId);
   }
 
   const sustainedStart = performance.now();
@@ -65,8 +67,38 @@ test('accepts 200 msg/s sustained and a 1,000 msg/s burst through signed HTTP in
   console.log(`US48_BURST messages=1000 elapsedMs=${burstMillis.toFixed(1)} rate=${(1000 / (burstMillis / 1000)).toFixed(1)}msg/s`);
   for (const response of burst) expect(response.status(), await response.text()).toBe(200);
   expect(1000 / (burstMillis / 1000)).toBeGreaterThanOrEqual(1000);
+
+  const latestLatencies = await measure(20, async () => api.get(`/api/v1/tracking/vehicles/${vehicles[0]}/latest`));
+  const from = encodeURIComponent(new Date(Date.now() - 23 * 60 * 60_000).toISOString());
+  const to = encodeURIComponent(new Date(Date.now() + 60_000).toISOString());
+  const historyLatencies = await measure(20, async () => api.get(
+    `/api/v1/tracking/vehicles/${vehicles[0]}/positions?from=${from}&to=${to}&page=0&size=100`,
+  ));
+  const latestP95 = percentile95(latestLatencies);
+  const historyP95 = percentile95(historyLatencies);
+  console.log(`US48_LATEST_P95 milliseconds=${latestP95.toFixed(1)}`);
+  console.log(`US48_HISTORY_P95 milliseconds=${historyP95.toFixed(1)}`);
+  expect(latestP95).toBeLessThanOrEqual(200);
+  expect(historyP95).toBeLessThanOrEqual(500);
   await api.dispose();
 });
+
+async function measure(samples: number, requestCall: () => Promise<import('@playwright/test').APIResponse>) {
+  const latencies: number[] = [];
+  for (let index = 0; index < samples; index++) {
+    const started = performance.now();
+    const response = await requestCall();
+    latencies.push(performance.now() - started);
+    expect(response.status(), await response.text()).toBe(200);
+    await response.dispose();
+  }
+  return latencies;
+}
+
+function percentile95(values: number[]) {
+  const ordered = [...values].sort((left, right) => left - right);
+  return ordered[Math.ceil(ordered.length * 0.95) - 1];
+}
 
 function batch(deviceId: string, offset: number, size: number) {
   const source = Date.now();

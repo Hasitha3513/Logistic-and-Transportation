@@ -21,13 +21,16 @@ class NotificationProducerCoverageTest {
         "DELIVERY_ETA_RISK_CHANGED",
         "DELIVERY_COMPLETED",
         "DELIVERY_FAILED_ATTEMPT_RECORDED",
-        "DELIVERY_REDELIVERY_SCHEDULED"
+        "DELIVERY_REDELIVERY_SCHEDULED",
+        "VEHICLE_GEOFENCE_TRANSITIONED_V1"
     );
 
-    @Test void everyAndOnlyFrozenMvpCatalogueEventHasProductionProducerEvidence() {
+    @Test void everyActiveProductionEventHasProducerEvidence() {
         var catalogueEvents = NotificationEventCatalogue.all().stream()
             .map(NotificationEventDefinition::eventType).collect(Collectors.toSet());
-        assertThat(catalogueEvents).hasSize(13).isEqualTo(PRODUCTION_PRODUCERS);
+        assertThat(catalogueEvents).hasSize(14).contains("VEHICLE_GEOFENCE_TRANSITIONED_V1");
+        assertThat(catalogueEvents).filteredOn(PRODUCTION_PRODUCERS::contains)
+            .containsExactlyInAnyOrderElementsOf(PRODUCTION_PRODUCERS);
         assertThat(catalogueEvents).doesNotContain("DRIVER_DRUG_TEST_EXPIRING", "FUEL_LIMIT_EXCEEDED", "FUEL_EXCEPTION");
     }
 }

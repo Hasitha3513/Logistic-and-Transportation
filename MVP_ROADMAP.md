@@ -6,7 +6,7 @@
 ![Completed](https://img.shields.io/badge/Completed-72%20%2F%2087-2da44e.svg?style=for-the-badge&logo=checkmarx)
 ![Progress](https://img.shields.io/badge/Progress-82.8%25-brightgreen.svg?style=for-the-badge&logo=speedtest)
 ![MVP 1.4 Closed](https://img.shields.io/badge/MVP%201.4%20Last--Mile-8%20%2F%208-2da44e.svg?style=for-the-badge&logo=pinboard)
-![Database](https://img.shields.io/badge/PostgreSQL%20%2F%20Flyway-V78-8a63d2.svg?style=for-the-badge&logo=postgresql)
+![Database](https://img.shields.io/badge/PostgreSQL%20%2F%20Flyway-V79-8a63d2.svg?style=for-the-badge&logo=postgresql)
 
 </div>
 
@@ -14,7 +14,7 @@
 
 > [!IMPORTANT]
 > **Authoritative Baseline & Current State:**
-> - **Last Reconciled:** `2026-09-10`
+> - **Last Reconciled:** `2026-09-11`
 > - **Authority Order:** Original Requirements (`Traspotation & logistic.docx`), Frozen Architecture/Contracts, Verified Production Code/Tests, then Roadmap.
 > - **MVP 1.3 Delivery Operations:** 7 / 7 COMPLETE (100%) - CLOSED
 > - **MVP 1.4 Last-Mile Delivery:** 8 / 8 COMPLETE (US-63 through US-70 Accepted & Closed)
@@ -22,7 +22,7 @@
 > - **Current Milestone:** MVP 1.4 Last-Mile Delivery — 8 / 8 COMPLETE, 100%, CLOSED.
 > - **Active Focus:** Wave B is 5 / 5 COMPLETE / CLOSED; Wave C is active.
 > - **US-48 Technical State:** `IMPLEMENTATION_COMPLETE / ACCEPTANCE_BLOCKED_EXTERNAL_SYSTEM`; pluggable CS01–CS10 are `COMPLETE` and `PLUG_AND_PLAY_FOR_SUPPORTED_ADAPTERS` is technically complete at V76; physical FMC130/Flespi evidence remains outstanding.
-> - **Immediate Next Action:** Execute `US-49-MANAGE-GEOFENCES-CS05-NOTIFICATION-INTEGRATION-001`; CS01–CS04A are verified complete at V78, while US-48 physical acceptance remains `ON_HOLD_EXTERNAL_PREREQUISITE` with no accounting change.
+> - **Immediate Next Action:** Execute `US-49-MANAGE-GEOFENCES-CS05-NOTIFICATION-INTEGRATION-001-RERUN`; CS01–CS05A are verified complete at V79, while US-48 physical acceptance remains `ON_HOLD_EXTERNAL_PREREQUISITE` with no accounting change.
 
 ---
 
@@ -166,7 +166,7 @@ Development startup now consistently provisions the idempotent PostgreSQL sample
 | :---: | :--- | :--- | :---: | :--- |
 | `US-47` | Manage Transport Billing | Trip/freight costing, charges, adjustments, cost centres and operational billing finalization | 🟢 `COMPLETE` | Final acceptance PASS; V72; focused 17/17; concurrency 9/9; Maven 1,398/0/0/15 in 06:38; architecture 46/46; Chromium 7/7; `US-47-TRANSPORT-BILLING-FINAL-ACCEPTANCE-001.md` |
 | `US-48` | Track Vehicles Live | Provider-neutral telemetry ingestion, live/last-known state, connectivity, accuracy and freshness | 🔴 `IMPLEMENTATION_COMPLETE / ACCEPTANCE_BLOCKED_EXTERNAL_SYSTEM` | CS01–CS10 technically complete at V76; external capture `ON_HOLD_EXTERNAL_PREREQUISITE`; rerun only when physical FMC130/live Flespi facts change; physical acceptance remains mandatory |
-| `US-49` | Manage Geofences | Depot, customer-site and unauthorized-zone entry/exit detection | 🟡 `IMPLEMENTATION_IN_PROGRESS` | CS01–CS04A COMPLETE: V77 persistence/evaluation, V78 permissions, Tenant-safe management/query APIs, runtime RBAC, idempotency and safe audit; CS05 Notification integration is next; no US-48 acceptance inheritance |
+| `US-49` | Manage Geofences | Depot, customer-site and unauthorized-zone entry/exit detection | 🟡 `IMPLEMENTATION_IN_PROGRESS` | CS01–CS05A COMPLETE: V77 persistence/evaluation, V78 permissions, Tenant-safe management/query APIs, runtime RBAC/idempotency/audit, and V79 Notification catalogue seed; CS05 Notification integration rerun is next; no US-48 acceptance inheritance |
 | `US-50` | Monitor Speed | Threshold, road-rule and repeat-speed monitoring | 🟡 `TECHNICAL_DEPENDENCY_SATISFIED / READY_FOR_PRODUCT_DECISIONS` | Frozen optional speed/Vehicle/time/trust contracts are sufficient for implementation; real speed fidelity remains a final-evidence gate |
 | `US-51` | Monitor Idle Time | Engine-on versus movement duration and qualified fuel-waste estimates | 🟡 `WAVE C / BLOCKED_BY_REQUIRED_TELEMETRY_CAPABILITY` | Current FLESPI does not advertise IGNITION and no accepted alternate engine-state source exists |
 | `US-52` | Monitor Route Deviations | Planned-versus-actual comparison, severity and audited approval | 🟡 `TECHNICAL_DEPENDENCY_SATISFIED / READY_FOR_PRODUCT_DECISIONS` | Frozen trusted-position/source-time and accepted Routing contracts are sufficient |
@@ -236,7 +236,7 @@ Development startup now consistently provisions the idempotent PostgreSQL sample
 
 ```
 Current Status: 72 / 87 COMPLETE; 15 stories remain across Waves C–E
-Queue Head:     US-49-MANAGE-GEOFENCES-CS05-NOTIFICATION-INTEGRATION-001
+Queue Head:     US-49-MANAGE-GEOFENCES-CS05-NOTIFICATION-INTEGRATION-001-RERUN
 ```
 
 1. **Wave A — Integration and exception-control foundations:** 2 / 2 COMPLETE / CLOSED (US-73 and US-78).

@@ -3,6 +3,8 @@ package com.transportlogistics.app.tracking;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.transportlogistics.app.support.PostgreSqlIntegrationTest;
+import com.transportlogistics.app.tenancy.TenantContextExecutor;
+import com.transportlogistics.app.tenancy.TenantExecutionContext;
 import com.transportlogistics.app.tracking.domain.geofence.Geofence;
 import com.transportlogistics.app.tracking.domain.geofence.GeofenceAlertPolicy;
 import com.transportlogistics.app.tracking.domain.geofence.GeofencePolygon;
@@ -31,6 +33,7 @@ class GeofenceEvaluationPostgreSqlAcceptanceTest extends PostgreSqlIntegrationTe
     @Autowired VehicleGeofenceStateRepositoryPort states;
     @Autowired GeofenceTransitionRepositoryPort transitions;
     @Autowired JdbcTemplate jdbc;
+    @Autowired TenantContextExecutor tenantContexts;
 
     @Test
     void outsideThenTwoInsidePositionsProduceOneDurableUnauthorizedTransition() {
@@ -47,6 +50,21 @@ class GeofenceEvaluationPostgreSqlAcceptanceTest extends PostgreSqlIntegrationTe
                 null, null, null, null, 10, false)).singleElement()
                 .extracting(transition -> transition.transitionType())
                 .isEqualTo(GeofenceTransitionType.UNAUTHORIZED_ZONE_ENTERED);
+        var outbox = jdbc.queryForMap("""
+                SELECT event_id,tenant_id,event_type,event_version,aggregate_type,payload::text payload
+                FROM integration_outbox_event
+                WHERE tenant_id=? AND consumer_name='geofence-transition-notification-bridge'
+                """, fixture.tenant());
+        assertThat(outbox).containsEntry("tenant_id", fixture.tenant())
+                .containsEntry("event_type", "VEHICLE_GEOFENCE_TRANSITIONED_V1")
+                .containsEntry("event_version", 1)
+                .containsEntry("aggregate_type", "GEOFENCE_TRANSITION");
+        assertThat((String) outbox.get("payload"))
+                .contains("\"geofenceId\"", "\"vehicleId\"", "\"locationId\": null",
+                        "\"geofenceType\"", "\"transition\"", "\"severity\"",
+                        "\"sourceTimestamp\"", "\"definitionVersion\"")
+                .doesNotContain("latitude", "longitude", "polygon", "device", "provider",
+                        "imei", "credential", "driver", "customer", "address");
     }
 
     @Test
@@ -66,7 +84,10 @@ class GeofenceEvaluationPostgreSqlAcceptanceTest extends PostgreSqlIntegrationTe
     }
 
     private void evaluate(UUID positionId, Instant evaluatedAt) {
-        evaluator.evaluate(positions.find(tenant(positionId), positionId).orElseThrow(), evaluatedAt);
+        UUID tenantId = tenant(positionId);
+        tenantContexts.within(new TenantExecutionContext(
+                tenantId, ACTOR, "geofence-acceptance", "geofence-acceptance"), () ->
+                evaluator.evaluate(positions.find(tenantId, positionId).orElseThrow(), evaluatedAt));
     }
 
     private UUID tenant(UUID positionId) {

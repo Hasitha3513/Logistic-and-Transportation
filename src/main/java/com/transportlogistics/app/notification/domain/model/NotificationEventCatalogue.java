@@ -67,6 +67,11 @@ public final class NotificationEventCatalogue {
         addCustomer(definitions, "DELIVERY_REDELIVERY_SCHEDULED", NotificationSeverity.INFO,
             required("deliveryNumber", "status", "scheduledWindowStart", "scheduledWindowEnd",
                 "customerDisplayName"), Set.of(), 1440, "scheduleId");
+        definitions.put("VEHICLE_GEOFENCE_TRANSITIONED_V1", new NotificationEventDefinition(
+            "VEHICLE_GEOFENCE_TRANSITIONED_V1", "tracking", NotificationSeverity.INFO,
+            Set.of(NotificationChannel.IN_APP), "VEHICLE_GEOFENCE_TRANSITIONED_V1",
+            required("geofenceId", "vehicleId", "geofenceType", "transition", "sourceTimestamp",
+                "definitionVersion"), Set.of("locationId"), 0, null));
         return Collections.unmodifiableMap(new LinkedHashMap<>(definitions));
     }
 

@@ -65,8 +65,6 @@ public final class GeofenceEvaluationService implements GeofenceEvaluationUseCas
             GeofenceEvaluationResult result = transaction.execute(
                     () -> evaluateCandidate(candidate, position, evaluatedAt));
             results.add(result);
-            result.transition().filter(ignored -> publicationEnabled(candidate, result))
-                    .ifPresent(transition -> publisher.publish(toEvent(transition)));
         }
         return List.copyOf(results);
     }
@@ -102,7 +100,12 @@ public final class GeofenceEvaluationService implements GeofenceEvaluationUseCas
         GeofenceEvaluationResult result = state.observe(current, position, evaluatedAt);
         if (!result.state().equals(state)) {
             states.save(result.state(), state.version());
-            result.transition().ifPresent(transitions::append);
+            result.transition().ifPresent(transition -> {
+                transitions.append(transition);
+                if (publicationEnabled(current, result)) {
+                    publisher.publish(toEvent(transition));
+                }
+            });
         }
         return result;
     }

@@ -1,6 +1,8 @@
 package com.transportlogistics.app.tracking.adapters.inbound.geofence;
 
 import com.transportlogistics.app.shared.domain.BusinessRuleException;
+import com.transportlogistics.app.tenancy.TenantContextExecutor;
+import com.transportlogistics.app.tenancy.TenantExecutionContext;
 import com.transportlogistics.app.tracking.adapters.configuration.GeofenceEvaluatorSettings;
 import com.transportlogistics.app.tracking.domain.geofence.GeofenceEvaluationJob;
 import com.transportlogistics.app.tracking.ports.inbound.GeofenceEvaluationUseCase;
@@ -29,12 +31,15 @@ import org.springframework.stereotype.Component;
 @Component
 @ConditionalOnProperty(name = "app.tracking.geofence-evaluator.enabled", havingValue = "true")
 public final class GeofenceEvaluationCoordinator {
+    private static final UUID SYSTEM_ACTOR =
+            UUID.fromString("00000000-0000-0000-0000-000000000049");
     private final GeofenceEvaluationJobRepositoryPort jobs;
     private final GeofencePositionRepositoryPort positions;
     private final GeofenceEvaluationUseCase evaluator;
     private final GeofenceEvaluatorSettings settings;
     private final MeterRegistry meters;
     private final Clock clock;
+    private final TenantContextExecutor tenantContexts;
     private final String leaseOwner;
     private final ThreadPoolExecutor workers;
     private final java.util.Set<JobKey> localJobs = ConcurrentHashMap.newKeySet();
@@ -44,21 +49,23 @@ public final class GeofenceEvaluationCoordinator {
     public GeofenceEvaluationCoordinator(
             GeofenceEvaluationJobRepositoryPort jobs, GeofencePositionRepositoryPort positions,
             GeofenceEvaluationUseCase evaluator, GeofenceEvaluatorSettings settings,
-            MeterRegistry meters, Clock clock) {
-        this(jobs, positions, evaluator, settings, meters, clock,
+            MeterRegistry meters, Clock clock, TenantContextExecutor tenantContexts) {
+        this(jobs, positions, evaluator, settings, meters, clock, tenantContexts,
                 "geofence-" + UUID.randomUUID());
     }
 
     GeofenceEvaluationCoordinator(
             GeofenceEvaluationJobRepositoryPort jobs, GeofencePositionRepositoryPort positions,
             GeofenceEvaluationUseCase evaluator, GeofenceEvaluatorSettings settings,
-            MeterRegistry meters, Clock clock, String leaseOwner) {
+            MeterRegistry meters, Clock clock, TenantContextExecutor tenantContexts,
+            String leaseOwner) {
         this.jobs = jobs;
         this.positions = positions;
         this.evaluator = evaluator;
         this.settings = settings;
         this.meters = meters;
         this.clock = clock;
+        this.tenantContexts = tenantContexts;
         this.leaseOwner = leaseOwner;
         BlockingQueue<Runnable> queue = settings.queueCapacity() == 0
                 ? new SynchronousQueue<>() : new ArrayBlockingQueue<>(settings.queueCapacity());
@@ -114,15 +121,8 @@ public final class GeofenceEvaluationCoordinator {
                     now.plus(settings.leaseDuration()))) {
                 return;
             }
-            var position = positions.find(job.tenantId(), job.positionId());
-            if (position.isPresent()) {
-                evaluator.evaluate(position.get(), now).stream()
-                        .flatMap(evaluation -> evaluation.transition().stream())
-                        .forEach(transition -> meters.summary(
-                                "tracking.geofence.evaluator.transition.latency.seconds").record(
-                                Math.max(0, java.time.Duration.between(
-                                        transition.sourceTimestamp(), clock.instant()).toSeconds())));
-            }
+            tenantContexts.within(new TenantExecutionContext(job.tenantId(), SYSTEM_ACTOR,
+                    "tracking-geofence-evaluator", leaseOwner), () -> evaluate(job, now));
             jobs.complete(job.tenantId(), job.positionId(), leaseOwner, clock.instant());
         } catch (BusinessRuleException exception) {
             if ("GEOFENCE_ACTIVE_LIMIT_EXCEEDED".equals(exception.code())) {
@@ -138,6 +138,18 @@ public final class GeofenceEvaluationCoordinator {
         } finally {
             localJobs.remove(new JobKey(job.tenantId(), job.positionId()));
             meters.counter("tracking.geofence.evaluator.jobs", "result", result).increment();
+        }
+    }
+
+    private void evaluate(GeofenceEvaluationJob job, Instant now) {
+        var position = positions.find(job.tenantId(), job.positionId());
+        if (position.isPresent()) {
+            evaluator.evaluate(position.get(), now).stream()
+                    .flatMap(evaluation -> evaluation.transition().stream())
+                    .forEach(transition -> meters.summary(
+                            "tracking.geofence.evaluator.transition.latency.seconds").record(
+                            Math.max(0, java.time.Duration.between(
+                                    transition.sourceTimestamp(), clock.instant()).toSeconds())));
         }
     }
 

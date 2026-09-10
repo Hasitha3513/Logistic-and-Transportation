@@ -8,6 +8,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.transportlogistics.app.tracking.adapters.configuration.GeofenceEvaluatorSettings;
+import com.transportlogistics.app.tenancy.TenantContextExecutor;
 import com.transportlogistics.app.tracking.domain.TrackingModels.Ordering;
 import com.transportlogistics.app.tracking.domain.TrackingModels.Trust;
 import com.transportlogistics.app.tracking.domain.geofence.GeofenceEvaluationJob;
@@ -26,6 +27,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 import org.junit.jupiter.api.Test;
 
 class GeofenceEvaluationCoordinatorTest {
@@ -36,6 +38,9 @@ class GeofenceEvaluationCoordinatorTest {
         var jobs = mock(GeofenceEvaluationJobRepositoryPort.class);
         var positions = mock(GeofencePositionRepositoryPort.class);
         var evaluator = mock(GeofenceEvaluationUseCase.class);
+        var tenantContexts = mock(TenantContextExecutor.class);
+        when(tenantContexts.within(any(), any(Supplier.class))).thenAnswer(invocation ->
+                ((Supplier<?>) invocation.getArgument(1)).get());
         UUID tenant = UUID.randomUUID();
         UUID first = UUID.randomUUID();
         UUID second = UUID.randomUUID();
@@ -57,7 +62,7 @@ class GeofenceEvaluationCoordinatorTest {
         var coordinator = new GeofenceEvaluationCoordinator(jobs, positions, evaluator,
                 new GeofenceEvaluatorSettings(2, 1, 0, Duration.ofSeconds(30),
                         Duration.ofSeconds(5), Duration.ofSeconds(1)),
-                new SimpleMeterRegistry(), Clock.fixed(NOW, ZoneOffset.UTC), "owner");
+                new SimpleMeterRegistry(), Clock.fixed(NOW, ZoneOffset.UTC), tenantContexts, "owner");
 
         coordinator.tick();
         started.await(2, TimeUnit.SECONDS);

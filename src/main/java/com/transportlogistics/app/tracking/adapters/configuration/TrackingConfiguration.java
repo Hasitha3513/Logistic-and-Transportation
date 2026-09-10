@@ -17,7 +17,6 @@ import com.transportlogistics.app.tracking.ports.outbound.GeofenceRepositoryPort
 import com.transportlogistics.app.tracking.ports.outbound.GeofenceLocationLookupPort;
 import com.transportlogistics.app.tracking.ports.outbound.GeofenceManagementSupportPort;
 import com.transportlogistics.app.tracking.ports.outbound.GeofenceManagementTransactionPort;
-import com.transportlogistics.app.tracking.ports.outbound.GeofenceTransitionPublisherPort;
 import com.transportlogistics.app.tracking.ports.outbound.GeofenceTransitionRepositoryPort;
 import com.transportlogistics.app.tracking.ports.outbound.VehicleGeofenceStateRepositoryPort;
 import java.time.Clock;
@@ -28,8 +27,7 @@ import org.springframework.context.annotation.*;
  @Bean TrackingMaintenanceService trackingMaintenanceUseCase(TrackingStore store,Clock clock){return new TrackingMaintenanceService(store,clock);}
  @Bean TrackingProviderAdapterRegistry trackingProviderAdapterRegistry(List<TrackingProviderAdapter> adapters){return new TrackingProviderAdapterRegistry(adapters);}
  @Bean TrackingProviderManagementService trackingProviderManagementUseCase(TrackingProviderConnectionStore connections,TrackingDeviceProviderBindingStore bindings,TrackingProviderAdapterRegistry adapters,IntegrationSecretResolver secrets,Clock clock){return new TrackingProviderManagementService(connections,bindings,adapters,secrets,clock);}
- @Bean GeofenceTransitionPublisherPort geofenceTransitionPublisherPort(){return event->{ };}
- @Bean GeofenceEvaluationService geofenceEvaluationUseCase(GeofenceRepositoryPort geofences,VehicleGeofenceStateRepositoryPort states,GeofenceTransitionRepositoryPort transitions,GeofenceTransitionPublisherPort publisher,GeofenceEvaluationTransactionPort transaction){return new GeofenceEvaluationService(geofences,states,transitions,publisher,transaction);}
+ @Bean GeofenceEvaluationService geofenceEvaluationUseCase(GeofenceRepositoryPort geofences,VehicleGeofenceStateRepositoryPort states,GeofenceTransitionRepositoryPort transitions,com.transportlogistics.app.tracking.ports.outbound.GeofenceTransitionPublisherPort publisher,GeofenceEvaluationTransactionPort transaction){return new GeofenceEvaluationService(geofences,states,transitions,publisher,transaction);}
  @Bean GeofenceManagementService geofenceManagementService(GeofenceRepositoryPort geofences,VehicleGeofenceStateRepositoryPort states,GeofenceTransitionRepositoryPort transitions,GeofenceLocationLookupPort locations,GeofenceManagementSupportPort support,GeofenceManagementTransactionPort transaction){return new GeofenceManagementService(geofences,states,transitions,locations,support,transaction);}
  @Bean @Primary SecuredGeofenceUseCases securedGeofenceUseCases(GeofenceManagementService service){return new SecuredGeofenceUseCases(service,service);}
 }

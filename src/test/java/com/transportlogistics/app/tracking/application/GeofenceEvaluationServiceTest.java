@@ -6,6 +6,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyDouble;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.clearInvocations;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -61,11 +63,11 @@ class GeofenceEvaluationServiceTest {
                 ((Supplier<?>) invocation.getArgument(0)).get());
         when(geofences.countActiveForUpdate(TENANT)).thenReturn(1L);
         when(geofences.findActiveCandidates(any(), any(), anyDouble(), anyDouble(), anyInt()))
-                .thenReturn(List.of(geofence));
+                .thenAnswer(ignored -> List.of(geofence));
         when(geofences.findActiveOutsideWithoutState(
                 any(), any(), anyDouble(), anyDouble(), anyInt())).thenReturn(List.of());
-        when(geofences.findForUpdate(TENANT, geofence.id())).thenReturn(Optional.of(geofence));
-        when(states.findForUpdate(TENANT, geofence.id(), VEHICLE))
+        when(geofences.findForUpdate(any(), any())).thenAnswer(ignored -> Optional.of(geofence));
+        when(states.findForUpdate(any(), any(), any()))
                 .thenAnswer(ignored -> Optional.ofNullable(stored.get()));
         when(states.save(any(), anyLong())).thenAnswer(invocation -> {
             VehicleGeofenceState state = invocation.getArgument(0);
@@ -112,12 +114,55 @@ class GeofenceEvaluationServiceTest {
                                 .isEqualTo("GEOFENCE_ACTIVE_LIMIT_EXCEEDED"));
     }
 
+    @Test
+    void requiredPublicationFailureEscapesTheEvaluationTransaction() {
+        service.evaluate(position(UUID.randomUUID(), NOW.minusSeconds(3), 20, 20), NOW);
+        service.evaluate(position(UUID.randomUUID(), NOW.minusSeconds(2), 2, 2), NOW);
+        doThrow(new IllegalStateException("outbox unavailable")).when(publisher).publish(any());
+
+        assertThatThrownBy(() -> service.evaluate(
+                position(UUID.randomUUID(), NOW.minusSeconds(1), 2, 2), NOW))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessage("outbox unavailable");
+    }
+
+    @Test
+    void configuredEntryAndExitAlertsPublishOnlyConfirmedTransitions() {
+        geofence = activeGeofence(GeofenceType.DEPOT, new GeofenceAlertPolicy(true, true));
+        service.evaluate(position(UUID.randomUUID(), NOW.minusSeconds(5), 20, 20), NOW);
+        service.evaluate(position(UUID.randomUUID(), NOW.minusSeconds(4), 2, 2), NOW);
+        service.evaluate(position(UUID.randomUUID(), NOW.minusSeconds(3), 2, 2), NOW);
+        service.evaluate(position(UUID.randomUUID(), NOW.minusSeconds(2), 20, 20), NOW);
+        service.evaluate(position(UUID.randomUUID(), NOW.minusSeconds(1), 20, 20), NOW);
+
+        verify(publisher, org.mockito.Mockito.times(2)).publish(any());
+    }
+
+    @Test
+    void disabledEntryAlertAndStablePositionsDoNotPublishPerPositionEvents() {
+        geofence = activeGeofence(GeofenceType.DEPOT, new GeofenceAlertPolicy(false, false));
+        service.evaluate(position(UUID.randomUUID(), NOW.minusSeconds(3), 2, 2), NOW);
+        clearInvocations(publisher);
+        for (int index = 0; index < 101; index++) {
+            service.evaluate(position(UUID.randomUUID(), NOW.minusSeconds(2), 2, 2), NOW);
+        }
+
+        verify(publisher, never()).publish(any());
+    }
+
     private static Geofence activeGeofence() {
-        Geofence value = Geofence.draft(UUID.randomUUID(), TENANT, "Unauthorized",
-                GeofenceType.UNAUTHORIZED_ZONE,
+        return activeGeofence(GeofenceType.UNAUTHORIZED_ZONE,
+                GeofenceAlertPolicy.unauthorizedZone());
+    }
+
+    private static Geofence activeGeofence(
+            GeofenceType type, GeofenceAlertPolicy alertPolicy) {
+        Geofence value = Geofence.draft(UUID.randomUUID(), TENANT, "Geofence",
+                type,
                 GeofencePolygon.of(List.of(new Wgs84Coordinate(0, 0),
                         new Wgs84Coordinate(10, 0), new Wgs84Coordinate(0, 10))),
-                null, GeofenceAlertPolicy.unauthorizedZone(), NOW.minusSeconds(60), UUID.randomUUID());
+                type == GeofenceType.UNAUTHORIZED_ZONE ? null : UUID.randomUUID(),
+                alertPolicy, NOW.minusSeconds(60), UUID.randomUUID());
         value.activate(NOW.minusSeconds(59), UUID.randomUUID());
         return value;
     }
