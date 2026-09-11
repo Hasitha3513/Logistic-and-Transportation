@@ -46,3 +46,19 @@ export interface DeviceProviderBindingInput {
   providerConnectionId:string; externalDeviceReference:string; safeConfiguration:Record<string,string>;
   lifecycle:'ACTIVE'; currentBindingVersion?:number;
 }
+
+export type GeofenceType = 'DEPOT' | 'CUSTOMER_SITE' | 'UNAUTHORIZED_ZONE';
+export type GeofenceLifecycle = 'DRAFT' | 'ACTIVE' | 'DISABLED' | 'RETIRED';
+export type GeofenceSeverity = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+export interface GeofenceVertex { longitude:number; latitude:number }
+export interface GeofenceAlertPolicy { alertOnEntry:boolean; alertOnExit:boolean }
+export interface GeofenceInput { name:string; type:GeofenceType; locationId?:string; polygon:GeofenceVertex[]; alertPolicy:GeofenceAlertPolicy }
+export interface Geofence extends GeofenceInput { id:string; lifecycle:GeofenceLifecycle; version:number; createdAt:string; updatedAt:string }
+export interface GeofencePage { items:Geofence[]; page:number; size:number; total:number }
+export interface GeofenceMembership { geofenceId:string; vehicleId:string; state:string; definitionVersion:number; sourceTimestamp:string }
+export interface GeofenceMembershipPage { items:GeofenceMembership[]; page:number; size:number; total:number }
+export interface GeofenceTransition { id:string; geofenceId:string; vehicleId:string; locationId?:string; geofenceType:GeofenceType; transition:string; severity:GeofenceSeverity; sourceTimestamp:string; definitionVersion:number }
+export interface GeofenceTransitionPage { items:GeofenceTransition[]; nextCursor?:string }
+export interface GeofenceFilters { type?:GeofenceType; lifecycle?:GeofenceLifecycle; locationId?:string; page:number; size:number }
+export interface GeofenceTransitionFilters { geofenceId?:string; vehicleId?:string; type?:GeofenceType; from?:string; to?:string; cursor?:string; limit:number }
+export interface TrackingApiError { code?:string; message?:string; fieldErrors?:Record<string,string> }

@@ -137,6 +137,7 @@ export const navigation: NavigationItem[] = [
       { key: 'tracking-vehicles', label: 'Live Vehicles', route: '/tracking/vehicles', requiredPermission: 'TRACKING_VIEW' },
       { key: 'tracking-devices', label: 'Devices', route: '/tracking/devices', requiredPermission: 'TRACKING_VIEW' },
       { key: 'tracking-provider-connections', label: 'Provider Connections', route: '/tracking/provider-connections', requiredPermission: 'TRACKING_DEVICE_MANAGE' },
+      { key: 'tracking-geofences', label: 'Geofences', route: '/tracking/geofences', requiredPermission: 'GEOFENCE_VIEW' },
     ],
   },
   {

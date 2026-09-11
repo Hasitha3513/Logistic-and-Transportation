@@ -57,6 +57,9 @@ import DriverPayrollPage from './features/fleet/driverPayroll/pages/DriverPayrol
 import TransportBillingPage from './features/billing/pages/TransportBillingPage';
 import LiveTrackingPage from './features/tracking/pages/LiveTrackingPage';
 import ProviderConnectionsPage from './features/tracking/pages/ProviderConnectionsPage';
+import GeofenceListPage from './features/tracking/pages/GeofenceListPage';
+import GeofenceFormPage from './features/tracking/pages/GeofenceFormPage';
+import GeofenceDetailPage from './features/tracking/pages/GeofenceDetailPage';
 
 function ProtectedRoute() {
   const { user, isLoading } = useAuth();
@@ -163,6 +166,10 @@ export default function App() {
         <Route path="tracking/vehicles" element={<LiveTrackingPage />} />
         <Route path="tracking/devices" element={<LiveTrackingPage initialTab="devices" />} />
         <Route path="tracking/provider-connections" element={<ProviderConnectionsPage />} />
+        <Route path="tracking/geofences" element={<GeofenceListPage />} />
+        <Route path="tracking/geofences/new" element={<GeofenceFormPage />} />
+        <Route path="tracking/geofences/:geofenceId/edit" element={<GeofenceFormPage />} />
+        <Route path="tracking/geofences/:geofenceId" element={<GeofenceDetailPage />} />
         <Route path="workspace" element={<WorkspacePage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
