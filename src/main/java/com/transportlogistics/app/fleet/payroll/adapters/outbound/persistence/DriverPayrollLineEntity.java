@@ -1,0 +1,5 @@
+package com.transportlogistics.app.fleet.payroll.adapters.outbound.persistence;
+import com.transportlogistics.app.fleet.payroll.domain.DriverPayrollInputLine;import com.transportlogistics.app.shared.infrastructure.persistence.TenantScopedEntity;
+import jakarta.persistence.*;import lombok.*;import java.math.BigDecimal;import java.util.*;
+@Entity @Table(name="driver_payroll_input_line") @Getter @Setter @NoArgsConstructor
+class DriverPayrollLineEntity extends TenantScopedEntity {@Id UUID id;@Column(name="batch_id")UUID batchId;@Column(name="driver_id")UUID driverId;@Column(name="trip_id")UUID tripId;@Column(name="trip_number")String tripNumber;@Enumerated(EnumType.STRING)DriverPayrollInputLine.Category category;@Column(name="reason_code")String reasonCode;String description;BigDecimal quantity;@Enumerated(EnumType.STRING)DriverPayrollInputLine.Unit unit;BigDecimal rate;BigDecimal amount;@Column(name="original_line_id")UUID originalLineId;@Column(name="source_snapshot_hash")String sourceSnapshotHash;@Column(name="external_worker_reference")String externalWorkerReference;}

@@ -1,6 +1,13 @@
 package com.transportlogistics.app.delivery.application;
+import com.transportlogistics.app.delivery.domain.model.DeliveryExceptionEvidence;
+import com.transportlogistics.app.delivery.domain.model.DeliveryExceptionResolution;
+import com.transportlogistics.app.delivery.domain.model.DeliveryExceptionResolutionCode;
+import com.transportlogistics.app.delivery.domain.model.DeliveryFailureDisposition;
+import com.transportlogistics.app.delivery.domain.model.DeliveryId;
+import com.transportlogistics.app.delivery.domain.model.DeliveryStatus;
+import com.transportlogistics.app.delivery.domain.model.DeliveryExceptionCase;
+import com.transportlogistics.app.delivery.domain.model.DeliveryOrder;
 
-import com.transportlogistics.app.delivery.domain.model.*;
 import com.transportlogistics.app.delivery.ports.inbound.DeliveryExceptionUseCase;
 import com.transportlogistics.app.delivery.ports.outbound.*;
 import com.transportlogistics.app.shared.domain.BusinessRuleException;
@@ -22,6 +29,7 @@ public final class DeliveryExceptionService implements DeliveryExceptionUseCase 
     private final DeliveryLocationLookupPort locations;
     private final DeliveryTenantContextPort tenantContext;
     private final DeliveryOrderTransaction transactions;
+    private final DeliveryOperationalExceptionPublisher operationalExceptions;
     private final Clock clock;
 
     public DeliveryExceptionService(
@@ -34,6 +42,21 @@ public final class DeliveryExceptionService implements DeliveryExceptionUseCase 
             DeliveryOrderTransaction transactions,
             Clock clock
     ) {
+        this(orders, attempts, exceptions, storage, locations, tenantContext, transactions,
+            DeliveryOperationalExceptionPublisher.noop(), clock);
+    }
+
+    public DeliveryExceptionService(
+            DeliveryOrderRepository orders,
+            DeliveryAttemptRepository attempts,
+            DeliveryExceptionRepository exceptions,
+            DeliveryEvidenceStoragePort storage,
+            DeliveryLocationLookupPort locations,
+            DeliveryTenantContextPort tenantContext,
+            DeliveryOrderTransaction transactions,
+            DeliveryOperationalExceptionPublisher operationalExceptions,
+            Clock clock
+    ) {
         this.orders = orders;
         this.attempts = attempts;
         this.exceptions = exceptions;
@@ -41,6 +64,7 @@ public final class DeliveryExceptionService implements DeliveryExceptionUseCase 
         this.locations = locations;
         this.tenantContext = tenantContext;
         this.transactions = transactions;
+        this.operationalExceptions = operationalExceptions;
         this.clock = clock;
     }
 
@@ -115,7 +139,9 @@ public final class DeliveryExceptionService implements DeliveryExceptionUseCase 
                     now
             );
 
-            return exceptions.save(newCase);
+            DeliveryExceptionCase saved = exceptions.save(newCase);
+            operationalExceptions.publish(saved);
+            return saved;
         });
     }
 

@@ -1,4 +1,9 @@
 app:
+  integration:
+    exchange:
+      enabled: false
+    file:
+      controlled-sandbox-root: ${INTEGRATION_CONTROLLED_SANDBOX_ROOT:./target/e2e-integration-sandbox}
   notification:
     sms:
       enabled: true

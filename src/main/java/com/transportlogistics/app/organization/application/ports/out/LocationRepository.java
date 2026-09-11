@@ -11,5 +11,7 @@ public interface LocationRepository {
 
     Optional<Location> findById(UUID id);
 
+    Optional<Location> findById(UUID tenantId, UUID id);
+
     List<Location> findAll();
 }

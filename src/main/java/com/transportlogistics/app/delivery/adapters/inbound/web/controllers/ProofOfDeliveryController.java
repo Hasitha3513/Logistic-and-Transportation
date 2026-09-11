@@ -1,8 +1,11 @@
 package com.transportlogistics.app.delivery.adapters.inbound.web.controllers;
+import com.transportlogistics.app.delivery.adapters.inbound.web.dto.request.CreateProofOfDeliveryRequest;
+import com.transportlogistics.app.delivery.adapters.inbound.web.mappers.DeliveryOrderWebMapper;
+import com.transportlogistics.app.delivery.adapters.inbound.web.dto.request.FinalizeProofOfDeliveryRequest;
+import com.transportlogistics.app.delivery.adapters.inbound.web.dto.response.ProofFinalizationResponse;
+import com.transportlogistics.app.delivery.adapters.inbound.web.dto.response.ProofOfDeliveryResponse;
+import com.transportlogistics.app.delivery.adapters.inbound.web.mappers.ProofOfDeliveryWebMapper;
 
-import com.transportlogistics.app.delivery.adapters.inbound.web.dto.request.*;
-import com.transportlogistics.app.delivery.adapters.inbound.web.dto.response.*;
-import com.transportlogistics.app.delivery.adapters.inbound.web.mappers.*;
 import com.transportlogistics.app.delivery.domain.model.PodEvidenceType;
 import com.transportlogistics.app.delivery.ports.inbound.ProofOfDeliveryUseCase;
 import com.transportlogistics.app.shared.utils.PrincipalUtils;

@@ -6,6 +6,7 @@ import com.transportlogistics.app.routing.application.ports.in.RouteUseCase;
 import com.transportlogistics.app.routing.application.ports.out.RouteDistancePort;
 import com.transportlogistics.app.routing.application.ports.out.RouteDisruptionRepository;
 import com.transportlogistics.app.routing.application.ports.out.RouteEventPublisher;
+import com.transportlogistics.app.routing.application.ports.out.RouteOperationalExceptionPublisher;
 import com.transportlogistics.app.routing.application.ports.out.RouteRepository;
 import com.transportlogistics.app.routing.application.ports.out.RouteRevisionRepository;
 import com.transportlogistics.app.routing.application.ports.out.RouteTransaction;
@@ -22,11 +23,13 @@ class RouteConfig {
                               RouteRevisionRepository revisionRepo,
                               RouteDisruptionRepository disruptionRepo,
                               RouteEventPublisher eventPublisher,
+                              RouteOperationalExceptionPublisher operationalExceptions,
                               RouteDistancePort distancePort,
                               RoutePerformanceTripLookupPort performanceTripLookup,
                               RouteTransaction transaction,
                               Clock clock) {
-        return new RouteService(repo, revisionRepo, disruptionRepo, eventPublisher, distancePort, performanceTripLookup, transaction, clock);
+        return new RouteService(repo, revisionRepo, disruptionRepo, eventPublisher, operationalExceptions,
+            distancePort, performanceTripLookup, transaction, clock);
     }
 
     @Bean

@@ -1,5 +1,12 @@
 package com.transportlogistics.app.freight.manifest.adapters.inbound.web.controllers;
-import com.transportlogistics.app.freight.manifest.adapters.inbound.web.dto.request.*;import com.transportlogistics.app.freight.manifest.adapters.inbound.web.dto.response.*;import com.transportlogistics.app.freight.manifest.adapters.inbound.web.mappers.CargoManifestWebMapper;import com.transportlogistics.app.freight.manifest.ports.inbound.CargoManifestUseCase;import com.transportlogistics.app.shared.utils.PrincipalUtils;import jakarta.validation.Valid;import org.springframework.http.*;import org.springframework.web.bind.annotation.*;import java.security.Principal;import java.util.UUID;
+import com.transportlogistics.app.freight.manifest.adapters.inbound.web.dto.request.CargoManifestItemRequest;
+import com.transportlogistics.app.freight.manifest.adapters.inbound.web.dto.response.CargoManifestPageResponse;
+import com.transportlogistics.app.freight.manifest.adapters.inbound.web.dto.response.CargoManifestReadinessResponse;
+import com.transportlogistics.app.freight.manifest.adapters.inbound.web.dto.response.CargoManifestResponse;
+import com.transportlogistics.app.freight.manifest.adapters.inbound.web.dto.request.CreateCargoManifestRequest;
+import com.transportlogistics.app.freight.manifest.adapters.inbound.web.dto.request.FinalizeCargoManifestRequest;
+import com.transportlogistics.app.freight.manifest.adapters.inbound.web.dto.request.UpdateCargoManifestRequest;
+import com.transportlogistics.app.freight.manifest.adapters.inbound.web.mappers.CargoManifestWebMapper;import com.transportlogistics.app.freight.manifest.ports.inbound.CargoManifestUseCase;import com.transportlogistics.app.shared.utils.PrincipalUtils;import jakarta.validation.Valid;import org.springframework.http.*;import org.springframework.web.bind.annotation.*;import java.security.Principal;import java.util.UUID;
 @RestController @RequestMapping("/v1/freight/manifests")
 public class CargoManifestController {private final CargoManifestUseCase manifests;private final CargoManifestWebMapper mapper;public CargoManifestController(CargoManifestUseCase manifests,CargoManifestWebMapper mapper){this.manifests=manifests;this.mapper=mapper;}
  @PostMapping @ResponseStatus(HttpStatus.CREATED) public CargoManifestResponse create(@Valid @RequestBody CreateCargoManifestRequest request,Principal principal){return mapper.toResponse(manifests.create(new CargoManifestUseCase.CreateCommand(request.freightOrderId()),actor(principal)));}

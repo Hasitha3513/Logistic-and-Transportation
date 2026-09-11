@@ -12,6 +12,9 @@ import {
   ThunderboltOutlined,
   ContainerOutlined,
   SendOutlined,
+  WarningOutlined,
+  DollarOutlined,
+  AimOutlined,
 } from '@ant-design/icons';
 
 export interface NavigationItem {
@@ -63,6 +66,7 @@ export const navigation: NavigationItem[] = [
     icon: <UserOutlined />,
     children: [
       { key: 'driver-list', label: 'Drivers', route: '/drivers', requiredPermission: 'DRIVER_VIEW' },
+      { key: 'driver-payroll', label: 'Payroll Inputs', route: '/drivers/payroll-input-batches', requiredPermission: 'DRIVER_PAYROLL_VIEW' },
     ],
   },
   {
@@ -86,6 +90,8 @@ export const navigation: NavigationItem[] = [
       { key: 'fuel-purchases', label: 'Fuel Purchases', route: '/fuel/purchases', requiredPermission: 'FUEL_PURCHASE_VIEW' },
       { key: 'bunker-tanks', label: 'Bunker Tanks', route: '/fuel/bunker-tanks', requiredPermission: 'BUNKER_VIEW' },
       { key: 'fuel-prices', label: 'Fuel Prices', route: '/fuel/prices', requiredPermission: 'FUEL_PRICE_VIEW' },
+      { key: 'fuel-cards', label: 'Fuel Cards', route: '/fuel/cards', requiredPermission: 'FUEL_CARD_VIEW' },
+      { key: 'fuel-exceptions', label: 'Fuel Exceptions', route: '/fuel/exceptions', requiredPermission: 'FUEL_EXCEPTION_VIEW' },
     ],
   },
   {
@@ -93,6 +99,7 @@ export const navigation: NavigationItem[] = [
     label: 'Freight',
     icon: <ContainerOutlined />,
     children: [
+      { key: 'fuel-performance', label: 'Fuel Performance', route: '/fuel/performance', requiredPermission: 'FUEL_PERFORMANCE_VIEW' },
       { key: 'freight-orders', label: 'Freight Orders', route: '/freight/orders', requiredPermission: 'FREIGHT_ORDER_VIEW' },
       { key: 'cargo-manifests', label: 'Cargo Manifests', route: '/freight/manifests', requiredPermission: 'CARGO_MANIFEST_VIEW' },
       { key: 'load-plans', label: 'Load Plans', route: '/freight/load-plans', requiredPermission: 'LOAD_PLAN_VIEW' },
@@ -116,6 +123,32 @@ export const navigation: NavigationItem[] = [
     ],
   },
   {
+    key: 'billing',
+    label: 'Transport Billing',
+    route: '/billing/records',
+    icon: <DollarOutlined />,
+    requiredPermission: 'BILLING_VIEW',
+  },
+  {
+    key: 'tracking',
+    label: 'Tracking',
+    icon: <AimOutlined />,
+    children: [
+      { key: 'tracking-vehicles', label: 'Live Vehicles', route: '/tracking/vehicles', requiredPermission: 'TRACKING_VIEW' },
+      { key: 'tracking-devices', label: 'Devices', route: '/tracking/devices', requiredPermission: 'TRACKING_VIEW' },
+      { key: 'tracking-provider-connections', label: 'Provider Connections', route: '/tracking/provider-connections', requiredPermission: 'TRACKING_DEVICE_MANAGE' },
+      { key: 'tracking-geofences', label: 'Geofences', route: '/tracking/geofences', requiredPermission: 'GEOFENCE_VIEW' },
+    ],
+  },
+  {
+    key: 'operations',
+    label: 'Operations',
+    icon: <WarningOutlined />,
+    children: [
+      { key: 'operational-exceptions', label: 'Operational Exceptions', route: '/operations/exceptions', requiredPermission: 'OPERATIONAL_EXCEPTION_VIEW' },
+    ],
+  },
+  {
     key: 'administration',
     label: 'Administration',
     icon: <SettingOutlined />,
@@ -134,6 +167,13 @@ export const navigation: NavigationItem[] = [
         route: '/notification-rules',
         requiredPermission: 'NOTIFICATION_RULE_VIEW',
         icon: <BellOutlined />,
+      },
+      {
+        key: 'integrations',
+        label: 'Integrations',
+        route: '/integrations',
+        requiredPermission: 'INTEGRATION_VIEW',
+        icon: <SettingOutlined />,
       },
     ],
   },

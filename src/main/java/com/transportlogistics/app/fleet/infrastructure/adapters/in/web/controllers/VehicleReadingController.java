@@ -1,4 +1,9 @@
 package com.transportlogistics.app.fleet.infrastructure.adapters.in.web.controllers;
+import com.transportlogistics.app.fleet.infrastructure.adapters.in.web.dto.response.PageResponse;
+import com.transportlogistics.app.fleet.infrastructure.adapters.in.web.dto.response.LatestVehicleReadingsResponse;
+import com.transportlogistics.app.fleet.infrastructure.adapters.in.web.dto.response.VehicleMeterResetResponse;
+import com.transportlogistics.app.fleet.infrastructure.adapters.in.web.dto.response.VehicleMileageSummaryResponse;
+import com.transportlogistics.app.fleet.infrastructure.adapters.in.web.dto.response.VehicleReadingResponse;
 
 import com.transportlogistics.app.fleet.application.ports.in.VehicleReadingUseCase;
 import com.transportlogistics.app.fleet.domain.model.VehicleReadingSourceType;
@@ -6,7 +11,6 @@ import com.transportlogistics.app.fleet.domain.model.VehicleReadingType;
 import com.transportlogistics.app.fleet.infrastructure.adapters.in.web.dto.request.RecordManualVehicleReadingRequest;
 import com.transportlogistics.app.fleet.infrastructure.adapters.in.web.dto.request.RecordVehicleMeterResetRequest;
 import com.transportlogistics.app.fleet.infrastructure.adapters.in.web.dto.request.RecordVehicleReadingCorrectionRequest;
-import com.transportlogistics.app.fleet.infrastructure.adapters.in.web.dto.response.*;
 import com.transportlogistics.app.fleet.infrastructure.adapters.in.web.mappers.VehicleReadingWebMapper;
 import com.transportlogistics.app.identity.AuthenticatedUserLookup;
 import com.transportlogistics.app.shared.domain.NotFoundException;

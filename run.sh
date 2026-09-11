@@ -16,7 +16,7 @@ POSTGRES_PASSWORD=transport_app_secret
 POSTGRES_PORT=5432
 JWT_SECRET=0123456789012345678901234567890123456789
 APP_ADMIN_USERNAME=admin
-APP_ADMIN_PASSWORD=AdminPassword123!
+APP_ADMIN_PASSWORD=AdminPass!2026
 APP_ADMIN_EMAIL=admin@localhost.test
 BACKEND_PORT=8080
 FRONTEND_PORT=5173
@@ -41,7 +41,7 @@ if command -v docker >/dev/null 2>&1 && [ "$1" != "--local" ]; then
     echo ""
     echo " Default Admin Login:"
     echo "   Username: ${APP_ADMIN_USERNAME:-admin}"
-    echo "   Password: ${APP_ADMIN_PASSWORD:-AdminPassword123!}"
+    echo "   Password: ${APP_ADMIN_PASSWORD:-AdminPass!2026}"
     echo "==================================================================="
     echo ""
     exec docker compose up --build "$@"
@@ -150,9 +150,14 @@ fi
 
 echo "[*] Using PostgreSQL datasource at ${DB_URL}..."
 PROFILE="postgres"
+export APP_DEV_IDENTITY_BOOTSTRAP_ENABLED=true
+export APP_DEV_IDENTITY_BOOTSTRAP_USERNAME="${APP_ADMIN_USERNAME:-admin}"
+export APP_DEV_IDENTITY_BOOTSTRAP_PASSWORD="${APP_ADMIN_PASSWORD:-AdminPass!2026}"
+export APP_DEV_IDENTITY_BOOTSTRAP_EMAIL="${APP_ADMIN_EMAIL:-admin@localhost.test}"
+export APP_DEV_SAMPLE_DATA_ENABLED=true
 
 echo "[*] Launching Backend Spring Boot Application (Profile: ${PROFILE})..."
-"$MVN_CMD" spring-boot:run -Dspring-boot.run.profiles=${PROFILE} -Dspring-boot.run.jvmArguments="-Dapp.dev.identity-bootstrap.enabled=true -Dapp.dev.identity-bootstrap.username=admin -Dapp.dev.identity-bootstrap.password=AdminPassword123! -Dapp.dev.sample-data.enabled=true" &
+"$MVN_CMD" spring-boot:run -Dspring-boot.run.profiles=${PROFILE} &
 BACKEND_PID=$!
 
 echo "[*] Launching Frontend Application (Vite / React)..."
@@ -176,8 +181,8 @@ echo " Swagger UI:     http://localhost:8080/api/swagger-ui.html"
 echo " Health Check:   http://localhost:8080/api/health"
 echo ""
 echo " Default Admin Login:"
-echo "   Username: admin"
-echo "   Password: AdminPassword123!"
+echo "   Username: ${APP_ADMIN_USERNAME:-admin}"
+echo "   Password: ${APP_ADMIN_PASSWORD:-AdminPass!2026}"
 echo "==================================================================="
 echo ""
 

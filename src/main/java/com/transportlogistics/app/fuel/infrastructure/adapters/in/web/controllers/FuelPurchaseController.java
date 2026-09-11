@@ -1,10 +1,17 @@
 package com.transportlogistics.app.fuel.infrastructure.adapters.in.web.controllers;
+import com.transportlogistics.app.fuel.infrastructure.adapters.in.web.dto.response.PageResponse;
+import com.transportlogistics.app.fuel.infrastructure.adapters.in.web.dto.response.FuelPriceResponse;
+import com.transportlogistics.app.fuel.domain.model.FuelPurchase;
+import com.transportlogistics.app.fuel.infrastructure.adapters.in.web.dto.response.FuelPurchaseHistoryResponse;
+import com.transportlogistics.app.fuel.infrastructure.adapters.in.web.dto.response.FuelPurchaseResponse;
+import com.transportlogistics.app.fuel.domain.model.FuelPurchaseStatus;
+import com.transportlogistics.app.fuel.domain.model.ReconciliationStatus;
 
 import com.transportlogistics.app.fuel.application.ports.in.FuelPriceUseCase;
 import com.transportlogistics.app.fuel.application.ports.in.FuelPurchaseUseCase;
-import com.transportlogistics.app.fuel.domain.model.*;
+
 import com.transportlogistics.app.fuel.infrastructure.adapters.in.web.dto.request.*;
-import com.transportlogistics.app.fuel.infrastructure.adapters.in.web.dto.response.*;
+
 import com.transportlogistics.app.fuel.infrastructure.adapters.in.web.mappers.FuelPurchaseWebMapper;
 import com.transportlogistics.app.shared.utils.PrincipalUtils;
 import jakarta.validation.Valid;

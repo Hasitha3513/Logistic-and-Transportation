@@ -6,6 +6,7 @@ import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.Set;
 
 public interface TripRepository {
     Trip save(Trip t);
@@ -15,6 +16,10 @@ public interface TripRepository {
     Optional<Trip> findByIdForUpdate(UUID id);
 
     List<Trip> findAll();
+
+    default List<Trip> findAllByIds(Set<UUID> ids) {
+        return findAll().stream().filter(trip -> ids.contains(trip.id())).toList();
+    }
 
     boolean hasOverlappingVehicleAllocation(UUID vehicleId, OffsetDateTime from, OffsetDateTime to,
                                             UUID excludeTripId);

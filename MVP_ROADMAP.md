@@ -3,10 +3,10 @@
 <div align="center">
 
 ![Total Stories](https://img.shields.io/badge/Total%20Stories-87-0969da.svg?style=for-the-badge&logo=target)
-![Completed](https://img.shields.io/badge/Completed-65%20%2F%2087-2da44e.svg?style=for-the-badge&logo=checkmarx)
-![Progress](https://img.shields.io/badge/Progress-74.7%25-brightgreen.svg?style=for-the-badge&logo=speedtest)
+![Completed](https://img.shields.io/badge/Completed-72%20%2F%2087-2da44e.svg?style=for-the-badge&logo=checkmarx)
+![Progress](https://img.shields.io/badge/Progress-82.8%25-brightgreen.svg?style=for-the-badge&logo=speedtest)
 ![MVP 1.4 Closed](https://img.shields.io/badge/MVP%201.4%20Last--Mile-8%20%2F%208-2da44e.svg?style=for-the-badge&logo=pinboard)
-![Database](https://img.shields.io/badge/PostgreSQL%20%2F%20Flyway-V60-8a63d2.svg?style=for-the-badge&logo=postgresql)
+![Database](https://img.shields.io/badge/PostgreSQL%20%2F%20Flyway-V80-8a63d2.svg?style=for-the-badge&logo=postgresql)
 
 </div>
 
@@ -14,35 +14,36 @@
 
 > [!IMPORTANT]
 > **Authoritative Baseline & Current State:**
-> - **Last Reconciled:** `2026-09-03`
+> - **Last Reconciled:** `2026-09-11`
 > - **Authority Order:** Original Requirements (`Traspotation & logistic.docx`), Frozen Architecture/Contracts, Verified Production Code/Tests, then Roadmap.
 > - **MVP 1.3 Delivery Operations:** 7 / 7 COMPLETE (100%) - CLOSED
 > - **MVP 1.4 Last-Mile Delivery:** 8 / 8 COMPLETE (US-63 through US-70 Accepted & Closed)
-> - **Overall Release Band:** 65 / 87 COMPLETE (22 REPRIORITIZED / 87 TOTAL)
+> - **Overall Release Band:** 73 / 87 COMPLETE (14 REPRIORITIZED / 87 TOTAL)
 > - **Current Milestone:** MVP 1.4 Last-Mile Delivery — 8 / 8 COMPLETE, 100%, CLOSED.
-> - **Active Focus:** US-73 external-integration product decisions are frozen; implementation has not started. P1-01 remains complete.
-> - **Immediate Next Action:** Execute `US-73-EXTERNAL-INTEGRATIONS-IMPLEMENTATION-001`.
+> - **Active Focus:** Wave B is 5 / 5 COMPLETE / CLOSED; Wave C is active.
+> - **US-48 Technical State:** `IMPLEMENTATION_COMPLETE / ACCEPTANCE_BLOCKED_EXTERNAL_SYSTEM`; pluggable CS01–CS10 are `COMPLETE` and `PLUG_AND_PLAY_FOR_SUPPORTED_ADAPTERS` is technically complete at V76; physical FMC130/Flespi evidence remains outstanding.
+> - **Immediate Next Action:** Execute `US-50-MONITOR-SPEED-CS01-DOMAIN-PORTS-001`; US-50 product decisions are frozen without accounting or Flyway change, while US-48 physical acceptance remains `ON_HOLD_EXTERNAL_PREREQUISITE`.
 
 ---
 
 ## 📊 1. Executive Metrics & Milestone Progress
 
 ```
-Overall Progress: [██████████████████████████████████████████░░░░░░░░] 65 / 87 Stories Complete (74.7%)
+Overall Progress: [██████████████████████████████████████████████████] 73 / 87 Stories Complete (83.9%)
 MVP 1.3 Band:     [██████████████████████████████████████████████████] 7 / 7 Complete (100.0%) - CLOSED
 MVP 1.4 Band:     [██████████████████████████████████████████████████] 8 / 8 Complete (100.0%) - CLOSED
 ```
 
 | Metric | Target | Current Count | Percentage | Status Indicator |
 | :--- | :---: | :---: | :---: | :--- |
-| **Completed Stories (Accepted)** | 87 | **65** | `74.7%` | 🟢 `ON TRACK / VERIFIED` |
+| **Completed Stories (Accepted)** | 87 | **72** | `82.8%` | 🟢 `ON TRACK / VERIFIED` |
 | **Next Active / Acceptance Required** | — | **0** | `0.0%` | 🟢 `NONE` |
 | **Not Started (MVP 1.4 Active Scope)** | 1 | **0** | `0.0%` | 🟢 `NONE` |
-| **Reprioritized Remaining Stories** | 22 | **22** | `25.3%` | 🟡 `PLANNED IN GOVERNED WAVES` |
+| **Reprioritized Remaining Stories** | 15 | **15** | `17.2%` | 🟡 `PLANNED IN GOVERNED WAVES` |
 | **Total Registered User Stories** | **87** | **87** | **`100%`** | 🔒 `FROZEN REGISTER (US-01..US-87)` |
 
 > [!NOTE]
-> Stories `US-88`, `US-89`, and `US-90` are strictly undefined. The story accounting register is bounded exactly from `US-01` through `US-87` (`65 COMPLETE + 22 REMAINING = 87`).
+> Stories `US-88`, `US-89`, and `US-90` are strictly undefined. The story accounting register is bounded exactly from `US-01` through `US-87` (`72 COMPLETE + 15 REMAINING = 87`).
 
 ---
 
@@ -54,10 +55,10 @@ MVP 1.4 Band:     [████████████████████�
 | **MVP 1.0** | **Core Operations** | Fleet (US-01–08), Trips (US-09–16), Basic Route (US-17–19), Drivers (US-39–45), Core Enablers | 34 | 34 / 34 | 🟢 `COMPLETE (100%)` |
 | **MVP 1.1A** | **Advanced Route** | Dynamic Route Optimization, Analytics, and Disruption Handling (US-20–23) | 4 | 4 / 4 | 🟢 `COMPLETE (100%)` |
 | **MVP 1.1B** | **Freight & Cargo** | Freight Orders, Manifests, Load Planning, Weight/Volume Engine, Claims, Exceptions (US-24–30) | 7 | 7 / 7 | 🟢 `COMPLETE (100%)` |
-| **MVP 1.2** | **Fuel Management** | Fuel Issues, Purchases, Mileage, Bunkers, Fuel Cards, Analytics, Exceptions (US-31–38) | 8 | 5 / 8 | 🟡 `MVP CLOSED; 3 STORIES REPRIORITIZED IN WAVE B` |
+| **MVP 1.2** | **Fuel Management** | Fuel Issues, Purchases, Mileage, Bunkers, Fuel Cards, Analytics, Exceptions (US-31–38) | 8 | 6 / 8 | 🟡 `MVP CLOSED; 2 STORIES REPRIORITIZED IN WAVE B` |
 | **MVP 1.3** | **Delivery Operations** | Delivery Orders, Online POD, Offline POD, Failed Deliveries, Redelivery, Analytics, Exceptions (US-56–62) | 7 | 7 / 7 | 🟢 `COMPLETE (100%) - CLOSED` |
 | **MVP 1.4** | **Last-Mile Delivery** | Delivery Zones, Delivery Slots, Riders, Batch Orders, ETA, Exceptions, Notifications, Self-Service (US-63–70) | 8 | 8 / 8 | 🟢 `COMPLETE (100%) - CLOSED` |
-| **Full Product** | **Waves A–E** | Integration/Exceptions; Fuel/Finance; GPS; Compliance/Mobile; Analytics/Integrity/Resilience/Risk | 22 | 0 / 22 | 🟡 `REPRIORITIZED / READY FOR GOVERNED EXECUTION` |
+| **Full Product** | **Waves A–E** | Integration/Exceptions; Fuel/Finance; GPS; Compliance/Mobile; Analytics/Integrity/Resilience/Risk | 22 | 7 / 22 | 🟡 `IN PROGRESS — WAVE C ACTIVE` |
 
 ### Phase 0 Architecture Remediation
 
@@ -139,10 +140,10 @@ Development startup now consistently provisions the idempotent PostgreSQL sample
 | `US-32` | Record External Fuel Purchases | Fuel card / receipt purchase logging | 🟢 `COMPLETE` | `FuelPurchaseTest`, V32 |
 | `US-33` | Track Fuel Consumption and Mileage | Km/L calculation, baseline variance alerts | 🟢 `COMPLETE` | `FuelMileageTest`, V33 |
 | `US-34` | Manage Bunker Fuel Stock | Internal tank dip readings, stock replenishment | 🟢 `COMPLETE` | `BunkerStockTest`, V34 |
-| `US-35` | Manage Fuel Cards | Card issuance, restrictions, imported transactions, reconciliation and misuse control | 🟡 `WAVE B / READY_FOR_PRODUCT_DECISIONS` | Full-product roadmap |
+| `US-35` | Manage Fuel Cards | Card issuance, restrictions, imported transactions, reconciliation and misuse control | 🟢 `COMPLETE` | Final acceptance PASS; V64/V65; Maven 1,335/0/0/15; Chromium 6/6; zero post-startup ledger mismatches; `US-35-FUEL-CARDS-FINAL-ACCEPTANCE-001.md` |
 | `US-36` | Calculate Trip Fuel Costs | Trip-level fuel expense aggregation | 🟢 `COMPLETE` | `TripFuelCostTest`, V35 |
-| `US-37` | Analyze Fuel Performance | Vehicle/driver efficiency, anomaly and leakage analysis without changing raw fuel data | 🟡 `WAVE B / READY_FOR_IMPLEMENTATION_AFTER_DECISIONS` | Full-product roadmap |
-| `US-38` | Handle Fuel Exceptions | Theft, wrong readings, price swings, emergency refuel, card misuse and negative balances | 🟡 `WAVE B / BLOCKED_BY_DEPENDENCY` | Requires US-35 and US-78 contracts |
+| `US-37` | Analyze Fuel Performance | Vehicle/driver efficiency, anomaly and leakage analysis without changing raw fuel data | 🟢 `COMPLETE` | Final acceptance PASS; V63; Maven 1,310/0/0/15; Chromium 6/6; `US-37-FUEL-PERFORMANCE-FINAL-ACCEPTANCE-001.md` |
+| `US-38` | Handle Fuel Exceptions | Suspected loss, wrong readings, price changes, emergency refuel, card policy deviations and negative Bunker balance | 🟢 `COMPLETE` | Final acceptance PASS; V67; Maven 1,356/0/0/15 in 05:34; PostgreSQL races 9/9; regressions 112/112; Chromium 6/6 in 36.6s |
 
 ---
 
@@ -156,22 +157,22 @@ Development startup now consistently provisions the idempotent PostgreSQL sample
 | `US-43` | Monitor Driver Hours of Service | Drive time limits, mandatory rest enforcement | 🟢 `COMPLETE` | `DriverHosTest`, V40 |
 | `US-44` | Manage Driver Violations | Speeding, route deviation, safety incidents | 🟢 `COMPLETE` | `DriverViolationTest`, V41 |
 | `US-45` | Manage Driver Medicals & Drug Tests | Periodic fitness-to-drive certifications | 🟢 `COMPLETE` | `DriverMedicalTest`, V42 |
-| `US-46` | Process Driver Payroll Link | Traceable trip earnings, allowances, overtime and deductions exported to Payroll/HRMS | 🟡 `WAVE B / BLOCKED_BY_EXTERNAL_SYSTEM` | Payroll link only; not a payroll engine |
+| `US-46` | Process Driver Payroll Link | Traceable trip earnings, allowances, overtime and deductions exported to Payroll/HRMS | 🟢 `COMPLETE` | Final acceptance PASS; V68–V71; PostgreSQL 18/18 and races 9/9; Maven 1,380/0/0/15 in 06:21; Chromium 7/7 in 38.2s |
 
 ---
 
 ### 📡 Module 7: GPS & Telematics (US-47 to US-55)
 | ID | User Story Title | Scope / Feature | Status | Verification Evidence |
 | :---: | :--- | :--- | :---: | :--- |
-| `US-47` | Manage Transport Billing | Trip/freight costing, charges, adjustments, cost centres and billing finalization | 🟡 `WAVE B / READY_FOR_PRODUCT_DECISIONS` | Billing boundary requires ARB ratification |
-| `US-48` | Track Vehicles Live | Provider-neutral telemetry ingestion, live/last-known state, connectivity, accuracy and freshness | 🟡 `WAVE C / READY_FOR_PRODUCT_DECISIONS` | GPS provider/device required for real acceptance |
-| `US-49` | Manage Geofences | Depot, customer-site and unauthorized-zone entry/exit detection | 🟡 `WAVE C / BLOCKED_BY_DEPENDENCY` | Requires US-48 |
-| `US-50` | Monitor Speed | Threshold, road-rule and repeat-speed monitoring | 🟡 `WAVE C / BLOCKED_BY_DEPENDENCY` | Requires US-48 |
-| `US-51` | Monitor Idle Time | Engine-on versus movement duration and qualified fuel-waste estimates | 🟡 `WAVE C / BLOCKED_BY_DEPENDENCY` | Requires US-48 engine-state telemetry |
-| `US-52` | Monitor Route Deviations | Planned-versus-actual comparison, severity and audited approval | 🟡 `WAVE C / BLOCKED_BY_DEPENDENCY` | Requires US-48 and Routing contract |
-| `US-53` | Replay Journeys | Historical journey replay, stop analysis and incident forensics | 🟡 `WAVE C / BLOCKED_BY_DEPENDENCY` | Requires US-48 history; overlays US-49–52 |
-| `US-54` | View Tracking Dashboard | Fleet overview, exceptions, heat maps, alerts and stale-state visibility | 🟡 `WAVE C / BLOCKED_BY_DEPENDENCY` | Must follow US-48–53 producers |
-| `US-55` | Handle GPS Edge Cases | Signal loss, spoofing, tampering, delayed packets, battery drain and trusted-state protection | 🟡 `WAVE C / BLOCKED_BY_DEPENDENCY` | Requires US-48; integrates US-78 |
+| `US-47` | Manage Transport Billing | Trip/freight costing, charges, adjustments, cost centres and operational billing finalization | 🟢 `COMPLETE` | Final acceptance PASS; V72; focused 17/17; concurrency 9/9; Maven 1,398/0/0/15 in 06:38; architecture 46/46; Chromium 7/7; `US-47-TRANSPORT-BILLING-FINAL-ACCEPTANCE-001.md` |
+| `US-48` | Track Vehicles Live | Provider-neutral telemetry ingestion, live/last-known state, connectivity, accuracy and freshness | 🔴 `IMPLEMENTATION_COMPLETE / ACCEPTANCE_BLOCKED_EXTERNAL_SYSTEM` | CS01–CS10 technically complete at V76; external capture `ON_HOLD_EXTERNAL_PREREQUISITE`; rerun only when physical FMC130/live Flespi facts change; physical acceptance remains mandatory |
+| `US-49` | Manage Geofences | Depot, customer-site and unauthorized-zone entry/exit detection | ✅ `COMPLETE / ACCEPTED` | Final acceptance PASS at V80: focused 76/76, Maven 1,595/0/0/15, architecture 52/52, Vitest 299/299 and Chromium 7/7; no US-48 acceptance inheritance |
+| `US-50` | Monitor Speed | Threshold, road-rule and repeat-speed monitoring | 🟡 `PRODUCT_DECISIONS_FROZEN / READY_FOR_IMPLEMENTATION` | Tracking-owned route-config with Tenant fallback; two-sample episodes; durable minimized Notification fact; real speed fidelity remains a final-evidence gate |
+| `US-51` | Monitor Idle Time | Engine-on versus movement duration and qualified fuel-waste estimates | 🟡 `WAVE C / BLOCKED_BY_REQUIRED_TELEMETRY_CAPABILITY` | Current FLESPI does not advertise IGNITION and no accepted alternate engine-state source exists |
+| `US-52` | Monitor Route Deviations | Planned-versus-actual comparison, severity and audited approval | 🟡 `TECHNICAL_DEPENDENCY_SATISFIED / READY_FOR_PRODUCT_DECISIONS` | Frozen trusted-position/source-time and accepted Routing contracts are sufficient |
+| `US-53` | Replay Journeys | Historical journey replay, stop analysis and incident forensics | 🟡 `TECHNICAL_DEPENDENCY_SATISFIED / READY_AFTER_EARLIER_WAVE_C_DECISIONS` | Immutable Tracking history is sufficient; optional overlays must follow their producers |
+| `US-54` | View Tracking Dashboard | Fleet overview, exceptions, heat maps, alerts and stale-state visibility | 🟡 `WAVE C / BLOCKED_BY_US49_TO_US53_PRODUCERS` | Consolidated consumer; must not recreate detector logic |
+| `US-55` | Handle GPS Edge Cases | Signal loss, spoofing, tampering, delayed packets, battery drain and trusted-state protection | 🟡 `WAVE C / BLOCKED_BY_REQUIRED_TELEMETRY_AND_PRODUCT_DECISIONS` | Signal-loss/delay contracts exist, but spoofing/tamper/battery signals are not established |
 
 ---
 
@@ -207,12 +208,12 @@ Development startup now consistently provisions the idempotent PostgreSQL sample
 | :---: | :--- | :--- | :---: | :--- |
 | `US-71` | Support Offline Data Sync | Generic IndexedDB sync framework, idempotency | 🟢 `COMPLETE` | `OfflineSyncCoordinatorTest`, V29 |
 | `US-72` | Enforce Compliance | Vehicle, driver, cargo/hazmat, tax, regional and retention decisions | 🟡 `WAVE D / BLOCKED_BY_DEPENDENCY` | Requires typed domain facts and US-47 billing facts |
-| `US-73` | Manage External Integrations | Provider-neutral endpoint/configuration, mapping, exchange, status, retry and error handling | 🟡 `PRODUCT_DECISIONS_FROZEN / IMPLEMENTATION_NOT_STARTED` | Outbound governed JSON-file adapter; controlled-sandbox acceptance |
+| `US-73` | Manage External Integrations | Provider-neutral endpoint/configuration, mapping, exchange, status, retry and error handling | 🟢 `COMPLETE` | Independent final acceptance PASS: V61, focused 24/24, regressions 40/40, Maven 1,276/0/0/15, architecture 44/44, real Chromium 6/6; controlled outbound JSON-file capability only |
 | `US-74` | Manage Security | JWT authentication, multi-tenant RBAC | 🟢 `COMPLETE` | `SecurityAccessTest`, `TenantFilterTest` |
 | `US-75` | Maintain Audit and Reports | Comprehensive audit log trail, CSV exports | 🟢 `COMPLETE` | `AuditLogTest`, `AuditReportTest` |
 | `US-76` | Support Mobile Operations | Driver, dispatcher and delivery mobile workflows with offline, camera/signature, push and device health | 🟡 `WAVE D / BLOCKED_BY_DEPENDENCY` | PWA/native and device/provider decisions required |
 | `US-77` | Manage Notification Rules | Rule-based alerts, multi-channel dispatch | 🟢 `COMPLETE` | `NotificationRuleTest`, V28 |
-| `US-78` | Manage Operational Exceptions | Cross-domain classification, assignment, severity, SLA, escalation, corrective action, RCA and closure | 🟡 `WAVE A / READY_FOR_PRODUCT_DECISIONS` | Domain modules retain detection/meaning |
+| `US-78` | Manage Operational Exceptions | Cross-domain classification, assignment, severity, SLA, escalation, corrective action, RCA and closure | 🟢 `COMPLETE` | Final acceptance PASS: V62; focused 41/41; concurrency 6/6; PostgreSQL 3/3; regressions 84/84; Maven 1,296/0/0/15 in 05:06; architecture 46/46; Chromium 6/6; `docs/full-product/US-78-OPERATIONAL-EXCEPTIONS-FINAL-ACCEPTANCE-001.md` |
 
 ---
 
@@ -234,13 +235,13 @@ Development startup now consistently provisions the idempotent PostgreSQL sample
 ## 🎯 4. Immediate Execution Queue
 
 ```
-Current Status: 65 / 87 COMPLETE; 22 stories reprioritized across Waves A–E
-Queue Head:     US-73-EXTERNAL-INTEGRATIONS-IMPLEMENTATION-001
+Current Status: 73 / 87 COMPLETE; 14 stories remain across Waves C–E
+Queue Head:     US-50-MONITOR-SPEED-CS01-DOMAIN-PORTS-001
 ```
 
-1. **Wave A — Integration and exception-control foundations:** implement US-73 from its frozen decision contract, then US-78.
-2. **Wave B — Fuel control and financial links:** US-37, US-35, US-38, US-46, US-47.
-3. **Wave C — GPS and telematics:** US-48, then US-49/50/51/52/55, then US-53, then US-54.
+1. **Wave A — Integration and exception-control foundations:** 2 / 2 COMPLETE / CLOSED (US-73 and US-78).
+2. **Wave B — Fuel control and financial links:** 5 / 5 COMPLETE / CLOSED (US-35, US-37, US-38, US-46, US-47).
+3. **Wave C — GPS and telematics:** US-48 physical acceptance is on external-prerequisite hold; US-49 is accepted; proceed with US-50/52, then US-53. US-51 and full US-55 require telemetry/product decisions; US-54 follows US-50–53 producers.
 4. **Wave D — Compliance and field mobility:** US-72, US-76.
 5. **Wave E — Analytics, integrity, resilience, disruption and user risk:** US-85, US-84, US-87, US-82, US-86.
 6. After 87/87: `FULL-SOURCE-PARITY-AUDIT-001`, then `FULL-PLATFORM-END-TO-END-ACCEPTANCE-001` after authorized parity disposition.
@@ -271,6 +272,10 @@ Detailed dependencies, readiness/done gates, scores, rollback plans, source-pari
   - `US-68`: `docs/mvp/MVP-1.4-US68-LAST-MILE-EXCEPTIONS-FINAL-ACCEPTANCE-001.md`
   - `US-69`: `docs/mvp/MVP-1.4-US69-DELIVERY-NOTIFICATIONS-FINAL-ACCEPTANCE-001.md`
   - `US-70`: `docs/mvp/MVP-1.4-US70-CUSTOMER-SELF-SERVICE-FINAL-ACCEPTANCE-001.md`
+  - `US-73`: `docs/full-product/US-73-EXTERNAL-INTEGRATIONS-FINAL-ACCEPTANCE-001.md`
+  - `US-78`: `docs/full-product/US-78-OPERATIONAL-EXCEPTIONS-FINAL-ACCEPTANCE-001.md`
+- **Frozen Product Decisions:**
+  - `US-78`: `docs/full-product/US-78-OPERATIONAL-EXCEPTIONS-PRODUCT-DECISIONS-001.md`
 - **Implementation Reports:**
   - `US-59`: `docs/mvp/MVP-1.3-US59-FAILED-DELIVERIES-IMPLEMENTATION-001.md`
   - `US-60`: `docs/mvp/MVP-1.3-US60-REDELIVERY-IMPLEMENTATION-001.md`
@@ -283,4 +288,4 @@ Detailed dependencies, readiness/done gates, scores, rollback plans, source-pari
   - `US-68`: `docs/mvp/MVP-1.4-US68-LAST-MILE-EXCEPTIONS-IMPLEMENTATION-001.md`
   - `US-69`: `docs/mvp/MVP-1.4-US69-DELIVERY-NOTIFICATIONS-IMPLEMENTATION-001.md`
   - `US-69 remediation`: `docs/mvp/MVP-1.4-US69-DELIVERY-NOTIFICATIONS-ACCEPTANCE-REMEDIATION-001.md`
-- **Central Knowledge Base:** P1-01 commit `6e2f1ca` is synchronized to `origin/main`; this reprioritization performs its own task-scoped planning sync.
+- **Central Knowledge Base:** US-73 implementation and technical-closure state is synchronized through commit `4582ba4`; final-acceptance facts are synchronized in the US-73 acceptance cycle.

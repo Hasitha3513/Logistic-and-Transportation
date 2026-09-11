@@ -85,9 +85,11 @@ class DeliveryOrderConfig {
             DeliveryLocationLookupPort locations,
             DeliveryTenantContextPort tenantContext,
             DeliveryOrderTransaction transactions,
+            DeliveryOperationalExceptionPublisher operationalExceptions,
             Clock clock) {
         return new DeliveryExceptionService(
-                orders, attempts, exceptions, storage, locations, tenantContext, transactions, clock
+                orders, attempts, exceptions, storage, locations, tenantContext, transactions,
+                operationalExceptions, clock
         );
     }
 

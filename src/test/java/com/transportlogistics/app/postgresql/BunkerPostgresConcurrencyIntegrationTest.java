@@ -24,6 +24,7 @@ import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.*;
 
@@ -59,8 +60,10 @@ class BunkerPostgresConcurrencyIntegrationTest extends PostgreSqlIntegrationTest
     @Autowired private FuelIssueUseCase fuelIssues;
     @Autowired private FuelPurchaseUseCase fuelPurchases;
     @Autowired private FuelStationRepository stations;
+    @Autowired private FuelTransaction transactions;
 
     private final UUID actorId = UUID.fromString("00000000-0000-0000-0000-000000000001");
+    private final UUID tenantId = UUID.fromString("4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a");
     private final OffsetDateTime now = OffsetDateTime.parse("2026-08-18T10:00:00Z");
 
     @BeforeEach
@@ -82,7 +85,7 @@ class BunkerPostgresConcurrencyIntegrationTest extends PostgreSqlIntegrationTest
         var tankId = UUID.randomUUID();
         tanks.save(new BunkerTank(
                 tankId, stationId, "BNK-CONC-01", "Diesel 1", "DIESEL",
-                new BigDecimal("10000.000"), new BigDecimal("100.000"), new BigDecimal("10.000"),
+                new BigDecimal("10000.000"), new BigDecimal("200.000"), new BigDecimal("10.000"),
                 BunkerTankStatus.ACTIVE, now, true, now, now
         ));
 
@@ -141,21 +144,17 @@ class BunkerPostgresConcurrencyIntegrationTest extends PostgreSqlIntegrationTest
         executor.shutdown();
         assertTrue(executor.awaitTermination(10, TimeUnit.SECONDS));
 
-        // Invariant: Exactly one issue can succeed; the other must be rejected
-        assertEquals(1, successCount.size(), "Exactly one fuel issue should succeed due to stock limits");
-        assertEquals(1, exceptions.size(), "Exactly one fuel issue should fail with INSUFFICIENT_BUNKER_STOCK");
+        assertEquals(2, successCount.size(), "Both permitted fuel issues must serialize and succeed");
+        assertEquals(0, exceptions.size());
 
         var tank = tanks.findById(tankId).orElseThrow();
         assertTrue(tank.currentStockLiters().compareTo(BigDecimal.ZERO) >= 0, "Tank stock must never be negative");
 
-        if (successCount.contains(issue1.id())) {
-            assertEquals(0, new BigDecimal("20.000").compareTo(tank.currentStockLiters()));
-        } else {
-            assertEquals(0, new BigDecimal("50.000").compareTo(tank.currentStockLiters()));
-        }
+        assertEquals(0, new BigDecimal("70.000").compareTo(tank.currentStockLiters()));
 
         var dbMovements = movements.findByTankIdPaged(tankId, 0, 10);
-        assertEquals(1, dbMovements.size(), "Exactly one FUEL_ISSUE ledger movement should exist");
+        assertEquals(2, dbMovements.size(), "Both FUEL_ISSUE ledger movements should exist");
+        assertEquals(List.of(2L, 1L), dbMovements.stream().map(BunkerStockMovement::ledgerSequence).toList());
         assertEquals(BunkerMovementType.FUEL_ISSUE, dbMovements.get(0).movementType());
         assertEquals(0, tank.currentStockLiters().compareTo(dbMovements.get(0).resultingBalanceLiters()));
     }
@@ -171,7 +170,7 @@ class BunkerPostgresConcurrencyIntegrationTest extends PostgreSqlIntegrationTest
         var tankId = UUID.randomUUID();
         tanks.save(new BunkerTank(
                 tankId, stationId, "BNK-CONC-02", "Diesel 2", "DIESEL",
-                new BigDecimal("10000.000"), new BigDecimal("8000.000"), new BigDecimal("10.000"),
+                new BigDecimal("12000.000"), new BigDecimal("8000.000"), new BigDecimal("10.000"),
                 BunkerTankStatus.ACTIVE, now, true, now, now
         ));
 
@@ -226,16 +225,17 @@ class BunkerPostgresConcurrencyIntegrationTest extends PostgreSqlIntegrationTest
         executor.shutdown();
         assertTrue(executor.awaitTermination(10, TimeUnit.SECONDS));
 
-        assertEquals(1, successCount.size(), "Exactly one purchase receipt should succeed due to capacity limits");
-        assertEquals(1, exceptions.size(), "The second purchase receipt must fail with BUNKER_CAPACITY_EXCEEDED");
+        assertEquals(2, successCount.size(), "Both permitted purchase receipts must serialize and succeed");
+        assertEquals(0, exceptions.size());
 
         var tank = tanks.findById(tankId).orElseThrow();
-        assertEquals(0, new BigDecimal("9500.000").compareTo(tank.currentStockLiters()), "Final stock must be exactly 9,500 L");
+        assertEquals(0, new BigDecimal("11000.000").compareTo(tank.currentStockLiters()), "Final stock must conserve both receipts");
 
         var dbMovements = movements.findByTankIdPaged(tankId, 0, 10);
-        assertEquals(1, dbMovements.size(), "Exactly one PURCHASE_RECEIPT movement should be committed");
+        assertEquals(2, dbMovements.size(), "Both PURCHASE_RECEIPT movements should be committed");
+        assertEquals(List.of(2L, 1L), dbMovements.stream().map(BunkerStockMovement::ledgerSequence).toList());
         assertEquals(BunkerMovementType.PURCHASE_RECEIPT, dbMovements.get(0).movementType());
-        assertEquals(0, new BigDecimal("9500.000").compareTo(dbMovements.get(0).resultingBalanceLiters()));
+        assertEquals(0, new BigDecimal("11000.000").compareTo(dbMovements.get(0).resultingBalanceLiters()));
     }
 
     @Test
@@ -489,6 +489,8 @@ class BunkerPostgresConcurrencyIntegrationTest extends PostgreSqlIntegrationTest
         // Stock conservation invariant: 1000 + 1000 - 800 = 1200 L
         assertEquals(0, new BigDecimal("1200.000").compareTo(tank.currentStockLiters()));
         assertEquals(2, dbMovements.size(), "Both operations should have committed ledger entries");
+        assertEquals(2L, dbMovements.get(0).ledgerSequence());
+        assertEquals(1L, dbMovements.get(1).ledgerSequence());
         assertEquals(0, tank.currentStockLiters().compareTo(dbMovements.get(0).resultingBalanceLiters()), "Latest ledger balance must match tank stock");
     }
 
@@ -558,6 +560,88 @@ class BunkerPostgresConcurrencyIntegrationTest extends PostgreSqlIntegrationTest
 
         assertEquals(2, movementsA.size());
         assertEquals(2, movementsB.size());
+        assertEquals(List.of(2L, 1L), movementsA.stream().map(BunkerStockMovement::ledgerSequence).toList());
+        assertEquals(List.of(2L, 1L), movementsB.stream().map(BunkerStockMovement::ledgerSequence).toList());
         assertEquals(2, successCount.size(), "Both transfers serialized and succeeded without deadlock");
+    }
+
+    @Test
+    void ledgerSequenceDeterminesLatestForSameAndBackdatedOccurrenceTimes() {
+        var stationId = UUID.randomUUID();
+        var locationId = UUID.randomUUID();
+        ReferenceFixtures.locations(jdbc, locationId);
+        stations.save(new FuelStation(stationId, "STN-ORDER", "Ordering Depot", FuelStationType.INTERNAL, true, null, locationId));
+        var tankId = UUID.randomUUID();
+        tanks.save(new BunkerTank(tankId, stationId, "BNK-ORDER", "Ordering Tank", "DIESEL",
+                new BigDecimal("1000.000"), new BigDecimal("80.000"), BigDecimal.ZERO,
+                BunkerTankStatus.ACTIVE, now, true, now, now));
+
+        insertMovement(tankId, 1L, "100.000", now, UUID.randomUUID());
+        insertMovement(tankId, 2L, "90.000", now, UUID.randomUUID());
+        insertMovement(tankId, 3L, "80.000", now.minusDays(30), UUID.randomUUID());
+
+        var ledger = movements.findByTankIdPaged(tankId, 0, 10);
+        assertEquals(List.of(3L, 2L, 1L), ledger.stream().map(BunkerStockMovement::ledgerSequence).toList());
+        assertEquals(0, new BigDecimal("80.000").compareTo(ledger.get(0).resultingBalanceLiters()));
+    }
+
+    @Test
+    void tenantTankLedgerSequenceConstraintRejectsDuplicatesAndIsIndependentPerTank() {
+        var stationId = UUID.randomUUID();
+        var locationId = UUID.randomUUID();
+        ReferenceFixtures.locations(jdbc, locationId);
+        stations.save(new FuelStation(stationId, "STN-SCOPE", "Scope Depot", FuelStationType.INTERNAL, true, null, locationId));
+        var tankA = UUID.randomUUID();
+        var tankB = UUID.randomUUID();
+        tanks.save(new BunkerTank(tankA, stationId, "BNK-SCOPE-A", "Scope A", "DIESEL",
+                new BigDecimal("1000.000"), new BigDecimal("10.000"), BigDecimal.ZERO,
+                BunkerTankStatus.ACTIVE, now, true, now, now));
+        tanks.save(new BunkerTank(tankB, stationId, "BNK-SCOPE-B", "Scope B", "DIESEL",
+                new BigDecimal("1000.000"), new BigDecimal("20.000"), BigDecimal.ZERO,
+                BunkerTankStatus.ACTIVE, now, true, now, now));
+
+        insertMovement(tankA, 1L, "10.000", now, UUID.randomUUID());
+        insertMovement(tankB, 1L, "20.000", now, UUID.randomUUID());
+        assertEquals(2L, movements.nextLedgerSequence(tankA));
+        assertEquals(2L, movements.nextLedgerSequence(tankB));
+        assertThrows(org.springframework.dao.DataIntegrityViolationException.class,
+                () -> insertMovement(tankA, 1L, "10.000", now, UUID.randomUUID()));
+    }
+
+    @Test
+    void rolledBackMutationDoesNotConsumeLedgerSequenceOrChangeTankBalance() {
+        var stationId = UUID.randomUUID();
+        var locationId = UUID.randomUUID();
+        ReferenceFixtures.locations(jdbc, locationId);
+        stations.save(new FuelStation(stationId, "STN-ROLLBACK", "Rollback Depot", FuelStationType.INTERNAL, true, null, locationId));
+        var tankId = UUID.randomUUID();
+        tanks.save(new BunkerTank(tankId, stationId, "BNK-ROLLBACK", "Rollback Tank", "DIESEL",
+                new BigDecimal("1000.000"), new BigDecimal("100.000"), BigDecimal.ZERO,
+                BunkerTankStatus.ACTIVE, now, true, now, now));
+
+        assertThrows(IllegalStateException.class, () -> transactions.execute(() -> {
+            var locked = tanks.findByIdForUpdate(tankId).orElseThrow();
+            var balance = new BigDecimal("110.000");
+            tanks.save(locked.withStock(balance));
+            movements.save(new BunkerStockMovement(UUID.randomUUID(), tankId,
+                    movements.nextLedgerSequence(tankId), BunkerMovementType.ADJUSTMENT_IN,
+                    new BigDecimal("10.000"), balance, BunkerReferenceType.MANUAL_ADJUSTMENT,
+                    UUID.randomUUID(), now, actorId, "forced rollback", now));
+            throw new IllegalStateException("force rollback after sequence allocation");
+        }));
+
+        assertEquals(0, new BigDecimal("100.000").compareTo(tanks.findById(tankId).orElseThrow().currentStockLiters()));
+        assertEquals(0, movements.countByTankId(tankId));
+        bunkerTanks.adjustStock(tankId, new BigDecimal("10.000"), "successful retry", null, "admin");
+        assertEquals(1L, movements.findByTankIdPaged(tankId, 0, 1).get(0).ledgerSequence());
+    }
+
+    private void insertMovement(UUID tankId, long sequence, String balance, OffsetDateTime occurredAt, UUID id) {
+        jdbc.update("INSERT INTO bunker_stock_movement "
+                        + "(id, tenant_id, tank_id, ledger_sequence, movement_type, quantity_liters, resulting_balance_liters, "
+                        + "reference_type, reference_id, occurred_at, created_by, reason, created_at) "
+                        + "VALUES (?, ?, ?, ?, 'ADJUSTMENT_OUT', 10.000, ?, "
+                        + "'MANUAL_ADJUSTMENT', ?, ?, ?, 'ordering acceptance', ?)",
+                id, tenantId, tankId, sequence, new BigDecimal(balance), id, occurredAt, actorId, now);
     }
 }

@@ -61,6 +61,8 @@ security:
 
 app:
   integration:
+    exchange:
+      enabled: false
     outbox:
       enabled: false
   delivery:

@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -15,6 +16,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
+@EnableMethodSecurity
 @EnableConfigurationProperties(JwtProperties.class)
 class SecurityConfig {
     @Bean
@@ -42,6 +44,8 @@ class SecurityConfig {
                                 "/v3/api-docs/**", "/error").permitAll()
                         .requestMatchers("/public/v1/delivery-self-service/**",
                                 "/api/public/v1/delivery-self-service/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/integration/v1/tracking/positions",
+                                "/api/integration/v1/tracking/positions").permitAll()
                         .requestMatchers("/auth/me", "/auth/logout").authenticated()
                         .requestMatchers("/actuator/**").hasAuthority("IDENTITY_MANAGE")
                         .requestMatchers("/users/**", "/roles/**").hasAuthority("IDENTITY_MANAGE")
@@ -90,6 +94,97 @@ class SecurityConfig {
 
                         .requestMatchers(HttpMethod.GET, "/drivers/available", "/drivers/*/availability")
                         .hasAuthority("DRIVER_AVAILABILITY_VIEW")
+                        .requestMatchers(HttpMethod.GET, "/drivers/payroll-input-batches",
+                                "/drivers/payroll-input-batches/**", "/drivers/*/payroll-worker-mapping",
+                                "/v1/drivers/payroll-input-batches", "/v1/drivers/payroll-input-batches/**",
+                                "/v1/drivers/*/payroll-worker-mapping",
+                                "/api/v1/drivers/payroll-input-batches",
+                                "/api/v1/drivers/payroll-input-batches/**",
+                                "/api/v1/drivers/*/payroll-worker-mapping")
+                        .hasAuthority("DRIVER_PAYROLL_VIEW")
+                        .requestMatchers(HttpMethod.PUT, "/drivers/payroll-input-batches/*/lines",
+                                "/drivers/*/payroll-worker-mapping", "/v1/drivers/payroll-input-batches/*/lines",
+                                "/v1/drivers/*/payroll-worker-mapping",
+                                "/api/v1/drivers/payroll-input-batches/*/lines",
+                                "/api/v1/drivers/*/payroll-worker-mapping")
+                        .hasAuthority("DRIVER_PAYROLL_PREPARE")
+                        .requestMatchers(HttpMethod.POST, "/drivers/payroll-input-batches",
+                                "/drivers/payroll-input-batches/*/validate",
+                                "/drivers/payroll-input-batches/*/corrections",
+                                "/v1/drivers/payroll-input-batches",
+                                "/v1/drivers/payroll-input-batches/*/validate",
+                                "/v1/drivers/payroll-input-batches/*/corrections",
+                                "/api/v1/drivers/payroll-input-batches",
+                                "/api/v1/drivers/payroll-input-batches/*/validate",
+                                "/api/v1/drivers/payroll-input-batches/*/corrections")
+                        .hasAuthority("DRIVER_PAYROLL_PREPARE")
+                        .requestMatchers(HttpMethod.POST, "/drivers/payroll-input-batches/*/approve",
+                                "/v1/drivers/payroll-input-batches/*/approve",
+                                "/api/v1/drivers/payroll-input-batches/*/approve")
+                        .hasAuthority("DRIVER_PAYROLL_APPROVE")
+                        .requestMatchers(HttpMethod.POST, "/drivers/payroll-input-batches/*/export",
+                                "/v1/drivers/payroll-input-batches/*/export",
+                                "/api/v1/drivers/payroll-input-batches/*/export")
+                        .hasAuthority("DRIVER_PAYROLL_EXPORT")
+                        .requestMatchers(HttpMethod.GET, "/billing/records", "/billing/records/**",
+                                "/v1/billing/records", "/v1/billing/records/**",
+                                "/api/v1/billing/records", "/api/v1/billing/records/**")
+                        .hasAuthority("BILLING_VIEW")
+                        .requestMatchers(HttpMethod.PUT, "/billing/records/*/lines", "/v1/billing/records/*/lines",
+                                "/api/v1/billing/records/*/lines")
+                        .hasAuthority("BILLING_PREPARE")
+                        .requestMatchers(HttpMethod.POST, "/billing/records", "/billing/records/*/validate",
+                                "/billing/records/*/cancel", "/billing/records/*/reversals",
+                                "/v1/billing/records", "/v1/billing/records/*/validate",
+                                "/v1/billing/records/*/cancel", "/v1/billing/records/*/reversals",
+                                "/api/v1/billing/records", "/api/v1/billing/records/*/validate",
+                                "/api/v1/billing/records/*/cancel", "/api/v1/billing/records/*/reversals")
+                        .hasAuthority("BILLING_PREPARE")
+                        .requestMatchers(HttpMethod.POST, "/billing/records/*/approve",
+                                "/v1/billing/records/*/approve", "/api/v1/billing/records/*/approve")
+                        .hasAuthority("BILLING_APPROVE")
+                        .requestMatchers(HttpMethod.POST, "/billing/records/*/finalize",
+                                "/v1/billing/records/*/finalize", "/api/v1/billing/records/*/finalize")
+                        .hasAuthority("BILLING_FINALIZE")
+                        .requestMatchers(HttpMethod.POST, "/billing/records/*/export",
+                                "/v1/billing/records/*/export", "/api/v1/billing/records/*/export")
+                        .hasAuthority("BILLING_EXPORT")
+                        .requestMatchers(HttpMethod.GET, "/tracking/vehicles", "/tracking/vehicles/*/latest",
+                                "/v1/tracking/vehicles", "/v1/tracking/vehicles/*/latest",
+                                "/api/v1/tracking/vehicles", "/api/v1/tracking/vehicles/*/latest",
+                                "/tracking/devices", "/tracking/devices/*", "/v1/tracking/devices",
+                                "/v1/tracking/devices/*", "/api/v1/tracking/devices", "/api/v1/tracking/devices/*")
+                        .hasAuthority("TRACKING_VIEW")
+                        .requestMatchers(HttpMethod.GET, "/tracking/vehicles/*/positions",
+                                "/v1/tracking/vehicles/*/positions", "/api/v1/tracking/vehicles/*/positions")
+                        .hasAuthority("TRACKING_HISTORY_VIEW")
+                        .requestMatchers("/tracking/provider-types", "/tracking/provider-connections/**",
+                                "/v1/tracking/provider-types", "/v1/tracking/provider-connections/**",
+                                "/api/v1/tracking/provider-types", "/api/v1/tracking/provider-connections/**")
+                        .hasAuthority("TRACKING_DEVICE_MANAGE")
+                        .requestMatchers(HttpMethod.POST, "/tracking/devices/**", "/v1/tracking/devices/**",
+                                "/api/v1/tracking/devices/**")
+                        .hasAuthority("TRACKING_DEVICE_MANAGE")
+                        .requestMatchers(HttpMethod.PUT, "/tracking/devices/*", "/v1/tracking/devices/*",
+                                "/api/v1/tracking/devices/*")
+                        .hasAuthority("TRACKING_DEVICE_MANAGE")
+                        .requestMatchers(HttpMethod.GET, "/v1/tracking/geofences/transitions",
+                                "/v1/tracking/geofences/unauthorized-transitions",
+                                "/api/v1/tracking/geofences/transitions",
+                                "/api/v1/tracking/geofences/unauthorized-transitions")
+                        .hasAuthority("GEOFENCE_EVENT_VIEW")
+                        .requestMatchers(HttpMethod.GET, "/v1/tracking/geofences",
+                                "/v1/tracking/geofences/*", "/v1/tracking/geofences/memberships",
+                                "/api/v1/tracking/geofences", "/api/v1/tracking/geofences/*",
+                                "/api/v1/tracking/geofences/memberships")
+                        .hasAuthority("GEOFENCE_VIEW")
+                        .requestMatchers(HttpMethod.POST, "/v1/tracking/geofences",
+                                "/v1/tracking/geofences/**", "/api/v1/tracking/geofences",
+                                "/api/v1/tracking/geofences/**")
+                        .hasAuthority("GEOFENCE_MANAGE")
+                        .requestMatchers(HttpMethod.PUT, "/v1/tracking/geofences/*",
+                                "/api/v1/tracking/geofences/*")
+                        .hasAuthority("GEOFENCE_MANAGE")
                         .requestMatchers(HttpMethod.GET, "/drivers", "/drivers/*", "/drivers/*/licenses",
                                 "/drivers/*/exceptions", "/drivers/*/exceptions/*",
                                 "/drivers/*/violations", "/drivers/*/violations/*",
@@ -188,6 +283,36 @@ class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/trips/*/checkpoints", "/trips/*/delays", "/trips/*/incidents")
                         .hasAnyAuthority("TRIP_DISPATCH", "TRIP_LOG_MANAGE", "TRIP_UPDATE")
 
+                        .requestMatchers(HttpMethod.GET, "/v1/fuel/exceptions", "/v1/fuel/exceptions/**")
+                        .hasAuthority("FUEL_EXCEPTION_VIEW")
+                        .requestMatchers(HttpMethod.POST, "/v1/fuel/exceptions/*/corrections/*/approve",
+                                "/v1/fuel/exceptions/*/corrections/*/reject")
+                        .hasAuthority("FUEL_EXCEPTION_APPROVE")
+                        .requestMatchers(HttpMethod.POST, "/v1/fuel/exceptions/*/corrections")
+                        .hasAuthority("FUEL_EXCEPTION_CORRECT")
+                        .requestMatchers(HttpMethod.POST, "/v1/fuel/exceptions/*/escalate")
+                        .hasAuthority("FUEL_EXCEPTION_ESCALATE")
+                        .requestMatchers(HttpMethod.POST, "/v1/fuel/exceptions", "/v1/fuel/exceptions/*/review",
+                                "/v1/fuel/exceptions/*/evidence", "/v1/fuel/exceptions/*/notes",
+                                "/v1/fuel/exceptions/*/resolve")
+                        .hasAuthority("FUEL_EXCEPTION_MANAGE")
+                        .requestMatchers(HttpMethod.GET, "/v1/fuel/performance", "/v1/fuel/performance/**")
+                        .hasAuthority("FUEL_PERFORMANCE_VIEW")
+                        .requestMatchers(HttpMethod.GET, "/v1/fuel/cards", "/v1/fuel/cards/**",
+                                "/v1/fuel/card-imports", "/v1/fuel/card-imports/**",
+                                "/v1/fuel/card-transactions", "/v1/fuel/card-transactions/**")
+                        .hasAuthority("FUEL_CARD_VIEW")
+                        .requestMatchers(HttpMethod.POST, "/v1/fuel/cards/*/block")
+                        .hasAuthority("FUEL_CARD_BLOCK")
+                        .requestMatchers(HttpMethod.POST, "/v1/fuel/card-imports")
+                        .hasAuthority("FUEL_CARD_IMPORT")
+                        .requestMatchers(HttpMethod.POST, "/v1/fuel/card-transactions/*/match",
+                                "/v1/fuel/card-transactions/*/unmatch", "/v1/fuel/card-transactions/*/reject")
+                        .hasAuthority("FUEL_CARD_RECONCILE")
+                        .requestMatchers(HttpMethod.POST, "/v1/fuel/cards", "/v1/fuel/cards/**")
+                        .hasAuthority("FUEL_CARD_MANAGE")
+                        .requestMatchers(HttpMethod.PUT, "/v1/fuel/cards/*", "/v1/fuel/cards/*/restrictions")
+                        .hasAuthority("FUEL_CARD_MANAGE")
                         .requestMatchers(HttpMethod.GET, "/fuel-issues", "/fuel-issues/*",
                                 "/fuel-issues/*/history", "/fuel-stations", "/fuel-stations/*")
                         .hasAuthority("FUEL_ISSUE_VIEW")
@@ -374,6 +499,67 @@ class SecurityConfig {
 
                         .requestMatchers("/e2e/**").hasAuthority("NOTIFICATION_RULE_MANAGE")
 
+                        // Runtime matching excludes the /api context path. Literal variants are retained so
+                        // security tests exercise the externally visible contract as well as the servlet path.
+                        .requestMatchers(HttpMethod.GET, "/v1/integrations/*/exchanges",
+                                "/api/v1/integrations/*/exchanges")
+                        .hasAuthority("INTEGRATION_AUDIT_VIEW")
+                        .requestMatchers(HttpMethod.GET, "/v1/integrations", "/v1/integrations/*",
+                                "/api/v1/integrations", "/api/v1/integrations/*")
+                        .hasAuthority("INTEGRATION_VIEW")
+                        .requestMatchers(HttpMethod.POST, "/v1/integrations", "/api/v1/integrations")
+                        .hasAuthority("INTEGRATION_MANAGE")
+                        .requestMatchers(HttpMethod.PUT, "/v1/integrations/*", "/api/v1/integrations/*")
+                        .hasAuthority("INTEGRATION_MANAGE")
+                        .requestMatchers(HttpMethod.POST, "/v1/integrations/*/test",
+                                "/api/v1/integrations/*/test")
+                        .hasAuthority("INTEGRATION_TEST")
+                        .requestMatchers(HttpMethod.POST, "/v1/integrations/*/enable",
+                                "/v1/integrations/*/disable", "/api/v1/integrations/*/enable",
+                                "/api/v1/integrations/*/disable")
+                        .hasAuthority("INTEGRATION_ACTIVATE")
+
+                        .requestMatchers(HttpMethod.GET, "/v1/operational-exceptions/*/history",
+                                "/api/v1/operational-exceptions/*/history")
+                        .hasAuthority("OPERATIONAL_EXCEPTION_AUDIT_VIEW")
+                        .requestMatchers(HttpMethod.GET, "/v1/operational-exceptions",
+                                "/v1/operational-exceptions/*", "/api/v1/operational-exceptions",
+                                "/api/v1/operational-exceptions/*")
+                        .hasAuthority("OPERATIONAL_EXCEPTION_VIEW")
+                        .requestMatchers(HttpMethod.POST, "/v1/operational-exceptions/*/assign",
+                                "/api/v1/operational-exceptions/*/assign")
+                        .hasAnyAuthority("OPERATIONAL_EXCEPTION_ASSIGN", "OPERATIONAL_EXCEPTION_MANAGE")
+                        .requestMatchers(HttpMethod.POST, "/v1/operational-exceptions/*/escalate",
+                                "/api/v1/operational-exceptions/*/escalate")
+                        .hasAuthority("OPERATIONAL_EXCEPTION_ESCALATE")
+                        .requestMatchers(HttpMethod.POST, "/v1/operational-exceptions/*/rca",
+                                "/v1/operational-exceptions/*/rca/approve",
+                                "/api/v1/operational-exceptions/*/rca",
+                                "/api/v1/operational-exceptions/*/rca/approve")
+                        .hasAuthority("OPERATIONAL_EXCEPTION_RCA")
+                        .requestMatchers(HttpMethod.POST, "/v1/operational-exceptions/*/close",
+                                "/v1/operational-exceptions/*/reject-resolution",
+                                "/v1/operational-exceptions/*/reopen",
+                                "/api/v1/operational-exceptions/*/close",
+                                "/api/v1/operational-exceptions/*/reject-resolution",
+                                "/api/v1/operational-exceptions/*/reopen")
+                        .hasAuthority("OPERATIONAL_EXCEPTION_CLOSE")
+                        .requestMatchers(HttpMethod.POST, "/v1/operational-exceptions/*/classify",
+                                "/v1/operational-exceptions/*/acknowledge",
+                                "/v1/operational-exceptions/*/start",
+                                "/v1/operational-exceptions/*/resolve",
+                                "/v1/operational-exceptions/*/corrective-actions",
+                                "/v1/operational-exceptions/*/corrective-actions/*/start",
+                                "/v1/operational-exceptions/*/corrective-actions/*/complete",
+                                "/api/v1/operational-exceptions/*/classify",
+                                "/api/v1/operational-exceptions/*/acknowledge",
+                                "/api/v1/operational-exceptions/*/start",
+                                "/api/v1/operational-exceptions/*/resolve",
+                                "/api/v1/operational-exceptions/*/corrective-actions",
+                                "/api/v1/operational-exceptions/*/corrective-actions/*/start",
+                                "/api/v1/operational-exceptions/*/corrective-actions/*/complete")
+                        .hasAuthority("OPERATIONAL_EXCEPTION_MANAGE")
+
                         .requestMatchers(HttpMethod.GET, "/v1/freight/exceptions", "/v1/freight/exceptions/*")
                         .hasAuthority("CARGO_EXCEPTION_VIEW")
                         .requestMatchers(HttpMethod.POST, "/v1/freight/exceptions")
@@ -394,7 +580,9 @@ class SecurityConfig {
                                 "/dashboard/**", "/reports/**",
                                 "/v1/deliveries/**",
                                 "/notification-rules/**", "/notification-rule-executions/**", "/notification-deliveries/**", "/notification-customer-preferences/**", "/notification-event-catalogue/**", "/notification-templates/**",
-                                "/notifications/**", "/offline-sync/**").denyAll()
+                                "/notifications/**", "/offline-sync/**", "/v1/integrations/**",
+                                "/api/v1/integrations/**", "/v1/operational-exceptions/**",
+                                "/api/v1/operational-exceptions/**").denyAll()
                         .anyRequest().denyAll())
                 .addFilterBefore(jwt, UsernamePasswordAuthenticationFilter.class)
                 .build();

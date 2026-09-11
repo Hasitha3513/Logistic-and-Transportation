@@ -140,13 +140,21 @@ class DatabaseTableOwnershipArchitectureTest {
         own(ownership, "organization", "customer", "department", "location", "project", "vendor");
         own(ownership, "fleet", "driver", "driver_license", "driver_exception", "driver_violation",
                 "driver_medical_record", "driver_drug_test", "vehicle_category", "vehicle_type", "vehicle",
-                "vehicle_document", "vehicle_reading", "vehicle_meter_reset", "maintenance_schedule", "lubricant_log");
+                "vehicle_document", "vehicle_reading", "vehicle_meter_reset", "maintenance_schedule", "lubricant_log",
+                "driver_payroll_input_batch", "driver_payroll_input_line", "driver_payroll_worker_mapping",
+                "driver_payroll_worker_mapping_command",
+                "driver_payroll_input_history");
         own(ownership, "routing", "route", "route_stop", "route_revision", "route_revision_stop", "route_disruption");
         own(ownership, "trip", "trip", "trip_status_history", "trip_dispatch", "trip_operational_event");
         own(ownership, "fuel", "fuel_station", "fuel_limit_policy", "fuel_issue", "fuel_issue_history",
                 "fuel_price", "fuel_purchase", "fuel_purchase_history", "bunker_tank", "bunker_dip_reading",
-                "bunker_stock_adjustment", "bunker_stock_movement");
-        own(ownership, "freight", "freight_order", "freight_order_line", "cargo_manifest", "cargo_manifest_item",
+                "bunker_stock_adjustment", "bunker_stock_movement", "fuel_card", "fuel_card_binding_history",
+                "fuel_card_restriction", "fuel_card_import_batch", "fuel_card_transaction",
+                "fuel_card_reconciliation_history", "fuel_card_transaction_indicator", "fuel_card_audit_event",
+                "fuel_exception_case", "fuel_exception_evidence", "fuel_exception_correction",
+                "fuel_exception_correction_attempt",
+                "fuel_exception_note", "fuel_exception_history", "fuel_exception_operations_handoff");
+        own(ownership, "freight", "freight_order", "freight_order_line", "freight_billing_fact", "cargo_manifest", "cargo_manifest_item",
                 "load_plan", "load_plan_item_placement", "freight_insurance_policy", "freight_insurance_claim",
                 "freight_insurance_settlement", "cargo_exception", "cargo_exception_history");
         own(ownership, "delivery", "delivery_order", "delivery_number_counter", "proof_of_delivery", "pod_evidence",
@@ -159,6 +167,19 @@ class DatabaseTableOwnershipArchitectureTest {
                 "notification_rule_policy", "notification_rule_quiet_day", "notification_rule_execution",
                 "notification_delivery_attempt", "customer_notification_preference");
         own(ownership, "offlinesync", "offline_sync_operation");
+        own(ownership, "integration", "integration_configuration", "integration_mapping", "integration_exchange",
+                "integration_exchange_attempt", "integration_audit_event");
+        own(ownership, "billing", "transport_billing_record", "transport_billing_line",
+                "transport_billing_cost_centre", "transport_billing_tax_fact", "transport_billing_source_claim",
+                "transport_billing_history");
+        own(ownership, "tracking", "tracking_device", "tracking_vehicle_device_assignment", "tracking_position",
+                "tracking_vehicle_latest", "tracking_ingest_nonce", "tracking_audit_event",
+                "tracking_provider_binding", "tracking_provider_ingest_nonce", "tracking_retention_policy",
+                "tracking_device_provider_binding", "tracking_geofence",
+                "tracking_vehicle_geofence_state", "tracking_geofence_transition",
+                "tracking_geofence_evaluation_job");
+        own(ownership, "operations", "operational_exception_case", "operational_exception_assignment_history",
+                "operational_exception_corrective_action", "operational_exception_rca", "operational_exception_history");
         own(ownership, "shared", "integration_outbox_event");
         return Map.copyOf(ownership);
     }

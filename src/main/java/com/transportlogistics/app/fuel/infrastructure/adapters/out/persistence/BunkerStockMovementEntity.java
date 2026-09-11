@@ -21,6 +21,9 @@ class BunkerStockMovementEntity extends com.transportlogistics.app.shared.infras
     @Column(name = "tank_id", nullable = false)
     private UUID tankId;
 
+    @Column(name = "ledger_sequence", nullable = false)
+    private long ledgerSequence;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "movement_type", nullable = false, length = 32)
     private BunkerMovementType movementType;

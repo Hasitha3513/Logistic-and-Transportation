@@ -1,11 +1,22 @@
 package com.transportlogistics.app.trip.infrastructure.adapters.in.web.controllers;
+import com.transportlogistics.app.trip.infrastructure.adapters.in.web.dto.request.CompleteRequest;
+import com.transportlogistics.app.trip.infrastructure.adapters.in.web.dto.request.DispatchRequest;
+import com.transportlogistics.app.trip.infrastructure.adapters.in.web.dto.request.DriverAssignmentRequest;
+import com.transportlogistics.app.trip.infrastructure.adapters.in.web.dto.request.ReasonRequest;
+import com.transportlogistics.app.trip.infrastructure.adapters.in.web.dto.request.RouteAssignmentRequest;
+import com.transportlogistics.app.trip.infrastructure.adapters.in.web.dto.request.StartRequest;
+import com.transportlogistics.app.trip.infrastructure.adapters.in.web.dto.request.TripCheckpointRequest;
+import com.transportlogistics.app.trip.infrastructure.adapters.in.web.dto.request.TripDelayRequest;
+import com.transportlogistics.app.trip.infrastructure.adapters.in.web.dto.request.TripIncidentRequest;
+import com.transportlogistics.app.trip.infrastructure.adapters.in.web.dto.request.TripRequest;
+import com.transportlogistics.app.trip.infrastructure.adapters.in.web.dto.request.VehicleAssignmentRequest;
 
 import com.transportlogistics.app.shared.utils.PrincipalUtils;
 import com.transportlogistics.app.trip.application.ports.in.TripOperationalEventUseCase;
 import com.transportlogistics.app.trip.application.ports.in.TripUseCase;
 import com.transportlogistics.app.trip.domain.model.Trip;
 import com.transportlogistics.app.trip.domain.model.TripCommand;
-import com.transportlogistics.app.trip.infrastructure.adapters.in.web.dto.request.*;
+
 import com.transportlogistics.app.trip.infrastructure.adapters.in.web.dto.response.TripHistoryResponse;
 import com.transportlogistics.app.trip.infrastructure.adapters.in.web.dto.response.TripOperationalEventResponse;
 import com.transportlogistics.app.trip.infrastructure.adapters.in.web.dto.response.TripResponse;

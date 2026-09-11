@@ -7,6 +7,7 @@ import java.util.UUID;
 public record BunkerStockMovement(
         UUID id,
         UUID tankId,
+        long ledgerSequence,
         BunkerMovementType movementType,
         BigDecimal quantityLiters,
         BigDecimal resultingBalanceLiters,

@@ -247,6 +247,13 @@ class TripOperationalEventOfflineSyncIntegrationTest {
                     (id, username, email, password_hash, first_name, last_name, active, created_at, updated_at)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """, id, actor, id + "@test.local", "unused", "Offline", "Trip", true, OCCURRED_AT, OCCURRED_AT);
+        jdbc.update("""
+                INSERT INTO tenant_membership
+                    (membership_id, tenant_id, user_id, status, created_at, created_by,
+                     updated_at, updated_by, version)
+                VALUES (?, ?, ?, 'ACTIVE', ?, 'offline-sync-test', ?, 'offline-sync-test', 0)
+                """, UUID.randomUUID(), com.transportlogistics.app.tenancy.CanonicalTenant.ID, id,
+                OCCURRED_AT, OCCURRED_AT);
     }
 
     private void insertDelayNotificationRule() {

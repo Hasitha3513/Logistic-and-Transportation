@@ -30,6 +30,10 @@ class LocationPersistenceAdapter implements LocationRepository {
         return repo.findById(id).map(this::map);
     }
 
+    public Optional<Location> findById(UUID tenantId, UUID id) {
+        return repo.findByIdAndTenantId(id, tenantId).map(this::map);
+    }
+
     public List<Location> findAll() {
         return repo.findAll().stream().map(this::map).toList();
     }

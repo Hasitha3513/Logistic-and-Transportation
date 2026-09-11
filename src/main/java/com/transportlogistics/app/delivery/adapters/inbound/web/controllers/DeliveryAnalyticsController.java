@@ -1,6 +1,11 @@
 package com.transportlogistics.app.delivery.adapters.inbound.web.controllers;
+import com.transportlogistics.app.delivery.DeliveryReportingQuery.DeliveryAnalyticsCriteria;
+import com.transportlogistics.app.delivery.DeliveryReportingQuery.TrendGranularity;
+import com.transportlogistics.app.delivery.DeliveryReportingQuery.DeliveryAnalyticsSummary;
+import com.transportlogistics.app.delivery.DeliveryReportingQuery.DeliveryTrendItem;
+import com.transportlogistics.app.delivery.DeliveryReportingQuery.FailureReasonBreakdownItem;
+import com.transportlogistics.app.delivery.DeliveryReportingQuery.RegionalPerformanceItem;
 
-import com.transportlogistics.app.delivery.DeliveryReportingQuery.*;
 import com.transportlogistics.app.delivery.ports.inbound.DeliveryAnalyticsUseCase;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;

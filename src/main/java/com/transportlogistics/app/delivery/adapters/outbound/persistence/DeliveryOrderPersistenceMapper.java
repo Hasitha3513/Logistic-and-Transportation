@@ -1,6 +1,12 @@
 package com.transportlogistics.app.delivery.adapters.outbound.persistence;
+import com.transportlogistics.app.delivery.domain.model.DeliveryId;
+import com.transportlogistics.app.delivery.domain.model.DeliveryNumber;
+import com.transportlogistics.app.delivery.domain.model.DeliveryPriority;
+import com.transportlogistics.app.delivery.domain.model.DeliveryServiceType;
+import com.transportlogistics.app.delivery.domain.model.DeliveryStatus;
+import com.transportlogistics.app.delivery.domain.model.DeliveryWindow;
+import com.transportlogistics.app.delivery.domain.model.DeliveryOrder;
 
-import com.transportlogistics.app.delivery.domain.model.*;
 import org.springframework.stereotype.Component;
 
 @Component

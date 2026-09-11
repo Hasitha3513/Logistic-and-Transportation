@@ -5,6 +5,7 @@ import com.transportlogistics.app.routing.RouteTripMetric;
 import com.transportlogistics.app.routing.application.ports.out.RouteDistancePort;
 import com.transportlogistics.app.routing.application.ports.out.RouteDisruptionRepository;
 import com.transportlogistics.app.routing.application.ports.out.RouteEventPublisher;
+import com.transportlogistics.app.routing.application.ports.out.RouteOperationalExceptionPublisher;
 import com.transportlogistics.app.routing.application.ports.out.RouteRepository;
 import com.transportlogistics.app.routing.application.ports.out.RouteRevisionRepository;
 import com.transportlogistics.app.routing.application.ports.out.RouteTransaction;
@@ -32,6 +33,7 @@ class RouteServiceTest {
     private RouteRevisionRepository revisionRepository;
     private RouteDisruptionRepository disruptionRepository;
     private RouteEventPublisher eventPublisher;
+    private RouteOperationalExceptionPublisher operationalExceptions;
     private RouteDistancePort distancePort;
     private RoutePerformanceTripLookupPort performanceTripLookup;
     private RouteTransaction transaction;
@@ -44,13 +46,15 @@ class RouteServiceTest {
         revisionRepository = mock(RouteRevisionRepository.class);
         disruptionRepository = mock(RouteDisruptionRepository.class);
         eventPublisher = mock(RouteEventPublisher.class);
+        operationalExceptions = mock(RouteOperationalExceptionPublisher.class);
         distancePort = mock(RouteDistancePort.class);
         performanceTripLookup = mock(RoutePerformanceTripLookupPort.class);
         transaction = mock(RouteTransaction.class);
         when(transaction.execute(any())).thenAnswer(invocation ->
                 ((java.util.function.Supplier<?>) invocation.getArgument(0)).get());
         clock = Clock.fixed(Instant.parse("2026-08-24T12:00:00Z"), ZoneOffset.UTC);
-        service = new RouteService(repository, revisionRepository, disruptionRepository, eventPublisher, distancePort, performanceTripLookup, transaction, clock);
+        service = new RouteService(repository, revisionRepository, disruptionRepository, eventPublisher,
+                operationalExceptions, distancePort, performanceTripLookup, transaction, clock);
     }
 
     @Test
@@ -128,6 +132,7 @@ class RouteServiceTest {
         assertEquals(DisruptionStatus.ACTIVE, disruption.status());
         verify(disruptionRepository).save(any());
         verify(eventPublisher).publish(isA(RouteDisruptionCreatedEvent.class));
+        verify(operationalExceptions).publish(disruption);
     }
 
     @Test

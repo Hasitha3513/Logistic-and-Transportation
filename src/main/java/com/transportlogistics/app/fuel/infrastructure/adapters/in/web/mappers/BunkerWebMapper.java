@@ -1,4 +1,8 @@
 package com.transportlogistics.app.fuel.infrastructure.adapters.in.web.mappers;
+import com.transportlogistics.app.fuel.infrastructure.adapters.in.web.dto.response.BunkerStockMovementResponse;
+import com.transportlogistics.app.fuel.infrastructure.adapters.in.web.dto.response.BunkerTankResponse;
+import com.transportlogistics.app.fuel.infrastructure.adapters.in.web.dto.response.DipReadingResponse;
+import com.transportlogistics.app.fuel.infrastructure.adapters.in.web.dto.response.StockAdjustmentResponse;
 
 import com.transportlogistics.app.fuel.application.ports.in.BunkerTankUseCase;
 import com.transportlogistics.app.fuel.domain.model.BunkerStockMovement;
@@ -8,7 +12,7 @@ import com.transportlogistics.app.fuel.domain.model.StockAdjustment;
 import com.transportlogistics.app.fuel.infrastructure.adapters.in.web.dto.request.BunkerTankCreateRequest;
 import com.transportlogistics.app.fuel.infrastructure.adapters.in.web.dto.request.BunkerTankUpdateRequest;
 import com.transportlogistics.app.fuel.infrastructure.adapters.in.web.dto.request.BunkerTransferRequest;
-import com.transportlogistics.app.fuel.infrastructure.adapters.in.web.dto.response.*;
+
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 

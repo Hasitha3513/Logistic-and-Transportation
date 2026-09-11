@@ -94,11 +94,34 @@ class LocalSampleDataBootstrapIntegrationTest extends PostgreSqlIntegrationTest 
         assertEquals(4, count("fuel_limit_policy"));
         assertEquals(3, count("bunker_tank"));
         assertEquals(6, count("bunker_stock_movement"));
+        assertCanonicalBunkerLedgerTails();
 
         var route = routes.get(java.util.UUID.fromString("50000000-0000-0000-0000-000000000001"));
         assertEquals(1, route.stopLocationIds().size());
         assertEquals(java.util.UUID.fromString("20000000-0000-0000-0000-000000000004"),
                 route.stopLocationIds().getFirst());
+    }
+
+    private void assertCanonicalBunkerLedgerTails() {
+        assertEquals(0, jdbc.queryForObject("""
+                SELECT COUNT(*) FROM bunker_tank tank
+                WHERE tank.current_stock_liters <> 0
+                  AND NOT EXISTS (
+                      SELECT 1 FROM bunker_stock_movement movement
+                      WHERE movement.tank_id = tank.id)
+                """, Integer.class));
+        assertEquals(0, jdbc.queryForObject("""
+                SELECT COUNT(*) FROM bunker_tank tank
+                WHERE EXISTS (
+                    SELECT 1 FROM bunker_stock_movement movement
+                    WHERE movement.tank_id = tank.id)
+                  AND tank.current_stock_liters <> (
+                      SELECT movement.resulting_balance_liters
+                      FROM bunker_stock_movement movement
+                      WHERE movement.tank_id = tank.id
+                      ORDER BY movement.ledger_sequence DESC
+                      LIMIT 1)
+                """, Integer.class));
     }
 
     @org.junit.jupiter.api.AfterEach

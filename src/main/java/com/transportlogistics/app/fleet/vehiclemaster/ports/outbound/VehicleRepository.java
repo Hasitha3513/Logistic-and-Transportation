@@ -5,6 +5,7 @@ import com.transportlogistics.app.fleet.vehiclemaster.domain.model.Vehicle;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.Set;
 
 public interface VehicleRepository {
     Vehicle save(Vehicle value);
@@ -14,6 +15,10 @@ public interface VehicleRepository {
     Optional<Vehicle> findByIdForUpdate(UUID id);
 
     List<Vehicle> findAll();
+
+    default List<Vehicle> findAllByIds(Set<UUID> ids) {
+        return findAll().stream().filter(vehicle -> ids.contains(vehicle.id())).toList();
+    }
 
     Optional<Vehicle> findByRegistrationNumber(String registrationNumber);
 

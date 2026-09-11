@@ -1,4 +1,5 @@
 import { defineConfig, devices } from '@playwright/test';
+import path from 'node:path';
 
 const isWindows = process.platform === 'win32';
 const mavenWrapper = isWindows ? '..\\mvnw.cmd' : '../mvnw';
@@ -6,9 +7,12 @@ const e2eAdminUsername = process.env.E2E_ADMIN_USERNAME ?? 'admin';
 const e2eAdminPassword = process.env.E2E_ADMIN_PASSWORD ?? 'AdminPass!2026';
 const e2eJwtSecret = process.env.E2E_JWT_SECRET ?? 'local-development-secret-change-me-32-bytes-minimum';
 const e2eWorkers = Number(process.env.E2E_WORKERS ?? 3);
+const integrationSandbox = process.env.INTEGRATION_CONTROLLED_SANDBOX_ROOT
+  ?? path.resolve(process.cwd(), `../target/e2e-integration-sandbox-${process.pid}`);
 
 process.env.E2E_ADMIN_USERNAME = e2eAdminUsername;
 process.env.E2E_ADMIN_PASSWORD = e2eAdminPassword;
+process.env.INTEGRATION_CONTROLLED_SANDBOX_ROOT = integrationSandbox;
 
 export default defineConfig({
   testDir: './e2e/tests',
@@ -48,7 +52,7 @@ export default defineConfig({
   ],
   webServer: [
     {
-      command: `${mavenWrapper} -q -f ../pom.xml spring-boot:run "-Dspring-boot.run.profiles=postgres,e2e" "-Dspring-boot.run.arguments=--server.port=8088 --app.dev.identity-bootstrap.enabled=true --app.dev.identity-bootstrap.username=${e2eAdminUsername} --app.dev.identity-bootstrap.password=${e2eAdminPassword} --app.dev.identity-bootstrap.email=e2e.admin@example.test --security.jwt.secret=${e2eJwtSecret} --app.dev.sample-data.enabled=true"`,
+      command: `${mavenWrapper} -q -f ../pom.xml spring-boot:run "-Dspring-boot.run.profiles=postgres,e2e" "-Dspring-boot.run.arguments=--server.port=8088 --app.dev.identity-bootstrap.enabled=true --app.dev.identity-bootstrap.username=${e2eAdminUsername} --app.dev.identity-bootstrap.password=${e2eAdminPassword} --app.dev.identity-bootstrap.email=e2e.admin@example.test --security.jwt.secret=${e2eJwtSecret} --app.dev.sample-data.enabled=true --app.integration.outbox.enabled=true --app.tracking.geofence-evaluator.enabled=true"`,
       url: 'http://localhost:8088/api/health',
       timeout: 180_000,
       reuseExistingServer: true,
@@ -60,7 +64,9 @@ export default defineConfig({
         DEV_IDENTITY_PASSWORD: e2eAdminPassword,
         DEV_IDENTITY_EMAIL: 'e2e.admin@example.test',
         DEV_SAMPLE_DATA_ENABLED: 'true',
+        INTEGRATION_CONTROLLED_SANDBOX_ROOT: integrationSandbox,
         DELIVERY_SELF_SERVICE_CUSTOMER_ORIGIN: process.env.DELIVERY_SELF_SERVICE_CUSTOMER_ORIGIN || 'http://localhost:5174',
+        US48_FIXTURE_SECRET: process.env.US48_FIXTURE_SECRET || 'us48-controlled-provider-secret',
         JAVA_HOME: process.env.E2E_JAVA_HOME || process.env.JAVA_HOME || '/usr/lib/jvm/java-1.21.0-openjdk-amd64',
         PATH: `${process.env.E2E_JAVA_HOME || process.env.JAVA_HOME || '/usr/lib/jvm/java-1.21.0-openjdk-amd64'}/bin:${process.env.PATH || ''}`,
       },

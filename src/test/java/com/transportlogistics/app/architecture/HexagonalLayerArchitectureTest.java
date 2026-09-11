@@ -171,6 +171,27 @@ public class HexagonalLayerArchitectureTest {
     }
 
     @Test
+    void trackingGeofenceDomainMustRemainFrameworkFree() {
+        classes()
+                .that().resideInAPackage("..tracking.domain.geofence..")
+                .should().onlyDependOnClassesThat().resideInAnyPackage(
+                        "java..", "..tracking.domain..")
+                .because("US-49 geofence rules are pure Tracking domain logic")
+                .check(importedClasses);
+    }
+
+    @Test
+    void trackingGeofencePortsMustRemainFrameworkAndAdapterFree() {
+        noClasses()
+                .that().resideInAnyPackage("..tracking.ports.inbound..", "..tracking.ports.outbound..")
+                .should().dependOnClassesThat().resideInAnyPackage(
+                        "org.springframework..", "jakarta.persistence..", "org.hibernate..",
+                        "com.fasterxml.jackson..", "..tracking.adapters..")
+                .because("Tracking ports are provider-neutral hexagonal contracts")
+                .check(importedClasses);
+    }
+
+    @Test
     void freightDomainPortsAndApplicationMustRemainFrameworkFree() {
         noClasses()
                 .that().resideInAnyPackage("..freight..domain..", "..freight..ports..", "..freight..application..")
@@ -198,6 +219,74 @@ public class HexagonalLayerArchitectureTest {
                         "org.springframework..", "jakarta.persistence..", "org.hibernate..", "com.fasterxml.jackson..",
                         "..delivery..adapters..")
                 .because("Delivery core code must remain provider-neutral and depend inward")
+                .check(importedClasses);
+    }
+
+    @Test
+    void integrationDomainPortsAndApplicationMustRemainFrameworkFree() {
+        noClasses()
+                .that().resideInAnyPackage("..integration..domain..", "..integration..ports..",
+                        "..integration..application..")
+                .should().dependOnClassesThat().resideInAnyPackage(
+                        "org.springframework..", "jakarta.persistence..", "org.hibernate..", "com.fasterxml.jackson..",
+                        "..integration..adapters..")
+                .because("Integration core code must remain provider-neutral and depend inward")
+                .check(importedClasses);
+    }
+
+    @Test
+    void integrationWebMustNotAccessPersistenceAdapters() {
+        noClasses()
+                .that().resideInAPackage("..integration..adapters.inbound.web..")
+                .should().dependOnClassesThat().resideInAPackage("..integration..adapters.outbound.persistence..")
+                .because("Integration web adapters must invoke inbound ports")
+                .check(importedClasses);
+    }
+
+    @Test
+    void operationsDomainPortsAndApplicationMustRemainFrameworkFree() {
+        noClasses().that().resideInAnyPackage("..operations..domain..", "..operations..ports..",
+                        "..operations..application..")
+                .should().dependOnClassesThat().resideInAnyPackage(
+                        "org.springframework..", "jakarta.persistence..", "com.fasterxml.jackson..",
+                        "..operations..adapters..")
+                .because("Operations core code must remain provider-neutral and depend inward")
+                .check(importedClasses);
+    }
+
+    @Test
+    void operationsWebMustNotAccessPersistenceAdapters() {
+        noClasses().that().resideInAPackage("..operations..adapters.inbound.web..")
+                .should().dependOnClassesThat().resideInAPackage("..operations..adapters.outbound.persistence..")
+                .because("Operations web adapters must invoke inbound ports")
+                .check(importedClasses);
+    }
+
+    @Test
+    void flespiTypesMustRemainInsideTrackingInboundAdapter() {
+        noClasses().that().resideOutsideOfPackage("..tracking.adapters.inbound.flespi..")
+                .should().dependOnClassesThat().resideInAPackage("..tracking.adapters.inbound.flespi..")
+                .because("provider-specific flespi types must not leak into Tracking core or other modules")
+                .check(importedClasses);
+    }
+
+    @Test
+    void trackingProviderSpiMustRemainFrameworkAndAdapterNeutral() {
+        noClasses().that().resideInAnyPackage(
+                        "..tracking.application.provider..", "..tracking.ports.outbound..")
+                .should().dependOnClassesThat().resideInAnyPackage(
+                        "org.springframework..", "jakarta.persistence..", "org.hibernate..",
+                        "com.fasterxml.jackson..", "..tracking.adapters..")
+                .because("Tracking provider SPI and neutral values must depend inward")
+                .check(importedClasses);
+    }
+
+    @Test
+    void trackingInternalProviderIngestionMustRemainInsideTracking() {
+        noClasses().that().resideOutsideOfPackage("..tracking..")
+                .should().dependOnClassesThat().haveFullyQualifiedName(
+                        "com.transportlogistics.app.tracking.ports.inbound.TrackingProviderIngestionPort")
+                .because("the non-web provider ingestion authority is Tracking-internal")
                 .check(importedClasses);
     }
 

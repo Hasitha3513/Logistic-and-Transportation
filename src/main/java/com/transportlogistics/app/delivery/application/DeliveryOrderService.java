@@ -1,6 +1,11 @@
 package com.transportlogistics.app.delivery.application;
+import com.transportlogistics.app.delivery.domain.model.DeliveryId;
+import com.transportlogistics.app.delivery.domain.model.DeliveryWindow;
+import com.transportlogistics.app.delivery.domain.model.DeliveryNumber;
+import com.transportlogistics.app.delivery.domain.model.DeliveryOrder;
+import com.transportlogistics.app.delivery.domain.model.DeliveryPriority;
+import com.transportlogistics.app.delivery.domain.model.DeliveryServiceType;
 
-import com.transportlogistics.app.delivery.domain.model.*;
 import com.transportlogistics.app.delivery.domain.events.DeliveryOrderDestinationChangedEvent;
 import com.transportlogistics.app.delivery.ports.inbound.DeliveryOrderUseCase;
 import com.transportlogistics.app.delivery.ports.outbound.*;

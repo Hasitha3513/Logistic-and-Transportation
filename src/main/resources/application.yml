@@ -67,6 +67,12 @@ security:
     refresh-token-ttl: P30D
     secret: ${JWT_SECRET:super_secret_jwt_key_that_is_at_least_32_bytes_long_for_security_2026}
 app:
+  integration:
+    exchange:
+      enabled: ${INTEGRATION_EXCHANGE_ENABLED:true}
+      worker-delay: ${INTEGRATION_EXCHANGE_WORKER_DELAY:PT5S}
+    file:
+      controlled-sandbox-root: ${INTEGRATION_CONTROLLED_SANDBOX_ROOT:./data/integration-sandbox}
   delivery:
     self-service:
       customer-origin: ${DELIVERY_SELF_SERVICE_CUSTOMER_ORIGIN:http://localhost:5173}

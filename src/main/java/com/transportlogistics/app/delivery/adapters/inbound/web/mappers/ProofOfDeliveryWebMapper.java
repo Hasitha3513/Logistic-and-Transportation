@@ -1,6 +1,7 @@
 package com.transportlogistics.app.delivery.adapters.inbound.web.mappers;
+import com.transportlogistics.app.delivery.adapters.inbound.web.dto.response.PodEvidenceResponse;
+import com.transportlogistics.app.delivery.adapters.inbound.web.dto.response.ProofOfDeliveryResponse;
 
-import com.transportlogistics.app.delivery.adapters.inbound.web.dto.response.*;
 import com.transportlogistics.app.delivery.domain.model.*;
 import org.springframework.stereotype.Component;
 

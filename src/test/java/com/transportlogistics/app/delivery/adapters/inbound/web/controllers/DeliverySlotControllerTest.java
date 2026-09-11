@@ -32,6 +32,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc(addFilters = false)
+@WithMockUser(authorities = {"DELIVERY_SLOT_CREATE", "DELIVERY_SLOT_VIEW", "DELIVERY_SLOT_ASSIGN"})
 class DeliverySlotControllerTest {
 
     @Autowired

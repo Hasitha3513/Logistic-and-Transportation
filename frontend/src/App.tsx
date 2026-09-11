@@ -47,6 +47,19 @@ import DeliverySlotListPage from './features/delivery/slots/pages/DeliverySlotLi
 import { DeliveryRiderListPage } from './features/delivery/riders/pages/DeliveryRiderListPage';
 import { DeliveryBatchListPage } from './features/delivery/batches/pages/DeliveryBatchListPage';
 import DeliverySelfServicePage from './features/delivery/selfService/pages/DeliverySelfServicePage';
+import IntegrationListPage from './features/integrations/pages/IntegrationListPage';
+import IntegrationDetailPage from './features/integrations/pages/IntegrationDetailPage';
+import OperationalExceptionQueuePage from './features/operations/operationalExceptions/pages/OperationalExceptionQueuePage';
+import FuelPerformancePage from './features/fuel/performance/pages/FuelPerformancePage';
+import FuelCardsPage from './features/fuel/cards/pages/FuelCardsPage';
+import FuelExceptionsPage from './features/fuel/exceptions/pages/FuelExceptionsPage';
+import DriverPayrollPage from './features/fleet/driverPayroll/pages/DriverPayrollPage';
+import TransportBillingPage from './features/billing/pages/TransportBillingPage';
+import LiveTrackingPage from './features/tracking/pages/LiveTrackingPage';
+import ProviderConnectionsPage from './features/tracking/pages/ProviderConnectionsPage';
+import GeofenceListPage from './features/tracking/pages/GeofenceListPage';
+import GeofenceFormPage from './features/tracking/pages/GeofenceFormPage';
+import GeofenceDetailPage from './features/tracking/pages/GeofenceDetailPage';
 
 function ProtectedRoute() {
   const { user, isLoading } = useAuth();
@@ -61,6 +74,8 @@ function HomePage() {
   if (hasPermission('DRIVER_VIEW')) return <Navigate to="/drivers" replace />;
   if (hasPermission('ROUTE_VIEW')) return <Navigate to="/routes" replace />;
   if (hasPermission('TRIP_VIEW')) return <Navigate to="/trips" replace />;
+  if (hasPermission('FUEL_PERFORMANCE_VIEW')) return <Navigate to="/fuel/performance" replace />;
+  if (hasPermission('FUEL_CARD_VIEW')) return <Navigate to="/fuel/cards" replace />;
   if (hasPermission('FUEL_ISSUE_VIEW')) return <Navigate to="/fuel/issues" replace />;
   if (hasPermission('FUEL_PURCHASE_VIEW')) return <Navigate to="/fuel/purchases" replace />;
   if (hasPermission('BUNKER_VIEW')) return <Navigate to="/fuel/bunker-tanks" replace />;
@@ -72,6 +87,9 @@ function HomePage() {
   if (hasPermission('CARGO_EXCEPTION_VIEW')) return <Navigate to="/freight/exceptions" replace />;
   if (hasPermission('FREIGHT_REPORT_VIEW')) return <Navigate to="/freight/reports" replace />;
   if (hasPermission('DELIVERY_VIEW')) return <Navigate to="/deliveries" replace />;
+  if (hasPermission('OPERATIONAL_EXCEPTION_VIEW')) return <Navigate to="/operations/exceptions" replace />;
+  if (hasPermission('BILLING_VIEW')) return <Navigate to="/billing/records" replace />;
+  if (hasPermission('TRACKING_VIEW')) return <Navigate to="/tracking/vehicles" replace />;
   if (hasPermission('IDENTITY_MANAGE')) return <Navigate to="/administration/users" replace />;
   return <Navigate to="/workspace" replace />;
 }
@@ -87,6 +105,7 @@ export default function App() {
         <Route path="fleet/vehicle-categories" element={<ResourceListPage {...resourcePages.categories} />} />
         <Route path="fleet/vehicle-types" element={<ResourceListPage {...resourcePages.types} />} />
         <Route path="drivers" element={<ResourceListPage {...resourcePages.drivers} />} />
+        <Route path="drivers/payroll-input-batches" element={<DriverPayrollPage />} />
         <Route path="routes" element={<ResourceListPage {...resourcePages.routes} />} />
         <Route path="trips" element={<TripListPage />} />
         <Route path="trips/new" element={<TripEditorPage />} />
@@ -103,6 +122,9 @@ export default function App() {
         <Route path="fuel/bunker-tanks" element={<BunkerTankListPage />} />
         <Route path="fuel/bunker-tanks/:bunkerTankId" element={<BunkerTankDetailsPage />} />
         <Route path="fuel/prices" element={<FuelPricePage />} />
+        <Route path="fuel/performance" element={<FuelPerformancePage />} />
+        <Route path="fuel/cards" element={<FuelCardsPage />} />
+        <Route path="fuel/exceptions" element={<FuelExceptionsPage />} />
         <Route path="freight/orders" element={<FreightOrderListPage />} />
         <Route path="freight/orders/new" element={<FreightOrderFormPage />} />
         <Route path="freight/orders/:freightOrderId/edit" element={<FreightOrderFormPage />} />
@@ -136,6 +158,18 @@ export default function App() {
         <Route path="administration/users" element={<ResourceListPage {...resourcePages.users} />} />
         <Route path="administration/roles" element={<ResourceListPage {...resourcePages.roles} />} />
         <Route path="notification-rules" element={<NotificationRulesPage />} />
+        <Route path="integrations" element={<IntegrationListPage />} />
+        <Route path="integrations/new" element={<IntegrationDetailPage />} />
+        <Route path="integrations/:id" element={<IntegrationDetailPage />} />
+        <Route path="operations/exceptions" element={<OperationalExceptionQueuePage />} />
+        <Route path="billing/records" element={<TransportBillingPage />} />
+        <Route path="tracking/vehicles" element={<LiveTrackingPage />} />
+        <Route path="tracking/devices" element={<LiveTrackingPage initialTab="devices" />} />
+        <Route path="tracking/provider-connections" element={<ProviderConnectionsPage />} />
+        <Route path="tracking/geofences" element={<GeofenceListPage />} />
+        <Route path="tracking/geofences/new" element={<GeofenceFormPage />} />
+        <Route path="tracking/geofences/:geofenceId/edit" element={<GeofenceFormPage />} />
+        <Route path="tracking/geofences/:geofenceId" element={<GeofenceDetailPage />} />
         <Route path="workspace" element={<WorkspacePage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
