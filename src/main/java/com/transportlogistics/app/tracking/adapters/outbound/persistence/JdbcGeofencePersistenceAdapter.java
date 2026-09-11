@@ -155,16 +155,25 @@ class JdbcGeofencePersistenceAdapter implements GeofenceRepositoryPort,
             UUID tenantId, UUID vehicleId, double longitude, double latitude, int limit) {
         requireLimit(limit, MAX_PAGE);
         return List.copyOf(jdbc.query("""
-                SELECT geofence.* FROM tracking_geofence geofence
-                WHERE geofence.tenant_id=? AND geofence.lifecycle='ACTIVE' AND (
-                  (geofence.min_longitude<=? AND geofence.max_longitude>=?
-                   AND geofence.min_latitude<=? AND geofence.max_latitude>=?)
-                  OR EXISTS(SELECT 1 FROM tracking_vehicle_geofence_state state
-                    WHERE state.tenant_id=geofence.tenant_id
-                      AND state.geofence_id=geofence.id AND state.vehicle_id=?))
+                WITH candidate_id AS (
+                 SELECT id FROM tracking_geofence
+                 WHERE tenant_id=? AND lifecycle='ACTIVE'
+                   AND min_longitude<=CAST(? AS numeric) AND max_longitude>=CAST(? AS numeric)
+                   AND min_latitude<=CAST(? AS numeric) AND max_latitude>=CAST(? AS numeric)
+                 UNION
+                 SELECT state.geofence_id FROM tracking_vehicle_geofence_state state
+                 JOIN tracking_geofence definition
+                   ON definition.tenant_id=state.tenant_id
+                  AND definition.id=state.geofence_id
+                 WHERE state.tenant_id=? AND state.vehicle_id=?
+                   AND definition.lifecycle='ACTIVE'
+                )
+                SELECT geofence.* FROM candidate_id candidate
+                JOIN tracking_geofence geofence
+                  ON geofence.tenant_id=? AND geofence.id=candidate.id
                 ORDER BY geofence.id LIMIT ?
                 """, this::mapGeofence, tenantId, longitude, longitude, latitude, latitude,
-                vehicleId, limit));
+                tenantId, vehicleId, tenantId, limit));
     }
 
     @Override

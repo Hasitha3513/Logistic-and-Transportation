@@ -47,14 +47,16 @@ class GeofencePersistencePostgreSqlAcceptanceTest extends PostgreSqlIntegrationT
 
     @Test
     void cleanMigrationReachesV77WithFourTrackingOwnedTablesAndIndexes() {
-        assertThat(flyway.info().current().getVersion().getVersion()).isEqualTo("79");
+        assertThat(flyway.info().current().getVersion().getVersion()).isEqualTo("80");
         assertThat(tables()).contains("tracking_geofence", "tracking_vehicle_geofence_state",
                 "tracking_geofence_transition", "tracking_geofence_evaluation_job");
         assertThat(indexes()).contains("uq_tracking_geofence_tenant_name",
                 "idx_tracking_geofence_active_bbox", "idx_tracking_geofence_location",
                 "idx_tracking_geofence_state_vehicle", "uq_tracking_geofence_transition_identity",
                 "idx_tracking_geofence_transition_geofence", "idx_tracking_geofence_transition_vehicle",
-                "idx_tracking_geofence_transition_unauthorized", "idx_tracking_geofence_job_due");
+                "idx_tracking_geofence_transition_unauthorized", "idx_tracking_geofence_job_due",
+                "idx_tracking_geofence_job_global_due",
+                "idx_tracking_geofence_active_bbox_upper");
         assertThat(columns("tracking_geofence_transition"))
                 .doesNotContain("latitude", "longitude", "geometry", "raw_payload");
         assertThat(extensionExists("postgis")).isFalse();
@@ -70,8 +72,27 @@ class GeofencePersistencePostgreSqlAcceptanceTest extends PostgreSqlIntegrationT
         to76.migrate();
         assertThat(to76.info().current().getVersion().getVersion()).isEqualTo("76");
         flyway.migrate();
-        assertThat(flyway.info().current().getVersion().getVersion()).isEqualTo("79");
+        assertThat(flyway.info().current().getVersion().getVersion()).isEqualTo("80");
         assertThat(tables()).contains("tracking_geofence", "tracking_geofence_evaluation_job");
+    }
+
+    @Test
+    void upgradesV79ToV80ByAddingOnlyTheTwoAuthorizedIndexes() {
+        flyway.clean();
+        Flyway to79 = Flyway.configure().dataSource(configuredJdbcUrl(),
+                        configuredDatabaseUsername(), configuredDatabasePassword())
+                .cleanDisabled(false).placeholders(flyway.getConfiguration().getPlaceholders())
+                .target(MigrationVersion.fromVersion("79")).load();
+        to79.migrate();
+        assertThat(to79.info().current().getVersion().getVersion()).isEqualTo("79");
+        assertThat(indexes()).doesNotContain("idx_tracking_geofence_job_global_due",
+                "idx_tracking_geofence_active_bbox_upper");
+
+        flyway.migrate();
+
+        assertThat(flyway.info().current().getVersion().getVersion()).isEqualTo("80");
+        assertThat(indexes()).contains("idx_tracking_geofence_job_global_due",
+                "idx_tracking_geofence_active_bbox_upper");
     }
 
     @Test
@@ -273,19 +294,52 @@ class GeofencePersistencePostgreSqlAcceptanceTest extends PostgreSqlIntegrationT
     }
 
     @Test
-    void representativePlansUseTenantLeadingIndexes() {
-        assertThat(explain("""
-                SELECT * FROM tracking_geofence WHERE tenant_id=? AND lifecycle='ACTIVE'
-                 AND min_longitude<=80 AND max_longitude>=80
-                """)).contains("tracking_geofence");
+    void realisticProductionPlansUseV80AndExistingTenantIndexes() {
+        Fixture fixture = fixture("plans");
+        seedPlanGeofences(fixture.tenant(), 5_000);
+        seedPlanJobs(fixture, 5_000);
+        jdbc.execute("ANALYZE tracking_geofence");
+        jdbc.execute("ANALYZE tracking_geofence_evaluation_job");
+
+        String candidatePlan = String.join("\n", jdbc.queryForList("""
+                EXPLAIN (ANALYZE,COSTS OFF) WITH candidate_id AS (
+                 SELECT id FROM tracking_geofence
+                 WHERE tenant_id=? AND lifecycle='ACTIVE'
+                   AND min_longitude<=CAST(? AS numeric) AND max_longitude>=CAST(? AS numeric)
+                   AND min_latitude<=CAST(? AS numeric) AND max_latitude>=CAST(? AS numeric)
+                 UNION
+                 SELECT state.geofence_id FROM tracking_vehicle_geofence_state state
+                 JOIN tracking_geofence definition
+                   ON definition.tenant_id=state.tenant_id AND definition.id=state.geofence_id
+                 WHERE state.tenant_id=? AND state.vehicle_id=?
+                   AND definition.lifecycle='ACTIVE'
+                )
+                SELECT geofence.* FROM candidate_id candidate
+                JOIN tracking_geofence geofence ON geofence.tenant_id=? AND geofence.id=candidate.id
+                ORDER BY geofence.id LIMIT 500
+                """, String.class, fixture.tenant(), 79.85, 79.85, 6.85, 6.85,
+                fixture.tenant(), fixture.vehicle(), fixture.tenant()));
+        System.out.println("US49_V80_BBOX_PLAN\n" + candidatePlan);
+        assertThat(candidatePlan).contains("idx_tracking_geofence_active_bbox_upper")
+                .doesNotContain("Rows Removed by Filter: 4990");
+
+        String jobPlan = String.join("\n", jdbc.queryForList("""
+                EXPLAIN (ANALYZE,COSTS OFF)
+                SELECT tenant_id,position_id FROM tracking_geofence_evaluation_job
+                WHERE next_attempt_at<=? AND (status IN('PENDING','FAILED')
+                  OR (status='PROCESSING' AND lease_until<=?))
+                ORDER BY next_attempt_at,tenant_id,position_id
+                FOR UPDATE SKIP LOCKED LIMIT 16
+                """, String.class, timestamp(NOW.plusSeconds(10)), timestamp(NOW.plusSeconds(10))));
+        System.out.println("US49_V80_DUE_JOB_PLAN\n" + jobPlan);
+        assertThat(jobPlan).contains("idx_tracking_geofence_job_global_due")
+                .doesNotContain("Seq Scan on tracking_geofence_evaluation_job")
+                .doesNotContain("Sort Key: next_attempt_at, tenant_id, position_id");
+
         assertThat(explain("""
                 SELECT * FROM tracking_geofence_transition
                  WHERE tenant_id=? ORDER BY source_timestamp DESC,id DESC LIMIT 10
-                """)).contains("tracking_geofence_transition");
-        assertThat(explain("""
-                SELECT * FROM tracking_geofence_evaluation_job
-                 WHERE tenant_id=? AND status='PENDING' ORDER BY next_attempt_at LIMIT 10
-                """)).contains("tracking_geofence_evaluation_job");
+                """)).contains("idx_tracking_geofence_transition");
     }
 
     private int claimAfter(CyclicBarrier barrier, String owner) throws Exception {
@@ -337,6 +391,48 @@ class GeofencePersistencePostgreSqlAcceptanceTest extends PostgreSqlIntegrationT
                 """, position, fixture.vehicle(), hex(position), hex(UUID.randomUUID()),
                 timestamp(NOW.plusSeconds(1)), timestamp(NOW.plusSeconds(1)), fixture.tenant());
         return position;
+    }
+
+    private void seedPlanGeofences(UUID tenantId, int count) {
+        jdbc.update("""
+                INSERT INTO tracking_geofence(
+                 id,tenant_id,name,type,polygon_vertices,min_longitude,max_longitude,min_latitude,
+                 max_latitude,location_id,alert_enter_enabled,alert_exit_enabled,lifecycle,version,
+                 created_at,created_by,updated_at,updated_by)
+                SELECT gen_random_uuid(),?,'Plan ' || value,'UNAUTHORIZED_ZONE',
+                 '[{"longitude":0,"latitude":0},{"longitude":1,"latitude":0},
+                   {"longitude":1,"latitude":1},{"longitude":0,"latitude":0}]'::jsonb,
+                 CASE WHEN value<=10 THEN 79.8 ELSE 0 END,
+                 CASE WHEN value<=10 THEN 79.9 ELSE 1 END,
+                 CASE WHEN value<=10 THEN 6.8 ELSE 0 END,
+                 CASE WHEN value<=10 THEN 6.9 ELSE 1 END,
+                 NULL,TRUE,FALSE,'ACTIVE',1,now(),?,now(),?
+                FROM generate_series(1,?) value
+                """, tenantId, ACTOR, ACTOR, count);
+    }
+
+    private void seedPlanJobs(Fixture fixture, int count) {
+        jdbc.update("""
+                WITH device AS (
+                 SELECT id FROM tracking_device WHERE tenant_id=? LIMIT 1
+                ), generated AS (
+                 SELECT gen_random_uuid() id FROM generate_series(1,?)
+                ), inserted AS (
+                 INSERT INTO tracking_position(
+                  id,tenant_id,device_id,vehicle_id,provider_alias,dedupe_identity,payload_hash,
+                  source_timestamp,received_at,latitude,longitude,engine_state,trust,quality,
+                  ordering_classification,retention_policy,retention_policy_version)
+                 SELECT generated.id,?,device.id,?,'FIXTURE','plan-' || generated.id,
+                  repeat('d',64),?,?,6.5,79.5,'UNKNOWN','TRUSTED','GOOD','IN_ORDER','TEST','1'
+                 FROM generated CROSS JOIN device RETURNING tenant_id,id
+                )
+                INSERT INTO tracking_geofence_evaluation_job(
+                 tenant_id,position_id,status,attempt,next_attempt_at,created_at,updated_at)
+                SELECT tenant_id,id,'PENDING',0,
+                 CAST(? AS timestamptz)-(row_number() OVER())*interval '1 millisecond',?,?
+                FROM inserted
+                """, fixture.tenant(), count, fixture.tenant(), fixture.vehicle(), timestamp(NOW),
+                timestamp(NOW), timestamp(NOW), timestamp(NOW), timestamp(NOW));
     }
 
     private static GeofenceTransition transition(

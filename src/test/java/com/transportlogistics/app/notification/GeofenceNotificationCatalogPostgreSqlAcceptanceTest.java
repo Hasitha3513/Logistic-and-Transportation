@@ -32,7 +32,7 @@ class GeofenceNotificationCatalogPostgreSqlAcceptanceTest extends PostgreSqlInte
 
     @Test
     void cleanV1ToV79SeedsOneSafeUsableTemplateAndOneRulePerTenant() {
-        assertThat(flyway.info().current().getVersion().getVersion()).isEqualTo("79");
+        assertThat(flyway.info().current().getVersion().getVersion()).isEqualTo("80");
         assertThat(jdbc.queryForObject("""
                 SELECT count(*) FROM notification_template
                 WHERE event_type=? AND code=? AND channel='IN_APP' AND version=1 AND active
@@ -103,7 +103,7 @@ class GeofenceNotificationCatalogPostgreSqlAcceptanceTest extends PostgreSqlInte
 
         flyway.migrate();
 
-        assertThat(flyway.info().current().getVersion().getVersion()).isEqualTo("79");
+        assertThat(flyway.info().current().getVersion().getVersion()).isEqualTo("80");
         assertThat(jdbc.queryForObject("SELECT count(*) FROM notification_template", Integer.class))
                 .isEqualTo(templatesBefore + 1);
         assertThat(jdbc.queryForObject("SELECT count(*) FROM notification_rule", Integer.class))
