@@ -18,18 +18,18 @@
 > - **Authority Order:** Original Requirements (`Traspotation & logistic.docx`), Frozen Architecture/Contracts, Verified Production Code/Tests, then Roadmap.
 > - **MVP 1.3 Delivery Operations:** 7 / 7 COMPLETE (100%) - CLOSED
 > - **MVP 1.4 Last-Mile Delivery:** 8 / 8 COMPLETE (US-63 through US-70 Accepted & Closed)
-> - **Overall Release Band:** 72 / 87 COMPLETE (15 REPRIORITIZED / 87 TOTAL)
+> - **Overall Release Band:** 73 / 87 COMPLETE (14 REPRIORITIZED / 87 TOTAL)
 > - **Current Milestone:** MVP 1.4 Last-Mile Delivery — 8 / 8 COMPLETE, 100%, CLOSED.
 > - **Active Focus:** Wave B is 5 / 5 COMPLETE / CLOSED; Wave C is active.
 > - **US-48 Technical State:** `IMPLEMENTATION_COMPLETE / ACCEPTANCE_BLOCKED_EXTERNAL_SYSTEM`; pluggable CS01–CS10 are `COMPLETE` and `PLUG_AND_PLAY_FOR_SUPPORTED_ADAPTERS` is technically complete at V76; physical FMC130/Flespi evidence remains outstanding.
-> - **Immediate Next Action:** Execute `US-49-MANAGE-GEOFENCES-FINAL-ACCEPTANCE-001`; technical closure is complete and US-49 is ready for independent final acceptance, while US-48 physical acceptance remains `ON_HOLD_EXTERNAL_PREREQUISITE` with no accounting change.
+> - **Immediate Next Action:** Execute `US-50-MONITOR-SPEED-PRODUCT-DECISIONS-001`; US-49 final acceptance passed at V80, while US-48 physical acceptance remains `ON_HOLD_EXTERNAL_PREREQUISITE`.
 
 ---
 
 ## 📊 1. Executive Metrics & Milestone Progress
 
 ```
-Overall Progress: [█████████████████████████████████████████████████░] 72 / 87 Stories Complete (82.8%)
+Overall Progress: [██████████████████████████████████████████████████] 73 / 87 Stories Complete (83.9%)
 MVP 1.3 Band:     [██████████████████████████████████████████████████] 7 / 7 Complete (100.0%) - CLOSED
 MVP 1.4 Band:     [██████████████████████████████████████████████████] 8 / 8 Complete (100.0%) - CLOSED
 ```
@@ -166,7 +166,7 @@ Development startup now consistently provisions the idempotent PostgreSQL sample
 | :---: | :--- | :--- | :---: | :--- |
 | `US-47` | Manage Transport Billing | Trip/freight costing, charges, adjustments, cost centres and operational billing finalization | 🟢 `COMPLETE` | Final acceptance PASS; V72; focused 17/17; concurrency 9/9; Maven 1,398/0/0/15 in 06:38; architecture 46/46; Chromium 7/7; `US-47-TRANSPORT-BILLING-FINAL-ACCEPTANCE-001.md` |
 | `US-48` | Track Vehicles Live | Provider-neutral telemetry ingestion, live/last-known state, connectivity, accuracy and freshness | 🔴 `IMPLEMENTATION_COMPLETE / ACCEPTANCE_BLOCKED_EXTERNAL_SYSTEM` | CS01–CS10 technically complete at V76; external capture `ON_HOLD_EXTERNAL_PREREQUISITE`; rerun only when physical FMC130/live Flespi facts change; physical acceptance remains mandatory |
-| `US-49` | Manage Geofences | Depot, customer-site and unauthorized-zone entry/exit detection | 🟡 `IMPLEMENTATION_COMPLETE / READY_FOR_FINAL_ACCEPTANCE` | CS01–CS07, CS07A and technical closure COMPLETE at V80; independent final acceptance is next; no US-48 acceptance inheritance |
+| `US-49` | Manage Geofences | Depot, customer-site and unauthorized-zone entry/exit detection | ✅ `COMPLETE / ACCEPTED` | Final acceptance PASS at V80: focused 76/76, Maven 1,595/0/0/15, architecture 52/52, Vitest 299/299 and Chromium 7/7; no US-48 acceptance inheritance |
 | `US-50` | Monitor Speed | Threshold, road-rule and repeat-speed monitoring | 🟡 `TECHNICAL_DEPENDENCY_SATISFIED / READY_FOR_PRODUCT_DECISIONS` | Frozen optional speed/Vehicle/time/trust contracts are sufficient for implementation; real speed fidelity remains a final-evidence gate |
 | `US-51` | Monitor Idle Time | Engine-on versus movement duration and qualified fuel-waste estimates | 🟡 `WAVE C / BLOCKED_BY_REQUIRED_TELEMETRY_CAPABILITY` | Current FLESPI does not advertise IGNITION and no accepted alternate engine-state source exists |
 | `US-52` | Monitor Route Deviations | Planned-versus-actual comparison, severity and audited approval | 🟡 `TECHNICAL_DEPENDENCY_SATISFIED / READY_FOR_PRODUCT_DECISIONS` | Frozen trusted-position/source-time and accepted Routing contracts are sufficient |
@@ -235,13 +235,13 @@ Development startup now consistently provisions the idempotent PostgreSQL sample
 ## 🎯 4. Immediate Execution Queue
 
 ```
-Current Status: 72 / 87 COMPLETE; 15 stories remain across Waves C–E
-Queue Head:     US-49-MANAGE-GEOFENCES-FINAL-ACCEPTANCE-001
+Current Status: 73 / 87 COMPLETE; 14 stories remain across Waves C–E
+Queue Head:     US-50-MONITOR-SPEED-PRODUCT-DECISIONS-001
 ```
 
 1. **Wave A — Integration and exception-control foundations:** 2 / 2 COMPLETE / CLOSED (US-73 and US-78).
 2. **Wave B — Fuel control and financial links:** 5 / 5 COMPLETE / CLOSED (US-35, US-37, US-38, US-46, US-47).
-3. **Wave C — GPS and telematics:** US-48 physical acceptance is on external-prerequisite hold; proceed with US-49, then US-50/52, then US-53. US-51 and full US-55 require telemetry/product decisions; US-54 follows US-49–53 producers.
+3. **Wave C — GPS and telematics:** US-48 physical acceptance is on external-prerequisite hold; US-49 is accepted; proceed with US-50/52, then US-53. US-51 and full US-55 require telemetry/product decisions; US-54 follows US-50–53 producers.
 4. **Wave D — Compliance and field mobility:** US-72, US-76.
 5. **Wave E — Analytics, integrity, resilience, disruption and user risk:** US-85, US-84, US-87, US-82, US-86.
 6. After 87/87: `FULL-SOURCE-PARITY-AUDIT-001`, then `FULL-PLATFORM-END-TO-END-ACCEPTANCE-001` after authorized parity disposition.
