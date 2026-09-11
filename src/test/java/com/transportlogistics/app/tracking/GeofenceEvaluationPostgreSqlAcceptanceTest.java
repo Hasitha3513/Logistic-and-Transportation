@@ -442,7 +442,7 @@ class GeofenceEvaluationPostgreSqlAcceptanceTest extends PostgreSqlIntegrationTe
         insertMembership(UUID.fromString("49000000-0000-0000-0000-000000000021"), tenantA, userA, role);
         insertMembership(UUID.fromString("49000000-0000-0000-0000-000000000022"), tenantB, userB, role);
         flyway.migrate();
-        assertThat(flyway.info().current().getVersion().getVersion()).isEqualTo("80");
+        assertThat(flyway.info().current().getVersion().getVersion()).isEqualTo("81");
     }
 
     private void insertUser(UUID userId, String username) {

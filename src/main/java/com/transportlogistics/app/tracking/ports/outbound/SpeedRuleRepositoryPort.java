@@ -7,7 +7,7 @@ import java.util.UUID;
 
 public interface SpeedRuleRepositoryPort {
     SpeedRule save(SpeedRule rule, long expectedVersion);
-    Optional<SpeedRule> find(UUID tenantId, UUID ruleId);
+    Optional<SpeedRule> findRule(UUID tenantId, UUID ruleId);
     Optional<SpeedRule> findActiveRouteRule(UUID tenantId, UUID routeId, String routeVersion);
     Optional<SpeedRule> findActiveTenantRule(UUID tenantId);
     List<SpeedRule> find(UUID tenantId, SpeedRule.Scope scope, SpeedRule.Lifecycle lifecycle,

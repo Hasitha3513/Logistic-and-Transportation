@@ -8,7 +8,7 @@ import java.util.UUID;
 
 public interface SpeedingEpisodeRepositoryPort {
     SpeedingEpisode save(SpeedingEpisode episode);
-    Optional<SpeedingEpisode> find(UUID tenantId, UUID episodeId);
+    Optional<SpeedingEpisode> findEpisode(UUID tenantId, UUID episodeId);
     Optional<SpeedingEpisode> findActive(UUID tenantId, UUID vehicleId);
     Optional<SpeedingEpisode> findLatestClosed(UUID tenantId, UUID vehicleId,
                                                 UUID ruleId, long ruleVersion);

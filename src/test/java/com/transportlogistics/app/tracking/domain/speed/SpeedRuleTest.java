@@ -43,7 +43,9 @@ class SpeedRuleTest {
         assertTrue(draft.editable());
         SpeedRule active = draft.activate(NOW);
         assertFalse(active.editable());
+        assertEquals(2, active.ruleVersion());
         assertEquals(SpeedRule.Lifecycle.DISABLED, active.disable().lifecycle());
+        assertEquals(3, active.disable().ruleVersion());
         assertEquals(SpeedRule.Lifecycle.RETIRED, active.disable().retire().lifecycle());
         assertThrows(SpeedMonitoringException.class, active::retire);
         SpeedRule retired = draft.retire();

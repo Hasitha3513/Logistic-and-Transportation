@@ -177,7 +177,8 @@ class DatabaseTableOwnershipArchitectureTest {
                 "tracking_provider_binding", "tracking_provider_ingest_nonce", "tracking_retention_policy",
                 "tracking_device_provider_binding", "tracking_geofence",
                 "tracking_vehicle_geofence_state", "tracking_geofence_transition",
-                "tracking_geofence_evaluation_job");
+                "tracking_geofence_evaluation_job", "tracking_speed_rule", "tracking_speed_state",
+                "tracking_speed_episode", "tracking_speed_evaluation_job");
         own(ownership, "operations", "operational_exception_case", "operational_exception_assignment_history",
                 "operational_exception_corrective_action", "operational_exception_rca", "operational_exception_history");
         own(ownership, "shared", "integration_outbox_event");

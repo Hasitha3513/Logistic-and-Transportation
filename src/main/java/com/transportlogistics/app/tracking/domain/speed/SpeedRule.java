@@ -55,7 +55,7 @@ public record SpeedRule(UUID id, UUID tenantId, String name, Scope scope, UUID r
             throw transition("Only draft or disabled rules may be activated");
         }
         return new SpeedRule(id, tenantId, name, scope, routeId, routeVersion, thresholdKph,
-                Lifecycle.ACTIVE, ruleVersion, Objects.requireNonNull(activatedAt));
+                Lifecycle.ACTIVE, ruleVersion + 1, Objects.requireNonNull(activatedAt));
     }
 
     public SpeedRule disable() {
@@ -63,7 +63,7 @@ public record SpeedRule(UUID id, UUID tenantId, String name, Scope scope, UUID r
             throw transition("Only an active rule may be disabled");
         }
         return new SpeedRule(id, tenantId, name, scope, routeId, routeVersion, thresholdKph,
-                Lifecycle.DISABLED, ruleVersion, effectiveAt);
+                Lifecycle.DISABLED, ruleVersion + 1, effectiveAt);
     }
 
     public SpeedRule retire() {
@@ -71,7 +71,7 @@ public record SpeedRule(UUID id, UUID tenantId, String name, Scope scope, UUID r
             throw transition("Only a draft or disabled rule may be retired");
         }
         return new SpeedRule(id, tenantId, name, scope, routeId, routeVersion, thresholdKph,
-                Lifecycle.RETIRED, ruleVersion, effectiveAt);
+                Lifecycle.RETIRED, ruleVersion + 1, effectiveAt);
     }
 
     private static SpeedMonitoringException invalidScope(String message) {
