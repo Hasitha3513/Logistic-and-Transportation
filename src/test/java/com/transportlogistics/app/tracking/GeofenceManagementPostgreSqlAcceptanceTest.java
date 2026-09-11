@@ -112,6 +112,39 @@ class GeofenceManagementPostgreSqlAcceptanceTest extends PostgreSqlIntegrationTe
     }
 
     @Test
+    void concurrentSameIdempotencyKeyProducesOneLogicalCreateAndAudit() throws Exception {
+        CyclicBarrier barrier = new CyclicBarrier(2);
+        try (var executor = Executors.newFixedThreadPool(2)) {
+            var one = executor.submit(() -> createAfter(barrier, "Concurrent", "same-key"));
+            var two = executor.submit(() -> createAfter(barrier, "Concurrent", "same-key"));
+            assertThat(one.get().id()).isEqualTo(two.get().id());
+        }
+        assertThat(jdbc.queryForObject("""
+                SELECT count(*) FROM tracking_geofence WHERE tenant_id=? AND name='Concurrent'
+                """, Integer.class, TENANT)).isOne();
+        assertThat(jdbc.queryForObject("""
+                SELECT count(*) FROM tracking_audit_event
+                WHERE tenant_id=? AND action='GEOFENCE_CREATED'
+                """, Integer.class, TENANT)).isOne();
+    }
+
+    @Test
+    void concurrentSameExpectedVersionAllowsOneUpdateWithoutLostMutation() throws Exception {
+        Geofence draft = service.create(context(TENANT), create("Stale Race"), "stale-create");
+        CyclicBarrier barrier = new CyclicBarrier(2);
+        try (var executor = Executors.newFixedThreadPool(2)) {
+            var one = executor.submit(() -> updateAfter(barrier, draft, "Winner A"));
+            var two = executor.submit(() -> updateAfter(barrier, draft, "Winner B"));
+            assertThat(one.get() + two.get()).isEqualTo(1);
+        }
+        assertThat(service.get(TENANT, draft.id()).orElseThrow().version()).isEqualTo(1);
+        assertThat(jdbc.queryForObject("""
+                SELECT count(*) FROM tracking_audit_event
+                WHERE tenant_id=? AND target_id=? AND action='GEOFENCE_UPDATED'
+                """, Integer.class, TENANT, draft.id())).isOne();
+    }
+
+    @Test
     void queryPagesAreBoundedAndPendingMembershipIsHidden() {
         Geofence definition = service.create(context(TENANT), create("Query"), "query-create");
         assertThat(service.list(TENANT, null, null, null, 0, 100).total()).isEqualTo(1);
@@ -130,6 +163,22 @@ class GeofenceManagementPostgreSqlAcceptanceTest extends PostgreSqlIntegrationTe
             return 1;
         } catch (BusinessRuleException exception) {
             assertThat(exception.code()).isEqualTo("GEOFENCE_ACTIVE_LIMIT");
+            return 0;
+        }
+    }
+
+    private Geofence createAfter(CyclicBarrier barrier, String name, String key) throws Exception {
+        barrier.await();
+        return service.create(context(TENANT), create(name), key);
+    }
+
+    private int updateAfter(CyclicBarrier barrier, Geofence geofence, String name) throws Exception {
+        barrier.await();
+        try {
+            service.update(context(TENANT), geofence.id(), geofence.version(), update(name));
+            return 1;
+        } catch (BusinessRuleException exception) {
+            assertThat(exception.code()).isEqualTo("GEOFENCE_STALE_VERSION");
             return 0;
         }
     }

@@ -230,6 +230,49 @@ class GeofencePersistencePostgreSqlAcceptanceTest extends PostgreSqlIntegrationT
     }
 
     @Test
+    void twoWorkersClaimDistinctJobsAndPreserveTheBoundedBatch() throws Exception {
+        Fixture fixture = fixture("multi-worker");
+        for (int index = 0; index < 7; index++) {
+            UUID position = position(fixture, "multi-" + index);
+            jobs.enqueue(fixture.tenant(), position, NOW.plusMillis(index));
+        }
+        CyclicBarrier barrier = new CyclicBarrier(2);
+        try (var executor = Executors.newFixedThreadPool(2)) {
+            var first = executor.submit(() -> claimIdsAfter(barrier, "worker-one", 3));
+            var second = executor.submit(() -> claimIdsAfter(barrier, "worker-two", 3));
+            var firstIds = first.get();
+            var secondIds = second.get();
+            assertThat(firstIds).hasSize(3);
+            assertThat(secondIds).hasSize(3);
+            assertThat(firstIds).doesNotContainAnyElementsOf(secondIds);
+        }
+        assertThat(jobs.backlog(NOW.plusSeconds(1))).satisfies(backlog -> {
+            assertThat(backlog.claimed()).isEqualTo(6);
+            assertThat(backlog.queued()).isEqualTo(1);
+        });
+    }
+
+    @Test
+    void reclaimedLeaseRejectsEveryStaleOwnerMutation() {
+        Fixture fixture = fixture("stale-owner");
+        jobs.enqueue(fixture.tenant(), fixture.position(), NOW);
+        jobs.claimDue("worker-a", NOW, NOW.plusSeconds(1), 1);
+        jobs.claimDue("worker-b", NOW.plusSeconds(2), NOW.plusSeconds(30), 1);
+
+        assertThat(jobs.renew(fixture.tenant(), fixture.position(), "worker-a",
+                NOW.plusSeconds(2), NOW.plusSeconds(40))).isFalse();
+        assertThat(jobs.release(fixture.tenant(), fixture.position(), "worker-a",
+                NOW.plusSeconds(2))).isFalse();
+        assertThatThrownBy(() -> jobs.complete(fixture.tenant(), fixture.position(), "worker-a",
+                NOW.plusSeconds(2))).isInstanceOfSatisfying(BusinessRuleException.class,
+                        error -> assertThat(error.code()).isEqualTo("GEOFENCE_JOB_STALE_LEASE"));
+        assertThatThrownBy(() -> jobs.retry(fixture.tenant(), fixture.position(), "worker-a",
+                NOW.plusSeconds(2), NOW.plusSeconds(5))).isInstanceOf(BusinessRuleException.class);
+        assertThatThrownBy(() -> jobs.fail(fixture.tenant(), fixture.position(), "worker-a",
+                NOW.plusSeconds(2))).isInstanceOf(BusinessRuleException.class);
+    }
+
+    @Test
     void representativePlansUseTenantLeadingIndexes() {
         assertThat(explain("""
                 SELECT * FROM tracking_geofence WHERE tenant_id=? AND lifecycle='ACTIVE'
@@ -248,6 +291,13 @@ class GeofencePersistencePostgreSqlAcceptanceTest extends PostgreSqlIntegrationT
     private int claimAfter(CyclicBarrier barrier, String owner) throws Exception {
         barrier.await();
         return jobs.claimDue(owner, NOW.plusSeconds(2), NOW.plusSeconds(30), 1).size();
+    }
+
+    private List<UUID> claimIdsAfter(CyclicBarrier barrier, String owner, int limit)
+            throws Exception {
+        barrier.await();
+        return jobs.claimDue(owner, NOW.plusSeconds(1), NOW.plusSeconds(31), limit).stream()
+                .map(GeofenceEvaluationJob::positionId).toList();
     }
 
     private Fixture fixture(String suffix) {
@@ -273,6 +323,20 @@ class GeofencePersistencePostgreSqlAcceptanceTest extends PostgreSqlIntegrationT
         Geofence geofence = geofences.save(geofence(tenant, UUID.randomUUID(),
                 "Fence " + suffix, GeofenceType.UNAUTHORIZED_ZONE, null), 0);
         return new Fixture(tenant, vehicle, position, geofence);
+    }
+
+    private UUID position(Fixture fixture, String suffix) {
+        UUID position = UUID.randomUUID();
+        jdbc.update("""
+                INSERT INTO tracking_position(
+                 id,tenant_id,device_id,vehicle_id,provider_alias,dedupe_identity,payload_hash,
+                 source_timestamp,received_at,latitude,longitude,engine_state,trust,quality,
+                 ordering_classification,retention_policy,retention_policy_version)
+                SELECT ?,tenant_id,id,?,'FIXTURE',?,?, ?,?,6.5,79.5,'UNKNOWN','TRUSTED','GOOD',
+                 'IN_ORDER','TEST','1' FROM tracking_device WHERE tenant_id=? LIMIT 1
+                """, position, fixture.vehicle(), hex(position), hex(UUID.randomUUID()),
+                timestamp(NOW.plusSeconds(1)), timestamp(NOW.plusSeconds(1)), fixture.tenant());
+        return position;
     }
 
     private static GeofenceTransition transition(

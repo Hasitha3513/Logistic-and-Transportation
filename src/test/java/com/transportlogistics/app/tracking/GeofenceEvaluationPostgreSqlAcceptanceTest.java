@@ -24,6 +24,8 @@ import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.Executors;
 import javax.sql.DataSource;
 import org.flywaydb.core.Flyway;
 import org.flywaydb.core.api.MigrationVersion;
@@ -174,6 +176,197 @@ class GeofenceEvaluationPostgreSqlAcceptanceTest extends PostgreSqlIntegrationTe
                 .isEqualTo(GeofenceTransitionType.EXITED);
         assertThat(states.find(UUID.randomUUID(), fixture.vehicle(), fixture.geofenceId(), 0, 10))
                 .isEmpty();
+    }
+
+    @Test
+    void concurrentDuplicateFirstObservationCreatesOneSilentStableState() throws Exception {
+        Instant now = Instant.now();
+        Fixture fixture = fixture(now);
+        UUID initial = position(fixture, now.minusSeconds(1), 20, 20);
+
+        runConcurrently(() -> evaluate(initial, now), () -> evaluate(initial, now));
+
+        assertThat(jdbc.queryForObject("""
+                SELECT count(*) FROM tracking_vehicle_geofence_state
+                WHERE tenant_id=? AND geofence_id=? AND vehicle_id=?
+                """, Integer.class, fixture.tenant(), fixture.geofenceId(), fixture.vehicle()))
+                .isOne();
+        assertThat(count("tracking_geofence_transition", fixture.tenant())).isZero();
+        assertThat(count("integration_outbox_event", fixture.tenant())).isZero();
+    }
+
+    @Test
+    void concurrentDuplicateConfirmationCreatesOneTransitionAndOneDurableEvent() throws Exception {
+        Instant now = Instant.now();
+        Fixture fixture = fixture(now);
+        evaluate(position(fixture, now.minusSeconds(3), 20, 20), now);
+        evaluate(position(fixture, now.minusSeconds(2), 2, 2), now);
+        UUID confirming = position(fixture, now.minusSeconds(1), 3, 2);
+
+        runConcurrently(() -> evaluate(confirming, now), () -> evaluate(confirming, now));
+
+        assertThat(count("tracking_geofence_transition", fixture.tenant())).isOne();
+        assertThat(count("integration_outbox_event", fixture.tenant())).isOne();
+        assertThat(states.find(fixture.tenant(), fixture.vehicle(), fixture.geofenceId(), 0, 10))
+                .singleElement().satisfies(state -> {
+                    assertThat(state.stableState().name()).isEqualTo("INSIDE");
+                    assertThat(state.lastEvaluatedPositionId()).isEqualTo(confirming);
+                });
+    }
+
+    @Test
+    void concurrentDelayedAndNewerPositionsCannotRewindSourceOrder() throws Exception {
+        Instant now = Instant.now();
+        Fixture fixture = fixture(now);
+        evaluate(position(fixture, now.minusSeconds(4), 20, 20), now);
+        UUID older = position(fixture, now.minusSeconds(2), 2, 2);
+        UUID newer = position(fixture, now.minusSeconds(1), 3, 2);
+
+        runConcurrently(() -> evaluate(older, now), () -> evaluate(newer, now));
+
+        assertThat(states.find(fixture.tenant(), fixture.vehicle(), fixture.geofenceId(), 0, 10))
+                .singleElement().satisfies(state -> {
+                    assertThat(state.lastEvaluatedPositionId()).isEqualTo(newer);
+                    assertThat(state.lastEvaluatedSourceTimestamp())
+                            .isEqualTo(jdbc.queryForObject(
+                                    "SELECT source_timestamp FROM tracking_position WHERE id=?",
+                                    Timestamp.class, newer).toInstant());
+                });
+        assertThat(count("tracking_geofence_transition", fixture.tenant())).isLessThanOrEqualTo(1);
+    }
+
+    @Test
+    void fiveHundredActiveDefinitionsRemainHardBoundedWithoutPerPacketEvents() {
+        Instant now = Instant.now();
+        Fixture fixture = fixture(now);
+        jdbc.update("""
+                INSERT INTO tracking_geofence(
+                 id,tenant_id,name,type,polygon_vertices,min_longitude,max_longitude,min_latitude,
+                 max_latitude,location_id,alert_enter_enabled,alert_exit_enabled,lifecycle,version,
+                 created_at,created_by,updated_at,updated_by)
+                SELECT gen_random_uuid(), ?, 'Scale ' || value, 'UNAUTHORIZED_ZONE',
+                 '[{"longitude":79.8,"latitude":6.8},{"longitude":79.9,"latitude":6.8},
+                   {"longitude":79.9,"latitude":6.9},{"longitude":79.8,"latitude":6.8}]'::jsonb,
+                 79.8,79.9,6.8,6.9,NULL,TRUE,FALSE,'ACTIVE',1,now(),?,now(),?
+                FROM generate_series(1,499) value
+                """, fixture.tenant(), ACTOR, ACTOR);
+        assertThat(jdbc.queryForObject("""
+                SELECT count(*) FROM tracking_geofence WHERE tenant_id=? AND lifecycle='ACTIVE'
+                """, Integer.class, fixture.tenant())).isEqualTo(500);
+        UUID first = position(fixture, now.minusSeconds(2), 79.85, 6.85);
+        long started = System.nanoTime();
+        evaluate(first, now);
+        long elapsedMillis = (System.nanoTime() - started) / 1_000_000;
+
+        assertThat(jdbc.queryForObject("""
+                SELECT count(*) FROM tracking_vehicle_geofence_state
+                WHERE tenant_id=? AND vehicle_id=?
+                """, Integer.class, fixture.tenant(), fixture.vehicle())).isEqualTo(500);
+        assertThat(count("tracking_geofence_transition", fixture.tenant())).isZero();
+        assertThat(count("integration_outbox_event", fixture.tenant())).isZero();
+        System.out.printf("US49_GEOFENCE_500_INITIALIZATION elapsedMs=%d states=500 events=0%n",
+                elapsedMillis);
+    }
+
+    @Test
+    void disableSerializationHonorsBothCommitOrders() {
+        Instant now = Instant.now();
+        Fixture disableFirst = fixture(now);
+        evaluate(position(disableFirst, now.minusSeconds(3), 20, 20), now);
+        evaluate(position(disableFirst, now.minusSeconds(2), 2, 2), now);
+        Geofence first = geofences.find(disableFirst.tenant(), disableFirst.geofenceId()).orElseThrow();
+        long firstVersion = first.version();
+        first.disable(now.minusMillis(500), ACTOR);
+        geofences.save(first, firstVersion);
+        evaluate(position(disableFirst, now.minusSeconds(1), 3, 2), now);
+        assertThat(count("tracking_geofence_transition", disableFirst.tenant())).isZero();
+
+        Fixture evaluationFirst = fixture(now);
+        evaluate(position(evaluationFirst, now.minusSeconds(3), 20, 20), now);
+        evaluate(position(evaluationFirst, now.minusSeconds(2), 2, 2), now);
+        evaluate(position(evaluationFirst, now.minusSeconds(1), 3, 2), now);
+        Geofence second = geofences.find(
+                evaluationFirst.tenant(), evaluationFirst.geofenceId()).orElseThrow();
+        long secondVersion = second.version();
+        second.disable(now, ACTOR);
+        geofences.save(second, secondVersion);
+        assertThat(count("tracking_geofence_transition", evaluationFirst.tenant())).isOne();
+    }
+
+    @Test
+    void retirementSerializationHonorsBothCommitOrdersAndRemainsTerminal() {
+        Instant now = Instant.now();
+        Fixture retireFirst = fixture(now);
+        evaluate(position(retireFirst, now.minusSeconds(3), 20, 20), now);
+        evaluate(position(retireFirst, now.minusSeconds(2), 2, 2), now);
+        disableAndRetire(retireFirst, now);
+        evaluate(position(retireFirst, now.minusSeconds(1), 3, 2), now);
+        assertThat(count("tracking_geofence_transition", retireFirst.tenant())).isZero();
+
+        Fixture evaluationFirst = fixture(now);
+        evaluate(position(evaluationFirst, now.minusSeconds(3), 20, 20), now);
+        evaluate(position(evaluationFirst, now.minusSeconds(2), 2, 2), now);
+        evaluate(position(evaluationFirst, now.minusSeconds(1), 3, 2), now);
+        disableAndRetire(evaluationFirst, now);
+        assertThat(count("tracking_geofence_transition", evaluationFirst.tenant())).isOne();
+        assertThat(geofences.find(evaluationFirst.tenant(), evaluationFirst.geofenceId())
+                .orElseThrow().lifecycle().name()).isEqualTo("RETIRED");
+    }
+
+    @Test
+    void reactivatedDefinitionVersionSilentlyReinitializesOldState() {
+        Instant now = Instant.now();
+        Fixture fixture = fixture(now);
+        evaluate(position(fixture, now.minusSeconds(3), 20, 20), now);
+        Geofence definition = geofences.find(fixture.tenant(), fixture.geofenceId()).orElseThrow();
+        long activeVersion = definition.version();
+        definition.disable(now.minusSeconds(2), ACTOR);
+        geofences.save(definition, activeVersion);
+        long disabledVersion = definition.version();
+        definition.updateDefinition("Unauthorized revised", GeofenceType.UNAUTHORIZED_ZONE,
+                definition.polygon(), null, GeofenceAlertPolicy.unauthorizedZone(),
+                now.minusSeconds(1), ACTOR);
+        geofences.save(definition, disabledVersion);
+        long revisedVersion = definition.version();
+        definition.activate(now.minusMillis(500), ACTOR);
+        geofences.save(definition, revisedVersion);
+
+        evaluate(position(fixture, now.minusMillis(100), 2, 2), now);
+        assertThat(count("tracking_geofence_transition", fixture.tenant())).isZero();
+        assertThat(states.find(fixture.tenant(), fixture.vehicle(), fixture.geofenceId(), 0, 10))
+                .singleElement().satisfies(state -> {
+                    assertThat(state.definitionVersion()).isEqualTo(definition.version());
+                    assertThat(state.stableState().name()).isEqualTo("INSIDE");
+                    assertThat(state.pendingCount()).isZero();
+                });
+    }
+
+    private void disableAndRetire(Fixture fixture, Instant now) {
+        Geofence definition = geofences.find(fixture.tenant(), fixture.geofenceId()).orElseThrow();
+        long activeVersion = definition.version();
+        definition.disable(now, ACTOR);
+        geofences.save(definition, activeVersion);
+        long disabledVersion = definition.version();
+        definition.retire(now.plusMillis(1), ACTOR);
+        geofences.save(definition, disabledVersion);
+    }
+
+    private void runConcurrently(Runnable firstWork, Runnable secondWork) throws Exception {
+        CyclicBarrier barrier = new CyclicBarrier(2);
+        try (var executor = Executors.newFixedThreadPool(2)) {
+            var first = executor.submit(() -> {
+                barrier.await();
+                firstWork.run();
+                return true;
+            });
+            var second = executor.submit(() -> {
+                barrier.await();
+                secondWork.run();
+                return true;
+            });
+            assertThat(first.get()).isTrue();
+            assertThat(second.get()).isTrue();
+        }
     }
 
     private void evaluate(UUID positionId, Instant evaluatedAt) {
