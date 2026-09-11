@@ -17,7 +17,7 @@ This is 15 stories, so the invariant is `72 + 15 = 87`. `US-88`, `US-89`, and `U
 
 The existing roadmap had correct IDs but non-authoritative labels for several remaining stories. This plan restores the DOCX/UML titles and meanings, notably US-35/37/38 and US-48..55. It does not reopen accepted stories or change their acceptance decisions.
 
-**Waves A and B are COMPLETE / CLOSED; Wave C is active.** US-73 and US-78 are accepted. US-35, US-37, US-38, US-46, and US-47 final acceptance pass. US-48 is technically complete but physical acceptance is `ON_HOLD_EXTERNAL_PREREQUISITE`; US-49 CS01–CS05 are complete and the next task is `US-49-MANAGE-GEOFENCES-CS06-FRONTEND-001`.
+**Waves A and B are COMPLETE / CLOSED; Wave C is active.** US-73 and US-78 are accepted. US-35, US-37, US-38, US-46, and US-47 final acceptance pass. US-48 is technically complete but physical acceptance is `ON_HOLD_EXTERNAL_PREREQUISITE`; US-49 CS01–CS05 are complete, CS06 architecture is `APPROVED_EXISTING_FRONTEND_STACK`, and the next task is `US-49-MANAGE-GEOFENCES-CS06-FRONTEND-001-RERUN`.
 
 ## 2. Source reconciliation and non-negotiable boundaries
 
@@ -290,6 +290,6 @@ After 87/87 and disposition of parity findings, execute a real Tenant-isolated o
 
 Exactly one queue head is authorized by this roadmap:
 
-`US-49-MANAGE-GEOFENCES-CS06-FRONTEND-001`
+`US-49-MANAGE-GEOFENCES-CS06-FRONTEND-001-RERUN`
 
-US-48 external acceptance remains on hold until physical FMC130/live Flespi prerequisites change. US-49 CS01–CS05 are verified complete without story acceptance credit; CS06 owns the frontend workflow.
+US-48 external acceptance remains on hold until physical FMC130/live Flespi prerequisites change. US-49 CS01–CS05 are verified complete without story acceptance credit. CS06 must use the approved existing React Router, Ant Design, TanStack Query, React Hook Form/Zod, Axios and AuthContext architecture; Refine and Ant Design Pro Components are not used.
