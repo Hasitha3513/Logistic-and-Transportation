@@ -1,7 +1,16 @@
 package com.transportlogistics.app.billing.adapters.outbound.persistence;
+import com.transportlogistics.app.billing.domain.TransportBillingRecord.Compliance;
+import com.transportlogistics.app.billing.domain.TransportBillingRecord.CostCentre;
+import com.transportlogistics.app.billing.domain.TransportBillingRecord.Lifecycle;
+import com.transportlogistics.app.billing.domain.TransportBillingRecord.Line;
+import com.transportlogistics.app.billing.domain.TransportBillingRecord.LineCategory;
+import com.transportlogistics.app.billing.domain.TransportBillingRecord.RecordType;
+import com.transportlogistics.app.billing.domain.TransportBillingRecord.Source;
+import com.transportlogistics.app.billing.domain.TransportBillingRecord.TaxFact;
+import com.transportlogistics.app.billing.domain.TransportBillingRecord.TaxStatus;
+import com.transportlogistics.app.billing.domain.TransportBillingRecord.Totals;
 
 import com.transportlogistics.app.billing.domain.TransportBillingRecord;
-import com.transportlogistics.app.billing.domain.TransportBillingRecord.*;
 import com.transportlogistics.app.billing.ports.outbound.BillingStore;
 import com.transportlogistics.app.shared.domain.ConflictException;
 import java.sql.ResultSet;

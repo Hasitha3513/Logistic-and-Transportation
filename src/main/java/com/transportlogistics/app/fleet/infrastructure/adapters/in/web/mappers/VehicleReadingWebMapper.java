@@ -1,11 +1,15 @@
 package com.transportlogistics.app.fleet.infrastructure.adapters.in.web.mappers;
+import com.transportlogistics.app.fleet.infrastructure.adapters.in.web.dto.response.LatestVehicleReadingsResponse;
+import com.transportlogistics.app.fleet.infrastructure.adapters.in.web.dto.response.TripDistanceSummaryResponse;
+import com.transportlogistics.app.fleet.infrastructure.adapters.in.web.dto.response.VehicleMeterResetResponse;
+import com.transportlogistics.app.fleet.infrastructure.adapters.in.web.dto.response.VehicleMileageSummaryResponse;
+import com.transportlogistics.app.fleet.infrastructure.adapters.in.web.dto.response.VehicleReadingResponse;
 
 import com.transportlogistics.app.fleet.TripDistanceSummary;
 import com.transportlogistics.app.fleet.VehicleMileageSummary;
 import com.transportlogistics.app.fleet.application.ports.in.VehicleReadingUseCase;
 import com.transportlogistics.app.fleet.domain.model.VehicleMeterReset;
 import com.transportlogistics.app.fleet.domain.model.VehicleReading;
-import com.transportlogistics.app.fleet.infrastructure.adapters.in.web.dto.response.*;
 import org.mapstruct.Mapper;
 
 import java.util.List;

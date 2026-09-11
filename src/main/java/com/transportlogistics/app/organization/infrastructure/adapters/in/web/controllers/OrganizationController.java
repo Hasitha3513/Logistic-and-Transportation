@@ -1,9 +1,20 @@
 package com.transportlogistics.app.organization.infrastructure.adapters.in.web.controllers;
+import com.transportlogistics.app.organization.infrastructure.adapters.in.web.dto.response.MessageResponse;
+import com.transportlogistics.app.organization.infrastructure.adapters.in.web.dto.response.CustomerResponse;
+import com.transportlogistics.app.organization.application.ports.in.CustomerUseCase;
+import com.transportlogistics.app.organization.infrastructure.adapters.in.web.dto.response.DepartmentResponse;
+import com.transportlogistics.app.organization.application.ports.in.DepartmentUseCase;
+import com.transportlogistics.app.organization.infrastructure.adapters.in.web.dto.response.LocationResponse;
+import com.transportlogistics.app.organization.application.ports.in.LocationUseCase;
+import com.transportlogistics.app.organization.infrastructure.adapters.in.web.dto.response.ProjectResponse;
+import com.transportlogistics.app.organization.application.ports.in.ProjectUseCase;
+import com.transportlogistics.app.organization.infrastructure.adapters.in.web.dto.response.VendorResponse;
+import com.transportlogistics.app.organization.application.ports.in.VendorUseCase;
 
-import com.transportlogistics.app.organization.application.ports.in.*;
+
 import com.transportlogistics.app.organization.domain.model.*;
 import com.transportlogistics.app.organization.infrastructure.adapters.in.web.dto.request.*;
-import com.transportlogistics.app.organization.infrastructure.adapters.in.web.dto.response.*;
+
 import com.transportlogistics.app.organization.infrastructure.adapters.in.web.mappers.OrganizationWebMapper;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

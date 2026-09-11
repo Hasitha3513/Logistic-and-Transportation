@@ -1,6 +1,14 @@
 package com.transportlogistics.app.delivery.ports.inbound;
+import com.transportlogistics.app.delivery.domain.model.DeliveryAttempt;
+import com.transportlogistics.app.delivery.domain.model.DeliveryContactAttempt;
+import com.transportlogistics.app.delivery.domain.model.DeliveryContactChannel;
+import com.transportlogistics.app.delivery.domain.model.DeliveryContactOutcome;
+import com.transportlogistics.app.delivery.domain.model.DeliveryEscalation;
+import com.transportlogistics.app.delivery.domain.model.DeliveryEscalationStatus;
+import com.transportlogistics.app.delivery.domain.model.DeliveryFailureDisposition;
+import com.transportlogistics.app.delivery.domain.model.DeliveryFailureReason;
+import com.transportlogistics.app.delivery.domain.model.DeliveryOrder;
 
-import com.transportlogistics.app.delivery.domain.model.*;
 
 import java.time.OffsetDateTime;
 import java.util.List;

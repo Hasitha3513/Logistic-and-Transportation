@@ -1,6 +1,13 @@
 package com.transportlogistics.app.routing.application.ports.in;
+import com.transportlogistics.app.routing.domain.model.DisruptionSeverity;
+import com.transportlogistics.app.routing.domain.model.Route;
+import com.transportlogistics.app.routing.domain.model.RouteDisruption;
+import com.transportlogistics.app.routing.domain.model.RouteDisruptionType;
+import com.transportlogistics.app.routing.domain.model.RouteOptimizationResult;
+import com.transportlogistics.app.routing.domain.model.RoutePerformanceAnalytics;
+import com.transportlogistics.app.routing.domain.model.RouteRevision;
 
-import com.transportlogistics.app.routing.domain.model.*;
+
 
 import java.time.OffsetDateTime;
 import java.util.List;

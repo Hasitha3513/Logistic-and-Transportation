@@ -1,9 +1,21 @@
 package com.transportlogistics.app.fuel.infrastructure.adapters.in.web.controllers;
+import com.transportlogistics.app.fuel.infrastructure.adapters.in.web.dto.response.PageResponse;
+import com.transportlogistics.app.fuel.infrastructure.adapters.in.web.dto.request.BunkerOpeningBalanceRequest;
+import com.transportlogistics.app.fuel.infrastructure.adapters.in.web.dto.response.BunkerStockMovementResponse;
+import com.transportlogistics.app.fuel.infrastructure.adapters.in.web.dto.response.BunkerTankBalanceResponse;
+import com.transportlogistics.app.fuel.infrastructure.adapters.in.web.dto.request.BunkerTankCreateRequest;
+import com.transportlogistics.app.fuel.infrastructure.adapters.in.web.dto.response.BunkerTankResponse;
+import com.transportlogistics.app.fuel.infrastructure.adapters.in.web.dto.request.BunkerTankUpdateRequest;
+import com.transportlogistics.app.fuel.infrastructure.adapters.in.web.dto.request.BunkerTransferRequest;
+import com.transportlogistics.app.fuel.infrastructure.adapters.in.web.dto.request.DipReadingRequest;
+import com.transportlogistics.app.fuel.infrastructure.adapters.in.web.dto.response.DipReadingResponse;
+import com.transportlogistics.app.fuel.infrastructure.adapters.in.web.dto.request.StockAdjustmentRequest;
+import com.transportlogistics.app.fuel.infrastructure.adapters.in.web.dto.response.StockAdjustmentResponse;
 
 import com.transportlogistics.app.fuel.application.ports.in.BunkerTankUseCase;
 import com.transportlogistics.app.fuel.domain.model.DipReading;
-import com.transportlogistics.app.fuel.infrastructure.adapters.in.web.dto.request.*;
-import com.transportlogistics.app.fuel.infrastructure.adapters.in.web.dto.response.*;
+
+
 import com.transportlogistics.app.fuel.infrastructure.adapters.in.web.mappers.BunkerWebMapper;
 import com.transportlogistics.app.shared.utils.PrincipalUtils;
 import jakarta.validation.Valid;

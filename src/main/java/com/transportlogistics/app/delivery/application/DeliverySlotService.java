@@ -1,6 +1,11 @@
 package com.transportlogistics.app.delivery.application;
+import com.transportlogistics.app.delivery.domain.model.DeliveryOrder;
+import com.transportlogistics.app.delivery.domain.model.DeliveryStatus;
+import com.transportlogistics.app.delivery.domain.model.DeliveryZone;
+import com.transportlogistics.app.delivery.domain.model.DeliveryZoneStatus;
+import com.transportlogistics.app.delivery.domain.model.DeliverySlot;
+import com.transportlogistics.app.delivery.domain.model.DeliverySlotReservation;
 
-import com.transportlogistics.app.delivery.domain.model.*;
 import com.transportlogistics.app.delivery.ports.inbound.DeliverySlotUseCase;
 import com.transportlogistics.app.delivery.ports.inbound.DeliveryZoneLookupPort;
 import com.transportlogistics.app.delivery.ports.outbound.DeliveryLocationLookupPort;

@@ -1,4 +1,14 @@
 package com.transportlogistics.app.routing.application.service;
+import com.transportlogistics.app.routing.domain.model.DisruptionStatus;
+import com.transportlogistics.app.routing.domain.model.RouteOptimizer;
+import com.transportlogistics.app.routing.domain.model.RoutePerformanceCalculator;
+import com.transportlogistics.app.routing.domain.model.DisruptionSeverity;
+import com.transportlogistics.app.routing.domain.model.Route;
+import com.transportlogistics.app.routing.domain.model.RouteDisruption;
+import com.transportlogistics.app.routing.domain.model.RouteDisruptionType;
+import com.transportlogistics.app.routing.domain.model.RouteOptimizationResult;
+import com.transportlogistics.app.routing.domain.model.RoutePerformanceAnalytics;
+import com.transportlogistics.app.routing.domain.model.RouteRevision;
 
 import com.transportlogistics.app.routing.RoutePerformanceTripLookupPort;
 import com.transportlogistics.app.routing.application.ports.in.RouteUseCase;
@@ -11,7 +21,7 @@ import com.transportlogistics.app.routing.application.ports.out.RouteRevisionRep
 import com.transportlogistics.app.routing.application.ports.out.RouteTransaction;
 import com.transportlogistics.app.routing.domain.event.RouteDisruptionCreatedEvent;
 import com.transportlogistics.app.routing.domain.event.RouteDisruptionResolvedEvent;
-import com.transportlogistics.app.routing.domain.model.*;
+
 import com.transportlogistics.app.shared.domain.NotFoundException;
 import com.transportlogistics.app.shared.domain.BusinessRuleException;
 

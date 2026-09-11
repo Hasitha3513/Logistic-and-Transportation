@@ -1,6 +1,9 @@
 package com.transportlogistics.app.delivery.adapters.inbound.web.controllers;
+import com.transportlogistics.app.delivery.adapters.inbound.web.dto.request.SelfServiceDeliveryRequest;
+import com.transportlogistics.app.delivery.adapters.inbound.web.dto.request.SelfServiceFeedbackRequest;
+import com.transportlogistics.app.delivery.adapters.inbound.web.dto.request.SelfServiceIssueRequest;
+import com.transportlogistics.app.delivery.adapters.inbound.web.dto.request.SelfServicePreferenceRequest;
 
-import com.transportlogistics.app.delivery.adapters.inbound.web.dto.request.*;
 import com.transportlogistics.app.delivery.ports.inbound.CustomerSelfServiceUseCase;
 import com.transportlogistics.app.shared.domain.NotFoundException;
 import jakarta.servlet.http.HttpServletRequest;

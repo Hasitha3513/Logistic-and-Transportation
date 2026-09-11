@@ -1,7 +1,12 @@
 package com.transportlogistics.app.freight.order.adapters.inbound.web.mappers;
+import com.transportlogistics.app.freight.order.adapters.inbound.web.dto.response.FreightOrderLineResponse;
+import com.transportlogistics.app.freight.order.adapters.inbound.web.dto.request.CreateFreightOrderRequest;
+import com.transportlogistics.app.freight.order.adapters.inbound.web.dto.request.FreightOrderLineRequest;
+import com.transportlogistics.app.freight.order.adapters.inbound.web.dto.response.FreightOrderResponse;
+import com.transportlogistics.app.freight.order.adapters.inbound.web.dto.request.UpdateFreightOrderRequest;
 
-import com.transportlogistics.app.freight.order.adapters.inbound.web.dto.request.*;
-import com.transportlogistics.app.freight.order.adapters.inbound.web.dto.response.*;
+
+
 import com.transportlogistics.app.freight.order.domain.model.FreightOrder;
 import com.transportlogistics.app.freight.order.ports.inbound.FreightOrderUseCase;
 import org.mapstruct.Mapper;

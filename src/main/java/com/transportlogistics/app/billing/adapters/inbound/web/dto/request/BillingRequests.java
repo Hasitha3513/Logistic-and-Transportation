@@ -1,5 +1,7 @@
 package com.transportlogistics.app.billing.adapters.inbound.web.dto.request;
-import com.transportlogistics.app.billing.domain.TransportBillingRecord.*;
+import com.transportlogistics.app.billing.domain.TransportBillingRecord.Source;
+import com.transportlogistics.app.billing.domain.TransportBillingRecord.LineCategory;
+import com.transportlogistics.app.billing.domain.TransportBillingRecord.TaxStatus;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 import java.math.BigDecimal;

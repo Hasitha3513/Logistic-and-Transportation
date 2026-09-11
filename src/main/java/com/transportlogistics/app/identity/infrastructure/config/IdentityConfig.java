@@ -14,6 +14,7 @@ import com.transportlogistics.app.identity.application.ports.out.TenantMembershi
 import com.transportlogistics.app.identity.application.service.IdentityService;
 import com.transportlogistics.app.identity.application.service.TenantAccessService;
 import com.transportlogistics.app.identity.infrastructure.security.JwtProperties;
+import com.transportlogistics.app.tenancy.CurrentTenant;
 import com.transportlogistics.app.tenancy.TenantDirectory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -44,12 +45,15 @@ class IdentityConfig {
     }
 
     @Bean
-    NotificationRecipientDirectory notificationRecipientDirectory(IdentityUseCase identities) {
+    NotificationRecipientDirectory notificationRecipientDirectory(IdentityUseCase identities,
+                                                                   CurrentTenant currentTenant) {
         return new NotificationRecipientDirectory() {
             @Override
             public java.util.Optional<RecipientUser> findActiveUser(String username) {
-                return identities.findByUsername(username)
+                return identities.listUsers(context()).stream()
+                    .filter(user -> user.username().equalsIgnoreCase(username))
                     .filter(com.transportlogistics.app.identity.domain.model.User::active)
+                    .findFirst()
                     .map(user -> new RecipientUser(user.username(), user.email()));
             }
 
@@ -64,11 +68,17 @@ class IdentityConfig {
                 if (roleName == null) {
                     return java.util.List.of();
                 }
-                return identities.listUsers().stream()
+                return identities.listUsers(context()).stream()
                     .filter(com.transportlogistics.app.identity.domain.model.User::active)
                     .filter(user -> user.hasRole(roleName.trim()))
                     .map(user -> new RecipientUser(user.username(), user.email()))
                     .toList();
+            }
+
+            private IdentityUseCase.AdministrationContext context() {
+                var tenant = currentTenant.required();
+                return new IdentityUseCase.AdministrationContext(
+                        tenant.tenantId(), tenant.username(), java.util.Set.of());
             }
         };
     }

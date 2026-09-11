@@ -1,6 +1,9 @@
 package com.transportlogistics.app.delivery.adapters.outbound.persistence;
+import com.transportlogistics.app.delivery.DeliveryReportingQuery.DeliveryAnalyticsSummary;
+import com.transportlogistics.app.delivery.DeliveryReportingQuery.DeliveryTrendItem;
+import com.transportlogistics.app.delivery.DeliveryReportingQuery.FailureReasonBreakdownItem;
+import com.transportlogistics.app.delivery.DeliveryReportingQuery.TrendGranularity;
 
-import com.transportlogistics.app.delivery.DeliveryReportingQuery.*;
 import com.transportlogistics.app.delivery.ports.outbound.DeliveryAnalyticsPersistencePort;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;

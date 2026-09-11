@@ -1,6 +1,7 @@
 package com.transportlogistics.app.delivery.adapters.inbound.web.mappers;
+import com.transportlogistics.app.delivery.adapters.inbound.web.dto.request.CreateDeliveryOrderRequest;
+import com.transportlogistics.app.delivery.adapters.inbound.web.dto.request.UpdateDeliveryOrderRequest;
 
-import com.transportlogistics.app.delivery.adapters.inbound.web.dto.request.*;
 import com.transportlogistics.app.delivery.adapters.inbound.web.dto.response.DeliveryOrderResponse;
 import com.transportlogistics.app.delivery.domain.model.DeliveryOrder;
 import com.transportlogistics.app.delivery.ports.inbound.DeliveryOrderUseCase;

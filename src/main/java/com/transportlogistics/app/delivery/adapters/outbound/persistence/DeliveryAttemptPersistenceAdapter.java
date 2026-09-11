@@ -1,6 +1,9 @@
 package com.transportlogistics.app.delivery.adapters.outbound.persistence;
+import com.transportlogistics.app.delivery.domain.model.DeliveryFailureDisposition;
+import com.transportlogistics.app.delivery.domain.model.DeliveryFailureReason;
+import com.transportlogistics.app.delivery.domain.model.DeliveryId;
+import com.transportlogistics.app.delivery.domain.model.DeliveryAttempt;
 
-import com.transportlogistics.app.delivery.domain.model.*;
 import com.transportlogistics.app.delivery.ports.outbound.DeliveryAttemptRepository;
 import com.transportlogistics.app.delivery.ports.outbound.DeliveryTenantContextPort;
 import com.transportlogistics.app.shared.domain.BusinessRuleException;

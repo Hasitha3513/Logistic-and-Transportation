@@ -1,5 +1,7 @@
 package com.transportlogistics.app.fleet.payroll.ports.outbound;
-import com.transportlogistics.app.fleet.payroll.domain.*;
+import com.transportlogistics.app.fleet.payroll.domain.DriverPayrollInputBatch;
+import com.transportlogistics.app.fleet.payroll.domain.DriverPayrollWorkerMapping;
+
 import java.time.OffsetDateTime;
 import java.util.*;
 public interface DriverPayrollStore {

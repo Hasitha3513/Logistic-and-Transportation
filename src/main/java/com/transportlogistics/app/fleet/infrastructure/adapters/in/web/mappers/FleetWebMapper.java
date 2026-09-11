@@ -1,7 +1,20 @@
 package com.transportlogistics.app.fleet.infrastructure.adapters.in.web.mappers;
+import com.transportlogistics.app.fleet.infrastructure.adapters.in.web.dto.response.DriverAvailabilityResponse;
+import com.transportlogistics.app.fleet.infrastructure.adapters.in.web.dto.response.DriverDrugTestResponse;
+import com.transportlogistics.app.fleet.infrastructure.adapters.in.web.dto.response.DriverExceptionResponse;
+import com.transportlogistics.app.fleet.infrastructure.adapters.in.web.dto.response.DriverLicenseResponse;
+import com.transportlogistics.app.fleet.infrastructure.adapters.in.web.dto.response.DriverMedicalRecordResponse;
+import com.transportlogistics.app.fleet.infrastructure.adapters.in.web.dto.response.DriverPerformanceResponse;
+import com.transportlogistics.app.fleet.infrastructure.adapters.in.web.dto.response.DriverResponse;
+import com.transportlogistics.app.fleet.infrastructure.adapters.in.web.dto.response.DriverViolationResponse;
+import com.transportlogistics.app.fleet.infrastructure.adapters.in.web.dto.response.LubricantLogResponse;
+import com.transportlogistics.app.fleet.infrastructure.adapters.in.web.dto.response.MaintenanceScheduleResponse;
+import com.transportlogistics.app.fleet.infrastructure.adapters.in.web.dto.response.VehicleAvailabilityResponse;
+import com.transportlogistics.app.fleet.infrastructure.adapters.in.web.dto.response.VehicleCategoryResponse;
+import com.transportlogistics.app.fleet.infrastructure.adapters.in.web.dto.response.VehicleDocumentResponse;
+import com.transportlogistics.app.fleet.infrastructure.adapters.in.web.dto.response.VehicleTypeResponse;
 
 import com.transportlogistics.app.fleet.domain.model.*;
-import com.transportlogistics.app.fleet.infrastructure.adapters.in.web.dto.response.*;
 import com.transportlogistics.app.fleet.vehiclemaster.adapters.inbound.web.dto.response.VehicleResponse;
 import com.transportlogistics.app.fleet.vehiclemaster.domain.model.Vehicle;
 import org.mapstruct.Mapper;

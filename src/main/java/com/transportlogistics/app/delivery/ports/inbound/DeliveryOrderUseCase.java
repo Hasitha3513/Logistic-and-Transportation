@@ -1,6 +1,9 @@
 package com.transportlogistics.app.delivery.ports.inbound;
+import com.transportlogistics.app.delivery.domain.model.DeliveryOrder;
+import com.transportlogistics.app.delivery.domain.model.DeliveryPriority;
+import com.transportlogistics.app.delivery.domain.model.DeliveryServiceType;
+import com.transportlogistics.app.delivery.domain.model.DeliveryStatus;
 
-import com.transportlogistics.app.delivery.domain.model.*;
 
 import java.time.OffsetDateTime;
 import java.util.List;

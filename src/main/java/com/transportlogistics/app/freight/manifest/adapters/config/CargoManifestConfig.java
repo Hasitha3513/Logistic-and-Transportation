@@ -1,3 +1,6 @@
 package com.transportlogistics.app.freight.manifest.adapters.config;
-import com.transportlogistics.app.freight.manifest.application.CargoManifestService;import com.transportlogistics.app.freight.manifest.ports.inbound.CargoManifestUseCase;import com.transportlogistics.app.freight.manifest.ports.outbound.*;import com.transportlogistics.app.freight.order.ports.inbound.FreightOrderLookup;import org.springframework.context.annotation.*;import java.time.Clock;
+import com.transportlogistics.app.freight.manifest.ports.outbound.CargoManifestNumberGenerator;
+import com.transportlogistics.app.freight.manifest.ports.outbound.CargoManifestRepository;
+import com.transportlogistics.app.freight.manifest.ports.outbound.CargoManifestTransaction;
+import com.transportlogistics.app.freight.manifest.application.CargoManifestService;import com.transportlogistics.app.freight.manifest.ports.inbound.CargoManifestUseCase;import com.transportlogistics.app.freight.order.ports.inbound.FreightOrderLookup;import org.springframework.context.annotation.*;import java.time.Clock;
 @Configuration class CargoManifestConfig {@Bean CargoManifestUseCase cargoManifestUseCase(CargoManifestRepository manifests,CargoManifestNumberGenerator numbers,FreightOrderLookup orders,CargoManifestTransaction transactions,Clock clock){return new CargoManifestService(manifests,numbers,orders,transactions,clock);}}
