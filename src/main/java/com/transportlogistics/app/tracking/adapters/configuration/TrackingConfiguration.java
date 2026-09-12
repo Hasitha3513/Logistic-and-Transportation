@@ -6,7 +6,9 @@ import com.transportlogistics.app.tracking.application.TrackingProviderManagemen
 import com.transportlogistics.app.tracking.application.GeofenceEvaluationService;
 import com.transportlogistics.app.tracking.application.GeofenceManagementService;
 import com.transportlogistics.app.tracking.application.SpeedEvaluationService;
+import com.transportlogistics.app.tracking.application.SpeedRuleManagementService;
 import com.transportlogistics.app.tracking.adapters.inbound.security.SecuredGeofenceUseCases;
+import com.transportlogistics.app.tracking.adapters.inbound.security.SecuredSpeedMonitoringUseCases;
 import com.transportlogistics.app.integration.IntegrationSecretResolver;
 import com.transportlogistics.app.tracking.application.provider.TrackingProviderAdapterRegistry;
 import com.transportlogistics.app.tracking.ports.outbound.TrackingProviderAdapter;
@@ -24,6 +26,8 @@ import com.transportlogistics.app.tracking.ports.outbound.SpeedAttributionLookup
 import com.transportlogistics.app.tracking.ports.outbound.SpeedEvaluationJobRepositoryPort;
 import com.transportlogistics.app.tracking.ports.outbound.SpeedEvaluationTransactionPort;
 import com.transportlogistics.app.tracking.ports.outbound.SpeedPositionRepositoryPort;
+import com.transportlogistics.app.tracking.ports.outbound.SpeedManagementSupportPort;
+import com.transportlogistics.app.tracking.ports.outbound.SpeedManagementTransactionPort;
 import com.transportlogistics.app.tracking.ports.outbound.SpeedRuleRepositoryPort;
 import com.transportlogistics.app.tracking.ports.outbound.SpeedingEpisodePublisherPort;
 import com.transportlogistics.app.tracking.ports.outbound.SpeedingEpisodeRepositoryPort;
@@ -39,6 +43,8 @@ import org.springframework.context.annotation.*;
  @Bean GeofenceEvaluationService geofenceEvaluationUseCase(GeofenceRepositoryPort geofences,VehicleGeofenceStateRepositoryPort states,GeofenceTransitionRepositoryPort transitions,com.transportlogistics.app.tracking.ports.outbound.GeofenceTransitionPublisherPort publisher,GeofenceEvaluationTransactionPort transaction){return new GeofenceEvaluationService(geofences,states,transitions,publisher,transaction);}
  @Bean GeofenceManagementService geofenceManagementService(GeofenceRepositoryPort geofences,VehicleGeofenceStateRepositoryPort states,GeofenceTransitionRepositoryPort transitions,GeofenceLocationLookupPort locations,GeofenceManagementSupportPort support,GeofenceManagementTransactionPort transaction){return new GeofenceManagementService(geofences,states,transitions,locations,support,transaction);}
  @Bean SpeedEvaluationService speedEvaluationUseCase(SpeedPositionRepositoryPort positions,SpeedRuleRepositoryPort rules,VehicleSpeedStateRepositoryPort states,SpeedingEpisodeRepositoryPort episodes,SpeedEvaluationJobRepositoryPort jobs,SpeedAttributionLookupPort attribution,SpeedingEpisodePublisherPort publisher,SpeedEvaluationTransactionPort transaction){return new SpeedEvaluationService(positions,rules,states,episodes,jobs,attribution,publisher,transaction);}
+ @Bean SpeedRuleManagementService speedRuleManagementService(SpeedRuleRepositoryPort rules,VehicleSpeedStateRepositoryPort states,SpeedingEpisodeRepositoryPort episodes,SpeedManagementSupportPort support,SpeedManagementTransactionPort transaction){return new SpeedRuleManagementService(rules,states,episodes,support,transaction);}
  @Bean @org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean(SpeedingEpisodePublisherPort.class) SpeedingEpisodePublisherPort deferredSpeedingEpisodePublisher(){return (tenantId,event)->{};}
  @Bean @Primary SecuredGeofenceUseCases securedGeofenceUseCases(GeofenceManagementService service){return new SecuredGeofenceUseCases(service,service);}
+ @Bean @Primary SecuredSpeedMonitoringUseCases securedSpeedMonitoringUseCases(SpeedRuleManagementService service){return new SecuredSpeedMonitoringUseCases(service,service);}
 }

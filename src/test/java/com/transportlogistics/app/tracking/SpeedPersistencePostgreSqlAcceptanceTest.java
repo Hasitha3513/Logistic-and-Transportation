@@ -42,8 +42,8 @@ class SpeedPersistencePostgreSqlAcceptanceTest extends PostgreSqlIntegrationTest
     @Autowired Flyway flyway;
 
     @Test
-    void cleanMigrationReachesV81WithOnlyFourSpeedTablesAndRequiredIndexes() {
-        assertThat(flyway.info().current().getVersion().getVersion()).isEqualTo("81");
+    void cleanMigrationReachesV82WithOnlyFourSpeedTablesAndRequiredIndexes() {
+        assertThat(flyway.info().current().getVersion().getVersion()).isEqualTo("82");
         assertThat(speedTables()).containsExactlyInAnyOrder("tracking_speed_rule", "tracking_speed_state",
                 "tracking_speed_episode", "tracking_speed_evaluation_job");
         assertThat(speedIndexes()).contains("uq_tracking_speed_rule_active_tenant",
@@ -57,7 +57,7 @@ class SpeedPersistencePostgreSqlAcceptanceTest extends PostgreSqlIntegrationTest
     }
 
     @Test
-    void upgradesV80ToV81ForwardOnly() {
+    void upgradesV80ThroughV82ForwardOnly() {
         flyway.clean();
         Flyway to80 = Flyway.configure().dataSource(configuredJdbcUrl(),
                         configuredDatabaseUsername(), configuredDatabasePassword())
@@ -67,7 +67,7 @@ class SpeedPersistencePostgreSqlAcceptanceTest extends PostgreSqlIntegrationTest
         assertThat(to80.info().current().getVersion().getVersion()).isEqualTo("80");
         assertThat(speedTables()).isEmpty();
         flyway.migrate();
-        assertThat(flyway.info().current().getVersion().getVersion()).isEqualTo("81");
+        assertThat(flyway.info().current().getVersion().getVersion()).isEqualTo("82");
     }
 
     @Test

@@ -126,6 +126,11 @@ class JdbcSpeedPersistenceAdapter implements SpeedRuleRepositoryPort,
     }
 
     @Override
+    public Optional<VehicleSpeedState> findState(UUID tenantId, UUID vehicleId) {
+        return findState(tenantId, vehicleId, false);
+    }
+
+    @Override
     public VehicleSpeedState save(VehicleSpeedState state, long expectedVersion) {
         return Objects.requireNonNull(transactions.execute(transaction -> {
             jdbc.queryForObject("SELECT pg_advisory_xact_lock(hashtextextended(?::text,50))",

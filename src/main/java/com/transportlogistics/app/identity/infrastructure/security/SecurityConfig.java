@@ -185,6 +185,28 @@ class SecurityConfig {
                         .requestMatchers(HttpMethod.PUT, "/v1/tracking/geofences/*",
                                 "/api/v1/tracking/geofences/*")
                         .hasAuthority("GEOFENCE_MANAGE")
+                        .requestMatchers(HttpMethod.GET, "/v1/tracking/speed-monitoring/episodes",
+                                "/v1/tracking/speed-monitoring/episodes/*",
+                                "/api/v1/tracking/speed-monitoring/episodes",
+                                "/api/v1/tracking/speed-monitoring/episodes/*")
+                        .hasAuthority("SPEED_EVENT_VIEW")
+                        .requestMatchers(HttpMethod.GET, "/v1/tracking/speed-monitoring/rules",
+                                "/v1/tracking/speed-monitoring/rules/*",
+                                "/v1/tracking/speed-monitoring/states",
+                                "/v1/tracking/speed-monitoring/states/*",
+                                "/api/v1/tracking/speed-monitoring/rules",
+                                "/api/v1/tracking/speed-monitoring/rules/*",
+                                "/api/v1/tracking/speed-monitoring/states",
+                                "/api/v1/tracking/speed-monitoring/states/*")
+                        .hasAuthority("SPEED_MONITOR_VIEW")
+                        .requestMatchers(HttpMethod.POST, "/v1/tracking/speed-monitoring/rules",
+                                "/v1/tracking/speed-monitoring/rules/**",
+                                "/api/v1/tracking/speed-monitoring/rules",
+                                "/api/v1/tracking/speed-monitoring/rules/**")
+                        .hasAuthority("SPEED_MONITOR_MANAGE")
+                        .requestMatchers(HttpMethod.PUT, "/v1/tracking/speed-monitoring/rules/*",
+                                "/api/v1/tracking/speed-monitoring/rules/*")
+                        .hasAuthority("SPEED_MONITOR_MANAGE")
                         .requestMatchers(HttpMethod.GET, "/drivers", "/drivers/*", "/drivers/*/licenses",
                                 "/drivers/*/exceptions", "/drivers/*/exceptions/*",
                                 "/drivers/*/violations", "/drivers/*/violations/*",

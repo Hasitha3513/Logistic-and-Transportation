@@ -4,7 +4,7 @@
 **Planning baseline:** 2026-09-03  
 **Register:** exactly `US-01..US-87`  
 **Current state:** 73 / 87 accepted; 14 / 87 remaining; Waves A and B are COMPLETE / CLOSED; Wave C is active; US-48 is implementation complete with physical acceptance on external-prerequisite hold; US-49 is COMPLETE / ACCEPTED
-**Architecture enabler:** `P1-01` COMPLETE; current Flyway head `V81`
+**Architecture enabler:** `P1-01` COMPLETE; current Flyway head `V82`
 **Mode:** planning only; no story is accepted or implemented by this document
 
 ## 1. Executive decision
@@ -17,7 +17,7 @@ This is 14 stories, so the invariant is `73 + 14 = 87`. `US-88`, `US-89`, and `U
 
 The existing roadmap had correct IDs but non-authoritative labels for several remaining stories. This plan restores the DOCX/UML titles and meanings, notably US-35/37/38 and US-48..55. It does not reopen accepted stories or change their acceptance decisions.
 
-**Waves A and B are COMPLETE / CLOSED; Wave C is active.** US-73 and US-78 are accepted. US-35, US-37, US-38, US-46, US-47, and US-49 final acceptance pass. US-48 is technically complete but physical acceptance is `ON_HOLD_EXTERNAL_PREREQUISITE`; US-50 CS01 domain/ports and CS02 V81 persistence are complete and the next task is `US-50-MONITOR-SPEED-CS03-EVALUATION-EPISODES-001`.
+**Waves A and B are COMPLETE / CLOSED; Wave C is active.** US-73 and US-78 are accepted. US-35, US-37, US-38, US-46, US-47, and US-49 final acceptance pass. US-48 is technically complete but physical acceptance is `ON_HOLD_EXTERNAL_PREREQUISITE`; US-50 CS01–CS04 are complete through V82 and the next task is `US-50-MONITOR-SPEED-CS05-NOTIFICATION-INTEGRATION-001`.
 
 ## 2. Source reconciliation and non-negotiable boundaries
 
@@ -290,6 +290,6 @@ After 87/87 and disposition of parity findings, execute a real Tenant-isolated o
 
 Exactly one queue head is authorized by this roadmap:
 
-`US-50-MONITOR-SPEED-CS03-EVALUATION-EPISODES-001`
+`US-50-MONITOR-SPEED-CS05-NOTIFICATION-INTEGRATION-001`
 
-US-48 external acceptance remains on hold until physical FMC130/live Flespi prerequisites change. US-49 is COMPLETE / ACCEPTED. US-50 CS01 domain/ports and CS02 V81 persistence are complete without US-48 acceptance inheritance or accounting change; begin evaluation and episode orchestration in CS03.
+US-48 external acceptance remains on hold until physical FMC130/live Flespi prerequisites change. US-49 is COMPLETE / ACCEPTED. US-50 CS01–CS04 are complete through the V82 API/RBAC/audit boundary without US-48 acceptance inheritance or accounting change; proceed with durable Notification integration in CS05.

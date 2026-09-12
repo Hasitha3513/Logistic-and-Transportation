@@ -21,7 +21,7 @@ class GeofencePermissionPostgreSqlAcceptanceTest extends PostgreSqlIntegrationTe
 
     @Test
     void cleanV1ToCurrentHeadRetainsExactlyThreePermissionsAndOnlyAdministrativeGrants() {
-        assertThat(flyway.info().current().getVersion().getVersion()).isEqualTo("81");
+        assertThat(flyway.info().current().getVersion().getVersion()).isEqualTo("82");
         assertThat(permissionCount()).isEqualTo(3);
         assertThat(jdbc.queryForObject("""
                 SELECT count(*) FROM app_role_permission grant_row
@@ -51,7 +51,7 @@ class GeofencePermissionPostgreSqlAcceptanceTest extends PostgreSqlIntegrationTe
 
         flyway.migrate();
 
-        assertThat(flyway.info().current().getVersion().getVersion()).isEqualTo("81");
+        assertThat(flyway.info().current().getVersion().getVersion()).isEqualTo("82");
         assertThat(permissionCount()).isEqualTo(3);
         assertThat(grantCount("ADMIN")).isEqualTo(3);
         assertThat(grantCount("LOCAL_MVP_ADMIN")).isEqualTo(3);

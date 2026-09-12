@@ -19,7 +19,7 @@ class DriverPayrollV71PostgreSqlAcceptanceTest extends PostgreSqlIntegrationTest
     @Test
     void v71HasExactTenantOwnedCommandStructureAndNoForeignModuleForeignKeys() {
         assertThat(jdbc.queryForObject("select version from flyway_schema_history where success "
-            + "order by installed_rank desc limit 1", String.class)).isEqualTo("81");
+            + "order by installed_rank desc limit 1", String.class)).isEqualTo("82");
         assertThat(jdbc.queryForList("select column_name from information_schema.columns "
             + "where table_schema='public' and table_name='driver_payroll_worker_mapping_command' "
             + "and is_nullable='NO'", String.class)).containsExactlyInAnyOrder(

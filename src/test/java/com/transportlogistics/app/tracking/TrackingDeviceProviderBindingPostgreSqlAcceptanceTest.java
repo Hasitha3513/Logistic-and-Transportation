@@ -46,7 +46,7 @@ class TrackingDeviceProviderBindingPostgreSqlAcceptanceTest extends PostgreSqlIn
 
     @Test
     void cleanSchemaReachesCurrentHeadWithTheAuthorizedBindingTable() {
-        assertThat(flyway.info().current().getVersion().getVersion()).isEqualTo("81");
+        assertThat(flyway.info().current().getVersion().getVersion()).isEqualTo("82");
         assertThat(tableExists("tracking_device_provider_binding")).isTrue();
         assertThat(tableExists("tracking_provider_connection")).isFalse();
         assertThat(columns()).containsExactlyInAnyOrder(
