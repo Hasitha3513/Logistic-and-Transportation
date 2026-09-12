@@ -15,8 +15,9 @@ class NotificationEventCatalogueTest {
                 "VEHICLE_DOCUMENT_EXPIRING", "DRIVER_EXCEPTION_RECORDED", "DRIVER_MEDICAL_EXPIRING",
                 "DRIVER_DRUG_TEST_FAILED", "DRIVER_LICENSE_EXPIRING", "DELIVERY_OUT_FOR_DELIVERY",
                 "DELIVERY_ETA_RISK_CHANGED", "DELIVERY_COMPLETED", "DELIVERY_FAILED_ATTEMPT_RECORDED",
-                "DELIVERY_REDELIVERY_SCHEDULED", "VEHICLE_GEOFENCE_TRANSITIONED_V1");
-        assertThat(NotificationEventCatalogue.all()).hasSize(14);
+                "DELIVERY_REDELIVERY_SCHEDULED", "VEHICLE_GEOFENCE_TRANSITIONED_V1",
+                "VEHICLE_SPEEDING_DETECTED_V1");
+        assertThat(NotificationEventCatalogue.all()).hasSize(15);
     }
 
     @Test
@@ -45,5 +46,16 @@ class NotificationEventCatalogueTest {
             "eventTime", "severity", "geofenceId", "vehicleId", "geofenceType", "transition",
             "sourceTimestamp", "definitionVersion");
         assertThat(geofence.optionalVariables()).containsExactly("locationId");
+    }
+
+    @Test
+    void definesMinimalInAppSpeedingContract() {
+        var speeding = NotificationEventCatalogue.require("vehicle_speeding_detected_v1");
+        assertThat(speeding.supportedChannels()).containsExactly(NotificationChannel.IN_APP);
+        assertThat(speeding.requiredVariables()).contains(
+                "speedEpisodeId", "vehicleId", "observedSpeedKph", "effectiveThresholdKph",
+                "thresholdSource", "ruleId", "ruleVersion", "sourceTimestamp", "repeatCount");
+        assertThat(speeding.optionalVariables()).containsExactlyInAnyOrder(
+                "driverId", "tripId", "routeId", "routeVersion");
     }
 }

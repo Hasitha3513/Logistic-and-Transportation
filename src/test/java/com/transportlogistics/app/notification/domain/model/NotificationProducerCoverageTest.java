@@ -22,13 +22,15 @@ class NotificationProducerCoverageTest {
         "DELIVERY_COMPLETED",
         "DELIVERY_FAILED_ATTEMPT_RECORDED",
         "DELIVERY_REDELIVERY_SCHEDULED",
-        "VEHICLE_GEOFENCE_TRANSITIONED_V1"
+        "VEHICLE_GEOFENCE_TRANSITIONED_V1",
+        "VEHICLE_SPEEDING_DETECTED_V1"
     );
 
     @Test void everyActiveProductionEventHasProducerEvidence() {
         var catalogueEvents = NotificationEventCatalogue.all().stream()
             .map(NotificationEventDefinition::eventType).collect(Collectors.toSet());
-        assertThat(catalogueEvents).hasSize(14).contains("VEHICLE_GEOFENCE_TRANSITIONED_V1");
+        assertThat(catalogueEvents).hasSize(15).contains(
+                "VEHICLE_GEOFENCE_TRANSITIONED_V1", "VEHICLE_SPEEDING_DETECTED_V1");
         assertThat(catalogueEvents).filteredOn(PRODUCTION_PRODUCERS::contains)
             .containsExactlyInAnyOrderElementsOf(PRODUCTION_PRODUCERS);
         assertThat(catalogueEvents).doesNotContain("DRIVER_DRUG_TEST_EXPIRING", "FUEL_LIMIT_EXCEEDED", "FUEL_EXCEPTION");

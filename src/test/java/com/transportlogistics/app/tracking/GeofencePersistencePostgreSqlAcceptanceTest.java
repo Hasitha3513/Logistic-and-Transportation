@@ -47,7 +47,7 @@ class GeofencePersistencePostgreSqlAcceptanceTest extends PostgreSqlIntegrationT
 
     @Test
     void cleanMigrationReachesV77WithFourTrackingOwnedTablesAndIndexes() {
-        assertThat(flyway.info().current().getVersion().getVersion()).isEqualTo("82");
+        assertThat(flyway.info().current().getVersion().getVersion()).isEqualTo("83");
         assertThat(tables()).contains("tracking_geofence", "tracking_vehicle_geofence_state",
                 "tracking_geofence_transition", "tracking_geofence_evaluation_job");
         assertThat(indexes()).contains("uq_tracking_geofence_tenant_name",
@@ -72,7 +72,7 @@ class GeofencePersistencePostgreSqlAcceptanceTest extends PostgreSqlIntegrationT
         to76.migrate();
         assertThat(to76.info().current().getVersion().getVersion()).isEqualTo("76");
         flyway.migrate();
-        assertThat(flyway.info().current().getVersion().getVersion()).isEqualTo("82");
+        assertThat(flyway.info().current().getVersion().getVersion()).isEqualTo("83");
         assertThat(tables()).contains("tracking_geofence", "tracking_geofence_evaluation_job");
     }
 
@@ -90,7 +90,7 @@ class GeofencePersistencePostgreSqlAcceptanceTest extends PostgreSqlIntegrationT
 
         flyway.migrate();
 
-        assertThat(flyway.info().current().getVersion().getVersion()).isEqualTo("82");
+        assertThat(flyway.info().current().getVersion().getVersion()).isEqualTo("83");
         assertThat(indexes()).contains("idx_tracking_geofence_job_global_due",
                 "idx_tracking_geofence_active_bbox_upper");
     }

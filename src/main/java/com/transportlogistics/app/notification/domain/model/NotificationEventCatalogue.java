@@ -72,6 +72,12 @@ public final class NotificationEventCatalogue {
             Set.of(NotificationChannel.IN_APP), "VEHICLE_GEOFENCE_TRANSITIONED_V1",
             required("geofenceId", "vehicleId", "geofenceType", "transition", "sourceTimestamp",
                 "definitionVersion"), Set.of("locationId"), 0, null));
+        definitions.put("VEHICLE_SPEEDING_DETECTED_V1", new NotificationEventDefinition(
+            "VEHICLE_SPEEDING_DETECTED_V1", "tracking", NotificationSeverity.WARNING,
+            Set.of(NotificationChannel.IN_APP), "VEHICLE_SPEEDING_DETECTED_V1",
+            required("speedEpisodeId", "vehicleId", "observedSpeedKph", "effectiveThresholdKph",
+                "thresholdSource", "ruleId", "ruleVersion", "sourceTimestamp", "repeatCount"),
+            Set.of("driverId", "tripId", "routeId", "routeVersion"), 0, null));
         return Collections.unmodifiableMap(new LinkedHashMap<>(definitions));
     }
 
