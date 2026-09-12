@@ -105,7 +105,7 @@ function batch(deviceId: string, offset: number, size: number) {
   return Array.from({ length: size }, (_, index) => ({
     deviceId, providerMessageId: `${suffix}-${offset + index}`, providerSequence: offset + index,
     sourceTimestamp: new Date(source + index).toISOString(), latitude: 6.9271, longitude: 79.8612,
-    horizontalAccuracyMeters: 5,
+    horizontalAccuracyMeters: 5, speedKph: 80,
   }));
 }
 

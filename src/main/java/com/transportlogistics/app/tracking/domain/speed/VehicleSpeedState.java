@@ -101,8 +101,10 @@ public record VehicleSpeedState(UUID tenantId, UUID vehicleId, MonitoringState m
     }
 
     private VehicleSpeedState resetForRule(ResolvedSpeedThreshold threshold) {
-        return next(MonitoringState.UNKNOWN, Availability.AVAILABLE, threshold,
-                null, null, null, 0, null, null);
+        return new VehicleSpeedState(tenantId, vehicleId, MonitoringState.UNKNOWN,
+                Availability.AVAILABLE, threshold.rule().id(), threshold.rule().ruleVersion(),
+                null, null, null, 0, null, lastEvaluatedSourceTimestamp,
+                lastEvaluatedPositionId, version);
     }
 
     private VehicleSpeedState reset(SpeedPosition position, Availability reason) {
