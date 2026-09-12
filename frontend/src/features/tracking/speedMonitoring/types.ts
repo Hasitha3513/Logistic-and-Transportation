@@ -1,0 +1,17 @@
+export type SpeedRuleScope='TENANT'|'ROUTE_VERSION';
+export type SpeedRuleLifecycle='DRAFT'|'ACTIVE'|'DISABLED'|'RETIRED';
+export type MonitoringState='UNKNOWN'|'NORMAL'|'SPEEDING';
+export type MonitoringAvailability='AVAILABLE'|'NOT_EVALUATED'|'CONFIGURATION_UNAVAILABLE';
+export type ThresholdSource='ROUTE_CONFIG'|'TENANT_CONFIG';
+export type SpeedSeverity='WARNING'|'HIGH';
+export interface SpeedRule{id:string;name:string;scope:SpeedRuleScope;routeId?:string|null;routeVersion?:string|null;thresholdKph:number;lifecycle:SpeedRuleLifecycle;version:number;effectiveAt?:string|null}
+export interface SpeedRulePage{items:SpeedRule[];page:number;size:number;total:number}
+export interface SpeedRuleInput{name:string;scope:SpeedRuleScope;routeId?:string;routeVersion?:string;thresholdKph:number}
+export interface SpeedState{vehicleId:string;monitoringState:MonitoringState;availability:MonitoringAvailability;effectiveRuleId?:string|null;effectiveRuleVersion?:number|null;activeEpisodeId?:string|null;lastEvaluatedSourceTimestamp?:string|null}
+export interface SpeedStatePage{items:SpeedState[];page:number;size:number;total:number}
+export interface SpeedEpisode{episodeId:string;vehicleId:string;tripId?:string|null;driverId?:string|null;routeId?:string|null;routeVersion?:string|null;ruleId:string;ruleVersion:number;thresholdSource:ThresholdSource;effectiveThresholdKph:number;startSourceTimestamp:string;confirmationSourceTimestamp:string;endSourceTimestamp?:string|null;maxObservedSpeedKph:number;eligibleAboveThresholdSampleCount:number;severity:SpeedSeverity;repeatCount:number}
+export interface SpeedEpisodePage{items:SpeedEpisode[];nextCursor?:string|null}
+export interface RuleFilters{scope?:SpeedRuleScope;lifecycle?:SpeedRuleLifecycle;page:number;size:number}
+export interface StateFilters{state?:MonitoringState;page:number;size:number}
+export interface EpisodeFilters{vehicleId?:string;driverId?:string;from:string;to:string;cursor?:string;limit:number}
+export interface ApiError{code?:string;message?:string;fieldErrors?:Record<string,string>}

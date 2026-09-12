@@ -22,7 +22,7 @@
 > - **Current Milestone:** MVP 1.4 Last-Mile Delivery — 8 / 8 COMPLETE, 100%, CLOSED.
 > - **Active Focus:** Wave B is 5 / 5 COMPLETE / CLOSED; Wave C is active.
 > - **US-48 Technical State:** `IMPLEMENTATION_COMPLETE / ACCEPTANCE_BLOCKED_EXTERNAL_SYSTEM`; pluggable CS01–CS10 are `COMPLETE` and `PLUG_AND_PLAY_FOR_SUPPORTED_ADAPTERS` is technically complete at V76; physical FMC130/Flespi evidence remains outstanding.
-> - **Immediate Next Action:** Execute `US-50-MONITOR-SPEED-CS06-FRONTEND-001`; CS01–CS05 are complete at V83, while accounting remains unchanged and US-48 physical acceptance remains `ON_HOLD_EXTERNAL_PREREQUISITE`.
+> - **Immediate Next Action:** Execute `US-50-MONITOR-SPEED-CS07-POSTGRES-CONCURRENCY-PERFORMANCE-001`; CS01–CS06 are complete at V83, while accounting remains unchanged and US-48 physical acceptance remains `ON_HOLD_EXTERNAL_PREREQUISITE`.
 
 ---
 
@@ -167,7 +167,7 @@ Development startup now consistently provisions the idempotent PostgreSQL sample
 | `US-47` | Manage Transport Billing | Trip/freight costing, charges, adjustments, cost centres and operational billing finalization | 🟢 `COMPLETE` | Final acceptance PASS; V72; focused 17/17; concurrency 9/9; Maven 1,398/0/0/15 in 06:38; architecture 46/46; Chromium 7/7; `US-47-TRANSPORT-BILLING-FINAL-ACCEPTANCE-001.md` |
 | `US-48` | Track Vehicles Live | Provider-neutral telemetry ingestion, live/last-known state, connectivity, accuracy and freshness | 🔴 `IMPLEMENTATION_COMPLETE / ACCEPTANCE_BLOCKED_EXTERNAL_SYSTEM` | CS01–CS10 technically complete at V76; external capture `ON_HOLD_EXTERNAL_PREREQUISITE`; rerun only when physical FMC130/live Flespi facts change; physical acceptance remains mandatory |
 | `US-49` | Manage Geofences | Depot, customer-site and unauthorized-zone entry/exit detection | ✅ `COMPLETE / ACCEPTED` | Final acceptance PASS at V80: focused 76/76, Maven 1,595/0/0/15, architecture 52/52, Vitest 299/299 and Chromium 7/7; no US-48 acceptance inheritance |
-| `US-50` | Monitor Speed | Threshold, road-rule and repeat-speed monitoring | 🟡 `IMPLEMENTATION_IN_PROGRESS` | CS01–CS05 complete at V83: bounded Tenant-safe rule/state/episode APIs, exact three-permission RBAC, durable `VehicleSpeedingDetectedV1`, and idempotent same-Tenant Dispatcher IN_APP notifications; CS06 frontend is next |
+| `US-50` | Monitor Speed | Threshold, road-rule and repeat-speed monitoring | 🟡 `IMPLEMENTATION_IN_PROGRESS` | CS01–CS06 complete at V83: bounded Tenant-safe APIs, exact RBAC, durable notifications, and the permission-aware rule/state/episode frontend; CS07 PostgreSQL concurrency/performance is next |
 | `US-51` | Monitor Idle Time | Engine-on versus movement duration and qualified fuel-waste estimates | 🟡 `WAVE C / BLOCKED_BY_REQUIRED_TELEMETRY_CAPABILITY` | Current FLESPI does not advertise IGNITION and no accepted alternate engine-state source exists |
 | `US-52` | Monitor Route Deviations | Planned-versus-actual comparison, severity and audited approval | 🟡 `TECHNICAL_DEPENDENCY_SATISFIED / READY_FOR_PRODUCT_DECISIONS` | Frozen trusted-position/source-time and accepted Routing contracts are sufficient |
 | `US-53` | Replay Journeys | Historical journey replay, stop analysis and incident forensics | 🟡 `TECHNICAL_DEPENDENCY_SATISFIED / READY_AFTER_EARLIER_WAVE_C_DECISIONS` | Immutable Tracking history is sufficient; optional overlays must follow their producers |
@@ -236,7 +236,7 @@ Development startup now consistently provisions the idempotent PostgreSQL sample
 
 ```
 Current Status: 73 / 87 COMPLETE; 14 stories remain across Waves C–E
-Queue Head:     US-50-MONITOR-SPEED-CS06-FRONTEND-001
+Queue Head:     US-50-MONITOR-SPEED-CS07-POSTGRES-CONCURRENCY-PERFORMANCE-001
 ```
 
 1. **Wave A — Integration and exception-control foundations:** 2 / 2 COMPLETE / CLOSED (US-73 and US-78).

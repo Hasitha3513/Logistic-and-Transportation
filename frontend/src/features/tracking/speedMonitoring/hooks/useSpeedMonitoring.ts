@@ -1,0 +1,10 @@
+import {useMutation,useQuery,useQueryClient} from '@tanstack/react-query';
+import {speedMonitoringApi} from '../api/speedMonitoringApi';import type {EpisodeFilters,RuleFilters,SpeedRule,StateFilters} from '../types';
+export const speedKeys={rules:['tracking','speed','rules'] as const,rule:(id:string)=>['tracking','speed','rules',id] as const,states:['tracking','speed','states'] as const,state:(id:string)=>['tracking','speed','states',id] as const,episodes:['tracking','speed','episodes'] as const,episode:(id:string)=>['tracking','speed','episodes',id] as const};
+export const useSpeedRules=(filters:RuleFilters)=>useQuery({queryKey:[...speedKeys.rules,filters],queryFn:()=>speedMonitoringApi.rules(filters)});
+export const useSpeedRule=(id?:string)=>useQuery({queryKey:speedKeys.rule(id??''),queryFn:()=>speedMonitoringApi.rule(id!),enabled:Boolean(id)});
+export const useSpeedStates=(filters:StateFilters)=>useQuery({queryKey:[...speedKeys.states,filters],queryFn:()=>speedMonitoringApi.states(filters)});
+export const useSpeedState=(id?:string)=>useQuery({queryKey:speedKeys.state(id??''),queryFn:()=>speedMonitoringApi.state(id!),enabled:Boolean(id)});
+export const useSpeedEpisodes=(filters:EpisodeFilters,enabled=true)=>useQuery({queryKey:[...speedKeys.episodes,filters],queryFn:()=>speedMonitoringApi.episodes(filters),enabled});
+export const useSpeedEpisode=(id?:string)=>useQuery({queryKey:speedKeys.episode(id??''),queryFn:()=>speedMonitoringApi.episode(id!),enabled:Boolean(id)});
+export function useSpeedRuleMutations(){const client=useQueryClient();const refresh=(rule?:SpeedRule)=>{void client.invalidateQueries({queryKey:speedKeys.rules});void client.invalidateQueries({queryKey:speedKeys.states});if(rule)void client.invalidateQueries({queryKey:speedKeys.rule(rule.id)});};return {create:useMutation({mutationFn:speedMonitoringApi.createRule,onSuccess:refresh}),update:useMutation({mutationFn:speedMonitoringApi.updateRule,onSuccess:refresh}),command:useMutation({mutationFn:speedMonitoringApi.command,onSuccess:refresh})};}

@@ -138,6 +138,8 @@ export const navigation: NavigationItem[] = [
       { key: 'tracking-devices', label: 'Devices', route: '/tracking/devices', requiredPermission: 'TRACKING_VIEW' },
       { key: 'tracking-provider-connections', label: 'Provider Connections', route: '/tracking/provider-connections', requiredPermission: 'TRACKING_DEVICE_MANAGE' },
       { key: 'tracking-geofences', label: 'Geofences', route: '/tracking/geofences', requiredPermission: 'GEOFENCE_VIEW' },
+      { key: 'tracking-speed-monitoring', label: 'Speed Monitoring', route: '/tracking/speed-monitoring', requiredPermission: 'SPEED_MONITOR_VIEW' },
+      { key: 'tracking-speed-episodes', label: 'Speed Episodes', route: '/tracking/speed-monitoring/episodes', requiredPermission: 'SPEED_EVENT_VIEW' },
     ],
   },
   {

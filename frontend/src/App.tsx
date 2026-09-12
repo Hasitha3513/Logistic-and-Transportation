@@ -60,6 +60,11 @@ import ProviderConnectionsPage from './features/tracking/pages/ProviderConnectio
 import GeofenceListPage from './features/tracking/pages/GeofenceListPage';
 import GeofenceFormPage from './features/tracking/pages/GeofenceFormPage';
 import GeofenceDetailPage from './features/tracking/pages/GeofenceDetailPage';
+import SpeedRuleListPage from './features/tracking/speedMonitoring/pages/SpeedRuleListPage';
+import SpeedRuleFormPage from './features/tracking/speedMonitoring/pages/SpeedRuleFormPage';
+import SpeedRuleDetailPage from './features/tracking/speedMonitoring/pages/SpeedRuleDetailPage';
+import SpeedStatePage from './features/tracking/speedMonitoring/pages/SpeedStatePage';
+import SpeedEpisodePage from './features/tracking/speedMonitoring/pages/SpeedEpisodePage';
 
 function ProtectedRoute() {
   const { user, isLoading } = useAuth();
@@ -170,6 +175,13 @@ export default function App() {
         <Route path="tracking/geofences/new" element={<GeofenceFormPage />} />
         <Route path="tracking/geofences/:geofenceId/edit" element={<GeofenceFormPage />} />
         <Route path="tracking/geofences/:geofenceId" element={<GeofenceDetailPage />} />
+        <Route path="tracking/speed-monitoring" element={<SpeedRuleListPage />} />
+        <Route path="tracking/speed-monitoring/rules/new" element={<SpeedRuleFormPage />} />
+        <Route path="tracking/speed-monitoring/rules/:ruleId/edit" element={<SpeedRuleFormPage />} />
+        <Route path="tracking/speed-monitoring/rules/:ruleId" element={<SpeedRuleDetailPage />} />
+        <Route path="tracking/speed-monitoring/states" element={<SpeedStatePage />} />
+        <Route path="tracking/speed-monitoring/episodes" element={<SpeedEpisodePage />} />
+        <Route path="tracking/speed-monitoring/episodes/:episodeId" element={<SpeedEpisodePage detail />} />
         <Route path="workspace" element={<WorkspacePage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
