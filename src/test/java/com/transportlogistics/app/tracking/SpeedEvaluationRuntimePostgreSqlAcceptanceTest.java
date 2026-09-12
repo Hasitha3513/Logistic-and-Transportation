@@ -25,6 +25,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.flywaydb.core.Flyway;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
@@ -43,15 +44,17 @@ class SpeedEvaluationRuntimePostgreSqlAcceptanceTest extends PostgreSqlIntegrati
     @Autowired CapturingPublisher publisher;
     @Autowired MutableAttribution attribution;
     @Autowired JdbcTemplate jdbc;
+    @Autowired Flyway flyway;
     private UUID tenant;
     private UUID vehicle;
 
     @BeforeEach
     void clean() {
-        jdbc.update("DELETE FROM tracking_speed_evaluation_job");
-        jdbc.update("DELETE FROM tracking_speed_state");
-        jdbc.update("DELETE FROM tracking_speed_episode");
-        jdbc.update("DELETE FROM tracking_speed_rule");
+        // Episodes are immutable production evidence and the V81 trigger correctly
+        // rejects DELETE. Rebuild only the explicitly isolated acceptance schema so
+        // every test starts from the exact V1 -> current Flyway baseline.
+        flyway.clean();
+        flyway.migrate();
         publisher.events.clear();
         attribution.value = SpeedAttribution.unknown();
         tenant = UUID.randomUUID();

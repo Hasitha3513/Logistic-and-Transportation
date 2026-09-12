@@ -17,7 +17,7 @@ This is 14 stories, so the invariant is `73 + 14 = 87`. `US-88`, `US-89`, and `U
 
 The existing roadmap had correct IDs but non-authoritative labels for several remaining stories. This plan restores the DOCX/UML titles and meanings, notably US-35/37/38 and US-48..55. It does not reopen accepted stories or change their acceptance decisions.
 
-**Waves A and B are COMPLETE / CLOSED; Wave C is active.** US-73 and US-78 are accepted. US-35, US-37, US-38, US-46, US-47, and US-49 final acceptance pass. US-48 is technically complete but physical acceptance is `ON_HOLD_EXTERNAL_PREREQUISITE`; US-50 CS01–CS06 are complete through V83 and the next task is `US-50-MONITOR-SPEED-CS07-POSTGRES-CONCURRENCY-PERFORMANCE-001`.
+**Waves A and B are COMPLETE / CLOSED; Wave C is active.** US-73 and US-78 are accepted. US-35, US-37, US-38, US-46, US-47, and US-49 final acceptance pass. US-48 is technically complete but physical acceptance is `ON_HOLD_EXTERNAL_PREREQUISITE`; US-50 CS01–CS07 are complete through V83 and technical closure is next.
 
 ## 2. Source reconciliation and non-negotiable boundaries
 
@@ -225,7 +225,7 @@ Every story follows `PRODUCT DECISIONS → IMPLEMENTATION → TECHNICAL CLOSURE 
 7. `US-47-TRANSPORT-BILLING-FINAL-ACCEPTANCE-001` — COMPLETE; accounting advanced to 72 / 87 and Wave B closed.
 8. US-48 product/architecture/technical implementation — COMPLETE; real provider/device acceptance is `ON_HOLD_EXTERNAL_PREREQUISITE` and resumes only when external facts change.
 9. `US-49-MANAGE-GEOFENCES-FINAL-ACCEPTANCE-001` — COMPLETE; accounting advanced to 73 / 87 independently of US-48 physical acceptance.
-10. US-50 product decisions and CS01–CS06 through the V83 operator frontend — COMPLETE; next concurrency/performance → closure → acceptance.
+10. US-50 product decisions and CS01–CS07 through V83 concurrency/performance — COMPLETE; next technical closure → acceptance.
 11. US-51 remains `BLOCKED_BY_REQUIRED_TELEMETRY_CAPABILITY`; resume product decisions only when an accepted engine-state source/proxy can be governed.
 12. US-52 product decisions → implementation → closure → acceptance (parallel with items 9-10 against frozen technical US-48 contracts).
 13. US-55 remains `BLOCKED_BY_REQUIRED_TELEMETRY_AND_PRODUCT_DECISIONS`; resume only after tamper/spoof/battery signal sources and full fault semantics can be governed.
@@ -290,6 +290,6 @@ After 87/87 and disposition of parity findings, execute a real Tenant-isolated o
 
 Exactly one queue head is authorized by this roadmap:
 
-`US-50-MONITOR-SPEED-CS07-POSTGRES-CONCURRENCY-PERFORMANCE-001`
+`US-50-MONITOR-SPEED-TECHNICAL-CLOSURE-001`
 
-US-48 external acceptance remains on hold until physical FMC130/live Flespi prerequisites change. US-49 is COMPLETE / ACCEPTED. US-50 CS01–CS06 are complete through the V83 operator frontend without US-48 acceptance inheritance or accounting change; proceed with PostgreSQL concurrency/performance in CS07.
+US-48 external acceptance remains on hold until physical FMC130/live Flespi prerequisites change. US-49 is COMPLETE / ACCEPTED. US-50 CS01–CS07 are complete through V83 without US-48 acceptance inheritance or accounting change; proceed with technical closure.
