@@ -31,12 +31,12 @@ public final class GenericRestPayloadNormalizer extends AbstractJsonTelemetryPay
                 tenantId,
                 text(at(root, "/deviceId", true), true),
                 text(at(root, "/messageId", false), false),
-                instant(at(root, "/recordedAt", true)),
+                instant(root.hasNonNull("recordedAt") ? root.get("recordedAt") : root.get("sourceTimestamp")),
                 decimal(at(root, "/latitude", true), true),
                 decimal(at(root, "/longitude", true), true),
                 decimal(at(root, "/speedKmh", false), false),
                 decimal(at(root, "/heading", false), false),
-                decimal(at(root, "/accuracyMeters", false), false),
+                decimal(root.has("accuracyMeters") ? root.get("accuracyMeters") : root.get("horizontalAccuracyMeters"), false),
                 decimal(at(root, "/odometerKm", false), false),
                 ignition);
     }

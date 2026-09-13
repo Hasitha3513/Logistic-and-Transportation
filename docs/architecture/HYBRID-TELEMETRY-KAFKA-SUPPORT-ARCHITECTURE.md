@@ -1,6 +1,6 @@
 # Hybrid Telemetry — Kafka Support Architecture
 
-**Status:** APPROVED / IMPLEMENTATION_PENDING  
+**Status:** TS02 IMPLEMENTED / TS03–TS04 PENDING
 **Date:** 2026-09-13
 
 ## Runtime flow
@@ -34,6 +34,9 @@ controller, preventing ghost live positions and making cache recovery determinis
 
 Kafka is Tracking infrastructure, not the P1-01 business outbox. Per-ping events do not cross
 Spring Modulith boundaries unless a later consumer contract explicitly authorizes that boundary.
+
+TS02 implements the signed provider ingress and durable producer side of this flow. The Redis and
+TimescaleDB consumers remain deliberately absent until TS03 and TS04 respectively.
 
 ## Consumers and failure behavior
 

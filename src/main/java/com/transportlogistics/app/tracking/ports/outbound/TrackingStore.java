@@ -20,6 +20,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import com.transportlogistics.app.tracking.application.provider.TelemetryGatewayType;
 
 public interface TrackingStore {
  Device insertDevice(Context context,CreateDevice command,Instant now);
@@ -35,6 +36,8 @@ public interface TrackingStore {
  HistoryPage positions(UUID tenantId,UUID vehicleId,Instant from,Instant to,String cursor,int limit);
  List<IngestResult> ingest(ProviderContext provider,List<PositionCommand> commands,Instant receivedAt);
  Optional<ProviderBinding> providerBinding(String providerKeyId);
+ Optional<TelemetryGatewayType> providerType(UUID tenantId,UUID providerBindingId);
+ Optional<IngressDeviceAuthority> ingressDeviceAuthority(UUID tenantId,UUID providerBindingId,String externalDeviceReference,Instant sourceTimestamp);
  List<ProviderBinding> activeProviderBindings();
  ProviderBinding insertProviderBinding(Context context,String providerKeyId,String providerAlias,String credentialReference,Instant now);
  ProviderBinding providerBindingLifecycle(Context context,UUID id,long version,ProviderBindingLifecycle lifecycle,Instant now);
@@ -45,4 +48,5 @@ public interface TrackingStore {
  void rebuildLatest(UUID tenantId,UUID vehicleId,Instant now);
  void auditDenied(Context context,String route,String reasonCode,Instant now);
  TrackingHealth health(Instant now);
+ record IngressDeviceAuthority(UUID deviceId,UUID vehicleId) {}
 }

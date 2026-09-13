@@ -21,6 +21,19 @@ spring:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
       timeout: ${REDIS_TIMEOUT:2s}
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      acks: all
+      compression-type: lz4
+      properties:
+        enable.idempotence: true
+        max.in.flight.requests.per.connection: 5
+        linger.ms: 20
+        batch.size: 65536
+        delivery.timeout.ms: 30000
+        request.timeout.ms: 10000
+        max.request.size: 1048576
   jpa:
     open-in-view: false
     database: postgresql
@@ -79,6 +92,11 @@ security:
     secret: ${JWT_SECRET:super_secret_jwt_key_that_is_at_least_32_bytes_long_for_security_2026}
 app:
   tracking:
+    kafka:
+      topic: ${TRACKING_KAFKA_TOPIC:tracking.telemetry.ingested.v1}
+      partitions: ${TRACKING_KAFKA_PARTITIONS:6}
+      acknowledgement-timeout: ${TRACKING_KAFKA_ACK_TIMEOUT:PT10S}
+      manage-topic: ${TRACKING_KAFKA_MANAGE_TOPIC:false}
     hybrid-storage:
       enabled: ${TRACKING_HYBRID_STORAGE_ENABLED:false}
       live-state-ttl: ${TRACKING_LIVE_STATE_TTL:PT24H}

@@ -8,6 +8,7 @@ import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.never;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -19,6 +20,7 @@ import com.transportlogistics.app.tenancy.TenantExecutionContext;
 import com.transportlogistics.app.tracking.ports.inbound.TrackingUseCase;
 import com.transportlogistics.app.tracking.ports.inbound.TrackingProviderManagementUseCase;
 import com.transportlogistics.app.tracking.ports.outbound.TrackingStore;
+import com.transportlogistics.app.tracking.ports.outbound.TelemetryStreamPublisherPort;
 import com.transportlogistics.app.integration.IntegrationSecretResolver;
 import com.transportlogistics.app.tracking.domain.TrackingModels.ProviderBinding;
 import com.transportlogistics.app.tracking.domain.TrackingModels.ProviderBindingLifecycle;
@@ -59,6 +61,7 @@ class TrackingSecurityIntegrationTest {
     @Autowired TrackingProviderManagementUseCase providerManagementUseCase;
     @Autowired TrackingStore store;
     @Autowired IntegrationSecretResolver secretResolver;
+    @Autowired TelemetryStreamPublisherPort streamPublisher;
     private static final UUID BINDING_ID = UUID.fromString("48000000-0000-0000-0000-000000000074");
     private static final String KEY_ID = "security-fixture-key";
     private static final String PROVIDER = "FIXTURE";
@@ -74,11 +77,12 @@ class TrackingSecurityIntegrationTest {
         }
         @Bean @Primary TrackingStore trackingTestStore() { return org.mockito.Mockito.mock(TrackingStore.class); }
         @Bean @Primary IntegrationSecretResolver trackingTestSecrets() { return org.mockito.Mockito.mock(IntegrationSecretResolver.class); }
+        @Bean @Primary TelemetryStreamPublisherPort trackingTestStreamPublisher() { return org.mockito.Mockito.mock(TelemetryStreamPublisherPort.class); }
     }
 
     @BeforeEach
     void setup() {
-        reset(useCase, providerManagementUseCase, store, secretResolver);
+        reset(useCase, providerManagementUseCase, store, secretResolver, streamPublisher);
         var context = new TenantExecutionContext(TENANT, UUID.randomUUID(), "tracking.operator", "tracking-test");
         when(currentTenant.current()).thenReturn(Optional.of(context));
         when(currentTenant.required()).thenReturn(context);
@@ -86,6 +90,9 @@ class TrackingSecurityIntegrationTest {
         when(useCase.devices(any(), anyInt(), anyInt(), anyBoolean())).thenReturn(List.of());
         when(store.providerBinding(KEY_ID)).thenReturn(Optional.of(binding(ProviderBindingLifecycle.ACTIVE)));
         when(store.reserveNonce(any(), any(), anyString(), any(), any())).thenReturn(true);
+        when(store.providerType(TENANT, BINDING_ID)).thenReturn(Optional.of(TelemetryGatewayType.GENERIC));
+        when(store.ingressDeviceAuthority(any(), any(), anyString(), any())).thenReturn(Optional.of(new TrackingStore.IngressDeviceAuthority(UUID.fromString("48000000-0000-0000-0000-000000000099"), VEHICLE)));
+        when(streamPublisher.publishDurably(anyString(), any(), anyString(), any())).thenReturn(new TelemetryStreamPublisherPort.Publication(0, 1));
         when(secretResolver.resolve("env:TRACKING_SECURITY_TEST")).thenReturn(Optional.of(SECRET.toCharArray()));
         when(useCase.ingest(any(), any(), any())).thenReturn(List.of());
     }
@@ -218,7 +225,7 @@ class TrackingSecurityIntegrationTest {
                 .andExpect(status().isOk());
     }
 
-    @Test void validSignedProviderRequestSucceedsWithoutTenantAuthorityHeader() throws Exception { performSigned(KEY_ID,PROVIDER,SECRET,Instant.now().getEpochSecond(),UUID.randomUUID().toString(),null).andExpect(status().isOk()); }
+    @Test void validSignedProviderRequestSucceedsWithoutTenantAuthorityHeader() throws Exception { performSigned(KEY_ID,PROVIDER,SECRET,Instant.now().getEpochSecond(),UUID.randomUUID().toString(),null).andExpect(status().isAccepted()); }
     @Test void invalidSignatureIsSanitizedUnauthorized() throws Exception { performSigned(KEY_ID,PROVIDER,"wrong",Instant.now().getEpochSecond(),UUID.randomUUID().toString(),null).andExpect(status().isUnauthorized()); }
     @Test void expiredTimestampIsUnauthorized() throws Exception { performSigned(KEY_ID,PROVIDER,SECRET,Instant.now().minusSeconds(301).getEpochSecond(),UUID.randomUUID().toString(),null).andExpect(status().isUnauthorized()); }
     @Test void futureTimestampIsUnauthorized() throws Exception { performSigned(KEY_ID,PROVIDER,SECRET,Instant.now().plusSeconds(600).getEpochSecond(),UUID.randomUUID().toString(),null).andExpect(status().isUnauthorized()); }
@@ -229,9 +236,12 @@ class TrackingSecurityIntegrationTest {
     @Test void retiredBindingIsUnauthorized() throws Exception { when(store.providerBinding(KEY_ID)).thenReturn(Optional.of(binding(ProviderBindingLifecycle.RETIRED)));performSigned(KEY_ID,PROVIDER,SECRET,Instant.now().getEpochSecond(),UUID.randomUUID().toString(),null).andExpect(status().isUnauthorized()); }
     @Test void wrongCredentialIsUnauthorized() throws Exception { when(secretResolver.resolve("env:TRACKING_SECURITY_TEST")).thenReturn(Optional.of("different".toCharArray()));performSigned(KEY_ID,PROVIDER,SECRET,Instant.now().getEpochSecond(),UUID.randomUUID().toString(),null).andExpect(status().isUnauthorized()); }
     @Test void providerAliasMismatchIsUnauthorized() throws Exception { performSigned(KEY_ID,"OTHER",SECRET,Instant.now().getEpochSecond(),UUID.randomUUID().toString(),null).andExpect(status().isUnauthorized()); }
-    @Test void wrongDeviceAndTenantMappingFailsClosed() throws Exception { when(useCase.ingest(any(),any(),any())).thenThrow(new com.transportlogistics.app.shared.domain.BusinessRuleException("TRACKING_PROVIDER_UNAUTHORIZED","mismatch"));performSigned(KEY_ID,PROVIDER,SECRET,Instant.now().getEpochSecond(),UUID.randomUUID().toString(),null).andExpect(status().isUnauthorized()); }
+    @Test void wrongDeviceAndTenantMappingFailsClosed() throws Exception { when(store.ingressDeviceAuthority(any(),any(),anyString(),any())).thenReturn(Optional.empty());performSigned(KEY_ID,PROVIDER,SECRET,Instant.now().getEpochSecond(),UUID.randomUUID().toString(),null).andExpect(status().isUnauthorized()); }
     @Test @WithMockUser(authorities="TRACKING_DEVICE_MANAGE") void humanJwtWithoutProviderCredentialCannotAuthenticateIngress() throws Exception { mvc.perform(post("/api/integration/v1/tracking/positions").contextPath("/api").contentType(MediaType.APPLICATION_JSON).content(positionBody())).andExpect(status().isUnauthorized()); }
-    @Test void callerTenantHeaderCannotOverrideTrustedBindingTenant() throws Exception { performSigned(KEY_ID,PROVIDER,SECRET,Instant.now().getEpochSecond(),UUID.randomUUID().toString(),UUID.randomUUID()).andExpect(status().isOk()); }
+    @Test void callerTenantHeaderCannotOverrideTrustedBindingTenant() throws Exception { performSigned(KEY_ID,PROVIDER,SECRET,Instant.now().getEpochSecond(),UUID.randomUUID().toString(),UUID.randomUUID()).andExpect(status().isAccepted()); }
+    @Test void unsupportedPayloadVersionFailsBeforePublication() throws Exception {String body=positionBody();long epoch=Instant.now().getEpochSecond();String nonce=UUID.randomUUID().toString();String canonical=epoch+"\n"+nonce+"\n"+KEY_ID+"\n"+PROVIDER+"\n"+body;mvc.perform(post("/api/integration/v1/tracking/positions").contextPath("/api").contentType(MediaType.APPLICATION_JSON).header("X-Tracking-Provider-Key-Id",KEY_ID).header("X-Tracking-Provider",PROVIDER).header("X-Tracking-Timestamp",epoch).header("X-Tracking-Nonce",nonce).header("X-Tracking-Signature",hmac(SECRET,canonical)).header("X-Tracking-Payload-Version","2").content(body)).andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("TRACKING_PAYLOAD_VERSION_UNSUPPORTED"));verify(streamPublisher,never()).publishDurably(anyString(),any(),anyString(),any());}
+    @Test void kafkaFailureNeverReturnsAccepted() throws Exception {when(streamPublisher.publishDurably(anyString(),any(),anyString(),any())).thenThrow(new com.transportlogistics.app.shared.domain.DependencyUnavailableException("TRACKING_KAFKA_UNAVAILABLE","Telemetry stream is unavailable",null));performSigned(KEY_ID,PROVIDER,SECRET,Instant.now().getEpochSecond(),UUID.randomUUID().toString(),null).andExpect(status().isServiceUnavailable()).andExpect(jsonPath("$.code").value("TRACKING_KAFKA_UNAVAILABLE"));}
+    @Test void acceptedEnvelopeUsesTrustedTenantAndDeterministicVehicleKey() throws Exception {performSigned(KEY_ID,PROVIDER,SECRET,Instant.now().getEpochSecond(),UUID.randomUUID().toString(),UUID.randomUUID()).andExpect(status().isAccepted());var key=org.mockito.ArgumentCaptor.forClass(String.class);var event=org.mockito.ArgumentCaptor.forClass(com.transportlogistics.app.tracking.application.telemetry.TrackingTelemetryIngestedV1.class);verify(streamPublisher).publishDurably(key.capture(),event.capture(),anyString(),any());org.assertj.core.api.Assertions.assertThat(key.getValue()).isEqualTo(TENANT+":"+VEHICLE);org.assertj.core.api.Assertions.assertThat(event.getValue().tenantId()).isEqualTo(TENANT);org.assertj.core.api.Assertions.assertThat(event.getValue().vehicleId()).isEqualTo(VEHICLE);verify(useCase,never()).ingest(any(),any(),any());}
 
     private org.springframework.test.web.servlet.ResultActions performSigned(String key,String provider,String secret,long epoch,String nonce,UUID assertedTenant)throws Exception{String body=positionBody();String canonical=epoch+"\n"+nonce+"\n"+key+"\n"+provider+"\n"+body;var builder=post("/api/integration/v1/tracking/positions").contextPath("/api").contentType(MediaType.APPLICATION_JSON).header("X-Tracking-Provider-Key-Id",key).header("X-Tracking-Provider",provider).header("X-Tracking-Timestamp",epoch).header("X-Tracking-Nonce",nonce).header("X-Tracking-Signature",hmac(secret,canonical));if(assertedTenant!=null)builder.header("X-Tracking-Tenant",assertedTenant);return mvc.perform(builder.content(body));}
     private static String positionBody(){return "{\"deviceId\":\"48000000-0000-0000-0000-000000000099\",\"sourceTimestamp\":\""+Instant.now()+"\",\"latitude\":6.9271,\"longitude\":79.8612,\"horizontalAccuracyMeters\":5}";}

@@ -23,9 +23,9 @@
 > - **Active Focus:** Wave B is 5 / 5 COMPLETE / CLOSED; Wave C is active.
 > - **US-48 Technical State:** `IMPLEMENTATION_COMPLETE / ACCEPTANCE_BLOCKED_EXTERNAL_SYSTEM`; pluggable CS01–CS10 are `COMPLETE` and `PLUG_AND_PLAY_FOR_SUPPORTED_ADAPTERS` is technically complete at V76; physical FMC130/Flespi evidence remains outstanding.
 > - **Architecture Promotion:** The high-throughput pluggable telemetry platform (Kafka durable stream, Redis live state, TimescaleDB history, Flespi/Traccar/Generic normalization, gateway administration and live Fleet map) is promoted into MVP scope as a US-48/Wave C platform enabler. US-48 acceptance remains externally blocked and accounting is unchanged.
-> - **Hybrid Telemetry State:** `IMPLEMENTATION_IN_PROGRESS / TS01_COMPLETE`; V86, TimescaleDB/Redis Compose infrastructure and the three normalization strategies are verified. Secure dynamic ingress is not yet active.
+> - **Hybrid Telemetry State:** `IMPLEMENTATION_IN_PROGRESS / TS02_COMPLETE`; V86 infrastructure, the three normalizers, signed dynamic ingress and durable Kafka publication are verified. Redis live projection remains TS03.
 > - **Hybrid Telemetry Test Infrastructure:** `CLOSED`; Testcontainers 2.0.3/docker-java 3.7.0 restores Docker 29 negotiation, V86 Timescale acceptance, table-ownership verification and the complete Maven regression without changing story accounting.
-> - **Immediate Next Action:** Run `HYBRID-TELEMETRY-TS02-KAFKA-CONTRACT-AND-SECURE-INGRESS`; retain the existing signed provider-key trust boundary and return 202 only after durable Kafka acknowledgement.
+> - **Immediate Next Action:** Run `HYBRID-TELEMETRY-TS03-KAFKA-REDIS-LIVE-PROJECTOR`; TS02 secure ingress and durable Kafka acknowledgement are complete.
 
 ---
 
@@ -239,7 +239,7 @@ Development startup now consistently provisions the idempotent PostgreSQL sample
 
 ```
 Current Status: 73 / 87 COMPLETE; 14 stories remain across Waves C–E
-Queue Head:     HYBRID-TELEMETRY-TS02-KAFKA-CONTRACT-AND-SECURE-INGRESS
+Queue Head:     HYBRID-TELEMETRY-TS03-KAFKA-REDIS-LIVE-PROJECTOR
 ```
 
 1. **Wave A — Integration and exception-control foundations:** 2 / 2 COMPLETE / CLOSED (US-73 and US-78).
