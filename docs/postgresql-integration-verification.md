@@ -2,10 +2,10 @@
 
 ## Environment
 
-- Java: 21.0.7
-- Database image: `postgres:16.4-alpine`
+- Java: 21.0.12
+- Database images: `postgres:16-alpine` and `timescale/timescaledb:latest-pg16`
 - Local verification engine: Docker Desktop 29.7.2, API 1.55
-- Test framework: JUnit 5, Spring Boot Test, and Testcontainers 2.0.3
+- Test framework: JUnit 5, Spring Boot Test, Testcontainers 2.0.3, and docker-java 3.7.0
 - CI prerequisite: a Docker-compatible container runtime. No external PostgreSQL service or fixed localhost port is required.
 
 On Windows Docker Desktop installations whose active engine is not exposed through the default pipe, Maven can be run with `DOCKER_HOST=npipe:////./pipe/dockerDesktopLinuxEngine`. Linux CI agents should use their normal Docker socket.
@@ -16,11 +16,19 @@ On Windows Docker Desktop installations whose active engine is not exposed throu
 
 The PostgreSQL suite is tagged `postgres` but is not excluded from the default Maven lifecycle. Its class name matches Surefire's normal test discovery, so `mvn clean verify` executes it together with the existing H2 suite.
 
-Testcontainers 2.0.3 and its renamed `testcontainers-postgresql` artifact are used because the Spring Boot-managed older Testcontainers client was rejected by the current Docker 29 API. Existing H2 tests remain unchanged and continue to provide fast application-level coverage.
+The Testcontainers 2.0.3 BOM aligns `testcontainers-postgresql`, `testcontainers-junit-jupiter`
+and their transitive modules. It resolves docker-java 3.7.0 and negotiates normally with Docker 29;
+the previous Testcontainers 1.21.3/docker-java 3.4.2 stack attempted API 1.32 and was rejected by
+the daemon's API 1.40 minimum. No forced Docker API version or machine-specific socket is required.
+Existing H2 tests remain unchanged and continue to provide fast application-level coverage.
 
 ## Flyway Result
 
-An empty PostgreSQL database was migrated successfully from `V1` through `V14`. The verification asserts that all 14 migrations are applied, successful, and at version 14. V14 adds the Fleet-owned vehicle-reading foundation and its PostgreSQL partial source-identity index.
+Isolated PostgreSQL and TimescaleDB databases migrate successfully from `V1` through the current
+head `V86`. The dedicated Timescale acceptance test verifies the extension, Tenant-qualified
+`tracking_position_history` table and real hypertable conversion. The mutable
+`timescale/timescaledb:latest-pg16` tag is preserved from the governed V86 implementation but must
+be replaced by a separately approved immutable tag or digest before supply-chain closure.
 
 Flyway 9.22.3 emits a compatibility warning because PostgreSQL 16 is newer than the highest PostgreSQL version tested by that Flyway release. Migration and validation succeed, but upgrading Flyway should be handled as a separate dependency-compatibility change.
 

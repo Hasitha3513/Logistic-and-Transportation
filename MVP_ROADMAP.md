@@ -14,7 +14,7 @@
 
 > [!IMPORTANT]
 > **Authoritative Baseline & Current State:**
-> - **Last Reconciled:** `2026-09-12`
+> - **Last Reconciled:** `2026-09-13`
 > - **Authority Order:** Original Requirements (`Traspotation & logistic.docx`), Frozen Architecture/Contracts, Verified Production Code/Tests, then Roadmap.
 > - **MVP 1.3 Delivery Operations:** 7 / 7 COMPLETE (100%) - CLOSED
 > - **MVP 1.4 Last-Mile Delivery:** 8 / 8 COMPLETE (US-63 through US-70 Accepted & Closed)
@@ -24,6 +24,7 @@
 > - **US-48 Technical State:** `IMPLEMENTATION_COMPLETE / ACCEPTANCE_BLOCKED_EXTERNAL_SYSTEM`; pluggable CS01–CS10 are `COMPLETE` and `PLUG_AND_PLAY_FOR_SUPPORTED_ADAPTERS` is technically complete at V76; physical FMC130/Flespi evidence remains outstanding.
 > - **Architecture Promotion:** The high-throughput pluggable telemetry platform (Kafka durable stream, Redis live state, TimescaleDB history, Flespi/Traccar/Generic normalization, gateway administration and live Fleet map) is promoted into MVP scope as a US-48/Wave C platform enabler. US-48 acceptance remains externally blocked and accounting is unchanged.
 > - **Hybrid Telemetry State:** `IMPLEMENTATION_IN_PROGRESS / TS01_COMPLETE`; V86, TimescaleDB/Redis Compose infrastructure and the three normalization strategies are verified. Secure dynamic ingress is not yet active.
+> - **Hybrid Telemetry Test Infrastructure:** `CLOSED`; Testcontainers 2.0.3/docker-java 3.7.0 restores Docker 29 negotiation, V86 Timescale acceptance, table-ownership verification and the complete Maven regression without changing story accounting.
 > - **Immediate Next Action:** Run `HYBRID-TELEMETRY-TS02-KAFKA-CONTRACT-AND-SECURE-INGRESS`; retain the existing signed provider-key trust boundary and return 202 only after durable Kafka acknowledgement.
 
 ---
