@@ -31,6 +31,7 @@ import com.transportlogistics.app.shared.domain.ConflictException;
 import com.transportlogistics.app.support.PostgreSqlIntegrationTest;
 import com.transportlogistics.app.support.ReferenceFixtures;
 import com.transportlogistics.app.trip.application.ports.in.TripUseCase;
+import com.transportlogistics.app.trip.VehicleTripAssignmentLookup;
 import com.transportlogistics.app.trip.application.ports.out.TripDispatchRepository;
 import com.transportlogistics.app.trip.application.ports.out.TripHistoryRepository;
 import com.transportlogistics.app.trip.application.ports.out.TripRepository;
@@ -93,6 +94,7 @@ class PostgreSqlProductionInvariantIntegrationTest extends PostgreSqlIntegration
     @Autowired FuelPurchaseNumberGenerator purchaseNumbers;
     @Autowired FuelPriceRepository priceRepository;
     @Autowired FuelPriceUseCase fuelPrices;
+    @Autowired VehicleTripAssignmentLookup vehicleTripAssignments;
 
     @org.junit.jupiter.api.BeforeEach
     void resetDatabase() {
@@ -107,8 +109,8 @@ class PostgreSqlProductionInvariantIntegrationTest extends PostgreSqlIntegration
         var applied = List.of(flyway.info().applied());
 // assertEquals(18, applied.size()); // size check removed
 
-        assertEquals("84", applied.getLast().getVersion().getVersion());
-        assertEquals("84", jdbc.queryForObject(
+        assertEquals("85", applied.getLast().getVersion().getVersion());
+        assertEquals("85", jdbc.queryForObject(
                 "SELECT version FROM flyway_schema_history WHERE success = TRUE ORDER BY installed_rank DESC LIMIT 1",
                 String.class));
         assertTrue(entityManagerFactory.isOpen());
@@ -171,6 +173,59 @@ class PostgreSqlProductionInvariantIntegrationTest extends PostgreSqlIntegration
                 FROM vehicle_reading
                 WHERE vehicle_id = ? AND source_type = 'TRIP_START' AND source_reference_id = ?
                 """, UUID.randomUUID(), otherTenant, "other-tenant-" + sourceReference, vehicle.id(), sourceReference));
+    }
+
+    @Test
+    void v84SchemaMigratesForwardToV85WithoutHistoricalBackfill() {
+        flyway.clean();
+        var throughV84 = Flyway.configure()
+                .configuration(flyway.getConfiguration())
+                .target("84")
+                .load();
+        throughV84.migrate();
+        assertEquals("84", throughV84.info().current().getVersion().getVersion());
+
+        flyway.migrate();
+
+        assertEquals("85", flyway.info().current().getVersion().getVersion());
+        assertEquals(0, jdbc.queryForObject("SELECT count(*) FROM trip WHERE route_version IS NOT NULL",
+                Integer.class));
+    }
+
+    @Test
+    void tripRouteRevisionSnapshotIsCanonicalTenantScopedAndNeverRecalculated() {
+        var tenantId = UUID.fromString("4f8b6a3b-2c1e-4d89-9a72-f9e4c5b3671a");
+        var originId = UUID.randomUUID();
+        var destinationId = UUID.randomUUID();
+        var routeId = UUID.randomUUID();
+        var vehicleId = UUID.randomUUID();
+        var tripId = UUID.randomUUID();
+        ReferenceFixtures.locations(jdbc, originId, destinationId);
+        ReferenceFixtures.vehicleReference(jdbc, vehicleId);
+        jdbc.update("""
+                INSERT INTO route
+                    (id, code, name, origin_location_id, destination_location_id, planned_distance_km,
+                     estimated_duration_minutes, active)
+                VALUES (?, ?, 'Route revision snapshot', ?, ?, 10, 30, TRUE)
+                """, routeId, "ROUTE-" + suffix(), originId, destinationId);
+        jdbc.update("""
+                INSERT INTO trip
+                    (id, trip_number, route_id, route_version, priority, status, origin_location_id,
+                     destination_location_id, requested_start_time, requested_end_time, vehicle_id,
+                     actual_start_time, created_at, updated_at)
+                VALUES (?, ?, ?, 'REVISION:7', 'NORMAL', 'IN_PROGRESS', ?, ?, ?, ?, ?, ?, ?, ?)
+                """, tripId, "TRIP-REV-" + suffix(), routeId, originId, destinationId, NOW.minusHours(2),
+                NOW.plusHours(2), vehicleId, NOW.minusHours(1), NOW.minusHours(2), NOW.minusHours(1));
+
+        var assignment = vehicleTripAssignments.findAt(tenantId, vehicleId, NOW.toInstant()).orElseThrow();
+        assertEquals(routeId, assignment.routeId());
+        assertEquals("REVISION:7", assignment.routeVersion());
+        assertTrue(vehicleTripAssignments.findAt(UUID.randomUUID(), vehicleId, NOW.toInstant()).isEmpty());
+
+        jdbc.update("UPDATE trip SET route_version = NULL WHERE id = ?", tripId);
+        assertNull(vehicleTripAssignments.findAt(tenantId, vehicleId, NOW.toInstant()).orElseThrow().routeVersion());
+        assertThrows(DataIntegrityViolationException.class,
+                () -> jdbc.update("UPDATE trip SET route_version = 'REVISION:0' WHERE id = ?", tripId));
     }
 
     @Test

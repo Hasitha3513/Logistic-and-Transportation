@@ -80,15 +80,16 @@ public final class TripService implements TripUseCase {
     @Override
     public Trip create(CreateCommand command) {
         var now = now();
+        var routeVersion = resolveRouteVersion(command.routeId(), command.originLocationId(),
+                command.destinationLocationId());
         var trip = new Trip(UUID.randomUUID(), "TRIP-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase(),
-                command.customerId(), command.departmentId(), command.projectId(), command.routeId(),
+                command.customerId(), command.departmentId(), command.projectId(), command.routeId(), routeVersion,
                 command.priority() == null || command.priority().isBlank() ? "NORMAL" : command.priority().trim(),
                 TripLifecyclePolicy.DRAFT, command.originLocationId(), command.destinationLocationId(),
                 command.requestedStartTime(), command.requestedEndTime(), command.requiredVehicleTypeId(),
                 command.requiredCapacityKg(), command.cargoDescription(), command.passengerCount(),
                 command.customerInstructions(), command.notes(), null, null, null, null, null, null, null, now, now);
         lifecycle.validateOrder(trip);
-        validateRoute(trip);
         return repo.save(trip);
     }
 
@@ -108,13 +109,18 @@ public final class TripService implements TripUseCase {
             var current = getForUpdate(id);
             lifecycle.requireEditable(current);
             lifecycle.validateOrder(requested);
-            validateRoute(requested);
+            var resolvedRouteVersion = resolveRouteVersion(requested.routeId(), requested.originLocationId(),
+                    requested.destinationLocationId());
+            var routeVersion = Objects.equals(current.routeId(), requested.routeId())
+                    ? current.routeVersion()
+                    : resolvedRouteVersion;
             if ((current.vehicleId() != null || current.driverId() != null) && affectsEligibility(current, requested)) {
                 throw new ConflictException("ASSIGNED_TRIP_UPDATE_REQUIRES_REVALIDATION",
                         "Assignment-affecting trip fields cannot be changed while a vehicle or driver is assigned");
             }
             var updated = new Trip(current.id(), current.tripNumber(), requested.customerId(),
-                    requested.departmentId(), requested.projectId(), requested.routeId(), requested.priority(),
+                    requested.departmentId(), requested.projectId(), requested.routeId(), routeVersion,
+                    requested.priority(),
                     current.status(), requested.originLocationId(), requested.destinationLocationId(),
                     requested.requestedStartTime(), requested.requestedEndTime(), requested.requiredVehicleTypeId(),
                     requested.requiredCapacityKg(), requested.cargoDescription(), requested.passengerCount(),
@@ -224,10 +230,14 @@ public final class TripService implements TripUseCase {
         return transactions.execute(() -> {
             var trip = getForUpdate(id);
             lifecycle.requireRouteAssignmentAllowed(trip);
-            routeEligibility.assertAssignable(routeId, trip.originLocationId(), trip.destinationLocationId());
+            if (routeId.equals(trip.routeId())) {
+                return trip;
+            }
+            var routeVersion = routeEligibility.requireAssignableRouteVersion(
+                    routeId, trip.originLocationId(), trip.destinationLocationId());
             var occurredAt = now();
             var assigned = new Trip(trip.id(), trip.tripNumber(), trip.customerId(), trip.departmentId(),
-                    trip.projectId(), routeId, trip.priority(), trip.status(), trip.originLocationId(),
+                    trip.projectId(), routeId, routeVersion, trip.priority(), trip.status(), trip.originLocationId(),
                     trip.destinationLocationId(), trip.requestedStartTime(), trip.requestedEndTime(),
                     trip.requiredVehicleTypeId(), trip.requiredCapacityKg(), trip.cargoDescription(),
                     trip.passengerCount(), trip.customerInstructions(), trip.notes(), trip.vehicleId(),
@@ -352,7 +362,8 @@ public final class TripService implements TripUseCase {
                       OffsetDateTime actualEnd, Double startOdometer, Double endOdometer, String remarks,
                       OffsetDateTime updatedAt) {
         return new Trip(trip.id(), trip.tripNumber(), trip.customerId(), trip.departmentId(), trip.projectId(),
-                trip.routeId(), trip.priority(), status, trip.originLocationId(), trip.destinationLocationId(),
+                trip.routeId(), trip.routeVersion(), trip.priority(), status, trip.originLocationId(),
+                trip.destinationLocationId(),
                 trip.requestedStartTime(), trip.requestedEndTime(), trip.requiredVehicleTypeId(),
                 trip.requiredCapacityKg(), trip.cargoDescription(), trip.passengerCount(), trip.customerInstructions(),
                 trip.notes(), vehicleId, driverId, actualStart, actualEnd, startOdometer, endOdometer, remarks,
@@ -374,10 +385,9 @@ public final class TripService implements TripUseCase {
                 .orElseThrow(() -> new NotFoundException("Trip not found: " + id));
     }
 
-    private void validateRoute(Trip trip) {
-        if (trip.routeId() != null) {
-            routeEligibility.assertAssignable(trip.routeId(), trip.originLocationId(), trip.destinationLocationId());
-        }
+    private String resolveRouteVersion(UUID routeId, UUID originLocationId, UUID destinationLocationId) {
+        return routeId == null ? null
+                : routeEligibility.requireAssignableRouteVersion(routeId, originLocationId, destinationLocationId);
     }
 
     private UUID resolveActorId(String actor) {
@@ -399,6 +409,6 @@ public final class TripService implements TripUseCase {
     }
 
     private static RouteEligibilityPort noOpRouteEligibility() {
-        return (routeId, originLocationId, destinationLocationId) -> { };
+        return (routeId, originLocationId, destinationLocationId) -> null;
     }
 }

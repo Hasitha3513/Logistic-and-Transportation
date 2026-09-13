@@ -29,6 +29,8 @@ public class TripEntity extends com.transportlogistics.app.shared.infrastructure
     private UUID projectId;
     @Column(name = "route_id")
     private UUID routeId;
+    @Column(name = "route_version", length = 120)
+    private String routeVersion;
     private String priority;
     private String status;
     @Column(name = "origin_location_id")

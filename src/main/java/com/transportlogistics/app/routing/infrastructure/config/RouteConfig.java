@@ -36,8 +36,10 @@ class RouteConfig {
     RouteAssignmentLookup routeAssignmentLookup(RouteUseCase routes) {
         return id -> {
             var route = routes.get(id);
+            var revision = routes.getRevisions(id).stream().findFirst()
+                    .orElseThrow(() -> new IllegalStateException("Route has no authoritative revision: " + id));
             return new RouteAssignmentLookup.AssignmentRoute(route.id(), route.originLocationId(),
-                    route.destinationLocationId(), route.active());
+                    route.destinationLocationId(), route.active(), "REVISION:" + revision.revisionNumber());
         };
     }
 }

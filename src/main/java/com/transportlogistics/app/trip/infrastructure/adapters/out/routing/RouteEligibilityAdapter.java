@@ -14,7 +14,7 @@ class RouteEligibilityAdapter implements RouteEligibilityPort {
     private final RouteAssignmentLookup routes;
 
     @Override
-    public void assertAssignable(UUID routeId, UUID originLocationId, UUID destinationLocationId) {
+    public String requireAssignableRouteVersion(UUID routeId, UUID originLocationId, UUID destinationLocationId) {
         var route = routes.get(routeId);
         if (!route.active()) {
             throw new BusinessRuleException("ROUTE_INACTIVE", "Only an active route can be assigned to a trip");
@@ -24,5 +24,6 @@ class RouteEligibilityAdapter implements RouteEligibilityPort {
             throw new BusinessRuleException("ROUTE_ENDPOINT_MISMATCH",
                     "Route origin and destination must match the trip");
         }
+        return route.routeVersion();
     }
 }

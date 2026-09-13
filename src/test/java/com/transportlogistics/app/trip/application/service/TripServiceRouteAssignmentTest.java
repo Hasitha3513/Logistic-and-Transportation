@@ -26,13 +26,15 @@ class TripServiceRouteAssignmentTest {
         var trip = trip(origin, destination, "APPROVED");
         when(repository.findByIdForUpdate(trip.id())).thenReturn(Optional.of(trip));
         when(repository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+        when(routes.requireAssignableRouteVersion(routeId, origin, destination)).thenReturn("REVISION:7");
         var service = service(repository, routes, history);
 
         var assigned = service.assignRoute(trip.id(), routeId, "planner");
 
         assertEquals(routeId, assigned.routeId());
+        assertEquals("REVISION:7", assigned.routeVersion());
         assertEquals("APPROVED", assigned.status());
-        verify(routes).assertAssignable(routeId, origin, destination);
+        verify(routes).requireAssignableRouteVersion(routeId, origin, destination);
         verify(history).save(argThat(entry -> entry.action().equals("ROUTE_ASSIGNED")
                 && entry.actor().equals("planner") && entry.details().contains(routeId.toString())));
     }
@@ -49,6 +51,23 @@ class TripServiceRouteAssignmentTest {
                 () -> service.assignRoute(trip.id(), UUID.randomUUID(), "planner"));
 
         verifyNoInteractions(routes);
+        verify(repository, never()).save(any());
+    }
+
+    @Test
+    void retryPreservesTheSnapshotAndDoesNotCreateAnotherAuditEntry() {
+        var repository = mock(TripRepository.class);
+        var routes = mock(RouteEligibilityPort.class);
+        var history = mock(TripHistoryRepository.class);
+        var routeId = UUID.randomUUID();
+        var original = routedTrip(routeId, "REVISION:4");
+        when(repository.findByIdForUpdate(original.id())).thenReturn(Optional.of(original));
+        var service = service(repository, routes, history);
+
+        var retried = service.assignRoute(original.id(), routeId, "planner");
+
+        assertEquals("REVISION:4", retried.routeVersion());
+        verifyNoInteractions(routes, history);
         verify(repository, never()).save(any());
     }
 
@@ -71,5 +90,12 @@ class TripServiceRouteAssignmentTest {
         return new Trip(UUID.randomUUID(), "TRIP-ROUTE", null, null, null, null, "NORMAL", status,
                 origin, destination, now.plusDays(1), now.plusDays(2), null, null, null, 0, null, null,
                 null, null, null, null, null, null, null, now, now);
+    }
+
+    private Trip routedTrip(UUID routeId, String routeVersion) {
+        var now = OffsetDateTime.parse("2026-08-01T00:00:00Z");
+        return new Trip(UUID.randomUUID(), "TRIP-ROUTE", null, null, null, routeId, routeVersion, "NORMAL",
+                "APPROVED", UUID.randomUUID(), UUID.randomUUID(), now.plusDays(1), now.plusDays(2), null,
+                null, null, 0, null, null, null, null, null, null, null, null, null, now, now);
     }
 }

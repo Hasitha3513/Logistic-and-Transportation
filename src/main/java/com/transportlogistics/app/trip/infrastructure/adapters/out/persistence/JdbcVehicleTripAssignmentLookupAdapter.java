@@ -22,7 +22,7 @@ class JdbcVehicleTripAssignmentLookupAdapter implements VehicleTripAssignmentLoo
     public Optional<VehicleTripAssignment> findAt(
             UUID tenantId, UUID vehicleId, Instant sourceTimestamp) {
         return jdbc.query("""
-                SELECT id,driver_id,route_id FROM trip
+                SELECT id,driver_id,route_id,route_version FROM trip
                 WHERE tenant_id=? AND vehicle_id=? AND actual_start_time IS NOT NULL
                   AND actual_start_time<=? AND (actual_end_time IS NULL OR actual_end_time>=?)
                   AND status NOT IN('CANCELLED','REJECTED')
@@ -34,6 +34,7 @@ class JdbcVehicleTripAssignmentLookupAdapter implements VehicleTripAssignmentLoo
     @SuppressWarnings("PMD.UnusedFormalParameter")
     private VehicleTripAssignment map(ResultSet row, int rowNumber) throws SQLException {
         return new VehicleTripAssignment(row.getObject("id", UUID.class),
-                row.getObject("driver_id", UUID.class), row.getObject("route_id", UUID.class), null);
+                row.getObject("driver_id", UUID.class), row.getObject("route_id", UUID.class),
+                row.getString("route_version"));
     }
 }
