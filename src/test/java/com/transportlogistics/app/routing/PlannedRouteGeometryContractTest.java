@@ -1,0 +1,3 @@
+package com.transportlogistics.app.routing;
+import static org.junit.jupiter.api.Assertions.*;import java.math.BigDecimal;import java.util.*;import org.junit.jupiter.api.Test;
+class PlannedRouteGeometryContractTest {@Test void contractIsImmutableAndTenantExplicit(){PlannedRouteGeometry g=new PlannedRouteGeometry(UUID.randomUUID(),"REVISION:1",List.of(new Wgs84Point(BigDecimal.ZERO,BigDecimal.ZERO),new Wgs84Point(new BigDecimal("0.000001"),BigDecimal.ZERO)));assertThrows(UnsupportedOperationException.class,()->g.orderedPoints().add(new Wgs84Point(BigDecimal.ONE,BigDecimal.ONE)));PlannedRouteGeometryLookup lookup=(tenant,route,version)->Optional.of(g);assertTrue(lookup.find(UUID.randomUUID(),g.routeId(),g.routeVersion()).isPresent());}}

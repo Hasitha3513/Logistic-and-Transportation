@@ -1,0 +1,3 @@
+package com.transportlogistics.app.tracking.ports.inbound;
+import com.transportlogistics.app.tracking.domain.routedeviation.RouteDeviationReview;import java.util.UUID;
+public interface RouteDeviationReviewUseCase {RouteDeviationReview approve(UUID tenantId,UUID episodeId,long expectedVersion,RouteDeviationReview.Reason reason,String note,UUID actor,String idempotencyKey);RouteDeviationReview reject(UUID tenantId,UUID episodeId,long expectedVersion,RouteDeviationReview.Reason reason,String note,UUID actor,String idempotencyKey);RouteDeviationReview correct(UUID tenantId,UUID episodeId,long expectedVersion,RouteDeviationReview.Status status,RouteDeviationReview.Reason reason,String note,UUID actor,String idempotencyKey);}

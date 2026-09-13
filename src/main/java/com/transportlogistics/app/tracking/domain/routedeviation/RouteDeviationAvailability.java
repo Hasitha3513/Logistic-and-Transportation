@@ -1,0 +1,6 @@
+package com.transportlogistics.app.tracking.domain.routedeviation;
+
+public enum RouteDeviationAvailability {
+    AVAILABLE, NO_TRIP, ROUTE_UNAVAILABLE, GEOMETRY_UNAVAILABLE, MALFORMED_GEOMETRY,
+    RULE_UNAVAILABLE, ACCURACY_UNKNOWN, STALE_POSITION, UNTRUSTED_POSITION, POSITION_INELIGIBLE
+}
