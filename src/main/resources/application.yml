@@ -16,6 +16,11 @@ spring:
     hikari:
       maximum-pool-size: ${DB_POOL_MAX:10}
       minimum-idle: ${DB_POOL_MIN:2}
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      timeout: ${REDIS_TIMEOUT:2s}
   jpa:
     open-in-view: false
     database: postgresql
@@ -44,6 +49,12 @@ spring:
         CREATE UNIQUE INDEX IF NOT EXISTS uq_vehicle_reading_source
         ON vehicle_reading(vehicle_id, reading_type, source_type, source_reference_id)
         WHERE source_reference_id IS NOT NULL AND correction_of_reading_id IS NULL
+      trackingTimescaleSetup: CREATE EXTENSION IF NOT EXISTS timescaledb;
+      trackingTimescaleHypertable: >-
+        SELECT create_hypertable(
+        'tracking_position_history',
+        by_range('source_timestamp', INTERVAL '1 day'),
+        if_not_exists => TRUE);
   servlet:
     multipart:
       max-file-size: 10MB
@@ -67,6 +78,12 @@ security:
     refresh-token-ttl: P30D
     secret: ${JWT_SECRET:super_secret_jwt_key_that_is_at_least_32_bytes_long_for_security_2026}
 app:
+  tracking:
+    hybrid-storage:
+      enabled: ${TRACKING_HYBRID_STORAGE_ENABLED:false}
+      live-state-ttl: ${TRACKING_LIVE_STATE_TTL:PT24H}
+      stream-batch-size: ${TRACKING_STREAM_BATCH_SIZE:500}
+      stream-consumer-delay: ${TRACKING_STREAM_CONSUMER_DELAY:PT1S}
   integration:
     exchange:
       enabled: ${INTEGRATION_EXCHANGE_ENABLED:true}

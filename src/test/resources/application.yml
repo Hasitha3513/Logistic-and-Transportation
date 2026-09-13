@@ -45,6 +45,8 @@ spring:
         CREATE UNIQUE INDEX uq_vehicle_reading_source
         ON vehicle_reading(vehicle_id, reading_type, source_type, source_reference_id)
         WHERE source_reference_id IS NOT NULL AND correction_of_reading_id IS NULL
+      trackingTimescaleSetup: SELECT 1;
+      trackingTimescaleHypertable: SELECT 1;
 
 management:
   endpoints:

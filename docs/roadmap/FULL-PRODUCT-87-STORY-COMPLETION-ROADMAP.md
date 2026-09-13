@@ -17,7 +17,7 @@ This is 14 stories, so the invariant is `73 + 14 = 87`. `US-88`, `US-89`, and `U
 
 The existing roadmap had correct IDs but non-authoritative labels for several remaining stories. This plan restores the DOCX/UML titles and meanings, notably US-35/37/38 and US-48..55. It does not reopen accepted stories or change their acceptance decisions.
 
-**Waves A and B are COMPLETE / CLOSED; Wave C is active.** US-73 and US-78 are accepted. US-35, US-37, US-38, US-46, US-47, and US-49 final acceptance pass. US-48 and US-50 are implementation complete but independently blocked on physical external acceptance evidence; US-52 CS01 is complete and CS02 is next.
+**Waves A and B are COMPLETE / CLOSED; Wave C is active.** US-73 and US-78 are accepted. US-35, US-37, US-38, US-46, US-47, and US-49 final acceptance pass. US-48 and US-50 are implementation complete but independently blocked on physical external acceptance evidence. The hybrid pluggable telemetry platform is promoted as a US-48/Wave C enabler; its V86 infrastructure slice is next, followed by normalization, Redis/micro-batch, gateway UI, live map and closure. US-52 CS02 is resequenced to V87.
 
 ## 2. Source reconciliation and non-negotiable boundaries
 
@@ -290,6 +290,6 @@ After 87/87 and disposition of parity findings, execute a real Tenant-isolated o
 
 Exactly one queue head is authorized by this roadmap:
 
-`US-52-MONITOR-ROUTE-DEVIATIONS-CS02-V86-PERSISTENCE-001`
+`HYBRID-TELEMETRY-TS02-SECURE-DYNAMIC-INGRESS`
 
-US-48 and US-50 remain on independent external acceptance holds. US-49 is COMPLETE / ACCEPTED. US-52 is `IMPLEMENTATION_IN_PROGRESS / CS01_COMPLETE`; accounting remains unchanged. V85 snapshots Trip's authoritative assigned route revision. Run CS02 only after rechecking that V86 remains free.
+US-48 and US-50 remain on independent external acceptance holds. US-49 is COMPLETE / ACCEPTED. US-52 remains `IMPLEMENTATION_IN_PROGRESS / CS01_COMPLETE`; accounting remains unchanged. V85 snapshots Trip's authoritative assigned route revision. Hybrid TS01 is complete at V86 with real TimescaleDB migration evidence, Redis runtime infrastructure and Flespi/Traccar/Generic normalizers. Secure dynamic ingress is next; US-52 CS02 moves to V87 after the hybrid platform change sets close.
