@@ -1,6 +1,6 @@
 # Hybrid Telemetry — Kafka Support Architecture
 
-**Status:** TS02 IMPLEMENTED / TS03–TS04 PENDING
+**Status:** TS03 IMPLEMENTED / TS04 PENDING
 **Date:** 2026-09-13
 
 ## Runtime flow
@@ -35,14 +35,19 @@ controller, preventing ghost live positions and making cache recovery determinis
 Kafka is Tracking infrastructure, not the P1-01 business outbox. Per-ping events do not cross
 Spring Modulith boundaries unless a later consumer contract explicitly authorizes that boundary.
 
-TS02 implements the signed provider ingress and durable producer side of this flow. The Redis and
-TimescaleDB consumers remain deliberately absent until TS03 and TS04 respectively.
+TS02 implements the signed provider ingress and durable producer side of this flow. TS03 implements
+the Redis live projector. The TimescaleDB consumer remains deliberately absent until TS04.
 
 ## Consumers and failure behavior
 
 The Redis projector writes `tracking:live:{tenantId}:{vehicleId}` with a sliding 24-hour TTL and
 uses source time/event identity so replay cannot replace newer state. Redis outage degrades live
 reads; Kafka retains the rebuild source.
+
+The Tenant index is `tracking:live-index:{tenantId}`, an expiry-scored sorted set capped at 10,000
+Vehicle members and lazily pruned without Redis key scans. State and index share the Tenant hash slot
+and update atomically in Lua. Equal source times select the lexicographically greatest event UUID;
+exact replay refreshes the sliding TTL without changing state.
 
 The Timescale consumer group is `tracking-telemetry-persister-group`, uses manual acknowledgment
 and batches up to 500. Offsets commit only after the database transaction. Static reduction may

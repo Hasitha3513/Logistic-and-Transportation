@@ -34,4 +34,17 @@ class TrackingKafkaConfiguration {
             @Value("${app.tracking.kafka.partitions:6}") int partitions) {
         return TopicBuilder.name(topic).partitions(partitions).replicas(1).build();
     }
+
+    @Bean
+    @ConditionalOnProperty(name = "app.tracking.kafka.manage-topic", havingValue = "true")
+    NewTopic trackingTelemetryDeadLetterTopic(
+            @Value("${app.tracking.kafka.dead-letter-topic:tracking.telemetry.ingested.v1.dlt}")
+                    String topic,
+            @Value("${app.tracking.kafka.partitions:6}") int partitions) {
+        return TopicBuilder.name(topic)
+                .partitions(partitions)
+                .replicas(1)
+                .config("retention.ms", Long.toString(java.time.Duration.ofDays(7).toMillis()))
+                .build();
+    }
 }

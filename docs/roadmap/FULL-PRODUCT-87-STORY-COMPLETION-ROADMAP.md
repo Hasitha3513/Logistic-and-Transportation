@@ -290,6 +290,6 @@ After 87/87 and disposition of parity findings, execute a real Tenant-isolated o
 
 Exactly one queue head is authorized by this roadmap:
 
-`HYBRID-TELEMETRY-TS03-KAFKA-REDIS-LIVE-PROJECTOR`
+`HYBRID-TELEMETRY-TS04-V87-TIMESCALE-CONSUMER-AND-POLICIES`
 
-US-48 and US-50 remain on independent external acceptance holds. US-49 is COMPLETE / ACCEPTED. US-52 remains `IMPLEMENTATION_IN_PROGRESS / CS01_COMPLETE`; accounting remains unchanged. V85 snapshots Trip's authoritative assigned route revision. Hybrid TS01 is complete at V86 with real TimescaleDB migration evidence, Redis runtime infrastructure and Flespi/Traccar/Generic normalizers. TS02 secure ingress now durably publishes the canonical Tenant/Vehicle-ordered Kafka record before returning 202. The Redis live projector is next; V87 forward-hardens Timescale policies and US-52 CS02 moves to V88.
+US-48 and US-50 remain on independent external acceptance holds. US-49 is COMPLETE / ACCEPTED. US-52 remains `IMPLEMENTATION_IN_PROGRESS / CS01_COMPLETE`; accounting remains unchanged. V85 snapshots Trip's authoritative assigned route revision. Hybrid TS01 is complete at V86; TS02 secure ingress durably publishes the canonical Tenant/Vehicle-ordered Kafka record before returning 202; TS03 atomically projects its bounded Tenant-isolated live state to Redis. TS04 V87 Timescale consumption/policies are next and US-52 CS02 remains V88.

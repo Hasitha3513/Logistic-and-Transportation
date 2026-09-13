@@ -34,6 +34,9 @@ spring:
         delivery.timeout.ms: 30000
         request.timeout.ms: 10000
         max.request.size: 1048576
+    consumer:
+      auto-offset-reset: earliest
+      enable-auto-commit: false
   jpa:
     open-in-view: false
     database: postgresql
@@ -97,9 +100,12 @@ app:
       partitions: ${TRACKING_KAFKA_PARTITIONS:6}
       acknowledgement-timeout: ${TRACKING_KAFKA_ACK_TIMEOUT:PT10S}
       manage-topic: ${TRACKING_KAFKA_MANAGE_TOPIC:false}
+      live-projector-group: ${TRACKING_KAFKA_LIVE_PROJECTOR_GROUP:tracking-live-projector-v1}
+      dead-letter-topic: ${TRACKING_KAFKA_DLT_TOPIC:tracking.telemetry.ingested.v1.dlt}
     hybrid-storage:
       enabled: ${TRACKING_HYBRID_STORAGE_ENABLED:false}
       live-state-ttl: ${TRACKING_LIVE_STATE_TTL:PT24H}
+      maximum-live-index-size: ${TRACKING_MAXIMUM_LIVE_INDEX_SIZE:10000}
       stream-batch-size: ${TRACKING_STREAM_BATCH_SIZE:500}
       stream-consumer-delay: ${TRACKING_STREAM_CONSUMER_DELAY:PT1S}
   integration:
