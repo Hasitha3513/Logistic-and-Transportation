@@ -1,5 +1,6 @@
 package com.transportlogistics.app.routing.infrastructure.config;
 
+import com.transportlogistics.app.routing.PlannedRouteGeometryLookup;
 import com.transportlogistics.app.routing.RouteAssignmentLookup;
 import com.transportlogistics.app.routing.RoutePerformanceTripLookupPort;
 import com.transportlogistics.app.routing.application.ports.in.RouteUseCase;
@@ -15,6 +16,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import java.time.Clock;
+import java.util.Objects;
 
 @Configuration
 class RouteConfig {
@@ -40,6 +42,22 @@ class RouteConfig {
                     .orElseThrow(() -> new IllegalStateException("Route has no authoritative revision: " + id));
             return new RouteAssignmentLookup.AssignmentRoute(route.id(), route.originLocationId(),
                     route.destinationLocationId(), route.active(), "REVISION:" + revision.revisionNumber());
+        };
+    }
+
+    @Bean
+    PlannedRouteGeometryLookup plannedRouteGeometryLookup() {
+        return (tenantId, routeId, routeVersion) -> {
+            Objects.requireNonNull(tenantId, "Tenant ID is required");
+            Objects.requireNonNull(routeId, "Route ID is required");
+            if (routeVersion == null || routeVersion.length() > 120
+                    || !routeVersion.matches("REVISION:[1-9][0-9]*")) {
+                throw new IllegalArgumentException(
+                        "Route version must use REVISION:<positive-integer>");
+            }
+            // Current revisions contain ordered Organization location IDs, not immutable
+            // coordinates. Returning empty is the only authoritative CS01 response.
+            return java.util.Optional.empty();
         };
     }
 }
