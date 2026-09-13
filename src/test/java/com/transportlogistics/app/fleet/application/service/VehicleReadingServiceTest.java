@@ -110,6 +110,23 @@ class VehicleReadingServiceTest {
     }
 
     @Test
+    void returnsTheOriginalReadingWhenAnExternalSourceRetriesTheSameFacts() {
+        var sourceReference = UUID.randomUUID();
+        var command = new VehicleReadingUseCase.RecordCommand(
+                vehicleId, VehicleReadingType.ODOMETER, new BigDecimal("10500.000"),
+                VehicleReadingSourceType.TRIP_START, sourceReference,
+                OffsetDateTime.parse("2026-08-16T10:00:00Z"), actorId, null, "Trip start"
+        );
+
+        var first = service.record(command);
+        var retry = service.record(command);
+
+        assertEquals(first.id(), retry.id());
+        assertEquals(1, readings.store.size());
+        assertEquals(1, publishedEvents.size());
+    }
+
+    @Test
     void correctsReadingPreservingOriginalAuditTrail() {
         var original = service.record(new VehicleReadingUseCase.RecordCommand(
                 vehicleId, VehicleReadingType.ODOMETER, new BigDecimal("10500.000"),

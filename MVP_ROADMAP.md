@@ -6,7 +6,7 @@
 ![Completed](https://img.shields.io/badge/Completed-73%20%2F%2087-2da44e.svg?style=for-the-badge&logo=checkmarx)
 ![Progress](https://img.shields.io/badge/Progress-83.9%25-brightgreen.svg?style=for-the-badge&logo=speedtest)
 ![MVP 1.4 Closed](https://img.shields.io/badge/MVP%201.4%20Last--Mile-8%20%2F%208-2da44e.svg?style=for-the-badge&logo=pinboard)
-![Database](https://img.shields.io/badge/PostgreSQL%20%2F%20Flyway-V83-8a63d2.svg?style=for-the-badge&logo=postgresql)
+![Database](https://img.shields.io/badge/PostgreSQL%20%2F%20Flyway-V84-8a63d2.svg?style=for-the-badge&logo=postgresql)
 
 </div>
 
@@ -22,7 +22,7 @@
 > - **Current Milestone:** MVP 1.4 Last-Mile Delivery — 8 / 8 COMPLETE, 100%, CLOSED.
 > - **Active Focus:** Wave B is 5 / 5 COMPLETE / CLOSED; Wave C is active.
 > - **US-48 Technical State:** `IMPLEMENTATION_COMPLETE / ACCEPTANCE_BLOCKED_EXTERNAL_SYSTEM`; pluggable CS01–CS10 are `COMPLETE` and `PLUG_AND_PLAY_FOR_SUPPORTED_ADAPTERS` is technically complete at V76; physical FMC130/Flespi evidence remains outstanding.
-> - **Immediate Next Action:** Execute `US-52-MONITOR-ROUTE-DEVIATIONS-CS01-DOMAIN-PORTS-001`; US-52 product decisions are frozen while US-48 and US-50 remain on independent external acceptance holds at V83.
+> - **Immediate Next Action:** Resume `US-52-MONITOR-ROUTE-DEVIATIONS-CS01-DOMAIN-PORTS-001`; US-52 product decisions are frozen while US-48 and US-50 remain on independent external acceptance holds. Foundation migration V84 now enforces Vehicle Reading source identity, so US-52 persistence must recheck and use V85 if still free.
 
 ---
 

@@ -4,7 +4,7 @@
 **Decision:** `PRODUCT_DECISIONS_FROZEN / READY_FOR_IMPLEMENTATION`  
 **Date:** 2026-09-12  
 **Owner:** Tracking  
-**Flyway head:** V83; V84 does not exist  
+**Flyway head at decision time:** V83; foundation remediation subsequently occupied V84
 **Accounting:** unchanged at 73/87 complete and 14/87 remaining  
 **Next:** `US-52-MONITOR-ROUTE-DEVIATIONS-CS01-DOMAIN-PORTS-001`
 
@@ -174,7 +174,7 @@ If a Trip ends while an episode is open, Tracking closes it at the Trip end sour
 
 ## Persistence, API, security and audit
 
-V84 is reserved, subject to head recheck. The minimum Tracking-owned tables are:
+V85 is now expected, subject to the mandatory head recheck. The minimum Tracking-owned tables are:
 
 - `tracking_route_deviation_rule` for route-revision tolerance, lifecycle, versions and audit facts;
 - `tracking_route_deviation_state` for stable/candidate state and source ordering per Vehicle;
@@ -269,7 +269,7 @@ gates.
 ## Controlled implementation sequence and exclusions
 
 1. `US-52-MONITOR-ROUTE-DEVIATIONS-CS01-DOMAIN-PORTS-001`
-2. `US-52-MONITOR-ROUTE-DEVIATIONS-CS02-V84-PERSISTENCE-001`
+2. `US-52-MONITOR-ROUTE-DEVIATIONS-CS02-V85-PERSISTENCE-001`
 3. `US-52-MONITOR-ROUTE-DEVIATIONS-CS03-EVALUATION-EPISODES-001`
 4. `US-52-MONITOR-ROUTE-DEVIATIONS-CS04-APIS-RBAC-AUDIT-001`
 5. `US-52-MONITOR-ROUTE-DEVIATIONS-CS05-NOTIFICATION-INTEGRATION-001`

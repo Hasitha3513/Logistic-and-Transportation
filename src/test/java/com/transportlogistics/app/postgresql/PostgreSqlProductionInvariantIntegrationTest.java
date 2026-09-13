@@ -107,8 +107,8 @@ class PostgreSqlProductionInvariantIntegrationTest extends PostgreSqlIntegration
         var applied = List.of(flyway.info().applied());
 // assertEquals(18, applied.size()); // size check removed
 
-        assertEquals("17", applied.getLast().getVersion().getVersion());
-        assertEquals("17", jdbc.queryForObject(
+        assertEquals("84", applied.getLast().getVersion().getVersion());
+        assertEquals("84", jdbc.queryForObject(
                 "SELECT version FROM flyway_schema_history WHERE success = TRUE ORDER BY installed_rank DESC LIMIT 1",
                 String.class));
         assertTrue(entityManagerFactory.isOpen());
@@ -123,7 +123,19 @@ class PostgreSqlProductionInvariantIntegrationTest extends PostgreSqlIntegration
                 """, String.class));
         assertTrue(indexNames.containsAll(List.of("idx_vehicle_reading_chronology", "idx_vehicle_reading_source",
                 "idx_vehicle_reading_correction", "uq_vehicle_reading_idempotency",
-                "uq_vehicle_reading_one_correction", "uq_vehicle_reading_source")));
+                "uq_vehicle_reading_one_correction", "uq_vehicle_reading_source_identity")));
+
+        var sourceIdentityDefinition = jdbc.queryForObject("""
+                SELECT indexdef FROM pg_indexes
+                WHERE schemaname = current_schema()
+                  AND tablename = 'vehicle_reading'
+                  AND indexname = 'uq_vehicle_reading_source_identity'
+                """, String.class);
+        assertNotNull(sourceIdentityDefinition);
+        assertTrue(sourceIdentityDefinition.contains(
+                "(tenant_id, vehicle_id, reading_type, source_type, source_reference_id)"));
+        assertTrue(sourceIdentityDefinition.contains("source_reference_id IS NOT NULL"));
+        assertTrue(sourceIdentityDefinition.contains("correction_of_reading_id IS NULL"));
 
         var actor = readingActor();
         var vehicle = vehicle();
@@ -135,6 +147,30 @@ class PostgreSqlProductionInvariantIntegrationTest extends PostgreSqlIntegration
 
         assertThrows(DataIntegrityViolationException.class, () -> vehicleReadingRepository.save(reading(vehicle.id(),
                 actor, "1000", NOW, VehicleReadingSourceType.TRIP_START, sourceReference, "different-key")));
+
+        assertDoesNotThrow(() -> vehicleReadingRepository.save(reading(vehicle.id(), actor, "1000", NOW,
+                VehicleReadingSourceType.TRIP_END, sourceReference, "different-source")));
+        assertDoesNotThrow(() -> vehicleReadingRepository.save(reading(vehicle.id(), actor, "1001", NOW.plusMinutes(1),
+                VehicleReadingSourceType.MANUAL, null, "manual-one")));
+        assertDoesNotThrow(() -> vehicleReadingRepository.save(reading(vehicle.id(), actor, "1002", NOW.plusMinutes(2),
+                VehicleReadingSourceType.MANUAL, null, "manual-two")));
+
+        var otherTenant = UUID.randomUUID();
+        jdbc.update("""
+                INSERT INTO tenant
+                    (tenant_id, tenant_code, tenant_name, default_currency, default_time_zone, status,
+                     created_at, created_by, updated_at, updated_by, version)
+                VALUES (?, ?, ?, 'LKR', 'Asia/Colombo', 'ACTIVE', ?, 'postgres-test', ?, 'postgres-test', 0)
+                """, otherTenant, "PG-" + suffix(), "Other PostgreSQL tenant", NOW, NOW);
+        assertEquals(1, jdbc.update("""
+                INSERT INTO vehicle_reading
+                    (reading_id, tenant_id, vehicle_id, reading_type, value, unit, meter_epoch, source_type,
+                     source_reference_id, recorded_at, received_at, created_by, idempotency_key, created_at)
+                SELECT ?, ?, vehicle_id, reading_type, value, unit, meter_epoch, source_type,
+                       source_reference_id, recorded_at, received_at, created_by, ?, created_at
+                FROM vehicle_reading
+                WHERE vehicle_id = ? AND source_type = 'TRIP_START' AND source_reference_id = ?
+                """, UUID.randomUUID(), otherTenant, "other-tenant-" + sourceReference, vehicle.id(), sourceReference));
     }
 
     @Test

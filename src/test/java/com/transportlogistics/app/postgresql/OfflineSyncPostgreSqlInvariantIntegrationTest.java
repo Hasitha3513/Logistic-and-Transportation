@@ -12,6 +12,8 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.testcontainers.DockerClientFactory;
 
 import java.time.OffsetDateTime;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -48,9 +50,14 @@ class OfflineSyncPostgreSqlInvariantIntegrationTest extends PostgreSqlIntegratio
 
         assertEquals("uuid", columnType("operation_id"));
         assertEquals("timestamp with time zone", columnType("processed_at"));
-        assertEquals(2, jdbc.queryForObject(
-                "SELECT COUNT(*) FROM pg_indexes WHERE tablename = 'offline_sync_operation' AND indexname LIKE 'idx_offline_sync_%'",
-                Integer.class));
+        assertEquals(Set.of("idx_offline_sync_actor_processed", "idx_offline_sync_aggregate_processed",
+                        "idx_offline_sync_tenant"),
+                new HashSet<>(jdbc.queryForList("""
+                        SELECT indexname FROM pg_indexes
+                        WHERE schemaname = current_schema()
+                          AND tablename = 'offline_sync_operation'
+                          AND indexname LIKE 'idx_offline_sync_%'
+                        """, String.class)));
         assertThrows(DataIntegrityViolationException.class, () -> insert(operationId, 1, ACTOR_ID, "APPLIED"));
         assertThrows(DataIntegrityViolationException.class, () -> insert(UUID.randomUUID(), 0, ACTOR_ID, "APPLIED"));
         assertThrows(DataIntegrityViolationException.class, () -> insert(UUID.randomUUID(), 1, UUID.randomUUID(), "APPLIED"));
