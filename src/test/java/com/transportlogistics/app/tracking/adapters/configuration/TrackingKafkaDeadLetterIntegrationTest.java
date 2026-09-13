@@ -18,7 +18,6 @@ import org.apache.kafka.common.serialization.StringDeserializer;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
-import org.springframework.kafka.listener.AcknowledgingMessageListener;
 import org.springframework.kafka.support.serializer.JsonDeserializer;
 import org.testcontainers.kafka.KafkaContainer;
 import org.testcontainers.utility.DockerImageName;
@@ -41,12 +40,11 @@ class TrackingKafkaDeadLetterIntegrationTest {
             var template = new TrackingKafkaConfiguration()
                     .trackingTelemetryKafkaTemplate(properties);
             var factory = new TrackingKafkaConsumerConfiguration()
-                    .trackingLiveProjectorContainerFactory(properties, template, deadLetter);
+                    .trackingHistoryPersisterContainerFactory(properties, template, deadLetter, 500);
             var container = factory.createContainer(source);
-            container.getContainerProperties().setGroupId("tracking-live-projector-dlt-test");
-            container.setupMessageListener(
-                    (AcknowledgingMessageListener<String, TrackingTelemetryIngestedV1>)
-                            (record, acknowledgment) -> {
+            container.getContainerProperties().setGroupId("tracking-telemetry-persister-group");
+            container.setupMessageListener((org.springframework.kafka.listener.BatchAcknowledgingMessageListener
+                    <String, TrackingTelemetryIngestedV1>) (records, acknowledgment) -> {
                                 throw new IllegalArgumentException("poison telemetry contract");
                             });
             container.start();

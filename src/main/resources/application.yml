@@ -71,6 +71,16 @@ spring:
         'tracking_position_history',
         by_range('source_timestamp', INTERVAL '1 day'),
         if_not_exists => TRUE);
+      trackingTimescalePolicyHardening: >-
+        SELECT set_chunk_time_interval('tracking_position_history', INTERVAL '7 days');
+        ALTER TABLE tracking_position_history SET (
+        timescaledb.compress,
+        timescaledb.compress_segmentby = 'tenant_id,vehicle_id',
+        timescaledb.compress_orderby = 'source_timestamp DESC,id DESC');
+        SELECT add_compression_policy(
+        'tracking_position_history', INTERVAL '7 days', if_not_exists => TRUE);
+        SELECT add_retention_policy(
+        'tracking_position_history', INTERVAL '180 days', if_not_exists => TRUE);
   servlet:
     multipart:
       max-file-size: 10MB
@@ -101,6 +111,7 @@ app:
       acknowledgement-timeout: ${TRACKING_KAFKA_ACK_TIMEOUT:PT10S}
       manage-topic: ${TRACKING_KAFKA_MANAGE_TOPIC:false}
       live-projector-group: ${TRACKING_KAFKA_LIVE_PROJECTOR_GROUP:tracking-live-projector-v1}
+      history-persister-group: ${TRACKING_KAFKA_HISTORY_PERSISTER_GROUP:tracking-telemetry-persister-group}
       dead-letter-topic: ${TRACKING_KAFKA_DLT_TOPIC:tracking.telemetry.ingested.v1.dlt}
     hybrid-storage:
       enabled: ${TRACKING_HYBRID_STORAGE_ENABLED:false}

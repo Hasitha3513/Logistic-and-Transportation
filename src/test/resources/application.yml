@@ -47,6 +47,7 @@ spring:
         WHERE source_reference_id IS NOT NULL AND correction_of_reading_id IS NULL
       trackingTimescaleSetup: SELECT 1;
       trackingTimescaleHypertable: SELECT 1;
+      trackingTimescalePolicyHardening: SELECT 1;
 
 management:
   endpoints:

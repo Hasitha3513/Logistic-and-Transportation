@@ -6,7 +6,7 @@
 ![Completed](https://img.shields.io/badge/Completed-73%20%2F%2087-2da44e.svg?style=for-the-badge&logo=checkmarx)
 ![Progress](https://img.shields.io/badge/Progress-83.9%25-brightgreen.svg?style=for-the-badge&logo=speedtest)
 ![MVP 1.4 Closed](https://img.shields.io/badge/MVP%201.4%20Last--Mile-8%20%2F%208-2da44e.svg?style=for-the-badge&logo=pinboard)
-![Database](https://img.shields.io/badge/TimescaleDB%20%2F%20Flyway-V86-8a63d2.svg?style=for-the-badge&logo=postgresql)
+![Database](https://img.shields.io/badge/TimescaleDB%20%2F%20Flyway-V87-8a63d2.svg?style=for-the-badge&logo=postgresql)
 
 </div>
 
@@ -23,9 +23,9 @@
 > - **Active Focus:** Wave B is 5 / 5 COMPLETE / CLOSED; Wave C is active.
 > - **US-48 Technical State:** `IMPLEMENTATION_COMPLETE / ACCEPTANCE_BLOCKED_EXTERNAL_SYSTEM`; pluggable CS01–CS10 are `COMPLETE` and `PLUG_AND_PLAY_FOR_SUPPORTED_ADAPTERS` is technically complete at V76; physical FMC130/Flespi evidence remains outstanding.
 > - **Architecture Promotion:** The high-throughput pluggable telemetry platform (Kafka durable stream, Redis live state, TimescaleDB history, Flespi/Traccar/Generic normalization, gateway administration and live Fleet map) is promoted into MVP scope as a US-48/Wave C platform enabler. US-48 acceptance remains externally blocked and accounting is unchanged.
-> - **Hybrid Telemetry State:** `IMPLEMENTATION_IN_PROGRESS / TS03_COMPLETE`; V86 infrastructure, normalization, secure Kafka ingress and the bounded atomic Redis live projector are verified. Timescale consumption/policies remain TS04.
+> - **Hybrid Telemetry State:** `IMPLEMENTATION_IN_PROGRESS / TS04_COMPLETE`; V87 adds the transactional Timescale history consumer, Tenant-scoped idempotency, deterministic static reduction, seven-day compression and 180-day raw retention.
 > - **Hybrid Telemetry Test Infrastructure:** `CLOSED`; Testcontainers 2.0.3/docker-java 3.7.0 restores Docker 29 negotiation, V86 Timescale acceptance, table-ownership verification and the complete Maven regression without changing story accounting.
-> - **Immediate Next Action:** Run `HYBRID-TELEMETRY-TS04-V87-TIMESCALE-CONSUMER-AND-POLICIES`; TS03 Redis live projection is complete.
+> - **Immediate Next Action:** Run `US-52-MONITOR-ROUTE-DEVIATIONS-CS02-V88-PERSISTENCE-001`; V87 is occupied by hybrid telemetry TS04.
 
 ---
 
@@ -239,7 +239,7 @@ Development startup now consistently provisions the idempotent PostgreSQL sample
 
 ```
 Current Status: 73 / 87 COMPLETE; 14 stories remain across Waves C–E
-Queue Head:     HYBRID-TELEMETRY-TS04-V87-TIMESCALE-CONSUMER-AND-POLICIES
+Queue Head:     US-52-MONITOR-ROUTE-DEVIATIONS-CS02-V88-PERSISTENCE-001
 ```
 
 1. **Wave A — Integration and exception-control foundations:** 2 / 2 COMPLETE / CLOSED (US-73 and US-78).

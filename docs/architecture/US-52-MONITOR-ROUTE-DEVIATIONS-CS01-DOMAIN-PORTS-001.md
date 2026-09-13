@@ -77,5 +77,5 @@ rollback is required.
 
 ## Next change set
 
-`US-52-MONITOR-ROUTE-DEVIATIONS-CS02-V86-PERSISTENCE-001` must add the smallest Routing-owned immutable
+`US-52-MONITOR-ROUTE-DEVIATIONS-CS02-V88-PERSISTENCE-001` must add the smallest Routing-owned immutable
 revision geometry and Tracking-owned route-deviation persistence, only after reconfirming V86 is free.

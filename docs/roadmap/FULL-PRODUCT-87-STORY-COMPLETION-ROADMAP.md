@@ -17,7 +17,7 @@ This is 14 stories, so the invariant is `73 + 14 = 87`. `US-88`, `US-89`, and `U
 
 The existing roadmap had correct IDs but non-authoritative labels for several remaining stories. This plan restores the DOCX/UML titles and meanings, notably US-35/37/38 and US-48..55. It does not reopen accepted stories or change their acceptance decisions.
 
-**Waves A and B are COMPLETE / CLOSED; Wave C is active.** US-73 and US-78 are accepted. US-35, US-37, US-38, US-46, US-47, and US-49 final acceptance pass. US-48 and US-50 are implementation complete but independently blocked on physical external acceptance evidence. The high-throughput pluggable telemetry platform is promoted as a US-48/Wave C enabler; V86/normalizers are complete, Kafka becomes the durable backbone, Redis owns live state, and TimescaleDB owns history. US-52 CS02 is resequenced to V88 after V87 Timescale policy hardening.
+**Waves A and B are COMPLETE / CLOSED; Wave C is active.** US-73 and US-78 are accepted. US-35, US-37, US-38, US-46, US-47, and US-49 final acceptance pass. US-48 and US-50 are implementation complete but independently blocked on physical external acceptance evidence. The high-throughput pluggable telemetry platform is promoted as a US-48/Wave C enabler; V86/normalizers are complete, Kafka is the durable backbone, Redis owns live state, and TS04 completes TimescaleDB history and policies at V87. US-52 CS02 is sequenced to V88.
 
 ## 2. Source reconciliation and non-negotiable boundaries
 
@@ -290,6 +290,6 @@ After 87/87 and disposition of parity findings, execute a real Tenant-isolated o
 
 Exactly one queue head is authorized by this roadmap:
 
-`HYBRID-TELEMETRY-TS04-V87-TIMESCALE-CONSUMER-AND-POLICIES`
+`US-52-MONITOR-ROUTE-DEVIATIONS-CS02-V88-PERSISTENCE-001`
 
-US-48 and US-50 remain on independent external acceptance holds. US-49 is COMPLETE / ACCEPTED. US-52 remains `IMPLEMENTATION_IN_PROGRESS / CS01_COMPLETE`; accounting remains unchanged. V85 snapshots Trip's authoritative assigned route revision. Hybrid TS01 is complete at V86; TS02 secure ingress durably publishes the canonical Tenant/Vehicle-ordered Kafka record before returning 202; TS03 atomically projects its bounded Tenant-isolated live state to Redis. TS04 V87 Timescale consumption/policies are next and US-52 CS02 remains V88.
+US-48 and US-50 remain on independent external acceptance holds. US-49 is COMPLETE / ACCEPTED. US-52 remains `IMPLEMENTATION_IN_PROGRESS / CS01_COMPLETE`; accounting remains unchanged. V85 snapshots Trip's authoritative assigned route revision. Hybrid TS01 is complete at V86; TS02 secure ingress durably publishes the canonical Tenant/Vehicle-ordered Kafka record before returning 202; TS03 atomically projects its bounded Tenant-isolated live state to Redis; and TS04 completes transactional Timescale history persistence and policies at V87. US-52 CS02 is the governed next slice at V88.

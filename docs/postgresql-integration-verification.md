@@ -25,8 +25,10 @@ Existing H2 tests remain unchanged and continue to provide fast application-leve
 ## Flyway Result
 
 Isolated PostgreSQL and TimescaleDB databases migrate successfully from `V1` through the current
-head `V86`. The dedicated Timescale acceptance test verifies the extension, Tenant-qualified
-`tracking_position_history` table and real hypertable conversion. The mutable
+head `V87`. The dedicated Timescale acceptance test verifies the extension, Tenant-qualified
+`tracking_position_history` table, real hypertable conversion, seven-day chunks, Tenant/Vehicle
+compression after seven days, raw retention after 180 days, Tenant-scoped idempotency, bounded
+query plans, and clean plus V86-upgrade paths. Existing V86 telemetry survives V87. The mutable
 `timescale/timescaledb:latest-pg16` tag is preserved from the governed V86 implementation but must
 be replaced by a separately approved immutable tag or digest before supply-chain closure.
 

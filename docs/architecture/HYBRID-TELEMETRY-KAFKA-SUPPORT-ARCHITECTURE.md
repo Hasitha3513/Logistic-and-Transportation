@@ -1,6 +1,6 @@
 # Hybrid Telemetry — Kafka Support Architecture
 
-**Status:** TS03 IMPLEMENTED / TS04 PENDING
+**Status:** TS04 IMPLEMENTED / NEXT GOVERNED SLICE PENDING
 **Date:** 2026-09-13
 
 ## Runtime flow
@@ -36,7 +36,8 @@ Kafka is Tracking infrastructure, not the P1-01 business outbox. Per-ping events
 Spring Modulith boundaries unless a later consumer contract explicitly authorizes that boundary.
 
 TS02 implements the signed provider ingress and durable producer side of this flow. TS03 implements
-the Redis live projector. The TimescaleDB consumer remains deliberately absent until TS04.
+the Redis live projector. TS04 implements the V87 TimescaleDB consumer, transactional historical
+persistence, deterministic static reduction and governed compression/retention policies.
 
 ## Consumers and failure behavior
 
@@ -52,6 +53,11 @@ exact replay refreshes the sliding TTL without changing state.
 The Timescale consumer group is `tracking-telemetry-persister-group`, uses manual acknowledgment
 and batches up to 500. Offsets commit only after the database transaction. Static reduction may
 remove only consecutive coordinate-identical, zero-speed points with unchanged engine state.
+
+V87 keeps source-time history append-only, enforces Tenant-scoped database idempotency and uses
+seven-day chunks. Compression runs after seven days, segmented by Tenant/Vehicle, and raw retention
+runs after 180 days. Exact reduction semantics and operational recovery are recorded in the TS04
+evidence and Timescale history runbook.
 
 All consumers validate agreement among Kafka key, headers and payload Tenant. Mismatch is rejected
 to a bounded access-controlled dead-letter path. Tenant Redis scans are prohibited; a bounded

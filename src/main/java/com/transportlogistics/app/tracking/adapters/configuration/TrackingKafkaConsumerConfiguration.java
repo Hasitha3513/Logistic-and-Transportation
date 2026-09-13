@@ -63,6 +63,53 @@ class TrackingKafkaConsumerConfiguration {
         return factory;
     }
 
+    @Bean
+    ConcurrentKafkaListenerContainerFactory<String, TrackingTelemetryIngestedV1>
+            trackingHistoryPersisterContainerFactory(
+                    KafkaProperties properties,
+                    KafkaTemplate<String, TrackingTelemetryIngestedV1> kafka,
+                    @Value("${app.tracking.kafka.dead-letter-topic:tracking.telemetry.ingested.v1.dlt}")
+                            String deadLetterTopic,
+                    @Value("${app.tracking.hybrid-storage.stream-batch-size:500}") int batchSize) {
+        if (batchSize < 1 || batchSize > 500) {
+            throw new IllegalArgumentException("Tracking history batch size must be 1..500");
+        }
+        Map<String, Object> consumer = consumerProperties(properties);
+        consumer.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, batchSize);
+        var factory = new ConcurrentKafkaListenerContainerFactory<String, TrackingTelemetryIngestedV1>();
+        factory.setConsumerFactory(new DefaultKafkaConsumerFactory<>(consumer));
+        factory.setBatchListener(true);
+        factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.MANUAL_IMMEDIATE);
+        var deadLetter = new DeadLetterPublishingRecoverer(
+                kafka, (record, exception) -> new TopicPartition(deadLetterTopic, record.partition()));
+        ConsumerRecordRecoverer recoverer = (record, exception) -> {
+            if (causedBy(exception, DependencyUnavailableException.class)) {
+                throw new KafkaException("Historical telemetry storage remains unavailable", exception);
+            }
+            deadLetter.accept(record, exception);
+        };
+        var errors = new DefaultErrorHandler(recoverer, new FixedBackOff(1_000L, 2L));
+        errors.addNotRetryableExceptions(IllegalArgumentException.class);
+        errors.addRetryableExceptions(DependencyUnavailableException.class);
+        errors.setCommitRecovered(true);
+        factory.setCommonErrorHandler(errors);
+        return factory;
+    }
+
+    private static Map<String, Object> consumerProperties(KafkaProperties properties) {
+        Map<String, Object> consumer = properties.buildConsumerProperties(null);
+        consumer.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false);
+        consumer.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, ErrorHandlingDeserializer.class);
+        consumer.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ErrorHandlingDeserializer.class);
+        consumer.put(ErrorHandlingDeserializer.KEY_DESERIALIZER_CLASS, StringDeserializer.class);
+        consumer.put(ErrorHandlingDeserializer.VALUE_DESERIALIZER_CLASS, JsonDeserializer.class);
+        consumer.put(JsonDeserializer.VALUE_DEFAULT_TYPE, TrackingTelemetryIngestedV1.class.getName());
+        consumer.put(JsonDeserializer.TRUSTED_PACKAGES,
+                TrackingTelemetryIngestedV1.class.getPackageName());
+        consumer.put(JsonDeserializer.USE_TYPE_INFO_HEADERS, false);
+        return consumer;
+    }
+
     private static boolean causedBy(Throwable exception, Class<? extends Throwable> type) {
         Throwable current = exception;
         while (current != null) {
