@@ -29,25 +29,27 @@ Provider normalizers are adapters around provider-neutral application commands. 
 credentials and vendor DTOs never enter the domain or persistence model. Traccar speed is
 converted from knots to kilometres per hour using exactly `1.852`.
 
-## Hybrid storage
+## High-throughput topology
 
-- Redis owns the replaceable hot projection and Tenant-qualified ingestion stream. Keys use
-  `tracking:live:{tenantId}:{vehicleId}` and `tracking:stream:{tenantId}`.
+- Kafka is the durable ingestion backbone. Topic `tracking.telemetry.ingested.v1` is keyed by
+  `{tenantId}:{vehicleId}` with idempotent production and `acks=all`. Independent consumer groups
+  drive Redis, TimescaleDB and later approved Tracking detectors.
+- Redis owns only the replaceable hot projection at
+  `tracking:live:{tenantId}:{vehicleId}` with a sliding 24-hour TTL. Redis Streams are superseded
+  and must not become a second durable telemetry backbone.
 - TimescaleDB owns append-only normalized historical telemetry and retention/chunk policy.
 - PostgreSQL continues to own provider/device configuration, nonce/dedupe authority, audit,
   evaluation state and other transactional Tracking records.
-- Accepted ingress updates the Redis live projection before acknowledging and appends a bounded
-  stream item for micro-batch persistence. Stream acknowledgement occurs only after the
-  historical transaction commits.
-- Redis is not a source of durable truth. On outage, ingress fails closed with an observable
-  service-unavailable result; it must not silently claim a live update. Historical reads never
-  depend on Redis. Recovery replays unacknowledged stream entries idempotently.
-- Every key, stream item, history row and query contains and enforces `tenant_id`.
+- Ingress returns `202 Accepted` only after Kafka acknowledges the normalized event. A dedicated
+  Kafka consumer updates Redis, avoiding unsafe controller dual writes and enabling replay.
+- The TimescaleDB consumer uses batches up to 500 and commits offsets only after its JDBC batch
+  commits. Delivery is at-least-once and inserts are idempotent by Tenant and event identity.
+- Every Kafka key/header/payload, Redis key/value, history row and query enforces `tenant_id`.
 
-TimescaleDB is a required production capability for this promoted path. Local Compose and
-PostgreSQL acceptance environments use a TimescaleDB PostgreSQL 16 image. Tests that do not
-exercise the hybrid adapter may use a profile-scoped compatibility implementation; production
-must fail readiness when Redis or TimescaleDB is unavailable.
+TimescaleDB and Kafka are required production capabilities. Tests may use profile-scoped
+compatibility adapters, but production readiness fails when Kafka or TimescaleDB is unavailable.
+Redis unavailability degrades live-map readiness without rejecting already durable telemetry or
+bringing down Trip, Billing or Delivery transactions.
 
 ## APIs and UI
 
@@ -64,25 +66,25 @@ subsequent replay capability rather than fabricated history behavior.
 
 ## Migration allocation and delivery sequence
 
-V86 is allocated to the hybrid telemetry foundation because it is the next free Tracking
-migration. US-52 route-geometry persistence moves to V87 and must recheck the head before
-implementation. Historical migrations remain immutable.
+V86 remains the immutable hybrid foundation with one-day chunks. A forward V87 hardening
+migration will configure 7-day chunks, Tenant/Vehicle segmented compression after 7 days and
+180-day raw retention. US-52 route-geometry persistence moves to V88 and must recheck the head.
 
 Implementation is divided into atomic change sets:
 
 1. `HYBRID-TELEMETRY-TS01-V86-INFRASTRUCTURE`
-2. `HYBRID-TELEMETRY-TS02-NORMALIZERS-AND-SECURE-INGRESS`
-3. `HYBRID-TELEMETRY-TS03-REDIS-HOT-PATH-AND-MICROBATCH`
-4. `HYBRID-TELEMETRY-TS04-GATEWAY-SETTINGS-UI`
-5. `HYBRID-TELEMETRY-TS05-LIVE-FLEET-MAP`
-6. `HYBRID-TELEMETRY-TECHNICAL-CLOSURE`
+2. `HYBRID-TELEMETRY-TS02-KAFKA-CONTRACT-AND-SECURE-INGRESS`
+3. `HYBRID-TELEMETRY-TS03-KAFKA-REDIS-LIVE-PROJECTOR`
+4. `HYBRID-TELEMETRY-TS04-V87-TIMESCALE-CONSUMER-AND-POLICIES`
+5. `HYBRID-TELEMETRY-TS05-GATEWAY-SETTINGS-UI`
+6. `HYBRID-TELEMETRY-TS06-LIVE-FLEET-MAP`
+7. `HYBRID-TELEMETRY-TECHNICAL-CLOSURE`
 
-Story accounting remains 73/87. The next executable task is TS01.
+Story accounting remains 73/87. TS01 is complete; the next executable task is TS02.
 
 ## Consequences and rollback
 
-This adds Redis, TimescaleDB, Spring Data Redis, Leaflet and React-Leaflet as approved runtime
-dependencies. Deployment must provide monitored Redis durability/eviction settings and a
-Timescale-capable PostgreSQL service. Rollback disables the hybrid ingress/read adapters and
-returns to the existing signed PostgreSQL path; it never drops accepted history or rewrites a
-historical migration.
+This approves Kafka, Spring Kafka, Redis, TimescaleDB, Spring Data Redis, Leaflet and
+React-Leaflet. Deployment must monitor Kafka durability, Redis eviction/readiness and TimescaleDB.
+Rollback pauses producers/consumers while preserving offsets and history; it never drops accepted
+history or rewrites a historical migration.

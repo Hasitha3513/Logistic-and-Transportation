@@ -22,9 +22,9 @@
 > - **Current Milestone:** MVP 1.4 Last-Mile Delivery — 8 / 8 COMPLETE, 100%, CLOSED.
 > - **Active Focus:** Wave B is 5 / 5 COMPLETE / CLOSED; Wave C is active.
 > - **US-48 Technical State:** `IMPLEMENTATION_COMPLETE / ACCEPTANCE_BLOCKED_EXTERNAL_SYSTEM`; pluggable CS01–CS10 are `COMPLETE` and `PLUG_AND_PLAY_FOR_SUPPORTED_ADAPTERS` is technically complete at V76; physical FMC130/Flespi evidence remains outstanding.
-> - **Architecture Promotion:** The hybrid pluggable telemetry platform (Redis live state, TimescaleDB history, Flespi/Traccar/Generic normalization, gateway administration and live Fleet map) is promoted into MVP scope as a US-48/Wave C platform enabler. US-48 acceptance remains externally blocked and accounting is unchanged.
+> - **Architecture Promotion:** The high-throughput pluggable telemetry platform (Kafka durable stream, Redis live state, TimescaleDB history, Flespi/Traccar/Generic normalization, gateway administration and live Fleet map) is promoted into MVP scope as a US-48/Wave C platform enabler. US-48 acceptance remains externally blocked and accounting is unchanged.
 > - **Hybrid Telemetry State:** `IMPLEMENTATION_IN_PROGRESS / TS01_COMPLETE`; V86, TimescaleDB/Redis Compose infrastructure and the three normalization strategies are verified. Secure dynamic ingress is not yet active.
-> - **Immediate Next Action:** Run `HYBRID-TELEMETRY-TS02-SECURE-DYNAMIC-INGRESS`; retain the existing signed provider-key trust boundary and connect the authenticated provider type to the normalizer registry.
+> - **Immediate Next Action:** Run `HYBRID-TELEMETRY-TS02-KAFKA-CONTRACT-AND-SECURE-INGRESS`; retain the existing signed provider-key trust boundary and return 202 only after durable Kafka acknowledgement.
 
 ---
 
@@ -171,7 +171,7 @@ Development startup now consistently provisions the idempotent PostgreSQL sample
 | `US-49` | Manage Geofences | Depot, customer-site and unauthorized-zone entry/exit detection | ✅ `COMPLETE / ACCEPTED` | Final acceptance PASS at V80: focused 76/76, Maven 1,595/0/0/15, architecture 52/52, Vitest 299/299 and Chromium 7/7; no US-48 acceptance inheritance |
 | `US-50` | Monitor Speed | Threshold, road-rule and repeat-speed monitoring | 🔴 `IMPLEMENTATION_COMPLETE / ACCEPTANCE_BLOCKED_EXTERNAL_SYSTEM` | Final acceptance blocked only by physical provider/device speed field, native-unit and normalization evidence; technical evidence PASS; no US-48 acceptance inheritance |
 | `US-51` | Monitor Idle Time | Engine-on versus movement duration and qualified fuel-waste estimates | 🟡 `WAVE C / BLOCKED_BY_REQUIRED_TELEMETRY_CAPABILITY` | Current FLESPI does not advertise IGNITION and no accepted alternate engine-state source exists |
-| `US-52` | Monitor Route Deviations | Planned-versus-actual comparison, severity and audited approval | 🟡 `IMPLEMENTATION_IN_PROGRESS / CS01_COMPLETE` | Trip route-revision prerequisite COMPLETE at V85; CS01 published geometry/domain contracts COMPLETE; CS02 persistence is resequenced to V87 after the promoted hybrid telemetry V86 foundation |
+| `US-52` | Monitor Route Deviations | Planned-versus-actual comparison, severity and audited approval | 🟡 `IMPLEMENTATION_IN_PROGRESS / CS01_COMPLETE` | Trip route-revision prerequisite COMPLETE at V85; CS01 published geometry/domain contracts COMPLETE; CS02 persistence is resequenced to V88 after hybrid V86 foundation and V87 Timescale policy hardening |
 | `US-53` | Replay Journeys | Historical journey replay, stop analysis and incident forensics | 🟡 `TECHNICAL_DEPENDENCY_SATISFIED / READY_AFTER_EARLIER_WAVE_C_DECISIONS` | Immutable Tracking history is sufficient; optional overlays must follow their producers |
 | `US-54` | View Tracking Dashboard | Fleet overview, exceptions, heat maps, alerts and stale-state visibility | 🟡 `WAVE C / BLOCKED_BY_US49_TO_US53_PRODUCERS` | Consolidated consumer; must not recreate detector logic |
 | `US-55` | Handle GPS Edge Cases | Signal loss, spoofing, tampering, delayed packets, battery drain and trusted-state protection | 🟡 `WAVE C / BLOCKED_BY_REQUIRED_TELEMETRY_AND_PRODUCT_DECISIONS` | Signal-loss/delay contracts exist, but spoofing/tamper/battery signals are not established |
@@ -238,7 +238,7 @@ Development startup now consistently provisions the idempotent PostgreSQL sample
 
 ```
 Current Status: 73 / 87 COMPLETE; 14 stories remain across Waves C–E
-Queue Head:     HYBRID-TELEMETRY-TS02-SECURE-DYNAMIC-INGRESS
+Queue Head:     HYBRID-TELEMETRY-TS02-KAFKA-CONTRACT-AND-SECURE-INGRESS
 ```
 
 1. **Wave A — Integration and exception-control foundations:** 2 / 2 COMPLETE / CLOSED (US-73 and US-78).

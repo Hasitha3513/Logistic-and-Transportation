@@ -30,3 +30,9 @@
 
 No development database was contacted. Testcontainers used isolated disposable databases. No
 existing migration was modified. No public endpoint or frontend behavior is active in this slice.
+
+## Superseding stream decision
+
+The later high-throughput amendment retains Redis as live state but supersedes the planned Redis
+Stream buffer with Kafka topic `tracking.telemetry.ingested.v1`. V86 remains immutable. Kafka
+producer/consumer code and V87 Timescale policy hardening are outside TS01.
