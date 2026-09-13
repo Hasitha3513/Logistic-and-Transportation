@@ -4,11 +4,28 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.transportlogistics.app.routing.PlannedRouteGeometryLookup;
+import com.transportlogistics.app.routing.PlannedRouteGeometry;
+import com.transportlogistics.app.routing.application.ports.out.RouteRevisionGeometryRepository;
+import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
 class PlannedRouteGeometryLookupProviderTest {
-    private final PlannedRouteGeometryLookup lookup = new RouteConfig().plannedRouteGeometryLookup();
+    private final RouteRevisionGeometryRepository repository = new RouteRevisionGeometryRepository() {
+        @Override
+        public PlannedRouteGeometry save(
+                UUID tenantId, UUID routeRevisionId, PlannedRouteGeometry geometry) {
+            throw new UnsupportedOperationException("Saving is outside this provider test");
+        }
+
+        @Override
+        public Optional<PlannedRouteGeometry> find(
+                UUID tenantId, UUID routeId, String routeVersion) {
+            return Optional.empty();
+        }
+    };
+    private final PlannedRouteGeometryLookup lookup =
+            new RouteConfig().plannedRouteGeometryLookup(repository);
 
     @Test
     void unavailableImmutableGeometryReturnsEmptyForEveryExactRevisionWithoutFallback() {

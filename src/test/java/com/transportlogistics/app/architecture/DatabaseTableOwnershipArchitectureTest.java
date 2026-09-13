@@ -144,7 +144,8 @@ class DatabaseTableOwnershipArchitectureTest {
                 "driver_payroll_input_batch", "driver_payroll_input_line", "driver_payroll_worker_mapping",
                 "driver_payroll_worker_mapping_command",
                 "driver_payroll_input_history");
-        own(ownership, "routing", "route", "route_stop", "route_revision", "route_revision_stop", "route_disruption");
+        own(ownership, "routing", "route", "route_stop", "route_revision", "route_revision_stop",
+                "route_revision_geometry", "route_revision_geometry_point", "route_disruption");
         own(ownership, "trip", "trip", "trip_status_history", "trip_dispatch", "trip_operational_event");
         own(ownership, "fuel", "fuel_station", "fuel_limit_policy", "fuel_issue", "fuel_issue_history",
                 "fuel_price", "fuel_purchase", "fuel_purchase_history", "bunker_tank", "bunker_dip_reading",
@@ -179,6 +180,9 @@ class DatabaseTableOwnershipArchitectureTest {
                 "tracking_vehicle_geofence_state", "tracking_geofence_transition",
                 "tracking_geofence_evaluation_job", "tracking_speed_rule", "tracking_speed_state",
                 "tracking_speed_episode", "tracking_speed_evaluation_job");
+        own(ownership, "tracking", "tracking_route_deviation_rule",
+                "tracking_route_deviation_state", "tracking_route_deviation_episode",
+                "tracking_route_deviation_review");
         own(ownership, "operations", "operational_exception_case", "operational_exception_assignment_history",
                 "operational_exception_corrective_action", "operational_exception_rca", "operational_exception_history");
         own(ownership, "shared", "integration_outbox_event");

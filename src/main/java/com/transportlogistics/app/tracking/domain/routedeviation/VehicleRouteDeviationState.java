@@ -15,7 +15,7 @@ public record VehicleRouteDeviationState(
     public record Candidate(UUID positionId, Instant sourceTimestamp, UUID tripId, UUID driverId,
             UUID routeId, RouteVersion routeVersion, UUID ruleId, long ruleVersion,
             DistanceMeters configuredTolerance, DistanceMeters effectiveTolerance,
-            DistanceMeters distance) { }
+            DistanceMeters distance, RoutePoint point, DistanceMeters accuracy) { }
 
     public VehicleRouteDeviationState {
         Objects.requireNonNull(tenantId, "Tenant ID is required");
@@ -58,7 +58,7 @@ public record VehicleRouteDeviationState(
             DistanceMeters effective, DistanceMeters distance) {
         Candidate next = new Candidate(position.positionId(), position.sourceTimestamp(), tripId,
                 driverId, nextRouteId, nextRouteVersion, rule.id(), rule.ruleVersion(),
-                rule.configuredTolerance(), effective, distance);
+                rule.configuredTolerance(), effective, distance, position.point(), position.accuracy());
         return advanced(position, state, tripId, nextRouteId, nextRouteVersion, rule,
                 effective, next, activeEpisodeId);
     }

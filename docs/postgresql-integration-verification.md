@@ -25,12 +25,18 @@ Existing H2 tests remain unchanged and continue to provide fast application-leve
 ## Flyway Result
 
 Isolated PostgreSQL and TimescaleDB databases migrate successfully from `V1` through the current
-head `V87`. The dedicated Timescale acceptance test verifies the extension, Tenant-qualified
+head `V88`. The dedicated Timescale acceptance test verifies the extension, Tenant-qualified
 `tracking_position_history` table, real hypertable conversion, seven-day chunks, Tenant/Vehicle
 compression after seven days, raw retention after 180 days, Tenant-scoped idempotency, bounded
 query plans, and clean plus V86-upgrade paths. Existing V86 telemetry survives V87. The mutable
 `timescale/timescaledb:latest-pg16` tag is preserved from the governed V86 implementation but must
 be replaced by a separately approved immutable tag or digest before supply-chain closure.
+
+V88 adds Routing-owned immutable route-revision geometry and Tracking-owned route-deviation
+rule, stable-state/candidate, episode and review-evidence persistence. Its PostgreSQL acceptance
+suite proves clean V1→V88 and V87→V88 upgrades, preservation of V87 telemetry, exact 2- and
+2,000-point geometry ordering, immutable/idempotent geometry writes, Tenant isolation, full
+candidate evidence round trips, and concurrent state writes retaining the newest source event.
 
 Flyway 9.22.3 emits a compatibility warning because PostgreSQL 16 is newer than the highest PostgreSQL version tested by that Flyway release. Migration and validation succeed, but upgrading Flyway should be handled as a separate dependency-compatibility change.
 

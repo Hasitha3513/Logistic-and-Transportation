@@ -10,6 +10,7 @@ import com.transportlogistics.app.routing.application.ports.out.RouteEventPublis
 import com.transportlogistics.app.routing.application.ports.out.RouteOperationalExceptionPublisher;
 import com.transportlogistics.app.routing.application.ports.out.RouteRepository;
 import com.transportlogistics.app.routing.application.ports.out.RouteRevisionRepository;
+import com.transportlogistics.app.routing.application.ports.out.RouteRevisionGeometryRepository;
 import com.transportlogistics.app.routing.application.ports.out.RouteTransaction;
 import com.transportlogistics.app.routing.application.service.RouteService;
 import org.springframework.context.annotation.Bean;
@@ -46,18 +47,15 @@ class RouteConfig {
     }
 
     @Bean
-    PlannedRouteGeometryLookup plannedRouteGeometryLookup() {
+    PlannedRouteGeometryLookup plannedRouteGeometryLookup(RouteRevisionGeometryRepository geometries) {
         return (tenantId, routeId, routeVersion) -> {
             Objects.requireNonNull(tenantId, "Tenant ID is required");
             Objects.requireNonNull(routeId, "Route ID is required");
             if (routeVersion == null || routeVersion.length() > 120
                     || !routeVersion.matches("REVISION:[1-9][0-9]*")) {
-                throw new IllegalArgumentException(
-                        "Route version must use REVISION:<positive-integer>");
+                throw new IllegalArgumentException("Route version must use REVISION:<positive-integer>");
             }
-            // Current revisions contain ordered Organization location IDs, not immutable
-            // coordinates. Returning empty is the only authoritative CS01 response.
-            return java.util.Optional.empty();
+            return geometries.find(tenantId, routeId, routeVersion);
         };
     }
 }

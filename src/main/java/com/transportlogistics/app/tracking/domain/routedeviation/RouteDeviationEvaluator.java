@@ -45,8 +45,8 @@ public final class RouteDeviationEvaluator {
         }
         VehicleRouteDeviationState.Candidate first = state.candidate();
         RouteDeviationPosition firstPosition = new RouteDeviationPosition(first.positionId(),
-                state.tenantId(), state.vehicleId(), first.sourceTimestamp(), position.point(),
-                position.accuracy(), true, false, RouteDeviationPosition.Trust.TRUSTED, true,
+                state.tenantId(), state.vehicleId(), first.sourceTimestamp(), first.point(),
+                first.accuracy(), true, false, RouteDeviationPosition.Trust.TRUSTED, true,
                 RouteDeviationPosition.Ordering.IN_ORDER);
         RouteDeviationEpisode episode = RouteDeviationEpisode.confirm(state.tenantId(),
                 state.vehicleId(), tripId, driverId, routeId, routeVersion, rule, firstPosition,
