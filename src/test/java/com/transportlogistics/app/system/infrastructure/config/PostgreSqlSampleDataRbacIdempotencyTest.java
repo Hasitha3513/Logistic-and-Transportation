@@ -76,6 +76,10 @@ class PostgreSqlSampleDataRbacIdempotencyTest extends PostgreSqlIntegrationTest 
                   AND id BETWEEN 'c4000000-0000-0000-0000-000000000001'::uuid
                              AND 'c4000000-0000-0000-0000-000000000005'::uuid
                 """, Integer.class));
+        assertEquals("GENERIC", jdbc.queryForObject("""
+                SELECT provider_type FROM tracking_provider_binding
+                WHERE provider_key_id = 'us48-fixture-key'
+                """, String.class));
         assertCanonicalBunkerLedgerTails();
     }
 

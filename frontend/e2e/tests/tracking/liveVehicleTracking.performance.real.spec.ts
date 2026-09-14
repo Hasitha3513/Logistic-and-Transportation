@@ -103,9 +103,9 @@ function percentile95(values: number[]) {
 function batch(deviceId: string, offset: number, size: number) {
   const source = Date.now();
   return Array.from({ length: size }, (_, index) => ({
-    deviceId, providerMessageId: `${suffix}-${offset + index}`, providerSequence: offset + index,
+    deviceId, messageId: `${suffix}-${offset + index}`,
     sourceTimestamp: new Date(source + index).toISOString(), latitude: 6.9271, longitude: 79.8612,
-    horizontalAccuracyMeters: 5, speedKph: 80,
+    horizontalAccuracyMeters: 5, speedKmh: 80,
   }));
 }
 

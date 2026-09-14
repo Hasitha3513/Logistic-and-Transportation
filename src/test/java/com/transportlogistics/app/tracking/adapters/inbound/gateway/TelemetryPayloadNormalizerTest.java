@@ -48,13 +48,21 @@ class TelemetryPayloadNormalizerTest {
     void normalizesCanonicalGenericPayload() {
         var normalizer = new GenericRestPayloadNormalizer(mapper);
         var point = normalizer.normalize("""
-                {"deviceId":"CUSTOM-3","recordedAt":"2026-09-13T09:31:00Z",
+                {"tenantId":"bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
+                 "vehicleId":"cccccccc-cccc-cccc-cccc-cccccccccccc",
+                 "deviceId":"CUSTOM-3","messageId":"sample-3",
+                 "sourceTimestamp":"2026-09-13T09:31:00Z",
                  "latitude":6.0329,"longitude":80.2168,"speedKmh":31.4,
-                 "heading":15,"ignitionOn":false,"odometerKm":9021.2}
+                 "horizontalAccuracyMeters":4.5,"heading":15,
+                 "ignitionOn":false,"odometerKm":9021.2}
                 """, TENANT_ID);
 
         assertThat(normalizer.supports(TelemetryGatewayType.GENERIC)).isTrue();
+        assertThat(point.tenantId()).isEqualTo(TENANT_ID);
+        assertThat(point.providerMessageId()).isEqualTo("sample-3");
         assertThat(point.latitude()).isEqualByComparingTo("6.0329");
+        assertThat(point.speedKph()).isEqualByComparingTo("31.4");
+        assertThat(point.horizontalAccuracyMeters()).isEqualByComparingTo("4.5");
         assertThat(point.engineState()).isEqualTo(EngineState.OFF);
         assertThat(point.odometerKm()).isEqualByComparingTo("9021.2");
     }
