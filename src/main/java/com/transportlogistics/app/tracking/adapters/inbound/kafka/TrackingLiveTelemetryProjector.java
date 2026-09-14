@@ -14,7 +14,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 @ConditionalOnProperty(name = "app.tracking.hybrid-storage.enabled", havingValue = "true")
-final class TrackingLiveTelemetryProjector {
+class TrackingLiveTelemetryProjector {
     private final LiveTelemetryProjectionPort liveState;
     private final MeterRegistry meters;
     private final Clock clock;

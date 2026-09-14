@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 @ConditionalOnProperty(name = "app.tracking.hybrid-storage.enabled", havingValue = "true")
-final class TrackingHistoricalTelemetryPersister {
+class TrackingHistoricalTelemetryPersister {
     private final HistoricalTelemetryStorePort history;
     private final MeterRegistry meters;
     private final String topic;
