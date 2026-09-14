@@ -1,0 +1,5 @@
+import {z} from 'zod';
+export const routeDeviationRuleSchema=z.object({routeId:z.string().uuid('Enter a valid route UUID'),routeVersion:z.string().trim().min(1,'Route version is required').max(120),toleranceMeters:z.number().min(10,'Tolerance must be at least 10 metres').max(5000,'Tolerance must not exceed 5,000 metres')});
+export const reviewSchema=z.object({status:z.enum(['APPROVED','REJECTED']),reason:z.enum(['AUTHORIZED_DETOUR','ROAD_CLOSURE','TRAFFIC_DIVERSION','OPERATIONAL_NECESSITY','UNKNOWN']),note:z.string().trim().max(500,'Note must not exceed 500 characters').optional()}).superRefine((value,context)=>{if(value.reason==='UNKNOWN'&&(value.note?.length??0)<10)context.addIssue({code:'custom',path:['note'],message:'UNKNOWN requires a note of at least 10 characters'});});
+export type RuleFormValues=z.infer<typeof routeDeviationRuleSchema>;export type ReviewFormValues=z.infer<typeof reviewSchema>;
+export const validEpisodeRange=(from:string,to:string)=>{const start=Date.parse(from),end=Date.parse(to);return Number.isFinite(start)&&Number.isFinite(end)&&end>=start&&end-start<=31*86_400_000;};

@@ -65,6 +65,11 @@ import SpeedRuleFormPage from './features/tracking/speedMonitoring/pages/SpeedRu
 import SpeedRuleDetailPage from './features/tracking/speedMonitoring/pages/SpeedRuleDetailPage';
 import SpeedStatePage from './features/tracking/speedMonitoring/pages/SpeedStatePage';
 import SpeedEpisodePage from './features/tracking/speedMonitoring/pages/SpeedEpisodePage';
+import DeviationRuleListPage from './features/tracking/routeDeviations/pages/DeviationRuleListPage';
+import DeviationRuleFormPage from './features/tracking/routeDeviations/pages/DeviationRuleFormPage';
+import DeviationRuleDetailPage from './features/tracking/routeDeviations/pages/DeviationRuleDetailPage';
+import DeviationStatePage from './features/tracking/routeDeviations/pages/DeviationStatePage';
+import DeviationEpisodePage from './features/tracking/routeDeviations/pages/DeviationEpisodePage';
 
 function ProtectedRoute() {
   const { user, isLoading } = useAuth();
@@ -182,6 +187,13 @@ export default function App() {
         <Route path="tracking/speed-monitoring/states" element={<SpeedStatePage />} />
         <Route path="tracking/speed-monitoring/episodes" element={<SpeedEpisodePage />} />
         <Route path="tracking/speed-monitoring/episodes/:episodeId" element={<SpeedEpisodePage detail />} />
+        <Route path="tracking/route-deviations" element={<DeviationRuleListPage />} />
+        <Route path="tracking/route-deviations/rules/new" element={<DeviationRuleFormPage />} />
+        <Route path="tracking/route-deviations/rules/:ruleId/edit" element={<DeviationRuleFormPage />} />
+        <Route path="tracking/route-deviations/rules/:ruleId" element={<DeviationRuleDetailPage />} />
+        <Route path="tracking/route-deviations/states" element={<DeviationStatePage />} />
+        <Route path="tracking/route-deviations/episodes" element={<DeviationEpisodePage />} />
+        <Route path="tracking/route-deviations/episodes/:episodeId" element={<DeviationEpisodePage detail />} />
         <Route path="workspace" element={<WorkspacePage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
