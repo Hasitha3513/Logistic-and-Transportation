@@ -16,8 +16,9 @@ class NotificationEventCatalogueTest {
                 "DRIVER_DRUG_TEST_FAILED", "DRIVER_LICENSE_EXPIRING", "DELIVERY_OUT_FOR_DELIVERY",
                 "DELIVERY_ETA_RISK_CHANGED", "DELIVERY_COMPLETED", "DELIVERY_FAILED_ATTEMPT_RECORDED",
                 "DELIVERY_REDELIVERY_SCHEDULED", "VEHICLE_GEOFENCE_TRANSITIONED_V1",
-                "VEHICLE_SPEEDING_DETECTED_V1");
-        assertThat(NotificationEventCatalogue.all()).hasSize(15);
+                "VEHICLE_SPEEDING_DETECTED_V1", "VEHICLE_ROUTE_DEVIATION_DETECTED_V1",
+                "VEHICLE_ROUTE_DEVIATION_ESCALATED_V1");
+        assertThat(NotificationEventCatalogue.all()).hasSize(17);
     }
 
     @Test
@@ -57,5 +58,19 @@ class NotificationEventCatalogueTest {
                 "thresholdSource", "ruleId", "ruleVersion", "sourceTimestamp", "repeatCount");
         assertThat(speeding.optionalVariables()).containsExactlyInAnyOrder(
                 "driverId", "tripId", "routeId", "routeVersion");
+    }
+
+    @Test
+    void definesMinimalInAppRouteDeviationContractsWithoutAddingHighSeverity() {
+        var detected = NotificationEventCatalogue.require("vehicle_route_deviation_detected_v1");
+        var escalated = NotificationEventCatalogue.require("vehicle_route_deviation_escalated_v1");
+        assertThat(detected.supportedChannels()).containsExactly(NotificationChannel.IN_APP);
+        assertThat(detected.requiredVariables()).contains(
+                "domainSeverity", "routeDeviationEpisodeId", "vehicleId", "routeId", "routeVersion",
+                "observedDistanceMeters", "sourceTimestamp");
+        assertThat(escalated.supportedChannels()).containsExactly(NotificationChannel.IN_APP);
+        assertThat(escalated.requiredVariables()).contains("escalationReason");
+        assertThat(NotificationSeverity.values()).containsExactly(
+                NotificationSeverity.INFO, NotificationSeverity.WARNING, NotificationSeverity.CRITICAL);
     }
 }

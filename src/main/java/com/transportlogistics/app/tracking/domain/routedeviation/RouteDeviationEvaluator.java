@@ -52,8 +52,7 @@ public final class RouteDeviationEvaluator {
                 state.vehicleId(), tripId, driverId, routeId, routeVersion, rule, firstPosition,
                 position, first.distance(), distance, first.effectiveTolerance());
         return result(RouteDeviationEvaluationResult.Outcome.EPISODE_CONFIRMED,
-                state.confirmed(position, episode.id()), episode, true,
-                episode.severity() == RouteDeviationEpisode.Severity.HIGH);
+                state.confirmed(position, episode.id()), episode, true, false);
     }
 
     private static void requireSameScope(VehicleRouteDeviationState state,

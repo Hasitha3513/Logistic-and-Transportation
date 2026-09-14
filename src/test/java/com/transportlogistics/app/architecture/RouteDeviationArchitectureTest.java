@@ -1,6 +1,7 @@
 package com.transportlogistics.app.architecture;
 
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import com.tngtech.archunit.core.domain.JavaClasses;
 import com.tngtech.archunit.core.importer.ClassFileImporter;
@@ -8,6 +9,7 @@ import com.tngtech.archunit.core.importer.ImportOption;
 import jakarta.persistence.Entity;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import java.util.Arrays;
 
 class RouteDeviationArchitectureTest {
     private static JavaClasses productionClasses;
@@ -44,5 +46,15 @@ class RouteDeviationArchitectureTest {
         noClasses().that().resideInAPackage("com.transportlogistics.app.routing")
                 .should().beAnnotatedWith(Entity.class)
                 .check(productionClasses);
+    }
+
+    @Test
+    void publishedRouteDeviationEventsExposeOnlyPublishedPrimitiveTypes() {
+        for (Class<?> type : java.util.List.of(
+                com.transportlogistics.app.tracking.VehicleRouteDeviationDetectedV1.class,
+                com.transportlogistics.app.tracking.VehicleRouteDeviationEscalatedV1.class)) {
+            assertThat(Arrays.stream(type.getRecordComponents())).noneMatch(component ->
+                    component.getType().getPackageName().contains("tracking.domain"));
+        }
     }
 }

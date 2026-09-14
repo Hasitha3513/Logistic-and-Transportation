@@ -15,6 +15,8 @@ import com.transportlogistics.app.tracking.domain.routedeviation.RouteVersion;
 import com.transportlogistics.app.tracking.ports.inbound.RouteDeviationReviewUseCase;
 import com.transportlogistics.app.tracking.ports.inbound.RouteDeviationRuleManagementUseCase;
 import com.transportlogistics.app.tracking.ports.outbound.RouteDeviationEpisodeRepositoryPort;
+import com.transportlogistics.app.tenancy.TenantContextExecutor;
+import com.transportlogistics.app.tenancy.TenantExecutionContext;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
@@ -28,6 +30,7 @@ class RouteDeviationManagementPostgreSqlAcceptanceTest extends PostgreSqlIntegra
     @Autowired RouteDeviationManagementService service;
     @Autowired RouteDeviationEpisodeRepositoryPort episodes;
     @Autowired JdbcTemplate jdbc;
+    @Autowired TenantContextExecutor tenantContexts;
 
     @Test
     void ruleCommandsAreTenantScopedIdempotentVersionedAndAudited() {
@@ -159,14 +162,21 @@ class RouteDeviationManagementPostgreSqlAcceptanceTest extends PostgreSqlIntegra
                     .filter(Boolean::booleanValue).count()).isEqualTo(1);
         }
         assertThat(service.reviews(tenant, episode.id(), 100)).hasSize(1);
+        assertThat(jdbc.queryForObject("""
+                SELECT count(*) FROM integration_outbox_event
+                WHERE tenant_id=? AND aggregate_id=?
+                  AND event_type='VEHICLE_ROUTE_DEVIATION_ESCALATED_V1'
+                  AND payload->>'escalationReason'='REVIEW_REJECTED'
+                """, Integer.class, tenant, episode.id())).isOne();
     }
 
     private boolean decideAfter(CountDownLatch start, UUID tenant, UUID actor,
             UUID episode, String key) throws InterruptedException {
         start.await();
         try {
-            service.reject(reviewContext(tenant, actor), episode, 0,
-                    RouteDeviationReview.Reason.OPERATIONAL_NECESSITY, null, key);
+            tenantContexts.within(new TenantExecutionContext(tenant, actor, key, key), () ->
+                    service.reject(reviewContext(tenant, actor), episode, 0,
+                            RouteDeviationReview.Reason.OPERATIONAL_NECESSITY, null, key));
             return true;
         } catch (ConflictException exception) {
             return false;

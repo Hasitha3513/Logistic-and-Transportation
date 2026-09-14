@@ -97,6 +97,18 @@ class RouteDeviationEvaluatorTest {
         RouteDeviationEvaluationResult high = evaluate(highFirst.state(), null,
                 position(now), 200.001);
         assertEquals(RouteDeviationEpisode.Severity.HIGH, high.episode().severity());
+        assertTrue(high.detectionPublication());
+        assertFalse(high.escalationPublication());
+
+        RouteDeviationEvaluationResult warningFirst = evaluate(
+                VehicleRouteDeviationState.unknown(tenantId, vehicleId), null,
+                position(now.minusSeconds(2)), 150);
+        RouteDeviationEvaluationResult warningEpisode = evaluate(warningFirst.state(), null,
+                position(now.minusSeconds(1)), 150);
+        RouteDeviationEvaluationResult escalated = evaluate(warningEpisode.state(), warningEpisode.episode(),
+                position(now), 250);
+        assertEquals(RouteDeviationEvaluationResult.Outcome.SEVERITY_ESCALATED, escalated.outcome());
+        assertTrue(escalated.escalationPublication());
     }
 
     private RouteDeviationEvaluationResult evaluate(VehicleRouteDeviationState state,

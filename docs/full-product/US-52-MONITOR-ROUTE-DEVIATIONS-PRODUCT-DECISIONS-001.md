@@ -225,6 +225,30 @@ The minimized detection payload is `routeDeviationEpisodeId`, `vehicleId`, nulla
 PII, Customer PII and notes are forbidden. Notification failure cannot invalidate persisted evidence; replay
 must not create another logical delivery.
 
+### CS05 Notification contract clarification
+
+The approved Phase-1 channel is `IN_APP`, and recipients are active same-Tenant members of the
+`DISPATCHER` role. Detection uses template key `TRACKING_ROUTE_DEVIATION_DETECTED_V1`; escalation uses
+`TRACKING_ROUTE_DEVIATION_ESCALATED_V1`. Tracking severity remains `WARNING` or `HIGH`. Notification keeps
+its existing `INFO`, `WARNING`, `CRITICAL` scale: detection `WARNING` maps to Notification `WARNING`, while
+detection `HIGH` and both `DISTANCE_HIGH` and `REVIEW_REJECTED` escalations map to Notification `CRITICAL`.
+The original Tracking severity or escalation reason remains present in the minimized payload and message.
+
+Detection title is `Route deviation detected — {domainSeverity}`. Its body is `Vehicle {vehicleId} deviated
+from route {routeId} ({routeVersion}) by {observedDistanceMeters} m at {sourceTimestamp}. Review episode
+{routeDeviationEpisodeId}.`; HIGH appends `Approval is required.` Escalation title is `Route deviation
+escalated — {escalationReason}`. Its body is `Route deviation episode {routeDeviationEpisodeId} for vehicle
+{vehicleId} requires immediate attention. Route {routeId} ({routeVersion}); observed distance
+{observedDistanceMeters} m at {sourceTimestamp}. Reason: {escalationReason}.` Distance is rounded to the
+nearest whole metre using deterministic repository rounding and timestamps use canonical UTC ISO-8601.
+
+A direct HIGH confirmation emits only HIGH detection. The first later WARNING-to-HIGH transition emits one
+`DISTANCE_HIGH` escalation. A rejected HIGH review emits one `REVIEW_REJECTED` escalation. Repeated HIGH
+telemetry, replay, approval, correction, closure, ordinary progress and non-evaluable telemetry emit nothing
+additional. No email, SMS, Operations/US-78 intake, coordinates, geometry, review notes, raw telemetry,
+provider/device facts, credentials/signatures, Driver/Customer PII, or Driver identity in message content is
+authorized.
+
 ## Frontend, privacy and operations
 
 Tracking gains Route Deviations pages for rule configuration, truthful current state, bounded episode history,

@@ -16,6 +16,7 @@ import com.transportlogistics.app.tracking.ports.inbound.RouteDeviationRuleManag
 import com.transportlogistics.app.tracking.ports.outbound.RouteDeviationEpisodeRepositoryPort;
 import com.transportlogistics.app.tracking.ports.outbound.RouteDeviationManagementSupportPort;
 import com.transportlogistics.app.tracking.ports.outbound.RouteDeviationManagementTransactionPort;
+import com.transportlogistics.app.tracking.ports.outbound.RouteDeviationEventPublisherPort;
 import com.transportlogistics.app.tracking.ports.outbound.RouteDeviationReviewRepositoryPort;
 import com.transportlogistics.app.tracking.ports.outbound.RouteDeviationRuleRepositoryPort;
 import com.transportlogistics.app.tracking.ports.outbound.RouteDeviationStateRepositoryPort;
@@ -41,18 +42,27 @@ public final class RouteDeviationManagementService implements RouteDeviationRule
     private final RouteDeviationReviewRepositoryPort reviews;
     private final RouteDeviationManagementSupportPort support;
     private final RouteDeviationManagementTransactionPort transactions;
+    private final RouteDeviationEventPublisherPort events;
 
     public RouteDeviationManagementService(RouteDeviationRuleRepositoryPort rules,
             RouteDeviationStateRepositoryPort states, RouteDeviationEpisodeRepositoryPort episodes,
             RouteDeviationReviewRepositoryPort reviews,
             RouteDeviationManagementSupportPort support,
             RouteDeviationManagementTransactionPort transactions) {
+        this(rules, states, episodes, reviews, support, transactions, new NoEvents());
+    }
+
+    public RouteDeviationManagementService(RouteDeviationRuleRepositoryPort rules,
+            RouteDeviationStateRepositoryPort states, RouteDeviationEpisodeRepositoryPort episodes,
+            RouteDeviationReviewRepositoryPort reviews, RouteDeviationManagementSupportPort support,
+            RouteDeviationManagementTransactionPort transactions, RouteDeviationEventPublisherPort events) {
         this.rules = rules;
         this.states = states;
         this.episodes = episodes;
         this.reviews = reviews;
         this.support = support;
         this.transactions = transactions;
+        this.events = events;
     }
 
     @Override
@@ -208,7 +218,13 @@ public final class RouteDeviationManagementService implements RouteDeviationRule
                 throw conflictOrRule(exception);
             }
             RouteDeviationReview saved = reviews.append(review);
-            episodes.save(episode.reviewed(saved));
+            RouteDeviationEpisode reviewed = episode.reviewed(saved);
+            boolean rejectedEscalation = !correction
+                    && saved.status() == RouteDeviationReview.Status.REJECTED
+                    && !episode.reviewRejectedEscalated();
+            if (rejectedEscalation) reviewed = reviewed.markReviewRejectedEscalated();
+            episodes.save(reviewed);
+            if (rejectedEscalation) publishRejectedEscalation(reviewed, current.now());
             support.audit(current.tenantId(), current.actorId(), correction
                     ? "ROUTE_DEVIATION_REVIEW_CORRECTED" : "ROUTE_DEVIATION_REVIEW_" + status,
                     "ROUTE_DEVIATION_EPISODE", episodeId,
@@ -343,4 +359,17 @@ public final class RouteDeviationManagementService implements RouteDeviationRule
             name + " is required"); }
     private record Cursor(Instant time, UUID id) { }
     @FunctionalInterface private interface RuleMutation { RouteDeviationRule apply(RouteDeviationRule rule); }
+    private void publishRejectedEscalation(RouteDeviationEpisode episode, Instant sourceTimestamp) {
+        UUID eventId = UUID.nameUUIDFromBytes((episode.tenantId() + "|" + episode.id()
+                + "|REVIEW_REJECTED").getBytes(StandardCharsets.UTF_8));
+        events.publishEscalated(episode.tenantId(), new RouteDeviationEventPublisherPort.Escalated(
+                eventId, episode.id(), episode.vehicleId(), episode.tripId(), episode.driverId(),
+                episode.routeId(), episode.routeVersion().value(), episode.severity().name(),
+                episode.maximumDistance().value(), episode.effectiveTolerance().value(), sourceTimestamp,
+                true, "REVIEW_REJECTED"));
+    }
+    private static final class NoEvents implements RouteDeviationEventPublisherPort {
+        @Override public void publishDetected(UUID tenantId, Detected event) { }
+        @Override public void publishEscalated(UUID tenantId, Escalated event) { }
+    }
 }

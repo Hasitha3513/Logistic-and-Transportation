@@ -78,6 +78,19 @@ public final class NotificationEventCatalogue {
             required("speedEpisodeId", "vehicleId", "observedSpeedKph", "effectiveThresholdKph",
                 "thresholdSource", "ruleId", "ruleVersion", "sourceTimestamp", "repeatCount"),
             Set.of("driverId", "tripId", "routeId", "routeVersion"), 0, null));
+        definitions.put("VEHICLE_ROUTE_DEVIATION_DETECTED_V1", new NotificationEventDefinition(
+            "VEHICLE_ROUTE_DEVIATION_DETECTED_V1", "tracking", NotificationSeverity.WARNING,
+            Set.of(NotificationChannel.IN_APP), "TRACKING_ROUTE_DEVIATION_DETECTED_V1",
+            required("routeDeviationEpisodeId", "vehicleId", "routeId", "routeVersion", "severity",
+                "domainSeverity", "observedDistanceMeters", "effectiveToleranceMeters", "sourceTimestamp",
+                "approvalRequired"),
+            Set.of("tripId", "driverId", "highSuffix"), 0, null));
+        definitions.put("VEHICLE_ROUTE_DEVIATION_ESCALATED_V1", new NotificationEventDefinition(
+            "VEHICLE_ROUTE_DEVIATION_ESCALATED_V1", "tracking", NotificationSeverity.CRITICAL,
+            Set.of(NotificationChannel.IN_APP), "TRACKING_ROUTE_DEVIATION_ESCALATED_V1",
+            required("routeDeviationEpisodeId", "vehicleId", "routeId", "routeVersion", "severity",
+                "observedDistanceMeters", "effectiveToleranceMeters", "sourceTimestamp", "approvalRequired",
+                "escalationReason"), Set.of("tripId", "driverId"), 0, null));
         return Collections.unmodifiableMap(new LinkedHashMap<>(definitions));
     }
 

@@ -13,6 +13,7 @@ import com.transportlogistics.app.tracking.ports.inbound.RouteDeviationEvaluatio
 import com.transportlogistics.app.tracking.ports.outbound.RouteDeviationAssignmentLookupPort;
 import com.transportlogistics.app.tracking.ports.outbound.RouteDeviationEpisodeRepositoryPort;
 import com.transportlogistics.app.tracking.ports.outbound.RouteDeviationEvaluationTransactionPort;
+import com.transportlogistics.app.tracking.ports.outbound.RouteDeviationEventPublisherPort;
 import com.transportlogistics.app.tracking.ports.outbound.RouteDeviationGeometryLookupPort;
 import com.transportlogistics.app.tracking.ports.outbound.RouteDeviationRuleRepositoryPort;
 import com.transportlogistics.app.tracking.ports.outbound.RouteDeviationStateRepositoryPort;
@@ -26,12 +27,21 @@ public final class RouteDeviationEvaluationService implements RouteDeviationEval
     private final RouteDeviationStateRepositoryPort states;
     private final RouteDeviationEpisodeRepositoryPort episodes;
     private final RouteDeviationEvaluationTransactionPort transactions;
+    private final RouteDeviationEventPublisherPort events;
     private final Clock clock;
 
     public RouteDeviationEvaluationService(RouteDeviationAssignmentLookupPort assignments,
             RouteDeviationGeometryLookupPort geometries, RouteDeviationRuleRepositoryPort rules,
             RouteDeviationStateRepositoryPort states, RouteDeviationEpisodeRepositoryPort episodes,
             RouteDeviationEvaluationTransactionPort transactions, Clock clock) {
+        this(assignments, geometries, rules, states, episodes, transactions, clock, new NoEvents());
+    }
+
+    public RouteDeviationEvaluationService(RouteDeviationAssignmentLookupPort assignments,
+            RouteDeviationGeometryLookupPort geometries, RouteDeviationRuleRepositoryPort rules,
+            RouteDeviationStateRepositoryPort states, RouteDeviationEpisodeRepositoryPort episodes,
+            RouteDeviationEvaluationTransactionPort transactions, Clock clock,
+            RouteDeviationEventPublisherPort events) {
         this.assignments = assignments;
         this.geometries = geometries;
         this.rules = rules;
@@ -39,6 +49,7 @@ public final class RouteDeviationEvaluationService implements RouteDeviationEval
         this.episodes = episodes;
         this.transactions = transactions;
         this.clock = clock;
+        this.events = events;
     }
 
     @Override
@@ -106,7 +117,31 @@ public final class RouteDeviationEvaluationService implements RouteDeviationEval
                 assignment.routeId(), routeVersion, rule, distance);
         if (result.state() != state) states.save(result.state());
         if (result.episode() != null) episodes.save(result.episode());
+        if (result.detectionPublication()) publishDetection(result.episode());
+        if (result.escalationPublication()) publishDistanceEscalation(
+                result.episode(), result.state().lastSourceTimestamp());
         return new ProcessingResult(RouteDeviationAvailability.AVAILABLE, result);
+    }
+
+    private void publishDetection(RouteDeviationEpisode episode) {
+        events.publishDetected(episode.tenantId(), new RouteDeviationEventPublisherPort.Detected(
+                episode.id(), episode.vehicleId(), episode.tripId(), episode.driverId(), episode.routeId(),
+                episode.routeVersion().value(), episode.severity().name(), episode.maximumDistance().value(),
+                episode.effectiveTolerance().value(), episode.confirmationSourceTimestamp(),
+                episode.severity() == RouteDeviationEpisode.Severity.HIGH));
+    }
+
+    private void publishDistanceEscalation(RouteDeviationEpisode episode, java.time.Instant sourceTimestamp) {
+        events.publishEscalated(episode.tenantId(), new RouteDeviationEventPublisherPort.Escalated(
+                escalationId(episode, "DISTANCE_HIGH"), episode.id(), episode.vehicleId(), episode.tripId(),
+                episode.driverId(), episode.routeId(), episode.routeVersion().value(), episode.severity().name(),
+                episode.maximumDistance().value(), episode.effectiveTolerance().value(),
+                sourceTimestamp, true, "DISTANCE_HIGH"));
+    }
+
+    private static java.util.UUID escalationId(RouteDeviationEpisode episode, String reason) {
+        return java.util.UUID.nameUUIDFromBytes((episode.tenantId() + "|" + episode.id() + "|" + reason)
+                .getBytes(java.nio.charset.StandardCharsets.UTF_8));
     }
 
     private Lookup<com.transportlogistics.app.tracking.domain.routedeviation.RoutePolyline> geometry(
@@ -177,5 +212,10 @@ public final class RouteDeviationEvaluationService implements RouteDeviationEval
     }
 
     private record Lookup<T>(T value, RouteDeviationAvailability reason) {
+    }
+
+    private static final class NoEvents implements RouteDeviationEventPublisherPort {
+        @Override public void publishDetected(java.util.UUID tenantId, Detected event) { }
+        @Override public void publishEscalated(java.util.UUID tenantId, Escalated event) { }
     }
 }
