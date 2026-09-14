@@ -10,17 +10,23 @@ import com.transportlogistics.app.routing.application.ports.out.RouteRevisionGeo
 import com.transportlogistics.app.support.PostgreSqlIntegrationTest;
 import com.transportlogistics.app.tracking.domain.routedeviation.DistanceMeters;
 import com.transportlogistics.app.tracking.domain.routedeviation.RouteDeviationPosition;
+import com.transportlogistics.app.tracking.domain.routedeviation.RouteDeviationEpisode;
 import com.transportlogistics.app.tracking.domain.routedeviation.RouteDeviationReview;
 import com.transportlogistics.app.tracking.domain.routedeviation.RouteDeviationRule;
 import com.transportlogistics.app.tracking.domain.routedeviation.RoutePoint;
 import com.transportlogistics.app.tracking.domain.routedeviation.RouteVersion;
 import com.transportlogistics.app.tracking.domain.routedeviation.VehicleRouteDeviationState;
+import com.transportlogistics.app.tracking.application.RouteDeviationEvaluationService;
+import com.transportlogistics.app.tracking.ports.outbound.RouteDeviationAssignmentLookupPort;
+import com.transportlogistics.app.tracking.ports.outbound.RouteDeviationEvaluationTransactionPort;
 import com.transportlogistics.app.tracking.ports.outbound.RouteDeviationEpisodeRepositoryPort;
 import com.transportlogistics.app.tracking.ports.outbound.RouteDeviationReviewRepositoryPort;
 import com.transportlogistics.app.tracking.ports.outbound.RouteDeviationRuleRepositoryPort;
 import com.transportlogistics.app.tracking.ports.outbound.RouteDeviationStateRepositoryPort;
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.Clock;
+import java.time.ZoneOffset;
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -43,6 +49,7 @@ class RouteDeviationV88PostgreSqlAcceptanceTest extends PostgreSqlIntegrationTes
     @Autowired RouteDeviationStateRepositoryPort states;
     @Autowired RouteDeviationEpisodeRepositoryPort episodes;
     @Autowired RouteDeviationReviewRepositoryPort reviews;
+    @Autowired RouteDeviationEvaluationTransactionPort evaluationTransaction;
     @Autowired Flyway flyway;
 
     @Test
@@ -248,6 +255,123 @@ class RouteDeviationV88PostgreSqlAcceptanceTest extends PostgreSqlIntegrationTes
                 Integer.class, vehicle)).isEqualTo(2);
     }
 
+    @Test
+    void applicationEvaluationPersistsOneLifecycleAndRollsBackAtomically() {
+        UUID tenant = UUID.randomUUID();
+        UUID vehicle = UUID.randomUUID();
+        UUID route = UUID.randomUUID();
+        UUID trip = UUID.randomUUID();
+        Instant now = Instant.now().truncatedTo(ChronoUnit.MICROS);
+        RouteVersion version = RouteVersion.ofRevision(6);
+        RouteDeviationRule rule = new RouteDeviationRule(UUID.randomUUID(), tenant, route,
+                version, DistanceMeters.of(100), RouteDeviationRule.Lifecycle.ACTIVE,
+                1, 1, now.minusSeconds(10));
+        rules.save(rule);
+        var service = evaluationService(tenant, vehicle, route, trip, version, now, episodes);
+
+        RouteDeviationPosition first = position(tenant, vehicle, now.minusSeconds(2),
+                "79.0010000", "6.0010000");
+        RouteDeviationPosition second = position(tenant, vehicle, now.minusSeconds(1),
+                "79.0020000", "6.0020000");
+        service.evaluate(first);
+        service.evaluate(second);
+        service.evaluate(second);
+
+        RouteDeviationEpisode open = episodes.findOpen(tenant, vehicle).orElseThrow();
+        assertThat(open.firstCandidatePositionId()).isEqualTo(first.positionId());
+        assertThat(open.confirmingPositionId()).isEqualTo(second.positionId());
+        assertThat(open.eligibleOutsideSampleCount()).isEqualTo(2);
+        service.evaluate(position(tenant, vehicle, now, "79.0000001", "6.0000001"));
+        assertThat(episodes.findOpen(tenant, vehicle)).isEmpty();
+        assertThat(episodes.find(tenant, open.id()).orElseThrow().terminalOutcome())
+                .isEqualTo(com.transportlogistics.app.tracking.domain.routedeviation
+                        .RouteDeviationEpisode.TerminalOutcome.RETURNED_TO_ROUTE);
+
+        UUID rollbackVehicle = UUID.randomUUID();
+        RouteDeviationEpisodeRepositoryPort failing = new FailingEpisodeStore(episodes);
+        var rollbackService = evaluationService(tenant, rollbackVehicle, route, trip,
+                version, now, failing);
+        rollbackService.evaluate(position(tenant, rollbackVehicle, now.minusSeconds(2),
+                "79.0010000", "6.0010000"));
+        assertThatThrownBy(() -> rollbackService.evaluate(position(tenant, rollbackVehicle,
+                now.minusSeconds(1), "79.0020000", "6.0020000")))
+                .isInstanceOf(IllegalStateException.class);
+        assertThat(states.find(tenant, rollbackVehicle).orElseThrow().state())
+                .isNotEqualTo(VehicleRouteDeviationState.State.DEVIATING);
+        assertThat(episodes.findOpen(tenant, rollbackVehicle)).isEmpty();
+    }
+
+    @Test
+    void concurrentConfirmationsOpenExactlyOneEpisode() throws Exception {
+        UUID tenant = UUID.randomUUID();
+        UUID vehicle = UUID.randomUUID();
+        UUID route = UUID.randomUUID();
+        UUID trip = UUID.randomUUID();
+        Instant now = Instant.now().truncatedTo(ChronoUnit.MICROS);
+        RouteVersion version = RouteVersion.ofRevision(7);
+        rules.save(new RouteDeviationRule(UUID.randomUUID(), tenant, route, version,
+                DistanceMeters.of(100), RouteDeviationRule.Lifecycle.ACTIVE,
+                1, 1, now.minusSeconds(10)));
+        var service = evaluationService(tenant, vehicle, route, trip, version, now, episodes);
+        service.evaluate(position(tenant, vehicle, now.minusSeconds(3),
+                "79.0010000", "6.0010000"));
+
+        RouteDeviationPosition earlierConfirmation = position(tenant, vehicle,
+                now.minusSeconds(2), "79.0020000", "6.0020000");
+        RouteDeviationPosition laterConfirmation = position(tenant, vehicle,
+                now.minusSeconds(1), "79.0030000", "6.0030000");
+        CountDownLatch start = new CountDownLatch(1);
+        try (var executor = Executors.newFixedThreadPool(2)) {
+            var earlier = executor.submit(() -> evaluateAfter(start, service, earlierConfirmation));
+            var later = executor.submit(() -> evaluateAfter(start, service, laterConfirmation));
+            start.countDown();
+            earlier.get();
+            later.get();
+        }
+
+        RouteDeviationEpisode open = episodes.findOpen(tenant, vehicle).orElseThrow();
+        assertThat(open.firstCandidatePositionId()).isNotNull();
+        assertThat(jdbc.queryForObject("""
+                SELECT count(*) FROM tracking_route_deviation_episode
+                WHERE tenant_id=? AND vehicle_id=? AND end_source_timestamp IS NULL
+                """, Integer.class, tenant, vehicle)).isOne();
+        assertThat(states.find(tenant, vehicle).orElseThrow().lastSourceTimestamp())
+                .isEqualTo(laterConfirmation.sourceTimestamp());
+    }
+
+    private RouteDeviationEvaluationService evaluationService(UUID tenant, UUID vehicle,
+            UUID route, UUID trip, RouteVersion version, Instant now,
+            RouteDeviationEpisodeRepositoryPort episodeStore) {
+        return new RouteDeviationEvaluationService(
+                (requestedTenant, requestedVehicle, at) -> requestedTenant.equals(tenant)
+                        && requestedVehicle.equals(vehicle) ? java.util.Optional.of(
+                                new RouteDeviationAssignmentLookupPort.Assignment(
+                                        trip, null, route, version.value())) : java.util.Optional.empty(),
+                (requestedTenant, requestedRoute, requestedVersion) -> java.util.Optional.of(
+                        new com.transportlogistics.app.tracking.domain.routedeviation.RoutePolyline(
+                                requestedVersion, List.of(
+                                new RoutePoint(new BigDecimal("79.0000000"), new BigDecimal("6.0000000")),
+                                new RoutePoint(new BigDecimal("79.0100000"), new BigDecimal("6.0000000"))))),
+                rules, states, episodeStore, evaluationTransaction,
+                Clock.fixed(now, ZoneOffset.UTC));
+    }
+
+    private record FailingEpisodeStore(RouteDeviationEpisodeRepositoryPort delegate)
+            implements RouteDeviationEpisodeRepositoryPort {
+        @Override public com.transportlogistics.app.tracking.domain.routedeviation.RouteDeviationEpisode save(
+                com.transportlogistics.app.tracking.domain.routedeviation.RouteDeviationEpisode episode) {
+            throw new IllegalStateException("simulated episode failure");
+        }
+        @Override public java.util.Optional<com.transportlogistics.app.tracking.domain.routedeviation.RouteDeviationEpisode> find(
+                UUID tenant, UUID episode) { return delegate.find(tenant, episode); }
+        @Override public java.util.Optional<com.transportlogistics.app.tracking.domain.routedeviation.RouteDeviationEpisode> findOpen(
+                UUID tenant, UUID vehicle) { return delegate.findOpen(tenant, vehicle); }
+        @Override public List<com.transportlogistics.app.tracking.domain.routedeviation.RouteDeviationEpisode> history(
+                UUID tenant, UUID vehicle, Instant from, Instant to, String cursor, int limit) {
+            return delegate.history(tenant, vehicle, from, to, cursor, limit);
+        }
+    }
+
     private boolean saveAfter(CountDownLatch start, VehicleRouteDeviationState state)
             throws InterruptedException {
         start.await();
@@ -257,6 +381,14 @@ class RouteDeviationV88PostgreSqlAcceptanceTest extends PostgreSqlIntegrationTes
         } catch (IllegalStateException stale) {
             return false;
         }
+    }
+
+    private static boolean evaluateAfter(CountDownLatch start,
+            RouteDeviationEvaluationService service, RouteDeviationPosition position)
+            throws InterruptedException {
+        start.await();
+        service.evaluate(position);
+        return true;
     }
 
     private UUID insertRevision(UUID tenant, UUID route, int number) {

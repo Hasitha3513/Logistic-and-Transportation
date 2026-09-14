@@ -34,6 +34,13 @@ final class JdbcRouteDeviationStateRepository implements RouteDeviationStateRepo
     }
 
     @Override
+    public Optional<VehicleRouteDeviationState> lockAndFind(UUID tenantId, UUID vehicleId) {
+        requireTenant(tenantId);
+        lock(tenantId, vehicleId);
+        return find(tenantId, vehicleId);
+    }
+
+    @Override
     public VehicleRouteDeviationState save(VehicleRouteDeviationState state) {
         requireTenant(state.tenantId());
         transactions.executeWithoutResult(status -> {

@@ -14,7 +14,7 @@
 
 > [!IMPORTANT]
 > **Authoritative Baseline & Current State:**
-> - **Last Reconciled:** `2026-09-13`
+> - **Last Reconciled:** `2026-09-14`
 > - **Authority Order:** Original Requirements (`Traspotation & logistic.docx`), Frozen Architecture/Contracts, Verified Production Code/Tests, then Roadmap.
 > - **MVP 1.3 Delivery Operations:** 7 / 7 COMPLETE (100%) - CLOSED
 > - **MVP 1.4 Last-Mile Delivery:** 8 / 8 COMPLETE (US-63 through US-70 Accepted & Closed)
@@ -25,8 +25,8 @@
 > - **Architecture Promotion:** The high-throughput pluggable telemetry platform (Kafka durable stream, Redis live state, TimescaleDB history, Flespi/Traccar/Generic normalization, gateway administration and live Fleet map) is promoted into MVP scope as a US-48/Wave C platform enabler. US-48 acceptance remains externally blocked and accounting is unchanged.
 > - **Hybrid Telemetry State:** `IMPLEMENTATION_IN_PROGRESS / TS04_COMPLETE`; V87 adds the transactional Timescale history consumer, Tenant-scoped idempotency, deterministic static reduction, seven-day compression and 180-day raw retention.
 > - **Hybrid Telemetry Test Infrastructure:** `CLOSED`; Testcontainers 2.0.3/docker-java 3.7.0 restores Docker 29 negotiation, V86 Timescale acceptance, table-ownership verification and the complete Maven regression without changing story accounting.
-> - **US-52 State:** `IMPLEMENTATION_IN_PROGRESS / CS02_COMPLETE`; V88 persists Routing-owned immutable revision geometry and Tracking-owned deviation rule/state/candidate/episode/review evidence without activating detection or workflow.
-> - **Immediate Next Action:** Run `US-52-MONITOR-ROUTE-DEVIATIONS-CS03-EVALUATION-EPISODES-001`.
+> - **US-52 State:** `IMPLEMENTATION_IN_PROGRESS / CS03_COMPLETE`; deterministic source-time evaluation now opens, progresses, escalates and closes Tenant-isolated deviation episodes through published Trip/Routing contracts; external events, APIs, review workflow and frontend remain deferred.
+> - **Immediate Next Action:** Run `US-52-MONITOR-ROUTE-DEVIATIONS-CS04-APIS-RBAC-AUDIT-001`.
 
 ---
 
@@ -173,7 +173,7 @@ Development startup now consistently provisions the idempotent PostgreSQL sample
 | `US-49` | Manage Geofences | Depot, customer-site and unauthorized-zone entry/exit detection | ✅ `COMPLETE / ACCEPTED` | Final acceptance PASS at V80: focused 76/76, Maven 1,595/0/0/15, architecture 52/52, Vitest 299/299 and Chromium 7/7; no US-48 acceptance inheritance |
 | `US-50` | Monitor Speed | Threshold, road-rule and repeat-speed monitoring | 🔴 `IMPLEMENTATION_COMPLETE / ACCEPTANCE_BLOCKED_EXTERNAL_SYSTEM` | Final acceptance blocked only by physical provider/device speed field, native-unit and normalization evidence; technical evidence PASS; no US-48 acceptance inheritance |
 | `US-51` | Monitor Idle Time | Engine-on versus movement duration and qualified fuel-waste estimates | 🟡 `WAVE C / BLOCKED_BY_REQUIRED_TELEMETRY_CAPABILITY` | Current FLESPI does not advertise IGNITION and no accepted alternate engine-state source exists |
-| `US-52` | Monitor Route Deviations | Planned-versus-actual comparison, severity and audited approval | 🟡 `IMPLEMENTATION_IN_PROGRESS / CS02_COMPLETE` | Trip prerequisite V85 and CS01 contracts COMPLETE; V88 adds exact immutable Routing geometry plus Tenant-isolated Tracking rule/state/candidate/episode/review repositories; PostgreSQL 7/7, affected 224/224, architecture 58/58 and full Maven 1,718/1,718 PASS; behavior remains dormant until CS03 |
+| `US-52` | Monitor Route Deviations | Planned-versus-actual comparison, severity and audited approval | 🟡 `IMPLEMENTATION_IN_PROGRESS / CS03_COMPLETE` | Source-time Trip attribution and exact Routing geometry now drive deterministic two-point candidate/episode lifecycle; first-candidate evidence is preserved; PostgreSQL 9/9, affected 231/231, architecture 58/58 and full Maven 1,726/1,726 PASS; APIs/RBAC/audit remain CS04 |
 | `US-53` | Replay Journeys | Historical journey replay, stop analysis and incident forensics | 🟡 `TECHNICAL_DEPENDENCY_SATISFIED / READY_AFTER_EARLIER_WAVE_C_DECISIONS` | Immutable Tracking history is sufficient; optional overlays must follow their producers |
 | `US-54` | View Tracking Dashboard | Fleet overview, exceptions, heat maps, alerts and stale-state visibility | 🟡 `WAVE C / BLOCKED_BY_US49_TO_US53_PRODUCERS` | Consolidated consumer; must not recreate detector logic |
 | `US-55` | Handle GPS Edge Cases | Signal loss, spoofing, tampering, delayed packets, battery drain and trusted-state protection | 🟡 `WAVE C / BLOCKED_BY_REQUIRED_TELEMETRY_AND_PRODUCT_DECISIONS` | Signal-loss/delay contracts exist, but spoofing/tamper/battery signals are not established |
@@ -240,7 +240,7 @@ Development startup now consistently provisions the idempotent PostgreSQL sample
 
 ```
 Current Status: 73 / 87 COMPLETE; 14 stories remain across Waves C–E
-Queue Head:     US-52-MONITOR-ROUTE-DEVIATIONS-CS02-V88-PERSISTENCE-001
+Queue Head:     US-52-MONITOR-ROUTE-DEVIATIONS-CS04-APIS-RBAC-AUDIT-001
 ```
 
 1. **Wave A — Integration and exception-control foundations:** 2 / 2 COMPLETE / CLOSED (US-73 and US-78).

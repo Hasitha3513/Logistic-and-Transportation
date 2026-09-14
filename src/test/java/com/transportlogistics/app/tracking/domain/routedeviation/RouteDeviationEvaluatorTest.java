@@ -75,6 +75,30 @@ class RouteDeviationEvaluatorTest {
         assertSame(baseline.state(), ignored.state());
     }
 
+    @Test
+    void exactEffectiveBoundaryIsInsideAndHighStartsStrictlyAboveTwiceEffective() {
+        RouteDeviationPosition accurate = new RouteDeviationPosition(UUID.randomUUID(), tenantId,
+                vehicleId, now.minusSeconds(2), point(), DistanceMeters.of(25), true, false,
+                RouteDeviationPosition.Trust.TRUSTED, true,
+                RouteDeviationPosition.Ordering.IN_ORDER);
+        RouteDeviationEvaluationResult boundary = evaluate(
+                VehicleRouteDeviationState.unknown(tenantId, vehicleId), null, accurate, 125);
+        assertEquals(RouteDeviationEvaluationResult.Outcome.BASELINE_ON_ROUTE, boundary.outcome());
+
+        RouteDeviationEvaluationResult first = evaluate(boundary.state(), null,
+                position(now.minusSeconds(1)), 200);
+        RouteDeviationEvaluationResult warning = evaluate(first.state(), null,
+                position(now), 200);
+        assertEquals(RouteDeviationEpisode.Severity.WARNING, warning.episode().severity());
+
+        RouteDeviationEvaluationResult highFirst = evaluate(
+                VehicleRouteDeviationState.unknown(tenantId, vehicleId), null,
+                position(now.minusSeconds(1)), 200.001);
+        RouteDeviationEvaluationResult high = evaluate(highFirst.state(), null,
+                position(now), 200.001);
+        assertEquals(RouteDeviationEpisode.Severity.HIGH, high.episode().severity());
+    }
+
     private RouteDeviationEvaluationResult evaluate(VehicleRouteDeviationState state,
             RouteDeviationEpisode episode, RouteDeviationPosition position, double distance) {
         return RouteDeviationEvaluator.evaluate(state, episode, position, now, tripId, null,

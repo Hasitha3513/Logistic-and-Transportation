@@ -7,6 +7,7 @@ import com.transportlogistics.app.tracking.application.GeofenceEvaluationService
 import com.transportlogistics.app.tracking.application.GeofenceManagementService;
 import com.transportlogistics.app.tracking.application.SpeedEvaluationService;
 import com.transportlogistics.app.tracking.application.SpeedRuleManagementService;
+import com.transportlogistics.app.tracking.application.RouteDeviationEvaluationService;
 import com.transportlogistics.app.tracking.adapters.inbound.security.SecuredGeofenceUseCases;
 import com.transportlogistics.app.tracking.adapters.inbound.security.SecuredSpeedMonitoringUseCases;
 import com.transportlogistics.app.integration.IntegrationSecretResolver;
@@ -32,6 +33,12 @@ import com.transportlogistics.app.tracking.ports.outbound.SpeedRuleRepositoryPor
 import com.transportlogistics.app.tracking.ports.outbound.SpeedingEpisodePublisherPort;
 import com.transportlogistics.app.tracking.ports.outbound.SpeedingEpisodeRepositoryPort;
 import com.transportlogistics.app.tracking.ports.outbound.VehicleSpeedStateRepositoryPort;
+import com.transportlogistics.app.tracking.ports.outbound.RouteDeviationAssignmentLookupPort;
+import com.transportlogistics.app.tracking.ports.outbound.RouteDeviationEpisodeRepositoryPort;
+import com.transportlogistics.app.tracking.ports.outbound.RouteDeviationEvaluationTransactionPort;
+import com.transportlogistics.app.tracking.ports.outbound.RouteDeviationGeometryLookupPort;
+import com.transportlogistics.app.tracking.ports.outbound.RouteDeviationRuleRepositoryPort;
+import com.transportlogistics.app.tracking.ports.outbound.RouteDeviationStateRepositoryPort;
 import java.time.Clock;
 import java.util.List;
 import org.springframework.context.annotation.*;
@@ -44,6 +51,7 @@ import org.springframework.context.annotation.*;
  @Bean GeofenceManagementService geofenceManagementService(GeofenceRepositoryPort geofences,VehicleGeofenceStateRepositoryPort states,GeofenceTransitionRepositoryPort transitions,GeofenceLocationLookupPort locations,GeofenceManagementSupportPort support,GeofenceManagementTransactionPort transaction){return new GeofenceManagementService(geofences,states,transitions,locations,support,transaction);}
  @Bean SpeedEvaluationService speedEvaluationUseCase(SpeedPositionRepositoryPort positions,SpeedRuleRepositoryPort rules,VehicleSpeedStateRepositoryPort states,SpeedingEpisodeRepositoryPort episodes,SpeedEvaluationJobRepositoryPort jobs,SpeedAttributionLookupPort attribution,SpeedingEpisodePublisherPort publisher,SpeedEvaluationTransactionPort transaction){return new SpeedEvaluationService(positions,rules,states,episodes,jobs,attribution,publisher,transaction);}
  @Bean SpeedRuleManagementService speedRuleManagementService(SpeedRuleRepositoryPort rules,VehicleSpeedStateRepositoryPort states,SpeedingEpisodeRepositoryPort episodes,SpeedManagementSupportPort support,SpeedManagementTransactionPort transaction){return new SpeedRuleManagementService(rules,states,episodes,support,transaction);}
+ @Bean RouteDeviationEvaluationService routeDeviationEvaluationUseCase(RouteDeviationAssignmentLookupPort assignments,RouteDeviationGeometryLookupPort geometries,RouteDeviationRuleRepositoryPort rules,RouteDeviationStateRepositoryPort states,RouteDeviationEpisodeRepositoryPort episodes,RouteDeviationEvaluationTransactionPort transaction,Clock clock){return new RouteDeviationEvaluationService(assignments,geometries,rules,states,episodes,transaction,clock);}
  @Bean @Primary SecuredGeofenceUseCases securedGeofenceUseCases(GeofenceManagementService service){return new SecuredGeofenceUseCases(service,service);}
  @Bean @Primary SecuredSpeedMonitoringUseCases securedSpeedMonitoringUseCases(SpeedRuleManagementService service){return new SecuredSpeedMonitoringUseCases(service,service);}
 }
