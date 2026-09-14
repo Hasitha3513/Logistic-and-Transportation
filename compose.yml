@@ -3,6 +3,7 @@ name: transport-logistics
 services:
   postgres:
     image: timescale/timescaledb:latest-pg16
+    command: ["postgres", "-c", "shared_preload_libraries=timescaledb"]
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-transport_logistics}
       POSTGRES_USER: ${POSTGRES_USER:-transport_app}

@@ -32,7 +32,7 @@ class GeofenceNotificationCatalogPostgreSqlAcceptanceTest extends PostgreSqlInte
 
     @Test
     void cleanV1ToV79SeedsOneSafeUsableTemplateAndOneRulePerTenant() {
-        assertThat(flyway.info().current().getVersion().getVersion()).isEqualTo("90");
+        assertThat(flyway.info().current().getVersion().getVersion()).isEqualTo("91");
         assertThat(jdbc.queryForObject("""
                 SELECT count(*) FROM notification_template
                 WHERE event_type=? AND code=? AND channel='IN_APP' AND version=1 AND active

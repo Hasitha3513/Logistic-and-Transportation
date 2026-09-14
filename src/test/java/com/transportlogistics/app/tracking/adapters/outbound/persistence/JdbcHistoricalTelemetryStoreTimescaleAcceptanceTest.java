@@ -36,6 +36,7 @@ class JdbcHistoricalTelemetryStoreTimescaleAcceptanceTest {
 
     private static JdbcTemplate jdbc;
     private static JdbcHistoricalTelemetryStore store;
+    private static JdbcTelemetryEvaluationDispatchRepository dispatches;
 
     @BeforeAll
     static void migrate() {
@@ -44,12 +45,14 @@ class JdbcHistoricalTelemetryStoreTimescaleAcceptanceTest {
         var dataSource = new DriverManagerDataSource(
                 DATABASE.getJdbcUrl(), DATABASE.getUsername(), DATABASE.getPassword());
         jdbc = new JdbcTemplate(dataSource);
-        store = new JdbcHistoricalTelemetryStore(jdbc,
-                new TransactionTemplate(new DataSourceTransactionManager(dataSource)));
+        var transactions = new TransactionTemplate(new DataSourceTransactionManager(dataSource));
+        dispatches = new JdbcTelemetryEvaluationDispatchRepository(jdbc, transactions);
+        store = new JdbcHistoricalTelemetryStore(jdbc, transactions, dispatches);
     }
 
     @BeforeEach
     void clear() {
+        jdbc.update("DELETE FROM tracking_telemetry_evaluation_dispatch");
         jdbc.update("DELETE FROM tracking_position_history");
     }
 
@@ -65,7 +68,14 @@ class JdbcHistoricalTelemetryStoreTimescaleAcceptanceTest {
                 BigDecimal.TWO, BigDecimal.ZERO, EngineState.OFF, BigDecimal.ONE);
 
         assertThat(store.persist(List.of(a)).persisted()).isOne();
+        assertThat(jdbc.queryForObject("SELECT count(*) FROM tracking_telemetry_evaluation_dispatch "
+                + "WHERE tenant_id=?", Integer.class, tenantA)).isEqualTo(3);
+        assertThat(jdbc.queryForList("SELECT evaluator_type FROM tracking_telemetry_evaluation_dispatch "
+                + "WHERE tenant_id=?", String.class, tenantA))
+                .containsExactlyInAnyOrder("GEOFENCE", "SPEED", "ROUTE_DEVIATION");
         assertThat(store.persist(List.of(a)).duplicate()).isOne();
+        assertThat(jdbc.queryForObject("SELECT count(*) FROM tracking_telemetry_evaluation_dispatch "
+                + "WHERE tenant_id=?", Integer.class, tenantA)).isEqualTo(3);
         assertThat(store.persist(List.of(b)).persisted()).isOne();
         assertThat(store.find(tenantA, vehicle, now.minusSeconds(1), now.plusSeconds(1), 10))
                 .hasSize(1).allMatch(fact -> fact.tenantId().equals(tenantA));
@@ -128,6 +138,41 @@ class JdbcHistoricalTelemetryStoreTimescaleAcceptanceTest {
                 .isInstanceOf(DependencyUnavailableException.class);
         assertThat(jdbc.queryForObject("SELECT count(*) FROM tracking_position_history", Integer.class))
                 .isZero();
+        assertThat(jdbc.queryForObject("SELECT count(*) FROM tracking_telemetry_evaluation_dispatch",
+                Integer.class)).isZero();
+    }
+
+    @Test
+    void claimsOnceAndSupportsCompletionRetryFailureAndExpiredLeaseRecovery() {
+        UUID tenant = UUID.randomUUID();
+        Instant now = Instant.now().minusSeconds(10);
+        var first = event(tenant, UUID.randomUUID(), "c".repeat(64), now, BigDecimal.ONE,
+                BigDecimal.TWO, BigDecimal.ONE, EngineState.ON, BigDecimal.ONE);
+        store.persist(List.of(first));
+
+        var claimed = dispatches.claim("worker-a", now.plusSeconds(20), now.plusSeconds(50), 100);
+
+        assertThat(claimed).hasSize(3).extracting(item -> item.evaluator().name())
+                .containsExactly("GEOFENCE", "ROUTE_DEVIATION", "SPEED");
+        assertThat(dispatches.claim("worker-b", now.plusSeconds(21), now.plusSeconds(51), 100))
+                .isEmpty();
+        dispatches.complete(claimed.get(0).id(), "worker-a", now.plusSeconds(22));
+        dispatches.retry(claimed.get(1).id(), "worker-a", now.plusSeconds(22),
+                now.plusSeconds(82), "EVALUATOR_FAILED");
+        dispatches.fail(claimed.get(2).id(), "worker-a", now.plusSeconds(22),
+                "EVALUATOR_FAILED");
+        assertThat(jdbc.queryForList("SELECT status FROM tracking_telemetry_evaluation_dispatch "
+                + "WHERE tenant_id=? ORDER BY status", String.class, tenant))
+                .containsExactly("COMPLETED", "FAILED", "PENDING");
+
+        var second = event(tenant, UUID.randomUUID(), "d".repeat(64), now.plusSeconds(1),
+                BigDecimal.ONE, BigDecimal.TWO, BigDecimal.ONE, EngineState.ON, BigDecimal.ONE);
+        store.persist(List.of(second));
+        var abandoned = dispatches.claim("worker-a", now.plusSeconds(23), now.plusSeconds(24), 3);
+        assertThat(abandoned).hasSize(3);
+        var recovered = dispatches.claim("worker-b", now.plusSeconds(25), now.plusSeconds(55), 3);
+        assertThat(recovered).extracting(item -> item.id())
+                .containsExactlyElementsOf(abandoned.stream().map(item -> item.id()).toList());
     }
 
     private static TrackingTelemetryIngestedV1 event(

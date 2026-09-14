@@ -7,6 +7,8 @@ import com.transportlogistics.app.tracking.domain.TrackingModels.EngineState;
 import com.transportlogistics.app.tracking.domain.TrackingModels.Ordering;
 import com.transportlogistics.app.tracking.domain.TrackingModels.Trust;
 import com.transportlogistics.app.tracking.ports.outbound.HistoricalTelemetryStorePort;
+import com.transportlogistics.app.tracking.ports.outbound.HistoricalTelemetryLookupPort;
+import com.transportlogistics.app.tracking.ports.outbound.TelemetryEvaluationDispatchPort;
 import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -23,16 +25,24 @@ import org.springframework.transaction.support.TransactionTemplate;
 
 @Component
 @ConditionalOnProperty(name = "app.tracking.hybrid-storage.enabled", havingValue = "true")
-public final class JdbcHistoricalTelemetryStore implements HistoricalTelemetryStorePort {
+public final class JdbcHistoricalTelemetryStore implements HistoricalTelemetryStorePort, HistoricalTelemetryLookupPort {
     private static final String RETENTION_POLICY = "TIMESCALE_RAW_180_DAYS";
     private static final String RETENTION_VERSION = "V87";
     private static final Duration RETENTION = Duration.ofDays(180);
     private final JdbcTemplate jdbc;
     private final TransactionTemplate transactions;
+    private final TelemetryEvaluationDispatchPort dispatch;
 
     public JdbcHistoricalTelemetryStore(JdbcTemplate jdbc, TransactionTemplate transactions) {
+        this(jdbc, transactions, new NoDispatch());
+    }
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public JdbcHistoricalTelemetryStore(JdbcTemplate jdbc, TransactionTemplate transactions,
+            TelemetryEvaluationDispatchPort dispatch) {
         this.jdbc = jdbc;
         this.transactions = transactions;
+        this.dispatch = dispatch;
     }
 
     @Override
@@ -63,12 +73,24 @@ public final class JdbcHistoricalTelemetryStore implements HistoricalTelemetrySt
                     reduced++;
                 } else if (insert(candidate) == 1) {
                     persisted++;
+                    dispatch.enqueue(candidate);
                 } else {
                     duplicate++;
+                    findExact(event.tenantId(), event.recordedAt(), event.eventId())
+                            .ifPresent(dispatch::enqueue);
                 }
             }
         }
         return new BatchResult(persisted, duplicate, reduced);
+    }
+
+    @Override
+    public java.util.Optional<HistoricalTelemetry> findExact(
+            UUID tenantId, Instant sourceTimestamp, UUID historyId) {
+        return jdbc.query("SELECT * FROM tracking_position_history "
+                        + "WHERE tenant_id=? AND source_timestamp=? AND id=?",
+                this::map, tenantId, Timestamp.from(sourceTimestamp), historyId)
+                .stream().findFirst();
     }
 
     private void lock(UUID tenantId, UUID vehicleId) {
@@ -203,5 +225,15 @@ public final class JdbcHistoricalTelemetryStore implements HistoricalTelemetrySt
                 row.getTimestamp("source_timestamp").toInstant(), row.getTimestamp("received_at").toInstant(),
                 Trust.valueOf(row.getString("trust")), row.getString("quality"),
                 Ordering.valueOf(row.getString("ordering_classification")));
+    }
+
+    private static final class NoDispatch implements TelemetryEvaluationDispatchPort {
+        @Override public void enqueue(HistoricalTelemetry telemetry) { }
+        @Override public List<Dispatch> claim(String owner, Instant now, Instant until, int limit) {
+            return List.of();
+        }
+        @Override public void complete(UUID id, String owner, Instant now) { }
+        @Override public void retry(UUID id, String owner, Instant now, Instant next, String code) { }
+        @Override public void fail(UUID id, String owner, Instant now, String code) { }
     }
 }
