@@ -41,6 +41,34 @@ final class JdbcRouteDeviationPersistenceAdapter implements RouteDeviationRuleRe
     }
 
     @Override
+    public Optional<RouteDeviationRule> findRule(UUID tenantId, UUID ruleId) {
+        requireTenant(tenantId);
+        return jdbc.query("SELECT * FROM tracking_route_deviation_rule WHERE tenant_id=? AND id=?",
+                this::rule, tenantId, ruleId).stream().findFirst();
+    }
+
+    @Override
+    public List<RouteDeviationRule> list(UUID tenantId, RouteDeviationRule.Lifecycle lifecycle,
+            int offset, int size) {
+        requireTenant(tenantId);
+        return List.copyOf(jdbc.query("""
+                SELECT * FROM tracking_route_deviation_rule
+                WHERE tenant_id=? AND (CAST(? AS varchar) IS NULL OR lifecycle=CAST(? AS varchar))
+                ORDER BY route_id,route_version,id LIMIT ? OFFSET ?
+                """, this::rule, tenantId, name(lifecycle), name(lifecycle), size, offset));
+    }
+
+    @Override
+    public long count(UUID tenantId, RouteDeviationRule.Lifecycle lifecycle) {
+        requireTenant(tenantId);
+        Long value = jdbc.queryForObject("""
+                SELECT count(*) FROM tracking_route_deviation_rule
+                WHERE tenant_id=? AND (CAST(? AS varchar) IS NULL OR lifecycle=CAST(? AS varchar))
+                """, Long.class, tenantId, name(lifecycle), name(lifecycle));
+        return value == null ? 0 : value;
+    }
+
+    @Override
     public RouteDeviationRule save(RouteDeviationRule rule) {
         requireTenant(rule.tenantId());
         transactions.executeWithoutResult(status -> {
@@ -120,6 +148,13 @@ final class JdbcRouteDeviationPersistenceAdapter implements RouteDeviationRuleRe
     }
 
     @Override
+    public Optional<RouteDeviationEpisode> lockAndFind(UUID tenantId, UUID episodeId) {
+        requireTenant(tenantId);
+        lock(tenantId, episodeId);
+        return find(tenantId, episodeId);
+    }
+
+    @Override
     public Optional<RouteDeviationEpisode> findOpen(UUID tenantId, UUID vehicleId) {
         requireTenant(tenantId);
         return jdbc.query("""
@@ -140,6 +175,30 @@ final class JdbcRouteDeviationPersistenceAdapter implements RouteDeviationRuleRe
                 WHERE tenant_id=? AND vehicle_id=? AND confirmation_source_timestamp>=?
                   AND confirmation_source_timestamp<? ORDER BY confirmation_source_timestamp DESC,id DESC LIMIT ?
                 """, this::episode, tenantId, vehicleId, timestamp(from), timestamp(to), limit));
+    }
+
+    @Override
+    public List<RouteDeviationEpisode> search(UUID tenantId, UUID vehicleId, UUID tripId,
+            UUID routeId, RouteDeviationEpisode.Severity severity, Boolean open, Instant from,
+            Instant to, Instant cursorTime, UUID cursorId, int limit) {
+        requireTenant(tenantId);
+        return List.copyOf(jdbc.query("""
+                SELECT * FROM tracking_route_deviation_episode
+                WHERE tenant_id=?
+                  AND (CAST(? AS uuid) IS NULL OR vehicle_id=CAST(? AS uuid))
+                  AND (CAST(? AS uuid) IS NULL OR trip_id=CAST(? AS uuid))
+                  AND (CAST(? AS uuid) IS NULL OR route_id=CAST(? AS uuid))
+                  AND (CAST(? AS varchar) IS NULL OR severity=CAST(? AS varchar))
+                  AND (CAST(? AS boolean) IS NULL
+                       OR (CAST(? AS boolean)=TRUE AND end_source_timestamp IS NULL)
+                       OR (CAST(? AS boolean)=FALSE AND end_source_timestamp IS NOT NULL))
+                  AND start_source_timestamp>=? AND start_source_timestamp<=?
+                  AND (CAST(? AS timestamptz) IS NULL OR (start_source_timestamp,id)<
+                       (CAST(? AS timestamptz),CAST(? AS uuid)))
+                ORDER BY start_source_timestamp DESC,id DESC LIMIT ?
+                """, this::episode, tenantId, vehicleId, vehicleId, tripId, tripId, routeId, routeId,
+                name(severity), name(severity), open, open, open, timestamp(from), timestamp(to),
+                timestamp(cursorTime), timestamp(cursorTime), cursorId, limit));
     }
 
     @Override

@@ -10,6 +10,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -31,6 +32,29 @@ final class JdbcRouteDeviationStateRepository implements RouteDeviationStateRepo
         requireTenant(tenantId);
         return jdbc.query("SELECT * FROM tracking_route_deviation_state WHERE tenant_id=? AND vehicle_id=?",
                 this::map, tenantId, vehicleId).stream().findFirst();
+    }
+
+    @Override
+    public List<VehicleRouteDeviationState> list(UUID tenantId,
+            VehicleRouteDeviationState.State state, int offset, int size) {
+        requireTenant(tenantId);
+        return List.copyOf(jdbc.query("""
+                SELECT * FROM tracking_route_deviation_state
+                WHERE tenant_id=? AND (CAST(? AS varchar) IS NULL OR stable_state=CAST(? AS varchar))
+                ORDER BY vehicle_id LIMIT ? OFFSET ?
+                """, this::map, tenantId, state == null ? null : state.name(),
+                state == null ? null : state.name(), size, offset));
+    }
+
+    @Override
+    public long count(UUID tenantId, VehicleRouteDeviationState.State state) {
+        requireTenant(tenantId);
+        Long value = jdbc.queryForObject("""
+                SELECT count(*) FROM tracking_route_deviation_state
+                WHERE tenant_id=? AND (CAST(? AS varchar) IS NULL OR stable_state=CAST(? AS varchar))
+                """, Long.class, tenantId, state == null ? null : state.name(),
+                state == null ? null : state.name());
+        return value == null ? 0 : value;
     }
 
     @Override

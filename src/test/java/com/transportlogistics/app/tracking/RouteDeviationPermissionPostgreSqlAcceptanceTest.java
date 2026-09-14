@@ -11,18 +11,17 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 
-class GeofencePermissionPostgreSqlAcceptanceTest extends PostgreSqlIntegrationTest {
-    private static final String CODES =
-            "'GEOFENCE_VIEW','GEOFENCE_MANAGE','GEOFENCE_EVENT_VIEW'";
-
+class RouteDeviationPermissionPostgreSqlAcceptanceTest extends PostgreSqlIntegrationTest {
+    private static final String CODES = "'ROUTE_DEVIATION_VIEW','ROUTE_DEVIATION_MANAGE',"
+            + "'ROUTE_DEVIATION_EVENT_VIEW','ROUTE_DEVIATION_APPROVE'";
     @Autowired JdbcTemplate jdbc;
     @Autowired DataSource dataSource;
     @Autowired Flyway flyway;
 
     @Test
-    void cleanV1ToCurrentHeadRetainsExactlyThreePermissionsAndOnlyAdministrativeGrants() {
+    void cleanV1ToV89SeedsExactlyFourPermissionsForAdministrativeRolesOnly() {
         assertThat(flyway.info().current().getVersion().getVersion()).isEqualTo("89");
-        assertThat(permissionCount()).isEqualTo(3);
+        assertThat(permissionCount()).isEqualTo(4);
         assertThat(jdbc.queryForObject("""
                 SELECT count(*) FROM app_role_permission grant_row
                 JOIN app_role role ON role.id=grant_row.role_id
@@ -32,29 +31,23 @@ class GeofencePermissionPostgreSqlAcceptanceTest extends PostgreSqlIntegrationTe
     }
 
     @Test
-    void v77ToV78GrantsAnExistingLocalAdministratorWithoutBroadeningOtherRoles() {
+    void v88ToV89GrantsOnlyExistingAdministrativeRoles() {
         flyway.clean();
-        Flyway to77 = Flyway.configure().dataSource(dataSource).cleanDisabled(false)
+        Flyway to88 = Flyway.configure().dataSource(dataSource).cleanDisabled(false)
                 .placeholders(flyway.getConfiguration().getPlaceholders())
-                .target(MigrationVersion.fromVersion("77")).load();
-        to77.migrate();
-        UUID adminRole = UUID.randomUUID();
-        UUID localRole = UUID.randomUUID();
-        jdbc.update("""
-                INSERT INTO app_role(id,name,description,active)
-                VALUES(?,'ADMIN','Administrator',TRUE)
-                """, adminRole);
-        jdbc.update("""
-                INSERT INTO app_role(id,name,description,active)
-                VALUES(?,'LOCAL_MVP_ADMIN','Local administrator',TRUE)
-                """, localRole);
-
+                .target(MigrationVersion.fromVersion("88")).load();
+        to88.migrate();
+        jdbc.update("INSERT INTO app_role(id,name,description,active) VALUES(?,'ADMIN','Admin',TRUE)",
+                UUID.randomUUID());
+        jdbc.update("INSERT INTO app_role(id,name,description,active) VALUES(?,"
+                + "'LOCAL_MVP_ADMIN','Local admin',TRUE)", UUID.randomUUID());
+        jdbc.update("INSERT INTO app_role(id,name,description,active) VALUES(?,"
+                + "'ROUTE_OPERATOR','Operator',TRUE)", UUID.randomUUID());
         flyway.migrate();
-
-        assertThat(flyway.info().current().getVersion().getVersion()).isEqualTo("89");
-        assertThat(permissionCount()).isEqualTo(3);
-        assertThat(grantCount("ADMIN")).isEqualTo(3);
-        assertThat(grantCount("LOCAL_MVP_ADMIN")).isEqualTo(3);
+        assertThat(permissionCount()).isEqualTo(4);
+        assertThat(grants("ADMIN")).isEqualTo(4);
+        assertThat(grants("LOCAL_MVP_ADMIN")).isEqualTo(4);
+        assertThat(grants("ROUTE_OPERATOR")).isZero();
     }
 
     private int permissionCount() {
@@ -62,11 +55,11 @@ class GeofencePermissionPostgreSqlAcceptanceTest extends PostgreSqlIntegrationTe
                 + CODES + ") AND active", Integer.class);
     }
 
-    private int grantCount(String roleName) {
+    private int grants(String role) {
         return jdbc.queryForObject("""
                 SELECT count(*) FROM app_role_permission grant_row
                 JOIN app_role role ON role.id=grant_row.role_id
                 WHERE role.name=? AND grant_row.permission_code IN (%s)
-                """.formatted(CODES), Integer.class, roleName);
+                """.formatted(CODES), Integer.class, role);
     }
 }

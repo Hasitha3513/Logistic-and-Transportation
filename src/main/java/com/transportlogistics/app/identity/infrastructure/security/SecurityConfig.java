@@ -207,6 +207,40 @@ class SecurityConfig {
                         .requestMatchers(HttpMethod.PUT, "/v1/tracking/speed-monitoring/rules/*",
                                 "/api/v1/tracking/speed-monitoring/rules/*")
                         .hasAuthority("SPEED_MONITOR_MANAGE")
+                        .requestMatchers(HttpMethod.POST,
+                                "/v1/tracking/route-deviations/episodes/*/approve",
+                                "/v1/tracking/route-deviations/episodes/*/reject",
+                                "/v1/tracking/route-deviations/episodes/*/correct-review",
+                                "/api/v1/tracking/route-deviations/episodes/*/approve",
+                                "/api/v1/tracking/route-deviations/episodes/*/reject",
+                                "/api/v1/tracking/route-deviations/episodes/*/correct-review")
+                        .hasAuthority("ROUTE_DEVIATION_APPROVE")
+                        .requestMatchers(HttpMethod.GET,
+                                "/v1/tracking/route-deviations/episodes",
+                                "/v1/tracking/route-deviations/episodes/**",
+                                "/api/v1/tracking/route-deviations/episodes",
+                                "/api/v1/tracking/route-deviations/episodes/**")
+                        .hasAuthority("ROUTE_DEVIATION_EVENT_VIEW")
+                        .requestMatchers(HttpMethod.GET,
+                                "/v1/tracking/route-deviations/rules",
+                                "/v1/tracking/route-deviations/rules/*",
+                                "/v1/tracking/route-deviations/states",
+                                "/v1/tracking/route-deviations/states/*",
+                                "/api/v1/tracking/route-deviations/rules",
+                                "/api/v1/tracking/route-deviations/rules/*",
+                                "/api/v1/tracking/route-deviations/states",
+                                "/api/v1/tracking/route-deviations/states/*")
+                        .hasAuthority("ROUTE_DEVIATION_VIEW")
+                        .requestMatchers(HttpMethod.POST,
+                                "/v1/tracking/route-deviations/rules",
+                                "/v1/tracking/route-deviations/rules/**",
+                                "/api/v1/tracking/route-deviations/rules",
+                                "/api/v1/tracking/route-deviations/rules/**")
+                        .hasAuthority("ROUTE_DEVIATION_MANAGE")
+                        .requestMatchers(HttpMethod.PUT,
+                                "/v1/tracking/route-deviations/rules/*",
+                                "/api/v1/tracking/route-deviations/rules/*")
+                        .hasAuthority("ROUTE_DEVIATION_MANAGE")
                         .requestMatchers(HttpMethod.GET, "/drivers", "/drivers/*", "/drivers/*/licenses",
                                 "/drivers/*/exceptions", "/drivers/*/exceptions/*",
                                 "/drivers/*/violations", "/drivers/*/violations/*",

@@ -8,8 +8,10 @@ import com.transportlogistics.app.tracking.application.GeofenceManagementService
 import com.transportlogistics.app.tracking.application.SpeedEvaluationService;
 import com.transportlogistics.app.tracking.application.SpeedRuleManagementService;
 import com.transportlogistics.app.tracking.application.RouteDeviationEvaluationService;
+import com.transportlogistics.app.tracking.application.RouteDeviationManagementService;
 import com.transportlogistics.app.tracking.adapters.inbound.security.SecuredGeofenceUseCases;
 import com.transportlogistics.app.tracking.adapters.inbound.security.SecuredSpeedMonitoringUseCases;
+import com.transportlogistics.app.tracking.adapters.inbound.security.SecuredRouteDeviationUseCases;
 import com.transportlogistics.app.integration.IntegrationSecretResolver;
 import com.transportlogistics.app.tracking.application.provider.TrackingProviderAdapterRegistry;
 import com.transportlogistics.app.tracking.ports.outbound.TrackingProviderAdapter;
@@ -37,6 +39,9 @@ import com.transportlogistics.app.tracking.ports.outbound.RouteDeviationAssignme
 import com.transportlogistics.app.tracking.ports.outbound.RouteDeviationEpisodeRepositoryPort;
 import com.transportlogistics.app.tracking.ports.outbound.RouteDeviationEvaluationTransactionPort;
 import com.transportlogistics.app.tracking.ports.outbound.RouteDeviationGeometryLookupPort;
+import com.transportlogistics.app.tracking.ports.outbound.RouteDeviationManagementSupportPort;
+import com.transportlogistics.app.tracking.ports.outbound.RouteDeviationManagementTransactionPort;
+import com.transportlogistics.app.tracking.ports.outbound.RouteDeviationReviewRepositoryPort;
 import com.transportlogistics.app.tracking.ports.outbound.RouteDeviationRuleRepositoryPort;
 import com.transportlogistics.app.tracking.ports.outbound.RouteDeviationStateRepositoryPort;
 import java.time.Clock;
@@ -52,6 +57,8 @@ import org.springframework.context.annotation.*;
  @Bean SpeedEvaluationService speedEvaluationUseCase(SpeedPositionRepositoryPort positions,SpeedRuleRepositoryPort rules,VehicleSpeedStateRepositoryPort states,SpeedingEpisodeRepositoryPort episodes,SpeedEvaluationJobRepositoryPort jobs,SpeedAttributionLookupPort attribution,SpeedingEpisodePublisherPort publisher,SpeedEvaluationTransactionPort transaction){return new SpeedEvaluationService(positions,rules,states,episodes,jobs,attribution,publisher,transaction);}
  @Bean SpeedRuleManagementService speedRuleManagementService(SpeedRuleRepositoryPort rules,VehicleSpeedStateRepositoryPort states,SpeedingEpisodeRepositoryPort episodes,SpeedManagementSupportPort support,SpeedManagementTransactionPort transaction){return new SpeedRuleManagementService(rules,states,episodes,support,transaction);}
  @Bean RouteDeviationEvaluationService routeDeviationEvaluationUseCase(RouteDeviationAssignmentLookupPort assignments,RouteDeviationGeometryLookupPort geometries,RouteDeviationRuleRepositoryPort rules,RouteDeviationStateRepositoryPort states,RouteDeviationEpisodeRepositoryPort episodes,RouteDeviationEvaluationTransactionPort transaction,Clock clock){return new RouteDeviationEvaluationService(assignments,geometries,rules,states,episodes,transaction,clock);}
+ @Bean RouteDeviationManagementService routeDeviationManagementService(RouteDeviationRuleRepositoryPort rules,RouteDeviationStateRepositoryPort states,RouteDeviationEpisodeRepositoryPort episodes,RouteDeviationReviewRepositoryPort reviews,RouteDeviationManagementSupportPort support,RouteDeviationManagementTransactionPort transaction){return new RouteDeviationManagementService(rules,states,episodes,reviews,support,transaction);}
  @Bean @Primary SecuredGeofenceUseCases securedGeofenceUseCases(GeofenceManagementService service){return new SecuredGeofenceUseCases(service,service);}
  @Bean @Primary SecuredSpeedMonitoringUseCases securedSpeedMonitoringUseCases(SpeedRuleManagementService service){return new SecuredSpeedMonitoringUseCases(service,service);}
+ @Bean @Primary SecuredRouteDeviationUseCases securedRouteDeviationUseCases(RouteDeviationManagementService service){return new SecuredRouteDeviationUseCases(service,service,service);}
 }
