@@ -6,7 +6,7 @@
 ![Completed](https://img.shields.io/badge/Completed-73%20%2F%2087-2da44e.svg?style=for-the-badge&logo=checkmarx)
 ![Progress](https://img.shields.io/badge/Progress-83.9%25-brightgreen.svg?style=for-the-badge&logo=speedtest)
 ![MVP 1.4 Closed](https://img.shields.io/badge/MVP%201.4%20Last--Mile-8%20%2F%208-2da44e.svg?style=for-the-badge&logo=pinboard)
-![Database](https://img.shields.io/badge/TimescaleDB%20%2F%20Flyway-V91-8a63d2.svg?style=for-the-badge&logo=postgresql)
+![Database](https://img.shields.io/badge/TimescaleDB%20%2F%20Flyway-V92-8a63d2.svg?style=for-the-badge&logo=postgresql)
 
 </div>
 
@@ -14,7 +14,7 @@
 
 > [!IMPORTANT]
 > **Authoritative Baseline & Current State:**
-> - **Last Reconciled:** `2026-09-14`
+> - **Last Reconciled:** `2026-09-15`
 > - **Authority Order:** Original Requirements (`Traspotation & logistic.docx`), Frozen Architecture/Contracts, Verified Production Code/Tests, then Roadmap.
 > - **MVP 1.3 Delivery Operations:** 7 / 7 COMPLETE (100%) - CLOSED
 > - **MVP 1.4 Last-Mile Delivery:** 8 / 8 COMPLETE (US-63 through US-70 Accepted & Closed)
@@ -25,8 +25,8 @@
 > - **Architecture Promotion:** The high-throughput pluggable telemetry platform (Kafka durable stream, Redis live state, TimescaleDB history, Flespi/Traccar/Generic normalization, gateway administration and live Fleet map) is promoted into MVP scope as a US-48/Wave C platform enabler. US-48 acceptance remains externally blocked and accounting is unchanged.
 > - **Hybrid Telemetry State:** `IMPLEMENTATION_IN_PROGRESS / TS04_COMPLETE`; V87 adds the transactional Timescale history consumer, Tenant-scoped idempotency, deterministic static reduction, seven-day compression and 180-day raw retention.
 > - **Hybrid Telemetry Test Infrastructure:** `CLOSED`; Testcontainers 2.0.3/docker-java 3.7.0 restores Docker 29 negotiation, V86 Timescale acceptance, table-ownership verification and the complete Maven regression without changing story accounting.
-> - **US-52 State:** `IMPLEMENTATION_IN_PROGRESS / CS06_COMPLETE`; V91 atomically couples Timescale history acceptance to durable Tenant-qualified geofence, speed and route-deviation dispatch while the CS06 frontend and real Chromium gates pass.
-> - **Immediate Next Action:** Run `US-52-MONITOR-ROUTE-DEVIATIONS-CS07-POSTGRES-CONCURRENCY-PERFORMANCE-001`.
+> - **US-52 State:** `IMPLEMENTATION_IN_PROGRESS / CS07_COMPLETE`; V92 transactionally hardens Tenant-leading episode keyset and Trip source-time assignment plans, while PostgreSQL concurrency and 26/26 retained Chromium continuity pass.
+> - **Immediate Next Action:** Run `US-52-MONITOR-ROUTE-DEVIATIONS-TECHNICAL-CLOSURE-001`.
 
 ---
 
@@ -173,7 +173,7 @@ Development startup now consistently provisions the idempotent PostgreSQL sample
 | `US-49` | Manage Geofences | Depot, customer-site and unauthorized-zone entry/exit detection | ✅ `COMPLETE / ACCEPTED` | Final acceptance PASS at V80: focused 76/76, Maven 1,595/0/0/15, architecture 52/52, Vitest 299/299 and Chromium 7/7; no US-48 acceptance inheritance |
 | `US-50` | Monitor Speed | Threshold, road-rule and repeat-speed monitoring | 🔴 `IMPLEMENTATION_COMPLETE / ACCEPTANCE_BLOCKED_EXTERNAL_SYSTEM` | Final acceptance blocked only by physical provider/device speed field, native-unit and normalization evidence; technical evidence PASS; no US-48 acceptance inheritance |
 | `US-51` | Monitor Idle Time | Engine-on versus movement duration and qualified fuel-waste estimates | 🟡 `WAVE C / BLOCKED_BY_REQUIRED_TELEMETRY_CAPABILITY` | Current FLESPI does not advertise IGNITION and no accepted alternate engine-state source exists |
-| `US-52` | Monitor Route Deviations | Planned-versus-actual comparison, severity and audited approval | 🟡 `IMPLEMENTATION_IN_PROGRESS / CS06_COMPLETE` | V91 durable history-backed evaluation dispatch and CS06 permission-aware frontend complete; US-49 6/6, US-50 10/10, CS06 Chromium 10/10, Maven 1,750/1,750 and architecture 59/59 PASS; CS07 remains |
+| `US-52` | Monitor Route Deviations | Planned-versus-actual comparison, severity and audited approval | 🟡 `IMPLEMENTATION_IN_PROGRESS / CS07_COMPLETE` | V92 maintenance-window indexes and CS07 concurrency/performance complete; Maven 1,754/1,754, architecture 59/59 and retained Chromium 26/26 PASS; technical closure remains |
 | `US-53` | Replay Journeys | Historical journey replay, stop analysis and incident forensics | 🟡 `TECHNICAL_DEPENDENCY_SATISFIED / READY_AFTER_EARLIER_WAVE_C_DECISIONS` | Immutable Tracking history is sufficient; optional overlays must follow their producers |
 | `US-54` | View Tracking Dashboard | Fleet overview, exceptions, heat maps, alerts and stale-state visibility | 🟡 `WAVE C / BLOCKED_BY_US49_TO_US53_PRODUCERS` | Consolidated consumer; must not recreate detector logic |
 | `US-55` | Handle GPS Edge Cases | Signal loss, spoofing, tampering, delayed packets, battery drain and trusted-state protection | 🟡 `WAVE C / BLOCKED_BY_REQUIRED_TELEMETRY_AND_PRODUCT_DECISIONS` | Signal-loss/delay contracts exist, but spoofing/tamper/battery signals are not established |
@@ -240,7 +240,7 @@ Development startup now consistently provisions the idempotent PostgreSQL sample
 
 ```
 Current Status: 73 / 87 COMPLETE; 14 stories remain across Waves C–E
-Queue Head:     US-52-MONITOR-ROUTE-DEVIATIONS-CS07-POSTGRES-CONCURRENCY-PERFORMANCE-001
+Queue Head:     US-52-MONITOR-ROUTE-DEVIATIONS-TECHNICAL-CLOSURE-001
 ```
 
 1. **Wave A — Integration and exception-control foundations:** 2 / 2 COMPLETE / CLOSED (US-73 and US-78).
