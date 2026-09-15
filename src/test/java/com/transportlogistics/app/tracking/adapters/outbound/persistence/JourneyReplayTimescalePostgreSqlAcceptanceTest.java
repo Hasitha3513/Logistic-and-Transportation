@@ -6,6 +6,7 @@ import com.transportlogistics.app.support.PostgreSqlIntegrationTest;
 import com.transportlogistics.app.tracking.domain.journeyreplay.JourneyReplayModels.*;
 import com.transportlogistics.app.tracking.ports.outbound.JourneyReplayCursorPort;
 import com.transportlogistics.app.tracking.ports.outbound.JourneyReplayHistoryPort;
+import com.transportlogistics.app.tracking.ports.inbound.JourneyReplayQueryUseCase;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.time.Instant;
@@ -32,6 +33,7 @@ class JourneyReplayTimescalePostgreSqlAcceptanceTest extends PostgreSqlIntegrati
     @Autowired JdbcTemplate jdbc;
     @Autowired JourneyReplayHistoryPort history;
     @Autowired JourneyReplayCursorPort cursors;
+    @Autowired JourneyReplayQueryUseCase replay;
 
     @BeforeEach
     void reset() {
@@ -146,6 +148,24 @@ class JourneyReplayTimescalePostgreSqlAcceptanceTest extends PostgreSqlIntegrati
         assertThat(plan).doesNotContain("Seq Scan on tracking_position_history");
     }
 
+    @Test
+    void analyzesStopsDirectlyFromTenantQualifiedTimescaleHistoryWithoutWrites() {
+        long before = jdbc.queryForObject("SELECT count(*) FROM tracking_position_history", Long.class);
+        for (int second : new int[]{0, 120, 240, 300}) {
+            insertStop(TENANT, VEHICLE, new UUID(0, 100 + second), FROM.plusSeconds(second));
+        }
+        ReplayQuery points = query(TENANT, VEHICLE, 2_000, null, FROM, FROM.plusSeconds(600));
+
+        StopPage page = replay.stops(new StopReplayQuery(points, 100, null));
+
+        assertThat(page.items()).singleElement().satisfies(stop -> {
+            assertThat(stop.dwell()).isEqualTo(java.time.Duration.ofMinutes(5));
+            assertThat(stop.evidenceCount()).isEqualTo(4);
+        });
+        assertThat(jdbc.queryForObject("SELECT count(*) FROM tracking_position_history", Long.class))
+                .isEqualTo(before + 4);
+    }
+
     private void insert(UUID tenant, UUID vehicle, UUID id, Instant source, Instant received) {
         insertAt(tenant, vehicle, id, source, received, new BigDecimal("6.9271000"),
                 new BigDecimal("79.8612000"));
@@ -163,6 +183,19 @@ class JourneyReplayTimescalePostgreSqlAcceptanceTest extends PostgreSqlIntegrati
                 """, tenant, Timestamp.from(source), id, UUID.randomUUID(), vehicle,
                 String.format("%064x", id.getLeastSignificantBits()), Timestamp.from(received),
                 latitude, longitude);
+    }
+
+    private void insertStop(UUID tenant, UUID vehicle, UUID id, Instant source) {
+        jdbc.update("""
+                INSERT INTO tracking_position_history(
+                  tenant_id,source_timestamp,id,event_version,device_id,vehicle_id,provider_alias,
+                  dedupe_identity,received_at,latitude,longitude,horizontal_accuracy_meters,speed_kph,
+                  engine_state,trust,quality,ordering_classification,retention_policy,
+                  retention_policy_version,safe_metadata)
+                VALUES(?,?,?,1,?,?,'TEST',?,?,6.9271000,79.8612000,1.000,0.000,'UNKNOWN',
+                  'TRUSTED','ACCEPTABLE','IN_ORDER','TIMESCALE_RAW_180_DAYS','V87','{}'::jsonb)
+                """, tenant, Timestamp.from(source), id, UUID.randomUUID(), vehicle,
+                String.format("%064x", id.getLeastSignificantBits()), Timestamp.from(Instant.now()));
     }
 
     private static ReplayQuery query(UUID tenant, UUID vehicle, int limit, String cursor,

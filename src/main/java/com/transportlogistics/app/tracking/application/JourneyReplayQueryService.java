@@ -7,6 +7,8 @@ import com.transportlogistics.app.tracking.domain.journeyreplay.JourneyReplayMod
 import com.transportlogistics.app.tracking.domain.journeyreplay.JourneyReplayModels.AttributionStatus;
 import com.transportlogistics.app.tracking.domain.journeyreplay.JourneyReplayModels.ConfirmedStop;
 import com.transportlogistics.app.tracking.domain.journeyreplay.JourneyReplayModels.CursorState;
+import com.transportlogistics.app.tracking.domain.journeyreplay.JourneyReplayModels.CursorBinding;
+import com.transportlogistics.app.tracking.domain.journeyreplay.JourneyReplayModels.CursorPosition;
 import com.transportlogistics.app.tracking.domain.journeyreplay.JourneyReplayModels.IncidentOverlay;
 import com.transportlogistics.app.tracking.domain.journeyreplay.JourneyReplayModels.JourneyPoint;
 import com.transportlogistics.app.tracking.domain.journeyreplay.JourneyReplayModels.QualityFlag;
@@ -16,13 +18,20 @@ import com.transportlogistics.app.tracking.domain.journeyreplay.JourneyReplayMod
 import com.transportlogistics.app.tracking.domain.journeyreplay.JourneyReplayModels.TimeRange;
 import com.transportlogistics.app.tracking.domain.journeyreplay.JourneyReplayModels.StopPage;
 import com.transportlogistics.app.tracking.domain.journeyreplay.JourneyReplayModels.StopReplayQuery;
+import com.transportlogistics.app.tracking.domain.journeyreplay.JourneyReplayModels.StopCursorState;
+import static com.transportlogistics.app.tracking.domain.journeyreplay.JourneyReplayModels.BROWSER_POINT_CEILING;
+import static com.transportlogistics.app.tracking.domain.journeyreplay.JourneyReplayModels.MAX_POINT_LIMIT;
+import static com.transportlogistics.app.tracking.domain.journeyreplay.JourneyReplayModels.STOP_RULE_VERSION;
 import com.transportlogistics.app.tracking.domain.journeyreplay.ReplayQueryPolicy;
+import com.transportlogistics.app.tracking.domain.journeyreplay.ReplayStreamGuard;
 import com.transportlogistics.app.tracking.ports.inbound.JourneyReplayQueryUseCase;
 import com.transportlogistics.app.tracking.ports.outbound.JourneyReplayAttributionPort;
 import com.transportlogistics.app.tracking.ports.outbound.JourneyReplayCursorPort;
 import com.transportlogistics.app.tracking.ports.outbound.JourneyReplayHistoryPort;
 import com.transportlogistics.app.tracking.ports.outbound.JourneyReplayRouteContextPort;
+import com.transportlogistics.app.tracking.ports.outbound.JourneyReplayStopCursorPort;
 import java.time.Clock;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -30,6 +39,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Comparator;
 import java.util.UUID;
 
 public final class JourneyReplayQueryService implements JourneyReplayQueryUseCase {
@@ -37,14 +47,22 @@ public final class JourneyReplayQueryService implements JourneyReplayQueryUseCas
     private final JourneyReplayCursorPort cursors;
     private final JourneyReplayAttributionPort attribution;
     private final JourneyReplayRouteContextPort routes;
+    private final JourneyReplayStopCursorPort stopCursors;
     private final Clock clock;
 
     public JourneyReplayQueryService(JourneyReplayHistoryPort history, JourneyReplayCursorPort cursors,
             JourneyReplayAttributionPort attribution, JourneyReplayRouteContextPort routes, Clock clock) {
+        this(history, cursors, attribution, routes, null, clock);
+    }
+
+    public JourneyReplayQueryService(JourneyReplayHistoryPort history, JourneyReplayCursorPort cursors,
+            JourneyReplayAttributionPort attribution, JourneyReplayRouteContextPort routes,
+            JourneyReplayStopCursorPort stopCursors, Clock clock) {
         this.history = history;
         this.cursors = cursors;
         this.attribution = attribution;
         this.routes = routes;
+        this.stopCursors = stopCursors;
         this.clock = clock;
     }
 
@@ -112,7 +130,63 @@ public final class JourneyReplayQueryService implements JourneyReplayQueryUseCas
 
     @Override
     public StopPage stops(StopReplayQuery query) {
-        throw new JourneyReplayException(JourneyReplayError.REQUIRED_CAPABILITY_UNAVAILABLE);
+        if (stopCursors == null) throw new JourneyReplayException(JourneyReplayError.REQUIRED_CAPABILITY_UNAVAILABLE);
+        ReplayQuery base = query.replayQuery();
+        StopCursorState stopCursor = query.stopCursor() == null ? null : stopCursors.decode(query.stopCursor());
+        if (stopCursor != null) ReplayQueryPolicy.validateStopCursor(stopCursor, query, clock.instant());
+        String pointCursor = stopCursor == null ? null : cursors.encode(new CursorState(
+                new CursorBinding(base.tenant().tenantId(), base.selector(), base.requestedRange(),
+                        stopCursor.snapshotRecordedAt()),
+                new CursorPosition(base.effectiveRange().from().minusNanos(1), new UUID(0, 0)),
+                stopCursor.expiresAt()));
+        ReplayStreamGuard guard = new ReplayStreamGuard();
+        ReplayPage first = null;
+        DeterministicJourneyReplayStopAnalyzer analyzer = null;
+        UUID vehicle = resolveVehicle(base);
+        while (true) {
+            ReplayQuery pageQuery = new ReplayQuery(base.tenant(), base.selector(), base.requestedRange(),
+                    base.effectiveRange(), MAX_POINT_LIMIT, pointCursor, base.overlays(), base.direction(),
+                    base.browserPointCeiling());
+            ReplayPage page = points(pageQuery);
+            guard.accept(pointCursor, page);
+            if (first == null) {
+                first = page;
+                analyzer = new DeterministicJourneyReplayStopAnalyzer(base.tenant().tenantId(), vehicle,
+                        page.snapshotRecordedAt(), page.boundaryEvidence(), page.coverage());
+            }
+            for (JourneyPoint point : page.items()) analyzer.accept(point);
+            if (guard.count() == BROWSER_POINT_CEILING && page.nextCursor() != null) {
+                throw new JourneyReplayException(JourneyReplayError.REPLAY_POINT_LIMIT_EXCEEDED);
+            }
+            if (page.nextCursor() == null) break;
+            pointCursor = page.nextCursor();
+        }
+        List<ConfirmedStop> all = analyzer.finish();
+        if (stopCursor != null) all = all.stream().filter(stop -> after(stop, stopCursor)).toList();
+        all = all.stream().sorted(Comparator.comparing(ConfirmedStop::start)
+                .thenComparing(ConfirmedStop::stopId)).toList();
+        boolean more = all.size() > query.stopLimit();
+        List<ConfirmedStop> items = more ? List.copyOf(all.subList(0, query.stopLimit())) : List.copyOf(all);
+        String next = more ? encodeStopCursor(base, first.snapshotRecordedAt(), items.getLast()) : null;
+        return new StopPage(items, next, first.snapshotRecordedAt(), first.requestedRange(),
+                first.availableRange(), first.coverage(), first.gaps(), guard.count(), BROWSER_POINT_CEILING);
+    }
+
+    private UUID resolveVehicle(ReplayQuery query) {
+        if (query.selector().type() == SelectionType.VEHICLE) return query.selector().id();
+        return attribution.findReplayScope(query.tenant().tenantId(), query.selector().id())
+                .orElseThrow(() -> new JourneyReplayException(JourneyReplayError.SAFE_ABSENCE)).vehicleId();
+    }
+
+    private String encodeStopCursor(ReplayQuery query, Instant snapshot, ConfirmedStop last) {
+        return stopCursors.encode(new StopCursorState(query.tenant().tenantId(), query.selector(),
+                query.requestedRange(), query.effectiveRange(), snapshot, last.start(), last.stopId(),
+                STOP_RULE_VERSION, snapshot.plus(Duration.ofMinutes(15))));
+    }
+
+    private static boolean after(ConfirmedStop stop, StopCursorState cursor) {
+        int time = stop.start().compareTo(cursor.lastStartSourceTimestamp());
+        return time > 0 || time == 0 && stop.stopId().compareTo(cursor.lastStopId()) > 0;
     }
 
     @Override
