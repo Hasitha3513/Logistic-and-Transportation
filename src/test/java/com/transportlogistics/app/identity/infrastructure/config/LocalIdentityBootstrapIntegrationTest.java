@@ -50,6 +50,9 @@ class LocalIdentityBootstrapIntegrationTest {
                         "GEOFENCE_MANAGE", "GEOFENCE_EVENT_VIEW")))
                 .andExpect(jsonPath("$.permissions").value(org.hamcrest.Matchers.hasItems("SPEED_MONITOR_VIEW",
                         "SPEED_MONITOR_MANAGE", "SPEED_EVENT_VIEW")))
+                .andExpect(jsonPath("$.permissions").value(org.hamcrest.Matchers.hasItems(
+                        "ROUTE_DEVIATION_VIEW", "ROUTE_DEVIATION_MANAGE",
+                        "ROUTE_DEVIATION_EVENT_VIEW", "ROUTE_DEVIATION_APPROVE")))
                 .andExpect(jsonPath("$.permissions").value(org.hamcrest.Matchers.hasItem("FUEL_EXCEPTION_VIEW")))
                 .andExpect(jsonPath("$.permissions").value(org.hamcrest.Matchers.hasItem("FUEL_EXCEPTION_MANAGE")))
                 .andExpect(jsonPath("$.permissions").value(org.hamcrest.Matchers.hasItem("FUEL_EXCEPTION_CORRECT")))
