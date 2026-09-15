@@ -15,7 +15,7 @@ class SpeedPermissionPostgreSqlAcceptanceTest extends PostgreSqlIntegrationTest 
     private static final String CODES="'SPEED_MONITOR_VIEW','SPEED_MONITOR_MANAGE','SPEED_EVENT_VIEW'";
     @Autowired JdbcTemplate jdbc; @Autowired DataSource dataSource; @Autowired Flyway flyway;
     @Test void cleanV1ToV82SeedsExactlyThreePermissionsForAdministrativeRolesOnly() {
-        assertThat(flyway.info().current().getVersion().getVersion()).isEqualTo("92");
+        assertThat(flyway.info().current().getVersion().getVersion()).isEqualTo("93");
         assertThat(permissionCount()).isEqualTo(3);
         assertThat(jdbc.queryForObject("""
                 SELECT count(*) FROM app_role_permission grant_row JOIN app_role role ON role.id=grant_row.role_id

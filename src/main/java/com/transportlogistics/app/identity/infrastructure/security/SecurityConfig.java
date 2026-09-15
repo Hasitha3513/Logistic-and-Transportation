@@ -208,6 +208,26 @@ class SecurityConfig {
                                 "/api/v1/tracking/speed-monitoring/rules/*")
                         .hasAuthority("SPEED_MONITOR_MANAGE")
                         .requestMatchers(HttpMethod.POST,
+                                "/v1/tracking/journey-replays/incidents/query",
+                                "/api/v1/tracking/journey-replays/incidents/query")
+                        .access(new org.springframework.security.authorization.AuthorizationManager<org.springframework.security.web.access.intercept.RequestAuthorizationContext>() {
+                            @Override public org.springframework.security.authorization.AuthorizationDecision check(
+                                    java.util.function.Supplier<org.springframework.security.core.Authentication> authentication,
+                                    org.springframework.security.web.access.intercept.RequestAuthorizationContext context) {
+                                var authorities = authentication.get().getAuthorities().stream()
+                                        .map(org.springframework.security.core.GrantedAuthority::getAuthority).collect(java.util.stream.Collectors.toSet());
+                                return new org.springframework.security.authorization.AuthorizationDecision(
+                                        authorities.contains("JOURNEY_REPLAY_VIEW")
+                                                && authorities.contains("JOURNEY_REPLAY_INCIDENT_VIEW"));
+                            }
+                        })
+                        .requestMatchers(HttpMethod.POST,
+                                "/v1/tracking/journey-replays/points/query",
+                                "/v1/tracking/journey-replays/stops/query",
+                                "/api/v1/tracking/journey-replays/points/query",
+                                "/api/v1/tracking/journey-replays/stops/query")
+                        .hasAuthority("JOURNEY_REPLAY_VIEW")
+                        .requestMatchers(HttpMethod.POST,
                                 "/v1/tracking/route-deviations/episodes/*/approve",
                                 "/v1/tracking/route-deviations/episodes/*/reject",
                                 "/v1/tracking/route-deviations/episodes/*/correct-review",

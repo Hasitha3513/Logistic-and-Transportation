@@ -106,6 +106,19 @@ class TrackingSecurityIntegrationTest {
         mvc.perform(post("/api/v1/tracking/devices").contextPath("/api")
                 .contentType(MediaType.APPLICATION_JSON).content("{}"))
                 .andExpect(status().isForbidden());
+        mvc.perform(post("/api/v1/tracking/journey-replays/points/query").contextPath("/api")
+                .contentType(MediaType.APPLICATION_JSON).content("{}"))
+                .andExpect(status().isForbidden());
+        mvc.perform(post("/api/v1/tracking/journey-replays/incidents/query").contextPath("/api")
+                .contentType(MediaType.APPLICATION_JSON).content("{}"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test @WithMockUser(authorities = "JOURNEY_REPLAY_VIEW")
+    void replayViewStillCannotReachLiteralIncidentRoute() throws Exception {
+        mvc.perform(post("/api/v1/tracking/journey-replays/incidents/query").contextPath("/api")
+                .contentType(MediaType.APPLICATION_JSON).content("{}"))
+                .andExpect(status().isForbidden());
     }
 
     @Test @WithMockUser(authorities = "TRACKING_VIEW")

@@ -6,7 +6,7 @@ import com.transportlogistics.app.support.PostgreSqlIntegrationTest;
 import com.transportlogistics.app.tracking.domain.journeyreplay.JourneyReplayModels.*;
 import com.transportlogistics.app.tracking.ports.outbound.JourneyReplayCursorPort;
 import com.transportlogistics.app.tracking.ports.outbound.JourneyReplayHistoryPort;
-import com.transportlogistics.app.tracking.ports.inbound.JourneyReplayQueryUseCase;
+import com.transportlogistics.app.tracking.application.JourneyReplayQueryService;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.time.Instant;
@@ -33,7 +33,7 @@ class JourneyReplayTimescalePostgreSqlAcceptanceTest extends PostgreSqlIntegrati
     @Autowired JdbcTemplate jdbc;
     @Autowired JourneyReplayHistoryPort history;
     @Autowired JourneyReplayCursorPort cursors;
-    @Autowired JourneyReplayQueryUseCase replay;
+    @Autowired JourneyReplayQueryService replay;
 
     @BeforeEach
     void reset() {
