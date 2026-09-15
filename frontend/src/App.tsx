@@ -1,4 +1,5 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
+import { journeyReplayEnabled } from './features/tracking/journeyReplay/config';
 import AppLayout from './layout/AppLayout';
 import DashboardPage from './pages/DashboardPage';
 import WorkspacePage from './pages/WorkspacePage';
@@ -195,7 +196,7 @@ export default function App() {
         <Route path="tracking/route-deviations/states" element={<DeviationStatePage />} />
         <Route path="tracking/route-deviations/episodes" element={<DeviationEpisodePage />} />
         <Route path="tracking/route-deviations/episodes/:episodeId" element={<DeviationEpisodePage detail />} />
-        <Route path="tracking/journey-replay" element={<JourneyReplayPage />} />
+        {journeyReplayEnabled && <Route path="tracking/journey-replay" element={<JourneyReplayPage />} />}
         <Route path="workspace" element={<WorkspacePage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>

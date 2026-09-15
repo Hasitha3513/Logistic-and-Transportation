@@ -52,7 +52,8 @@ final class JdbcJourneyReplayIncidentAdapter implements JourneyReplayIncidentPor
                     SELECT id,transition,source_timestamp,severity
                     FROM tracking_geofence_transition
                     WHERE tenant_id=? AND vehicle_id=? AND source_timestamp>=? AND source_timestamp<?
-                    """, this::geofence, tenantId, vehicleId, timestamp(from), timestamp(to)));
+                    ORDER BY source_timestamp ASC,id ASC LIMIT ?
+                    """, this::geofence, tenantId, vehicleId, timestamp(from), timestamp(to), query.limit() + 1));
         }
         if (query.overlays().contains(OverlayType.SPEED)) {
             result.addAll(jdbc.query("""
@@ -60,7 +61,9 @@ final class JdbcJourneyReplayIncidentAdapter implements JourneyReplayIncidentPor
                     FROM tracking_speed_episode
                     WHERE tenant_id=? AND vehicle_id=? AND start_source_timestamp<?
                       AND COALESCE(end_source_timestamp,?)>=?
-                    """, this::speed, tenantId, vehicleId, timestamp(to), timestamp(to), timestamp(from)));
+                    ORDER BY start_source_timestamp ASC,id ASC LIMIT ?
+                    """, this::speed, tenantId, vehicleId, timestamp(to), timestamp(to), timestamp(from),
+                    query.limit() + 1));
         }
         if (query.overlays().contains(OverlayType.ROUTE_DEVIATION)) {
             result.addAll(jdbc.query("""
@@ -69,8 +72,9 @@ final class JdbcJourneyReplayIncidentAdapter implements JourneyReplayIncidentPor
                     FROM tracking_route_deviation_episode
                     WHERE tenant_id=? AND vehicle_id=? AND start_source_timestamp<?
                       AND COALESCE(end_source_timestamp,?)>=?
+                    ORDER BY start_source_timestamp ASC,id ASC LIMIT ?
                     """, this::routeDeviation, tenantId, vehicleId,
-                    timestamp(to), timestamp(to), timestamp(from)));
+                    timestamp(to), timestamp(to), timestamp(from), query.limit() + 1));
             result.addAll(jdbc.query("""
                     SELECT review.id,review.reviewed_at,review.status,episode.severity,
                            episode.trip_id,episode.route_id,episode.route_version
@@ -79,8 +83,9 @@ final class JdbcJourneyReplayIncidentAdapter implements JourneyReplayIncidentPor
                       ON episode.tenant_id=review.tenant_id AND episode.id=review.episode_id
                     WHERE review.tenant_id=? AND episode.vehicle_id=?
                       AND review.reviewed_at>=? AND review.reviewed_at<?
+                    ORDER BY review.reviewed_at ASC,review.id ASC LIMIT ?
                     """, this::routeDeviationReview, tenantId, vehicleId,
-                    timestamp(from), timestamp(to)));
+                    timestamp(from), timestamp(to), query.limit() + 1));
         }
         return result.stream()
                 .sorted(Comparator.comparing(IncidentOverlay::sourceTimestamp)

@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { journeyReplayEnabled } from '../features/tracking/journeyReplay/config';
 import {
   BellOutlined,
   CarOutlined,
@@ -142,7 +143,9 @@ export const navigation: NavigationItem[] = [
       { key: 'tracking-speed-monitoring', label: 'Speed Monitoring', route: '/tracking/speed-monitoring', requiredPermission: 'SPEED_MONITOR_VIEW' },
       { key: 'tracking-speed-episodes', label: 'Speed Episodes', route: '/tracking/speed-monitoring/episodes', requiredPermission: 'SPEED_EVENT_VIEW' },
       { key: 'tracking-route-deviations', label: 'Route Deviations', route: '/tracking/route-deviations', requiredAnyPermission: ['ROUTE_DEVIATION_VIEW', 'ROUTE_DEVIATION_EVENT_VIEW'] },
-      { key: 'tracking-journey-replay', label: 'Journey Replay', route: '/tracking/journey-replay', requiredPermission: 'JOURNEY_REPLAY_VIEW' },
+      ...(journeyReplayEnabled
+        ? [{ key: 'tracking-journey-replay', label: 'Journey Replay', route: '/tracking/journey-replay', requiredPermission: 'JOURNEY_REPLAY_VIEW' }]
+        : []),
     ],
   },
   {
