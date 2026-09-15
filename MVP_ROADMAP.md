@@ -27,7 +27,7 @@
 > - **Hybrid Telemetry Test Infrastructure:** `CLOSED`; Testcontainers 2.0.3/docker-java 3.7.0 restores Docker 29 negotiation, V86 Timescale acceptance, table-ownership verification and the complete Maven regression without changing story accounting.
 > - **US-52 State:** `IMPLEMENTATION_COMPLETE / ACCEPTANCE_BLOCKED_EXTERNAL_SYSTEM`; technical closure remains valid, but no physical device/provider field journey, real Dispatcher delivery or operator sign-off is available. Rerun final acceptance only when those external facts change.
 > - **US-53 State:** `IMPLEMENTATION_IN_PROGRESS / CS01_COMPLETE`; framework-neutral replay/query, cursor, coverage, stop-analysis and overlay contracts are verified without inheriting US-48/50/52 acceptance.
-> - **Immediate Next Action:** Run `US-53-REPLAY-JOURNEYS-CS02-TIMESCALE-QUERY-ADAPTERS-001`.
+> - **Immediate Next Action:** Trip's bounded replay-scope and assignment-range prerequisite is complete; run `US-53-REPLAY-JOURNEYS-CS02-TIMESCALE-QUERY-ADAPTERS-001`.
 
 ---
 

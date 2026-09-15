@@ -292,4 +292,4 @@ Exactly one queue head is authorized by this roadmap:
 
 `US-53-REPLAY-JOURNEYS-CS02-TIMESCALE-QUERY-ADAPTERS-001`
 
-US-48, US-50 and US-52 remain on independent external acceptance holds. US-49 is COMPLETE / ACCEPTED and accounting remains 73 / 87. US-53 CS01 is complete: framework-neutral replay/query, cursor, coverage, stop-analysis and overlay contracts are verified. Continue with `US-53-REPLAY-JOURNEYS-CS02-TIMESCALE-QUERY-ADAPTERS-001`; Flyway remains V92 and V93 is reserved only for the later permission seed.
+US-48, US-50 and US-52 remain on independent external acceptance holds. US-49 is COMPLETE / ACCEPTED and accounting remains 73 / 87. US-53 CS01 and its Trip-owned bounded replay-scope/assignment-range prerequisite are complete. Continue with `US-53-REPLAY-JOURNEYS-CS02-TIMESCALE-QUERY-ADAPTERS-001`; Flyway remains V92 and V93 is reserved only for the later permission seed.

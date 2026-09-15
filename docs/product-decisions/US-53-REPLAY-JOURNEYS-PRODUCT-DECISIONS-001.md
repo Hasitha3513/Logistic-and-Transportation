@@ -152,6 +152,16 @@ The planned route is an optional overlay resolved only by exact `(tenantId,route
 published Routing geometry contract. Missing revision or geometry yields `GEOMETRY_UNAVAILABLE`; there is no
 latest-revision fallback or chord synthesis. Multiple contexts are returned as immutable timeline segments.
 
+### Frozen assignment-range ceiling
+
+Decision `US-53-TRIP-ASSIGNMENT-RANGE-CEILING-001` authorizes at most 2,000 Trip assignment intervals for one
+Tenant, Vehicle and range of no more than seven days. Trip executes one ordered query with `LIMIT 2001`;
+the extra row detects overflow. Zero through 2,000 rows are complete results. A 2,001st row fails with
+`TRIP_ASSIGNMENT_RESULT_LIMIT_EXCEEDED`, returns no partial attribution, performs no additional page or
+per-point fallback, and asks the caller to narrow the range without exposing identifiers or timestamps.
+Ordering is actual/effective start ascending and Trip identity ascending. Tracking retains responsibility for
+classifying no applicable interval as `UNATTRIBUTED` and multiple applicable intervals as `AMBIGUOUS`.
+
 ## Frozen API contract
 
 All routes are semantically read-only under `/api/v1/tracking/journey-replays`. POST bodies are required so

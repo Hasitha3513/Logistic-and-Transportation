@@ -4,6 +4,7 @@ import com.transportlogistics.app.trip.VehicleAllocationLookup;
 import com.transportlogistics.app.trip.DriverAssignmentLookup;
 import com.transportlogistics.app.trip.TripFuelContextLookup;
 import com.transportlogistics.app.trip.TripFuelPerformanceLookup;
+import com.transportlogistics.app.trip.TripReplayQuery;
 import com.transportlogistics.app.trip.application.ports.in.TripUseCase;
 import com.transportlogistics.app.trip.application.ports.out.TripRepository;
 import com.transportlogistics.app.trip.application.ports.out.VehicleEligibilityPort;
@@ -13,6 +14,8 @@ import com.transportlogistics.app.trip.application.ports.out.TripHistoryReposito
 import com.transportlogistics.app.trip.application.ports.out.TripTransaction;
 import com.transportlogistics.app.trip.application.ports.out.TripDispatchRepository;
 import com.transportlogistics.app.trip.application.service.TripService;
+import com.transportlogistics.app.trip.application.service.TripReplayQueryService;
+import com.transportlogistics.app.trip.application.ports.out.TripReplayRepository;
 import com.transportlogistics.app.trip.application.ports.out.TripActorPort;
 import com.transportlogistics.app.trip.application.ports.out.TripVehicleReadingPort;
 import org.springframework.context.annotation.Bean;
@@ -56,5 +59,10 @@ class TripConfig {
         return ids -> trips.findAllByIds(ids).stream()
                 .map(trip -> new TripFuelPerformanceLookup.Attribution(trip.id(), trip.vehicleId(), trip.driverId()))
                 .collect(Collectors.toMap(TripFuelPerformanceLookup.Attribution::tripId, Function.identity()));
+    }
+
+    @Bean
+    TripReplayQuery tripReplayQuery(TripReplayRepository repository) {
+        return new TripReplayQueryService(repository);
     }
 }
