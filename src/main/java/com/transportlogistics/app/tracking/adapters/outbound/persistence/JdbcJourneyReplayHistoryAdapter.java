@@ -4,6 +4,8 @@ import com.transportlogistics.app.tracking.domain.journeyreplay.JourneyReplayErr
 import com.transportlogistics.app.tracking.domain.journeyreplay.JourneyReplayException;
 import com.transportlogistics.app.tracking.domain.journeyreplay.JourneyReplayModels.Attribution;
 import com.transportlogistics.app.tracking.domain.journeyreplay.JourneyReplayModels.AttributionStatus;
+import com.transportlogistics.app.tracking.domain.journeyreplay.JourneyReplayModels.BoundaryObservation;
+import com.transportlogistics.app.tracking.domain.journeyreplay.JourneyReplayModels.BoundaryReason;
 import com.transportlogistics.app.tracking.domain.journeyreplay.JourneyReplayModels.Coordinate;
 import com.transportlogistics.app.tracking.domain.journeyreplay.JourneyReplayModels.Coverage;
 import com.transportlogistics.app.tracking.domain.journeyreplay.JourneyReplayModels.CursorBinding;
@@ -14,11 +16,13 @@ import com.transportlogistics.app.tracking.domain.journeyreplay.JourneyReplayMod
 import com.transportlogistics.app.tracking.domain.journeyreplay.JourneyReplayModels.Ordering;
 import com.transportlogistics.app.tracking.domain.journeyreplay.JourneyReplayModels.QualityFlag;
 import com.transportlogistics.app.tracking.domain.journeyreplay.JourneyReplayModels.ReplayPage;
+import com.transportlogistics.app.tracking.domain.journeyreplay.JourneyReplayModels.ReplayBoundaryEvidence;
 import com.transportlogistics.app.tracking.domain.journeyreplay.JourneyReplayModels.ReplayQuery;
 import com.transportlogistics.app.tracking.domain.journeyreplay.JourneyReplayModels.TimeRange;
 import com.transportlogistics.app.tracking.domain.journeyreplay.JourneyReplayModels.Trust;
 import com.transportlogistics.app.tracking.ports.outbound.JourneyReplayCursorPort;
 import com.transportlogistics.app.tracking.ports.outbound.JourneyReplayHistoryPort;
+import com.transportlogistics.app.tracking.domain.journeyreplay.StopAnalysisPolicy;
 import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -105,8 +109,44 @@ final class JdbcJourneyReplayHistoryAdapter implements JourneyReplayHistoryPort 
                 : coverage == Coverage.NO_DATA ? null : requested;
         List<DataGap> gaps = partial ? List.of(new DataGap(requested.from(), availableFrom,
                 Set.of(QualityFlag.PARTIAL_RETENTION))) : List.of();
+        ReplayBoundaryEvidence boundaries = boundaries(query.tenant().tenantId(), resolvedVehicleId,
+                requested, availableFrom, snapshot, partial);
         return new ReplayPage(items, next, query.requestedRange(), available, coverage, gaps,
-                partial, false, Set.of());
+                partial, false, Set.of(), snapshot, boundaries);
+    }
+
+    private ReplayBoundaryEvidence boundaries(UUID tenantId, UUID vehicleId, TimeRange requested,
+            Instant availableFrom, Instant snapshot, boolean retentionTruncated) {
+        BoundaryObservation lower;
+        if (retentionTruncated) {
+            lower = new BoundaryObservation(BoundaryReason.RETENTION_UNAVAILABLE, null);
+        } else {
+            JourneyPoint predecessor = jdbc.query("""
+                    SELECT id,vehicle_id,source_timestamp,received_at,latitude,longitude,
+                      horizontal_accuracy_meters,speed_kph,trust,quality,ordering_classification
+                    FROM tracking_position_history
+                    WHERE tenant_id=? AND vehicle_id=? AND source_timestamp<? AND received_at<=?
+                    ORDER BY source_timestamp DESC,id DESC LIMIT 1
+                    """, this::map, tenantId, vehicleId, Timestamp.from(availableFrom),
+                    Timestamp.from(snapshot)).stream().findFirst().orElse(null);
+            lower = observation(predecessor, BoundaryReason.NO_ADJACENT_EVIDENCE);
+        }
+        JourneyPoint successor = jdbc.query("""
+                SELECT id,vehicle_id,source_timestamp,received_at,latitude,longitude,
+                  horizontal_accuracy_meters,speed_kph,trust,quality,ordering_classification
+                FROM tracking_position_history
+                WHERE tenant_id=? AND vehicle_id=? AND source_timestamp>=? AND received_at<=?
+                ORDER BY source_timestamp ASC,id ASC LIMIT 1
+                """, this::map, tenantId, vehicleId, Timestamp.from(requested.to()),
+                Timestamp.from(snapshot)).stream().findFirst().orElse(null);
+        BoundaryObservation upper = observation(successor, BoundaryReason.REQUESTED_RANGE_ENDED);
+        return new ReplayBoundaryEvidence(lower, upper);
+    }
+
+    private static BoundaryObservation observation(JourneyPoint point, BoundaryReason absent) {
+        if (point == null) return new BoundaryObservation(absent, null);
+        return new BoundaryObservation(StopAnalysisPolicy.eligible(point)
+                ? BoundaryReason.ADJACENT_QUALIFYING : BoundaryReason.ADJACENT_INELIGIBLE, point);
     }
 
     private String nextCursor(ReplayQuery query, Instant snapshot, JourneyPoint last) {

@@ -37,8 +37,11 @@ public final class ReplayQueryPolicy {
 
     public static void validateCursor(CursorState cursor, ReplayQuery query, Instant now) {
         if (cursor == null || cursor.binding() == null || cursor.position() == null
-                || cursor.expiresAt() == null || !cursor.expiresAt().isAfter(now)) {
+                || cursor.expiresAt() == null) {
             throw new JourneyReplayException(JourneyReplayError.INVALID_CURSOR);
+        }
+        if (!cursor.expiresAt().isAfter(now)) {
+            throw new JourneyReplayException(JourneyReplayError.REPLAY_CURSOR_EXPIRED);
         }
         CursorBinding binding = cursor.binding();
         CursorPosition position = cursor.position();
@@ -51,6 +54,26 @@ public final class ReplayQueryPolicy {
                 || !binding.selector().equals(query.selector())
                 || !binding.requestedRange().equals(query.requestedRange())) {
             throw new JourneyReplayException(JourneyReplayError.CURSOR_QUERY_MISMATCH);
+        }
+    }
+
+    public static void validateStopCursor(StopCursorState cursor, StopReplayQuery query, Instant now) {
+        if (cursor == null || cursor.tenantId() == null || cursor.selector() == null
+                || cursor.requestedRange() == null || cursor.effectiveRange() == null
+                || cursor.snapshotRecordedAt() == null || cursor.lastStartSourceTimestamp() == null
+                || cursor.lastStopId() == null || cursor.ruleVersion() == null || cursor.expiresAt() == null) {
+            throw new JourneyReplayException(JourneyReplayError.STOP_CURSOR_INVALID);
+        }
+        if (!cursor.expiresAt().isAfter(now)) {
+            throw new JourneyReplayException(JourneyReplayError.STOP_CURSOR_EXPIRED);
+        }
+        ReplayQuery replay = query.replayQuery();
+        if (!STOP_RULE_VERSION.equals(cursor.ruleVersion())
+                || !replay.tenant().tenantId().equals(cursor.tenantId())
+                || !replay.selector().equals(cursor.selector())
+                || !replay.requestedRange().equals(cursor.requestedRange())
+                || !replay.effectiveRange().equals(cursor.effectiveRange())) {
+            throw new JourneyReplayException(JourneyReplayError.STOP_CURSOR_INVALID);
         }
     }
 

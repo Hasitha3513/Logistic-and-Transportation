@@ -86,7 +86,7 @@ class ReplayQueryPolicyTest {
                         error -> assertThat(error.error()).isEqualTo(JourneyReplayError.CURSOR_QUERY_MISMATCH));
         assertThatThrownBy(() -> ReplayQueryPolicy.validateCursor(cursor, query, NOW.plusSeconds(901)))
                 .isInstanceOfSatisfying(JourneyReplayException.class,
-                        error -> assertThat(error.error()).isEqualTo(JourneyReplayError.INVALID_CURSOR));
+                        error -> assertThat(error.error()).isEqualTo(JourneyReplayError.REPLAY_CURSOR_EXPIRED));
     }
 
     @Test void cursorPortContractCanRoundTripOpaqueStateWithoutSensitiveFacts() {

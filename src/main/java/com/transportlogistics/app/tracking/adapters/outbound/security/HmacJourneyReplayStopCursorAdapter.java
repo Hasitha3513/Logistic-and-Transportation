@@ -3,8 +3,8 @@ package com.transportlogistics.app.tracking.adapters.outbound.security;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.transportlogistics.app.tracking.domain.journeyreplay.JourneyReplayError;
 import com.transportlogistics.app.tracking.domain.journeyreplay.JourneyReplayException;
-import com.transportlogistics.app.tracking.domain.journeyreplay.JourneyReplayModels.CursorState;
-import com.transportlogistics.app.tracking.ports.outbound.JourneyReplayCursorPort;
+import com.transportlogistics.app.tracking.domain.journeyreplay.JourneyReplayModels.StopCursorState;
+import com.transportlogistics.app.tracking.ports.outbound.JourneyReplayStopCursorPort;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.util.Base64;
@@ -14,41 +14,35 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 @Component
-final class HmacJourneyReplayCursorAdapter implements JourneyReplayCursorPort {
+final class HmacJourneyReplayStopCursorAdapter implements JourneyReplayStopCursorPort {
     private final ObjectMapper json;
     private final byte[] secret;
 
-    HmacJourneyReplayCursorAdapter(ObjectMapper json,
+    HmacJourneyReplayStopCursorAdapter(ObjectMapper json,
             @Value("${app.tracking.journey-replay.cursor-secret:${security.jwt.secret}}") String secret) {
         this.json = json;
         this.secret = secret.getBytes(StandardCharsets.UTF_8);
-        if (this.secret.length < 32) {
-            throw new IllegalArgumentException("Journey replay cursor secret must contain at least 32 bytes");
-        }
+        if (this.secret.length < 32) throw new IllegalArgumentException("Cursor secret must contain 32 bytes");
     }
 
-    @Override
-    public String encode(CursorState state) {
+    @Override public String encode(StopCursorState state) {
         try {
             String payload = Base64.getUrlEncoder().withoutPadding()
                     .encodeToString(json.writeValueAsBytes(state));
-            String signed = "POINT." + payload;
+            String signed = "STOP." + payload;
             return signed + "." + Base64.getUrlEncoder().withoutPadding().encodeToString(sign(signed));
         } catch (Exception exception) {
             throw invalid();
         }
     }
 
-    @Override
-    public CursorState decode(String opaqueCursor) {
+    @Override public StopCursorState decode(String cursor) {
         try {
-            String[] parts = opaqueCursor.split("\\.", -1);
-            if (parts.length != 3 || !"POINT".equals(parts[0])) throw invalid();
+            String[] parts = cursor.split("\\.", -1);
+            if (parts.length != 3 || !"STOP".equals(parts[0])) throw invalid();
             String signed = parts[0] + "." + parts[1];
-            if (!MessageDigest.isEqual(sign(signed), Base64.getUrlDecoder().decode(parts[2]))) {
-                throw invalid();
-            }
-            return json.readValue(Base64.getUrlDecoder().decode(parts[1]), CursorState.class);
+            if (!MessageDigest.isEqual(sign(signed), Base64.getUrlDecoder().decode(parts[2]))) throw invalid();
+            return json.readValue(Base64.getUrlDecoder().decode(parts[1]), StopCursorState.class);
         } catch (JourneyReplayException exception) {
             throw exception;
         } catch (Exception exception) {
@@ -56,13 +50,13 @@ final class HmacJourneyReplayCursorAdapter implements JourneyReplayCursorPort {
         }
     }
 
-    private byte[] sign(String payload) throws Exception {
+    private byte[] sign(String value) throws Exception {
         Mac mac = Mac.getInstance("HmacSHA256");
         mac.init(new SecretKeySpec(secret, "HmacSHA256"));
-        return mac.doFinal(payload.getBytes(StandardCharsets.UTF_8));
+        return mac.doFinal(value.getBytes(StandardCharsets.UTF_8));
     }
 
     private static JourneyReplayException invalid() {
-        return new JourneyReplayException(JourneyReplayError.INVALID_CURSOR);
+        return new JourneyReplayException(JourneyReplayError.STOP_CURSOR_INVALID);
     }
 }

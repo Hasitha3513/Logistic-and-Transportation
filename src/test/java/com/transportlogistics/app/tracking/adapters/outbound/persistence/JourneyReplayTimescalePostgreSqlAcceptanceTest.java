@@ -51,6 +51,7 @@ class JourneyReplayTimescalePostgreSqlAcceptanceTest extends PostgreSqlIntegrati
         ReplayQuery query = query(TENANT, VEHICLE, 2, null, FROM, FROM.plusSeconds(100));
 
         ReplayPage firstPage = history.query(query, VEHICLE, null);
+        assertThat(firstPage.snapshotRecordedAt()).isNotNull();
         assertThat(firstPage.items()).extracting(JourneyPoint::historyId)
                 .containsExactly(first, second);
         CursorState cursor = cursors.decode(firstPage.nextCursor());
@@ -60,8 +61,22 @@ class JourneyReplayTimescalePostgreSqlAcceptanceTest extends PostgreSqlIntegrati
                 FROM, FROM.plusSeconds(100));
 
         ReplayPage secondPage = history.query(continuation, VEHICLE, cursor);
+        assertThat(secondPage.snapshotRecordedAt()).isEqualTo(firstPage.snapshotRecordedAt());
         assertThat(secondPage.items()).extracting(JourneyPoint::historyId).containsExactly(third);
         assertThat(secondPage.nextCursor()).isNull();
+    }
+
+    @Test
+    void exposesBoundedTenantQualifiedBoundaryEvidenceWithoutAddingItToItems() {
+        insert(TENANT, VEHICLE, new UUID(0, 20), FROM.minusSeconds(1), Instant.now().minusSeconds(20));
+        UUID visible = new UUID(0, 21);
+        insert(TENANT, VEHICLE, visible, FROM.plusSeconds(1), Instant.now().minusSeconds(10));
+        insert(TENANT, VEHICLE, new UUID(0, 22), FROM.plusSeconds(10), Instant.now().minusSeconds(5));
+        ReplayPage page = history.query(query(TENANT, VEHICLE, 10, null, FROM,
+                FROM.plusSeconds(10)), VEHICLE, null);
+        assertThat(page.items()).extracting(JourneyPoint::historyId).containsExactly(visible);
+        assertThat(page.boundaryEvidence().lowerBoundary().adjacentPoint()).isNotNull();
+        assertThat(page.boundaryEvidence().upperBoundary().adjacentPoint()).isNotNull();
     }
 
     @Test

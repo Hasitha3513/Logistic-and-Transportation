@@ -12,6 +12,9 @@ public final class JourneyReplayModels {
     public static final int DEFAULT_POINT_LIMIT = 1_000;
     public static final int MAX_POINT_LIMIT = 2_000;
     public static final int BROWSER_POINT_CEILING = 20_000;
+    public static final int DEFAULT_STOP_LIMIT = 100;
+    public static final int MAX_STOP_LIMIT = 500;
+    public static final String STOP_RULE_VERSION = "US53_STOP_V1";
 
     private JourneyReplayModels() { }
 
@@ -31,6 +34,10 @@ public final class JourneyReplayModels {
         GEOMETRY_UNAVAILABLE, PARTIAL_RETENTION
     }
     public enum StopEvidenceQuality { QUALIFIED, SPEED_SPATIAL_ONLY, RANGE_TRUNCATED }
+    public enum BoundaryReason {
+        NO_ADJACENT_EVIDENCE, ADJACENT_INELIGIBLE, ADJACENT_QUALIFYING,
+        RETENTION_UNAVAILABLE, SNAPSHOT_UNAVAILABLE, REQUESTED_RANGE_ENDED, NOT_SAFE_TO_EVALUATE
+    }
 
     public record TenantContext(UUID tenantId, UUID actorId) {
         public TenantContext {
@@ -146,22 +153,50 @@ public final class JourneyReplayModels {
         }
     }
 
+    public record BoundaryObservation(BoundaryReason reason, JourneyPoint adjacentPoint) {
+        public BoundaryObservation { Objects.requireNonNull(reason, "reason"); }
+    }
+
+    public record ReplayBoundaryEvidence(BoundaryObservation lowerBoundary,
+                                         BoundaryObservation upperBoundary) {
+        public ReplayBoundaryEvidence {
+            Objects.requireNonNull(lowerBoundary, "lowerBoundary");
+            Objects.requireNonNull(upperBoundary, "upperBoundary");
+        }
+        public static ReplayBoundaryEvidence unavailable() {
+            return new ReplayBoundaryEvidence(
+                    new BoundaryObservation(BoundaryReason.NOT_SAFE_TO_EVALUATE, null),
+                    new BoundaryObservation(BoundaryReason.NOT_SAFE_TO_EVALUATE, null));
+        }
+    }
+
     public record ReplayPage(List<JourneyPoint> items, String nextCursor, TimeRange requestedRange,
                              TimeRange availableRange, Coverage coverage, List<DataGap> gaps,
                              boolean truncated, boolean browserCeilingWarning,
-                             Set<String> unsupportedEvidence) {
+                             Set<String> unsupportedEvidence, Instant snapshotRecordedAt,
+                             ReplayBoundaryEvidence boundaryEvidence) {
         public ReplayPage {
             items = List.copyOf(items);
             Objects.requireNonNull(requestedRange, "requestedRange");
             Objects.requireNonNull(coverage, "coverage");
             gaps = List.copyOf(gaps);
             unsupportedEvidence = Set.copyOf(unsupportedEvidence);
+            Objects.requireNonNull(snapshotRecordedAt, "snapshotRecordedAt");
+            Objects.requireNonNull(boundaryEvidence, "boundaryEvidence");
             if (coverage == Coverage.PARTIAL_RETENTION && availableRange == null) {
                 throw new JourneyReplayException(JourneyReplayError.RETENTION_UNAVAILABLE);
             }
             if (coverage == Coverage.NO_DATA && !items.isEmpty()) {
                 throw new JourneyReplayException(JourneyReplayError.INVALID_COVERAGE);
             }
+        }
+
+        public ReplayPage(List<JourneyPoint> items, String nextCursor, TimeRange requestedRange,
+                TimeRange availableRange, Coverage coverage, List<DataGap> gaps, boolean truncated,
+                boolean browserCeilingWarning, Set<String> unsupportedEvidence) {
+            this(items, nextCursor, requestedRange, availableRange, coverage, gaps, truncated,
+                    browserCeilingWarning, unsupportedEvidence, Instant.EPOCH,
+                    ReplayBoundaryEvidence.unavailable());
         }
     }
 
@@ -171,6 +206,42 @@ public final class JourneyReplayModels {
     public record CursorPosition(Instant sourceTimestamp, UUID historyId) { }
 
     public record CursorState(CursorBinding binding, CursorPosition position, Instant expiresAt) { }
+
+    public record StopReplayQuery(ReplayQuery replayQuery, int stopLimit, String stopCursor) {
+        public StopReplayQuery {
+            Objects.requireNonNull(replayQuery, "replayQuery");
+            if (stopLimit < 1 || stopLimit > MAX_STOP_LIMIT) {
+                throw new JourneyReplayException(JourneyReplayError.INVALID_PAGE_SIZE);
+            }
+            if (stopCursor != null && stopCursor.isBlank()) {
+                throw new JourneyReplayException(JourneyReplayError.STOP_CURSOR_INVALID);
+            }
+        }
+        public static StopReplayQuery defaults(ReplayQuery query) {
+            return new StopReplayQuery(query, DEFAULT_STOP_LIMIT, null);
+        }
+    }
+
+    public record StopCursorState(UUID tenantId, ReplaySelector selector, TimeRange requestedRange,
+                                  TimeRange effectiveRange, Instant snapshotRecordedAt,
+                                  Instant lastStartSourceTimestamp, String lastStopId,
+                                  String ruleVersion, Instant expiresAt) { }
+
+    public record StopPage(List<ConfirmedStop> items, String nextCursor, Instant snapshotRecordedAt,
+                           TimeRange requestedRange, TimeRange availableRange, Coverage coverage,
+                           List<DataGap> missingIntervals, int analyzedPointCount, int pointCeiling) {
+        public StopPage {
+            items = List.copyOf(items);
+            Objects.requireNonNull(snapshotRecordedAt, "snapshotRecordedAt");
+            Objects.requireNonNull(requestedRange, "requestedRange");
+            Objects.requireNonNull(coverage, "coverage");
+            missingIntervals = List.copyOf(missingIntervals);
+            if (analyzedPointCount < 0 || analyzedPointCount > BROWSER_POINT_CEILING
+                    || pointCeiling != BROWSER_POINT_CEILING) {
+                throw new JourneyReplayException(JourneyReplayError.REPLAY_POINT_LIMIT_EXCEEDED);
+            }
+        }
+    }
 
     public record StopCandidate(List<JourneyPoint> evidence, Coordinate centroid,
                                 Instant start, Instant end, boolean startTruncated,

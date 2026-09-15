@@ -14,6 +14,8 @@ import com.transportlogistics.app.tracking.domain.journeyreplay.JourneyReplayMod
 import com.transportlogistics.app.tracking.domain.journeyreplay.JourneyReplayModels.ReplayQuery;
 import com.transportlogistics.app.tracking.domain.journeyreplay.JourneyReplayModels.SelectionType;
 import com.transportlogistics.app.tracking.domain.journeyreplay.JourneyReplayModels.TimeRange;
+import com.transportlogistics.app.tracking.domain.journeyreplay.JourneyReplayModels.StopPage;
+import com.transportlogistics.app.tracking.domain.journeyreplay.JourneyReplayModels.StopReplayQuery;
 import com.transportlogistics.app.tracking.domain.journeyreplay.ReplayQueryPolicy;
 import com.transportlogistics.app.tracking.ports.inbound.JourneyReplayQueryUseCase;
 import com.transportlogistics.app.tracking.ports.outbound.JourneyReplayAttributionPort;
@@ -90,7 +92,7 @@ public final class JourneyReplayQueryService implements JourneyReplayQueryUseCas
         }
         return new ReplayPage(enriched, raw.nextCursor(), raw.requestedRange(), raw.availableRange(),
                 raw.coverage(), raw.gaps(), raw.truncated(), raw.browserCeilingWarning(),
-                raw.unsupportedEvidence());
+                raw.unsupportedEvidence(), raw.snapshotRecordedAt(), raw.boundaryEvidence());
     }
 
     private static Attribution resolve(List<AttributionInterval> matches) {
@@ -109,7 +111,7 @@ public final class JourneyReplayQueryService implements JourneyReplayQueryUseCas
     }
 
     @Override
-    public List<ConfirmedStop> stops(ReplayQuery query) {
+    public StopPage stops(StopReplayQuery query) {
         throw new JourneyReplayException(JourneyReplayError.REQUIRED_CAPABILITY_UNAVAILABLE);
     }
 
