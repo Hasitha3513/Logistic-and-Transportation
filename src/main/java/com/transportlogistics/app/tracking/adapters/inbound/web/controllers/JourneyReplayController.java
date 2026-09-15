@@ -85,9 +85,9 @@ public class JourneyReplayController {
         ReplayQuery query = query(request.vehicleId(), request.tripId(), request.from(), request.to(),
                 request.limit(), request.cursor(), types);
         var result = queries.incidents(query);
-        audit("JOURNEY_REPLAY_INCIDENTS_VIEWED", query, result.size(), Coverage.COMPLETE);
-        return privateResponse(new JourneyReplayResponses.Incidents(mapper.incidents(result), null,
-                clock.instant(), new JourneyReplayResponses.Range(query.requestedRange().from(), query.requestedRange().to()),
+        audit("JOURNEY_REPLAY_INCIDENTS_VIEWED", query, result.items().size(), Coverage.COMPLETE);
+        return privateResponse(new JourneyReplayResponses.Incidents(mapper.incidents(result.items()), result.nextCursor(),
+                result.snapshotRecordedAt(), new JourneyReplayResponses.Range(query.requestedRange().from(), query.requestedRange().to()),
                 null, Coverage.COMPLETE, java.util.List.of(), types));
     }
 

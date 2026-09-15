@@ -286,4 +286,12 @@ public final class JourneyReplayModels {
             Objects.requireNonNull(displayLabel, "displayLabel");
         }
     }
+
+    public record IncidentPage(List<IncidentOverlay> items, String nextCursor,
+                               Instant snapshotRecordedAt) {
+        public IncidentPage {
+            items = List.copyOf(items);
+            Objects.requireNonNull(snapshotRecordedAt, "snapshotRecordedAt");
+        }
+    }
 }

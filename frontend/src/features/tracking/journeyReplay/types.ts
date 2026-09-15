@@ -24,4 +24,12 @@ export type ReplayPointsPage = ReplayPage<ReplayPoint> & {
   truncated: boolean; browserCeilingWarning: boolean; unsupportedEvidence: string[];
 };
 export type ReplayStopsPage = ReplayPage<ReplayStop> & { analyzedPointCount: number; pointCeiling: number };
+export type ReplayOverlayType = 'GEOFENCE' | 'SPEED' | 'ROUTE_DEVIATION';
+export type ReplayIncident = {
+  producer: ReplayOverlayType; evidenceStatus: 'ACCEPTED' | 'FIELD_FIDELITY_PENDING' | 'FIELD_ACCEPTANCE_PENDING';
+  incidentType: string; evidenceId: string; sourceTimestamp: string; endSourceTimestamp?: string;
+  severity?: string; status: string; tripId?: string; routeId?: string; routeVersion?: string;
+};
+export type ReplayIncidentsPage = ReplayPage<ReplayIncident> & { producerStatus: ReplayOverlayType[] };
+export type ReplayIncidentQuery = ReplayQuery & { types: ReplayOverlayType[] };
 export type ReplayForm = { selectorType: 'VEHICLE' | 'TRIP'; selectorId: string; from: string; to: string };

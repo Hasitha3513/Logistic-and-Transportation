@@ -6,6 +6,7 @@ import com.transportlogistics.app.support.PostgreSqlIntegrationTest;
 import com.transportlogistics.app.tracking.domain.journeyreplay.JourneyReplayModels.*;
 import com.transportlogistics.app.tracking.ports.outbound.JourneyReplayCursorPort;
 import com.transportlogistics.app.tracking.ports.outbound.JourneyReplayHistoryPort;
+import com.transportlogistics.app.tracking.ports.outbound.JourneyReplayIncidentPort;
 import com.transportlogistics.app.tracking.application.JourneyReplayQueryService;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
@@ -34,6 +35,7 @@ class JourneyReplayTimescalePostgreSqlAcceptanceTest extends PostgreSqlIntegrati
     @Autowired JourneyReplayHistoryPort history;
     @Autowired JourneyReplayCursorPort cursors;
     @Autowired JourneyReplayQueryService replay;
+    @Autowired JourneyReplayIncidentPort incidents;
 
     @BeforeEach
     void reset() {
@@ -93,6 +95,46 @@ class JourneyReplayTimescalePostgreSqlAcceptanceTest extends PostgreSqlIntegrati
         assertThat(point.accuracyMeters()).isNull();
         assertThat(JourneyPoint.class.getRecordComponents()).extracting("name")
                 .doesNotContain("providerAlias", "deviceId", "providerMessageId", "rawPayload");
+    }
+
+    @Test
+    void returnsTenantQualifiedProducerLabelledIncidentEvidenceWithoutSensitiveFields() {
+        UUID position = UUID.randomUUID();
+        insert(TENANT, VEHICLE, position, FROM.plusSeconds(10), Instant.now().minusSeconds(10));
+        UUID geofence = UUID.randomUUID();
+        UUID actor = UUID.randomUUID();
+        jdbc.update("""
+                INSERT INTO tracking_geofence(id,tenant_id,name,type,polygon_vertices,min_longitude,
+                  max_longitude,min_latitude,max_latitude,location_id,alert_enter_enabled,
+                  alert_exit_enabled,lifecycle,version,created_at,created_by,updated_at,updated_by)
+                VALUES(?,?,'Replay depot','DEPOT','[[79,6],[80,6],[80,7],[79,6]]'::jsonb,
+                  79,80,6,7,?,true,true,'ACTIVE',1,now(),?,now(),?)
+                """, geofence, TENANT, UUID.randomUUID(), actor, actor);
+        jdbc.update("""
+                INSERT INTO tracking_geofence_transition(id,tenant_id,geofence_id,vehicle_id,
+                  geofence_type,transition,severity,source_timestamp,definition_version,
+                  confirming_position_id,from_state,to_state,transition_identity,created_at)
+                VALUES(?,?,?,?,'DEPOT','ENTERED','NORMAL',?,1,?,'OUTSIDE','INSIDE',?,now())
+                """, UUID.randomUUID(), TENANT, geofence, VEHICLE, Timestamp.from(FROM.plusSeconds(10)),
+                position, UUID.randomUUID());
+        insertSpeedEpisode(TENANT, VEHICLE, FROM.plusSeconds(20));
+        insertRouteDeviationEpisode(TENANT, VEHICLE, FROM.plusSeconds(30));
+        insertSpeedEpisode(UUID.randomUUID(), VEHICLE, FROM.plusSeconds(40));
+        TimeRange range = new TimeRange(FROM, FROM.plusSeconds(100));
+        ReplayQuery query = new ReplayQuery(new TenantContext(TENANT, actor),
+                ReplaySelector.vehicle(VEHICLE), range, range, 100, null,
+                Set.of(OverlayType.GEOFENCE, OverlayType.SPEED, OverlayType.ROUTE_DEVIATION),
+                Direction.CHRONOLOGICAL_ASCENDING, 20_000);
+
+        var result = incidents.query(query, null);
+
+        assertThat(result).extracting(IncidentOverlay::producer)
+                .containsExactly(OverlayType.GEOFENCE, OverlayType.SPEED, OverlayType.ROUTE_DEVIATION);
+        assertThat(result).extracting(IncidentOverlay::producerAcceptance)
+                .containsExactly(ProducerAcceptance.ACCEPTED, ProducerAcceptance.FIELD_FIDELITY_PENDING,
+                        ProducerAcceptance.FIELD_ACCEPTANCE_PENDING);
+        assertThat(IncidentOverlay.class.getRecordComponents()).extracting("name")
+                .doesNotContain("driverId", "coordinates", "reviewNotes", "providerAlias", "deviceId");
     }
 
     @Test
@@ -196,6 +238,31 @@ class JourneyReplayTimescalePostgreSqlAcceptanceTest extends PostgreSqlIntegrati
                   'TRUSTED','ACCEPTABLE','IN_ORDER','TIMESCALE_RAW_180_DAYS','V87','{}'::jsonb)
                 """, tenant, Timestamp.from(source), id, UUID.randomUUID(), vehicle,
                 String.format("%064x", id.getLeastSignificantBits()), Timestamp.from(Instant.now()));
+    }
+
+    private void insertSpeedEpisode(UUID tenant, UUID vehicle, Instant source) {
+        jdbc.update("""
+                INSERT INTO tracking_speed_episode(id,tenant_id,vehicle_id,rule_id,rule_version,
+                  threshold_source,effective_threshold_kph,start_source_timestamp,
+                  confirmation_source_timestamp,max_observed_speed_kph,
+                  eligible_above_threshold_sample_count,severity,repeat_count,
+                  first_candidate_position_id,confirming_position_id)
+                VALUES(?,?,?, ?,1,'TENANT_CONFIG',80,?,?,90,2,'WARNING',0,?,?)
+                """, UUID.randomUUID(), tenant, vehicle, UUID.randomUUID(), Timestamp.from(source),
+                Timestamp.from(source.plusSeconds(1)), UUID.randomUUID(), UUID.randomUUID());
+    }
+
+    private void insertRouteDeviationEpisode(UUID tenant, UUID vehicle, Instant source) {
+        jdbc.update("""
+                INSERT INTO tracking_route_deviation_episode(id,tenant_id,vehicle_id,route_id,
+                  route_version,rule_id,rule_version,configured_tolerance_meters,
+                  effective_tolerance_meters,first_candidate_position_id,confirming_position_id,
+                  start_source_timestamp,confirmation_source_timestamp,maximum_distance_meters,
+                  eligible_outside_sample_count,severity,review_status)
+                VALUES(?,?,?,?,'REVISION:1',?,1,50,60,?,?,?, ?,70,2,'WARNING','NOT_REQUIRED')
+                """, UUID.randomUUID(), tenant, vehicle, UUID.randomUUID(), UUID.randomUUID(),
+                UUID.randomUUID(), UUID.randomUUID(), Timestamp.from(source),
+                Timestamp.from(source.plusSeconds(1)));
     }
 
     private static ReplayQuery query(UUID tenant, UUID vehicle, int limit, String cursor,

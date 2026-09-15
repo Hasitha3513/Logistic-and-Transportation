@@ -10,10 +10,12 @@ import com.transportlogistics.app.tracking.domain.journeyreplay.JourneyReplayMod
 import com.transportlogistics.app.tracking.domain.journeyreplay.JourneyReplayModels.CursorBinding;
 import com.transportlogistics.app.tracking.domain.journeyreplay.JourneyReplayModels.CursorPosition;
 import com.transportlogistics.app.tracking.domain.journeyreplay.JourneyReplayModels.IncidentOverlay;
+import com.transportlogistics.app.tracking.domain.journeyreplay.JourneyReplayModels.IncidentPage;
 import com.transportlogistics.app.tracking.domain.journeyreplay.JourneyReplayModels.JourneyPoint;
 import com.transportlogistics.app.tracking.domain.journeyreplay.JourneyReplayModels.QualityFlag;
 import com.transportlogistics.app.tracking.domain.journeyreplay.JourneyReplayModels.ReplayPage;
 import com.transportlogistics.app.tracking.domain.journeyreplay.JourneyReplayModels.ReplayQuery;
+import com.transportlogistics.app.tracking.domain.journeyreplay.JourneyReplayModels.ReplaySelector;
 import com.transportlogistics.app.tracking.domain.journeyreplay.JourneyReplayModels.SelectionType;
 import com.transportlogistics.app.tracking.domain.journeyreplay.JourneyReplayModels.TimeRange;
 import com.transportlogistics.app.tracking.domain.journeyreplay.JourneyReplayModels.StopPage;
@@ -28,6 +30,7 @@ import com.transportlogistics.app.tracking.ports.inbound.JourneyReplayQueryUseCa
 import com.transportlogistics.app.tracking.ports.outbound.JourneyReplayAttributionPort;
 import com.transportlogistics.app.tracking.ports.outbound.JourneyReplayCursorPort;
 import com.transportlogistics.app.tracking.ports.outbound.JourneyReplayHistoryPort;
+import com.transportlogistics.app.tracking.ports.outbound.JourneyReplayIncidentPort;
 import com.transportlogistics.app.tracking.ports.outbound.JourneyReplayRouteContextPort;
 import com.transportlogistics.app.tracking.ports.outbound.JourneyReplayStopCursorPort;
 import java.time.Clock;
@@ -48,6 +51,7 @@ public final class JourneyReplayQueryService implements JourneyReplayQueryUseCas
     private final JourneyReplayAttributionPort attribution;
     private final JourneyReplayRouteContextPort routes;
     private final JourneyReplayStopCursorPort stopCursors;
+    private final JourneyReplayIncidentPort incidents;
     private final Clock clock;
 
     public JourneyReplayQueryService(JourneyReplayHistoryPort history, JourneyReplayCursorPort cursors,
@@ -63,6 +67,19 @@ public final class JourneyReplayQueryService implements JourneyReplayQueryUseCas
         this.attribution = attribution;
         this.routes = routes;
         this.stopCursors = stopCursors;
+        this.incidents = null;
+        this.clock = clock;
+    }
+
+    public JourneyReplayQueryService(JourneyReplayHistoryPort history, JourneyReplayCursorPort cursors,
+            JourneyReplayAttributionPort attribution, JourneyReplayRouteContextPort routes,
+            JourneyReplayStopCursorPort stopCursors, JourneyReplayIncidentPort incidents, Clock clock) {
+        this.history = history;
+        this.cursors = cursors;
+        this.attribution = attribution;
+        this.routes = routes;
+        this.stopCursors = stopCursors;
+        this.incidents = incidents;
         this.clock = clock;
     }
 
@@ -190,8 +207,37 @@ public final class JourneyReplayQueryService implements JourneyReplayQueryUseCas
     }
 
     @Override
-    public List<IncidentOverlay> incidents(ReplayQuery query) {
-        throw new JourneyReplayException(JourneyReplayError.REQUIRED_CAPABILITY_UNAVAILABLE);
+    public IncidentPage incidents(ReplayQuery query) {
+        if (incidents == null) throw new JourneyReplayException(JourneyReplayError.REQUIRED_CAPABILITY_UNAVAILABLE);
+        ReplayQuery resolved = query;
+        if (query.selector().type() == SelectionType.TRIP) {
+            var scope = attribution.findReplayScope(query.tenant().tenantId(), query.selector().id())
+                    .orElseThrow(() -> new JourneyReplayException(JourneyReplayError.SAFE_ABSENCE));
+            Instant from = query.effectiveRange().from().isBefore(scope.actualStart())
+                    ? scope.actualStart() : query.effectiveRange().from();
+            Instant scopeEnd = scope.actualEnd() == null ? query.effectiveRange().to() : scope.actualEnd();
+            Instant to = query.effectiveRange().to().isAfter(scopeEnd) ? scopeEnd : query.effectiveRange().to();
+            if (!from.isBefore(to)) throw new JourneyReplayException(JourneyReplayError.SAFE_ABSENCE);
+            resolved = new ReplayQuery(query.tenant(), ReplaySelector.vehicle(scope.vehicleId()),
+                    query.requestedRange(), new TimeRange(from, to), query.limit(), query.cursor(),
+                    query.overlays(), query.direction(), query.browserPointCeiling());
+        }
+        CursorState cursor = query.cursor() == null ? null : cursors.decode(query.cursor());
+        if (cursor != null) ReplayQueryPolicy.validateCursor(cursor, query, clock.instant());
+        List<IncidentOverlay> candidates = incidents.query(resolved, cursor);
+        boolean more = candidates.size() > query.limit();
+        List<IncidentOverlay> items = more
+                ? List.copyOf(candidates.subList(0, query.limit())) : List.copyOf(candidates);
+        Instant snapshot = cursor == null ? clock.instant() : cursor.binding().snapshotRecordedAt();
+        String next = more ? encodeIncidentCursor(query, snapshot, items.getLast()) : null;
+        return new IncidentPage(items, next, snapshot);
+    }
+
+    private String encodeIncidentCursor(ReplayQuery query, Instant snapshot, IncidentOverlay last) {
+        return cursors.encode(new CursorState(new CursorBinding(query.tenant().tenantId(),
+                query.selector(), query.requestedRange(), snapshot),
+                new CursorPosition(last.sourceTimestamp(), last.evidenceId()),
+                snapshot.plus(Duration.ofMinutes(15))));
     }
 
     private record RouteKey(UUID routeId, String routeVersion) { }

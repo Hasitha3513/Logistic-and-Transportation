@@ -1,16 +1,18 @@
 import { useQuery } from '@tanstack/react-query';
 import { journeyReplayApi } from './api';
-import type { ReplayQuery } from './types';
+import type { ReplayOverlayType, ReplayQuery } from './types';
 
 export const replayKeys = {
   all: ['tracking', 'journey-replay'] as const,
   points: (query: ReplayQuery) => [...replayKeys.all, 'points', query] as const,
   stops: (query: ReplayQuery) => [...replayKeys.all, 'stops', query] as const,
+  incidents: (query: ReplayQuery, types: ReplayOverlayType[]) => [...replayKeys.all, 'incidents', query, types] as const,
 };
 
-export function useJourneyReplay(query?: ReplayQuery) {
+export function useJourneyReplay(query?: ReplayQuery, incidentTypes: ReplayOverlayType[] = [], incidentsEnabled = false) {
   const stopQuery = query ? { ...query, cursor: undefined } : undefined;
   const points = useQuery({ queryKey: replayKeys.points(query ?? { vehicleId: '' }), queryFn: ({ signal }) => journeyReplayApi.points(query!, signal), enabled: Boolean(query), retry: false });
   const stops = useQuery({ queryKey: replayKeys.stops(stopQuery ?? { vehicleId: '' }), queryFn: ({ signal }) => journeyReplayApi.stops(stopQuery!, signal), enabled: Boolean(stopQuery), retry: false });
-  return { points, stops };
+  const incidents = useQuery({ queryKey: replayKeys.incidents(stopQuery ?? { vehicleId: '' }, incidentTypes), queryFn: ({ signal }) => journeyReplayApi.incidents({ ...stopQuery!, types: incidentTypes }, signal), enabled: Boolean(stopQuery)&&incidentsEnabled&&incidentTypes.length>0, retry: false });
+  return { points, stops, incidents };
 }

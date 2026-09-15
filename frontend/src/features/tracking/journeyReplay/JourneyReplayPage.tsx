@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Alert, Button, Card, Empty, Flex, Form, Input, List, Progress, Radio, Select, Slider, Space, Spin, Tag, Typography } from 'antd';
+import { Alert, Button, Card, Checkbox, Empty, Flex, Form, Input, List, Progress, Radio, Select, Slider, Space, Spin, Tag, Typography } from 'antd';
 import axios from 'axios';
 import { useEffect, useMemo, useState } from 'react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
@@ -7,7 +7,7 @@ import { Navigate } from 'react-router-dom';
 import { useAuth } from '../../../auth/AuthContext';
 import { ReplayMap } from './ReplayMap';
 import { useJourneyReplay } from './hooks';
-import type { ReplayForm, ReplayQuery } from './types';
+import type { ReplayForm, ReplayOverlayType, ReplayQuery } from './types';
 import { replayFormSchema } from './validation';
 import './JourneyReplayPage.css';
 
@@ -19,10 +19,12 @@ export default function JourneyReplayPage(){
   const {hasPermission}=useAuth();
   const [query,setQuery]=useState<ReplayQuery>();
   const [activeIndex,setActiveIndex]=useState(0),[playing,setPlaying]=useState(false),[speed,setSpeed]=useState<number>(1),[showCoordinates,setShowCoordinates]=useState(false);
+  const canViewIncidents=hasPermission('JOURNEY_REPLAY_INCIDENT_VIEW');
+  const [incidentTypes,setIncidentTypes]=useState<ReplayOverlayType[]>(['GEOFENCE']);
   const [defaultRange]=useState(()=>{const to=new Date();return{from:localValue(new Date(to.getTime()-6*3_600_000)),to:localValue(to)}});
   const form=useForm<ReplayForm>({resolver:zodResolver(replayFormSchema),defaultValues:{selectorType:'VEHICLE',selectorId:'',...defaultRange}});
   const selectorType=useWatch({control:form.control,name:'selectorType'});
-  const replay=useJourneyReplay(query),points=useMemo(()=>replay.points.data?.items??[],[replay.points.data]),stops=replay.stops.data?.items??[];
+  const replay=useJourneyReplay(query,incidentTypes,canViewIncidents),points=useMemo(()=>replay.points.data?.items??[],[replay.points.data]),stops=replay.stops.data?.items??[];
   useEffect(()=>{if(!playing||points.length<2)return;const handle=window.setInterval(()=>setActiveIndex(index=>{if(index>=points.length-1){setPlaying(false);return index}return index+1}),Math.max(125,1000/speed));return()=>window.clearInterval(handle)},[playing,points.length,speed]);
   const current=points[activeIndex];
   const submit=(value:ReplayForm)=>{const selector=value.selectorType==='VEHICLE'?{vehicleId:value.selectorId}:{tripId:value.selectorId};setQuery({...selector,from:value.from?new Date(value.from).toISOString():undefined,to:value.to?new Date(value.to).toISOString():undefined,limit:1000});setActiveIndex(0);setPlaying(false)};
@@ -51,7 +53,17 @@ export default function JourneyReplayPage(){
         <div className="journey-replay__workspace"><ReplayMap points={points} stops={stops} activeIndex={activeIndex}/><Card className="journey-replay__timeline" title="Synchronized timeline"><Typography.Text strong>{new Date(current.sourceTimestamp).toLocaleString()}</Typography.Text><br/><Typography.Text>Source timestamp: {current.sourceTimestamp}</Typography.Text><br/><Typography.Text type="secondary">Received: {current.receivedAt}</Typography.Text><br/>{showCoordinates&&<Typography.Paragraph>Coordinates: {current.coordinate.latitude}, {current.coordinate.longitude}</Typography.Paragraph>}<Space wrap>{current.qualityFlags.map(flag=><Tag key={flag}>{flag.replaceAll('_',' ')}</Tag>)}<Tag>{current.trust}</Tag><Tag>{current.ordering}</Tag></Space>{current.attribution&&<Typography.Paragraph>Trip {current.attribution.tripId??'unknown'} · Route {current.attribution.routeId??'unknown'} / {current.attribution.routeVersion??'unknown'} · {current.attribution.status}</Typography.Paragraph>}</Card></div>
         <Card title="Detected stops"><List dataSource={stops} locale={{emptyText:'No confirmed stops in the visible evidence'}} renderItem={stop=><List.Item><List.Item.Meta title={`${new Date(stop.start).toLocaleString()} – ${new Date(stop.end).toLocaleString()}`} description={`${Math.round(stop.durationSeconds/60)} min · ${stop.pointCount} points · radius ${Math.round(stop.radiusMeters)} m · ${stop.quality}${stop.startTruncated||stop.endTruncated?' · range boundary':''}`}/></List.Item>}/></Card>
         {replay.points.data.missingIntervals.length>0&&<Card title="Journey gaps"><List dataSource={replay.points.data.missingIntervals} renderItem={gap=><List.Item>{gap.from} – {gap.to}: {gap.reasons.join(', ').replaceAll('_',' ')}</List.Item>}/></Card>}
-        {hasPermission('JOURNEY_REPLAY_INCIDENT_VIEW')&&<Alert type="info" message="Incident overlays are not yet available" description="Geofence, speed and route-deviation evidence will remain producer-labelled when the governed incident adapters are enabled."/>}
+        {canViewIncidents&&<Card title="Incident overlays"><Flex vertical gap={12}>
+          <Checkbox.Group value={incidentTypes} onChange={values=>setIncidentTypes(values as ReplayOverlayType[])} options={[{label:'Geofence transitions',value:'GEOFENCE'},{label:'Speed episodes — technical evidence',value:'SPEED'},{label:'Route deviations — technical evidence',value:'ROUTE_DEVIATION'}]}/>
+          {(incidentTypes.includes('SPEED')||incidentTypes.includes('ROUTE_DEVIATION'))&&<Alert type="warning" message="Technical-only incident evidence" description="Speed field fidelity and route-deviation field acceptance remain pending. Replay does not upgrade producer acceptance."/>}
+          {replay.incidents.isError&&<Alert
+            type="error"
+            message="Incident evidence could not be loaded"
+            description="The movement timeline remains available. Retry the incident query independently."
+            action={<Button onClick={()=>void replay.incidents.refetch()}>Retry incidents</Button>}
+          />}
+          <List loading={replay.incidents.isFetching} dataSource={replay.incidents.data?.items??[]} locale={{emptyText:'No producer incident evidence exists for the selected range'}} renderItem={incident=><List.Item><List.Item.Meta title={incident.status} description={<Space wrap><span>{new Date(incident.sourceTimestamp).toLocaleString()}</span><Tag>{incident.severity??'UNSPECIFIED'}</Tag><Tag>{incident.producer}</Tag><Tag>{incident.evidenceStatus.replaceAll('_',' ')}</Tag></Space>}/></List.Item>}/>
+        </Flex></Card>}
         {replay.points.data.nextCursor&&<Button onClick={()=>setQuery(currentQuery=>currentQuery?{...currentQuery,cursor:replay.points.data?.nextCursor}:currentQuery)}>Load next point page</Button>}
       </>}
     </>}

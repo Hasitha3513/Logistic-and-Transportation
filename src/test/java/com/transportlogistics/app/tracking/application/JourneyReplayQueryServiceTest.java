@@ -13,6 +13,7 @@ import com.transportlogistics.app.tracking.domain.journeyreplay.JourneyReplayMod
 import com.transportlogistics.app.tracking.ports.outbound.JourneyReplayAttributionPort;
 import com.transportlogistics.app.tracking.ports.outbound.JourneyReplayCursorPort;
 import com.transportlogistics.app.tracking.ports.outbound.JourneyReplayHistoryPort;
+import com.transportlogistics.app.tracking.ports.outbound.JourneyReplayIncidentPort;
 import com.transportlogistics.app.tracking.ports.outbound.JourneyReplayRouteContextPort;
 import com.transportlogistics.app.tracking.ports.outbound.JourneyReplayStopCursorPort;
 import java.math.BigDecimal;
@@ -105,6 +106,69 @@ class JourneyReplayQueryServiceTest {
         assertThat(result.analyzedPointCount()).isEqualTo(4);
         assertThat(result.snapshotRecordedAt()).isEqualTo(snapshot);
         verify(history, times(2)).query(any(), eq(VEHICLE), nullable(CursorState.class));
+    }
+
+    @Test
+    void delegatesProducerLabelledIncidentsForTheTenantVehicleAndBoundedRange() {
+        JourneyReplayStopCursorPort stopCursors = mock(JourneyReplayStopCursorPort.class);
+        JourneyReplayIncidentPort incidents = mock(JourneyReplayIncidentPort.class);
+        JourneyReplayQueryService incidentService = new JourneyReplayQueryService(history, cursors,
+                attribution, routes, stopCursors, incidents, Clock.fixed(TO, ZoneOffset.UTC));
+        ReplayQuery query = new ReplayQuery(new TenantContext(TENANT, ACTOR), ReplaySelector.vehicle(VEHICLE),
+                new TimeRange(FROM, TO), new TimeRange(FROM, TO), 100, null,
+                Set.of(OverlayType.GEOFENCE, OverlayType.SPEED), Direction.CHRONOLOGICAL_ASCENDING, 20_000);
+        IncidentOverlay geofence = new IncidentOverlay(OverlayType.GEOFENCE, ProducerAcceptance.ACCEPTED,
+                "ENTERED", UUID.randomUUID(), FROM.plusSeconds(10), null, "NORMAL",
+                "Geofence transition — ENTERED", null, null, null);
+        when(incidents.query(query, null)).thenReturn(List.of(geofence));
+
+        assertThat(incidentService.incidents(query).items()).containsExactly(geofence);
+        verify(incidents).query(query, null);
+    }
+
+    @Test
+    void pagesIncidentEvidenceWithTheExistingTenantBoundOpaqueCursor() {
+        JourneyReplayIncidentPort incidents = mock(JourneyReplayIncidentPort.class);
+        JourneyReplayQueryService incidentService = new JourneyReplayQueryService(history, cursors,
+                attribution, routes, mock(JourneyReplayStopCursorPort.class), incidents,
+                Clock.fixed(TO, ZoneOffset.UTC));
+        ReplayQuery query = new ReplayQuery(new TenantContext(TENANT, ACTOR), ReplaySelector.vehicle(VEHICLE),
+                new TimeRange(FROM, TO), new TimeRange(FROM, TO), 1, null,
+                Set.of(OverlayType.GEOFENCE), Direction.CHRONOLOGICAL_ASCENDING, 20_000);
+        IncidentOverlay first = new IncidentOverlay(OverlayType.GEOFENCE, ProducerAcceptance.ACCEPTED,
+                "ENTERED", UUID.randomUUID(), FROM.plusSeconds(10), null, "NORMAL",
+                "Geofence transition — ENTERED", null, null, null);
+        IncidentOverlay second = new IncidentOverlay(OverlayType.GEOFENCE, ProducerAcceptance.ACCEPTED,
+                "EXITED", UUID.randomUUID(), FROM.plusSeconds(20), null, "NORMAL",
+                "Geofence transition — EXITED", null, null, null);
+        when(incidents.query(query, null)).thenReturn(List.of(first, second));
+        when(cursors.encode(any(CursorState.class))).thenReturn("opaque-next");
+
+        var result = incidentService.incidents(query);
+
+        assertThat(result.items()).containsExactly(first);
+        assertThat(result.nextCursor()).isEqualTo("opaque-next");
+        assertThat(result.snapshotRecordedAt()).isEqualTo(TO);
+    }
+
+    @Test
+    void resolvesTripScopeBeforeQueryingIncidentEvidence() {
+        JourneyReplayIncidentPort incidents = mock(JourneyReplayIncidentPort.class);
+        JourneyReplayQueryService incidentService = new JourneyReplayQueryService(history, cursors,
+                attribution, routes, mock(JourneyReplayStopCursorPort.class), incidents,
+                Clock.fixed(TO, ZoneOffset.UTC));
+        UUID trip = UUID.randomUUID();
+        ReplayQuery query = query(ReplaySelector.trip(trip));
+        when(attribution.findReplayScope(TENANT, trip)).thenReturn(java.util.Optional.of(
+                new ReplayScope(trip, VEHICLE, FROM.plusSeconds(10), TO.minusSeconds(10),
+                        "COMPLETED", null, null)));
+
+        incidentService.incidents(query);
+
+        verify(incidents).query(org.mockito.ArgumentMatchers.argThat(resolved ->
+                resolved.selector().equals(ReplaySelector.vehicle(VEHICLE))
+                        && resolved.effectiveRange().from().equals(FROM.plusSeconds(10))
+                        && resolved.effectiveRange().to().equals(TO.minusSeconds(10))), eq(null));
     }
 
     private static ReplayQuery query(ReplaySelector selector) {
