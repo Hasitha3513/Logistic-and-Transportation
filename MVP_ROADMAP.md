@@ -6,7 +6,7 @@
 ![Completed](https://img.shields.io/badge/Completed-73%20%2F%2087-2da44e.svg?style=for-the-badge&logo=checkmarx)
 ![Progress](https://img.shields.io/badge/Progress-83.9%25-brightgreen.svg?style=for-the-badge&logo=speedtest)
 ![MVP 1.4 Closed](https://img.shields.io/badge/MVP%201.4%20Last--Mile-8%20%2F%208-2da44e.svg?style=for-the-badge&logo=pinboard)
-![Database](https://img.shields.io/badge/TimescaleDB%20%2F%20Flyway-V92-8a63d2.svg?style=for-the-badge&logo=postgresql)
+![Database](https://img.shields.io/badge/TimescaleDB%20%2F%20Flyway-V93-8a63d2.svg?style=for-the-badge&logo=postgresql)
 
 </div>
 
@@ -26,8 +26,9 @@
 > - **Hybrid Telemetry State:** `IMPLEMENTATION_IN_PROGRESS / TS04_COMPLETE`; V87 adds the transactional Timescale history consumer, Tenant-scoped idempotency, deterministic static reduction, seven-day compression and 180-day raw retention.
 > - **Hybrid Telemetry Test Infrastructure:** `CLOSED`; Testcontainers 2.0.3/docker-java 3.7.0 restores Docker 29 negotiation, V86 Timescale acceptance, table-ownership verification and the complete Maven regression without changing story accounting.
 > - **US-52 State:** `IMPLEMENTATION_COMPLETE / ACCEPTANCE_BLOCKED_EXTERNAL_SYSTEM`; technical closure remains valid, but no physical device/provider field journey, real Dispatcher delivery or operator sign-off is available. Rerun final acceptance only when those external facts change.
-> - **US-53 State:** `TECHNICALLY_COMPLETE / ACCEPTANCE_PENDING`; all remediation, prerequisite and CS01–CS07 contracts and consolidated technical gates pass without inheriting US-48/50/52 physical acceptance.
-> - **Immediate Next Action:** Run `US-53-REPLAY-JOURNEYS-FINAL-ACCEPTANCE-001` only when genuine retained provider/device journey evidence and operator sign-off are available.
+> - **US-53 State:** `TECHNICALLY_COMPLETE / IMPLEMENTATION_COMPLETE_ACCEPTANCE_BLOCKED_EXTERNAL_SYSTEM`; all remediation, prerequisite and CS01–CS07 contracts and consolidated technical gates pass, while genuine provider/device field evidence remains on a governed external hold.
+> - **Deferred Acceptance Queue:** `US-53-REPLAY-JOURNEYS-FINAL-ACCEPTANCE-001` resumes only when genuine retained provider/device journey evidence and operator sign-off are available.
+> - **Immediate Next Action:** Execute `US-54-VIEW-TRACKING-DASHBOARD-PRODUCT-DECISIONS-001` without inheriting physical acceptance from US-48, US-50, US-52 or US-53.
 
 ---
 
@@ -175,8 +176,8 @@ Development startup now consistently provisions the idempotent PostgreSQL sample
 | `US-50` | Monitor Speed | Threshold, road-rule and repeat-speed monitoring | 🔴 `IMPLEMENTATION_COMPLETE / ACCEPTANCE_BLOCKED_EXTERNAL_SYSTEM` | Final acceptance blocked only by physical provider/device speed field, native-unit and normalization evidence; technical evidence PASS; no US-48 acceptance inheritance |
 | `US-51` | Monitor Idle Time | Engine-on versus movement duration and qualified fuel-waste estimates | 🟡 `WAVE C / BLOCKED_BY_REQUIRED_TELEMETRY_CAPABILITY` | Current FLESPI does not advertise IGNITION and no accepted alternate engine-state source exists |
 | `US-52` | Monitor Route Deviations | Planned-versus-actual comparison, severity and audited approval | 🔴 `IMPLEMENTATION_COMPLETE / ACCEPTANCE_BLOCKED_EXTERNAL_SYSTEM` | Technical closure PASS at V92; final acceptance stopped before field execution because physical provider/device route evidence, real Dispatcher delivery and operator sign-off are unavailable |
-| `US-53` | Replay Journeys | Historical journey replay, stop analysis and incident forensics | 🟡 `TECHNICALLY_COMPLETE / ACCEPTANCE_PENDING` | All prerequisite and CS01–CS07 contracts pass consolidated technical closure; final physical/provider journey evidence and operator sign-off remain independent |
-| `US-54` | View Tracking Dashboard | Fleet overview, exceptions, heat maps, alerts and stale-state visibility | 🟡 `WAVE C / BLOCKED_BY_US49_TO_US53_PRODUCERS` | Consolidated consumer; must not recreate detector logic |
+| `US-53` | Replay Journeys | Historical journey replay, stop analysis and incident forensics | 🔴 `TECHNICALLY_COMPLETE / IMPLEMENTATION_COMPLETE_ACCEPTANCE_BLOCKED_EXTERNAL_SYSTEM` | Technical closure remains valid; final physical/provider journey evidence and operator sign-off are deferred under `US-53-REPLAY-JOURNEYS-FINAL-ACCEPTANCE-001` |
+| `US-54` | View Tracking Dashboard | Fleet overview, exceptions, heat maps, alerts and stale-state visibility | 🟡 `PRODUCT_DECISIONS_AUTHORIZED` | Execute the approved product-decision gate; consolidated consumer must not recreate detector logic or inherit producer acceptance |
 | `US-55` | Handle GPS Edge Cases | Signal loss, spoofing, tampering, delayed packets, battery drain and trusted-state protection | 🟡 `WAVE C / BLOCKED_BY_REQUIRED_TELEMETRY_AND_PRODUCT_DECISIONS` | Signal-loss/delay contracts exist, but spoofing/tamper/battery signals are not established |
 
 ---
@@ -241,12 +242,13 @@ Development startup now consistently provisions the idempotent PostgreSQL sample
 
 ```
 Current Status: 73 / 87 COMPLETE; 14 stories remain across Waves C–E
-Queue Head:     US-53-REPLAY-JOURNEYS-FINAL-ACCEPTANCE-001
+Queue Head:     US-54-VIEW-TRACKING-DASHBOARD-PRODUCT-DECISIONS-001
+Deferred:       US-53-REPLAY-JOURNEYS-FINAL-ACCEPTANCE-001
 ```
 
 1. **Wave A — Integration and exception-control foundations:** 2 / 2 COMPLETE / CLOSED (US-73 and US-78).
 2. **Wave B — Fuel control and financial links:** 5 / 5 COMPLETE / CLOSED (US-35, US-37, US-38, US-46, US-47).
-3. **Wave C — GPS and telematics:** US-48 physical acceptance is on external-prerequisite hold; US-49 is accepted; proceed with US-50/52, then US-53. US-51 and full US-55 require telemetry/product decisions; US-54 follows US-50–53 producers.
+3. **Wave C — GPS and telematics:** US-48, US-50, US-52 and US-53 physical acceptance are on independent external-prerequisite holds; US-49 is accepted; execute US-54 product decisions against the frozen technical producer contracts. US-51 and full US-55 still require telemetry/product decisions.
 4. **Wave D — Compliance and field mobility:** US-72, US-76.
 5. **Wave E — Analytics, integrity, resilience, disruption and user risk:** US-85, US-84, US-87, US-82, US-86.
 6. After 87/87: `FULL-SOURCE-PARITY-AUDIT-001`, then `FULL-PLATFORM-END-TO-END-ACCEPTANCE-001` after authorized parity disposition.
