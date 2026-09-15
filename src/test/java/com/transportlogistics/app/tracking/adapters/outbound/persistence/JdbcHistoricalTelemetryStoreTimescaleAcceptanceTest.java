@@ -2,14 +2,20 @@ package com.transportlogistics.app.tracking.adapters.outbound.persistence;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.mock;
 
 import com.transportlogistics.app.shared.domain.DependencyUnavailableException;
 import com.transportlogistics.app.tracking.application.telemetry.TrackingTelemetryIngestedV1;
 import com.transportlogistics.app.tracking.domain.TrackingModels.EngineState;
+import com.transportlogistics.app.tracking.domain.journeyreplay.JourneyReplayModels.*;
+import com.transportlogistics.app.tracking.ports.outbound.JourneyReplayCursorPort;
 import java.math.BigDecimal;
+import java.time.Clock;
 import java.time.Instant;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import org.flywaydb.core.Flyway;
 import org.junit.jupiter.api.BeforeAll;
@@ -173,6 +179,30 @@ class JdbcHistoricalTelemetryStoreTimescaleAcceptanceTest {
         var recovered = dispatches.claim("worker-b", now.plusSeconds(25), now.plusSeconds(55), 3);
         assertThat(recovered).extracting(item -> item.id())
                 .containsExactlyElementsOf(abandoned.stream().map(item -> item.id()).toList());
+    }
+
+    @Test
+    void journeyReplayReadsACompressedChunkWithoutChangingPolicies() {
+        UUID tenant = UUID.randomUUID();
+        UUID vehicle = UUID.randomUUID();
+        Instant source = Instant.now().minusSeconds(10L * 86_400L);
+        assertThat(store.persist(List.of(event(tenant, vehicle, "e".repeat(64), source,
+                BigDecimal.ONE, BigDecimal.TWO, BigDecimal.ONE, EngineState.ON,
+                BigDecimal.ONE))).persisted()).isOne();
+        jdbc.query("SELECT compress_chunk(chunk) FROM show_chunks('tracking_position_history',"
+                + " older_than => now() - interval '7 days') chunk", row -> { });
+        var adapter = new JdbcJourneyReplayHistoryAdapter(jdbc,
+                new DataSourceTransactionManager(jdbc.getDataSource()),
+                mock(JourneyReplayCursorPort.class), Clock.fixed(Instant.now(), ZoneOffset.UTC));
+        TimeRange range = new TimeRange(source.minusSeconds(1), source.plusSeconds(2));
+        ReplayQuery query = new ReplayQuery(new TenantContext(tenant, UUID.randomUUID()),
+                ReplaySelector.vehicle(vehicle), range, range, 10, null, Set.of(),
+                Direction.CHRONOLOGICAL_ASCENDING, 20_000);
+
+        assertThat(adapter.query(query, vehicle, null).items()).hasSize(1);
+        assertThat(jdbc.queryForObject("SELECT count(*) FROM timescaledb_information.jobs WHERE "
+                + "hypertable_name='tracking_position_history' AND proc_name IN "
+                + "('policy_compression','policy_retention')", Integer.class)).isEqualTo(2);
     }
 
     private static TrackingTelemetryIngestedV1 event(

@@ -103,6 +103,17 @@ public final class JourneyReplayModels {
         }
     }
 
+    public record ReplayScope(UUID tripId, UUID vehicleId, Instant actualStart, Instant actualEnd,
+                              String status, UUID routeId, String routeVersion) { }
+
+    public record AttributionInterval(UUID tripId, Instant effectiveStart, Instant effectiveEnd,
+                                      UUID routeId, String routeVersion) {
+        public boolean includes(Instant sourceTimestamp) {
+            return !sourceTimestamp.isBefore(effectiveStart)
+                    && (effectiveEnd == null || sourceTimestamp.isBefore(effectiveEnd));
+        }
+    }
+
     public record JourneyPoint(UUID historyId, UUID vehicleId, Instant sourceTimestamp,
                                Instant receivedAt, Coordinate coordinate, BigDecimal speedKph,
                                BigDecimal accuracyMeters, Trust trust, String quality,

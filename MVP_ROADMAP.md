@@ -26,8 +26,8 @@
 > - **Hybrid Telemetry State:** `IMPLEMENTATION_IN_PROGRESS / TS04_COMPLETE`; V87 adds the transactional Timescale history consumer, Tenant-scoped idempotency, deterministic static reduction, seven-day compression and 180-day raw retention.
 > - **Hybrid Telemetry Test Infrastructure:** `CLOSED`; Testcontainers 2.0.3/docker-java 3.7.0 restores Docker 29 negotiation, V86 Timescale acceptance, table-ownership verification and the complete Maven regression without changing story accounting.
 > - **US-52 State:** `IMPLEMENTATION_COMPLETE / ACCEPTANCE_BLOCKED_EXTERNAL_SYSTEM`; technical closure remains valid, but no physical device/provider field journey, real Dispatcher delivery or operator sign-off is available. Rerun final acceptance only when those external facts change.
-> - **US-53 State:** `IMPLEMENTATION_IN_PROGRESS / CS01_COMPLETE`; framework-neutral replay/query, cursor, coverage, stop-analysis and overlay contracts are verified without inheriting US-48/50/52 acceptance.
-> - **Immediate Next Action:** Trip's bounded replay-scope and assignment-range prerequisite is complete; run `US-53-REPLAY-JOURNEYS-CS02-TIMESCALE-QUERY-ADAPTERS-001`.
+> - **US-53 State:** `IMPLEMENTATION_IN_PROGRESS / CS02_COMPLETE`; Timescale history querying, protected keyset cursors and bounded Trip/Routing attribution adapters are verified without inheriting US-48/50/52 acceptance.
+> - **Immediate Next Action:** Run `US-53-REPLAY-JOURNEYS-CS03-STOP-ANALYSIS-001`.
 
 ---
 
@@ -175,7 +175,7 @@ Development startup now consistently provisions the idempotent PostgreSQL sample
 | `US-50` | Monitor Speed | Threshold, road-rule and repeat-speed monitoring | 🔴 `IMPLEMENTATION_COMPLETE / ACCEPTANCE_BLOCKED_EXTERNAL_SYSTEM` | Final acceptance blocked only by physical provider/device speed field, native-unit and normalization evidence; technical evidence PASS; no US-48 acceptance inheritance |
 | `US-51` | Monitor Idle Time | Engine-on versus movement duration and qualified fuel-waste estimates | 🟡 `WAVE C / BLOCKED_BY_REQUIRED_TELEMETRY_CAPABILITY` | Current FLESPI does not advertise IGNITION and no accepted alternate engine-state source exists |
 | `US-52` | Monitor Route Deviations | Planned-versus-actual comparison, severity and audited approval | 🔴 `IMPLEMENTATION_COMPLETE / ACCEPTANCE_BLOCKED_EXTERNAL_SYSTEM` | Technical closure PASS at V92; final acceptance stopped before field execution because physical provider/device route evidence, real Dispatcher delivery and operator sign-off are unavailable |
-| `US-53` | Replay Journeys | Historical journey replay, stop analysis and incident forensics | 🟡 `IMPLEMENTATION_IN_PROGRESS / CS01_COMPLETE` | Framework-neutral query, cursor, coverage, stop and overlay contracts verified; Timescale adapters remain CS02; two permissions remain reserved for V93 in CS04 |
+| `US-53` | Replay Journeys | Historical journey replay, stop analysis and incident forensics | 🟡 `IMPLEMENTATION_IN_PROGRESS / CS02_COMPLETE` | Framework-neutral contracts plus Timescale keyset history and bounded Trip/Routing attribution adapters verified; stop analysis remains CS03; two permissions remain reserved for V93 in CS04 |
 | `US-54` | View Tracking Dashboard | Fleet overview, exceptions, heat maps, alerts and stale-state visibility | 🟡 `WAVE C / BLOCKED_BY_US49_TO_US53_PRODUCERS` | Consolidated consumer; must not recreate detector logic |
 | `US-55` | Handle GPS Edge Cases | Signal loss, spoofing, tampering, delayed packets, battery drain and trusted-state protection | 🟡 `WAVE C / BLOCKED_BY_REQUIRED_TELEMETRY_AND_PRODUCT_DECISIONS` | Signal-loss/delay contracts exist, but spoofing/tamper/battery signals are not established |
 
@@ -241,7 +241,7 @@ Development startup now consistently provisions the idempotent PostgreSQL sample
 
 ```
 Current Status: 73 / 87 COMPLETE; 14 stories remain across Waves C–E
-Queue Head:     US-53-REPLAY-JOURNEYS-CS02-TIMESCALE-QUERY-ADAPTERS-001
+Queue Head:     US-53-REPLAY-JOURNEYS-CS03-STOP-ANALYSIS-001
 ```
 
 1. **Wave A — Integration and exception-control foundations:** 2 / 2 COMPLETE / CLOSED (US-73 and US-78).

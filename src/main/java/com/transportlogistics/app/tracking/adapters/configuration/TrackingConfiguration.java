@@ -9,6 +9,7 @@ import com.transportlogistics.app.tracking.application.SpeedEvaluationService;
 import com.transportlogistics.app.tracking.application.SpeedRuleManagementService;
 import com.transportlogistics.app.tracking.application.RouteDeviationEvaluationService;
 import com.transportlogistics.app.tracking.application.RouteDeviationManagementService;
+import com.transportlogistics.app.tracking.application.JourneyReplayQueryService;
 import com.transportlogistics.app.tracking.adapters.inbound.security.SecuredGeofenceUseCases;
 import com.transportlogistics.app.tracking.adapters.inbound.security.SecuredSpeedMonitoringUseCases;
 import com.transportlogistics.app.tracking.adapters.inbound.security.SecuredRouteDeviationUseCases;
@@ -62,4 +63,5 @@ import org.springframework.context.annotation.*;
  @Bean @Primary SecuredGeofenceUseCases securedGeofenceUseCases(GeofenceManagementService service){return new SecuredGeofenceUseCases(service,service);}
  @Bean @Primary SecuredSpeedMonitoringUseCases securedSpeedMonitoringUseCases(SpeedRuleManagementService service){return new SecuredSpeedMonitoringUseCases(service,service);}
  @Bean @Primary SecuredRouteDeviationUseCases securedRouteDeviationUseCases(RouteDeviationManagementService service){return new SecuredRouteDeviationUseCases(service,service,service);}
+ @Bean @org.springframework.boot.autoconfigure.condition.ConditionalOnProperty(name="app.tracking.hybrid-storage.enabled",havingValue="true") JourneyReplayQueryService journeyReplayQueryService(com.transportlogistics.app.tracking.ports.outbound.JourneyReplayHistoryPort history,com.transportlogistics.app.tracking.ports.outbound.JourneyReplayCursorPort cursors,com.transportlogistics.app.tracking.ports.outbound.JourneyReplayAttributionPort attribution,com.transportlogistics.app.tracking.ports.outbound.JourneyReplayRouteContextPort routes,Clock clock){return new JourneyReplayQueryService(history,cursors,attribution,routes,clock);}
 }
