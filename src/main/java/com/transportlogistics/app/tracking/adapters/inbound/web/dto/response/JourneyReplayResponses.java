@@ -1,6 +1,13 @@
 package com.transportlogistics.app.tracking.adapters.inbound.web.dto.response;
 
-import com.transportlogistics.app.tracking.domain.journeyreplay.JourneyReplayModels.*;
+import com.transportlogistics.app.tracking.domain.journeyreplay.JourneyReplayModels.AttributionStatus;
+import com.transportlogistics.app.tracking.domain.journeyreplay.JourneyReplayModels.Coverage;
+import com.transportlogistics.app.tracking.domain.journeyreplay.JourneyReplayModels.Ordering;
+import com.transportlogistics.app.tracking.domain.journeyreplay.JourneyReplayModels.OverlayType;
+import com.transportlogistics.app.tracking.domain.journeyreplay.JourneyReplayModels.ProducerAcceptance;
+import com.transportlogistics.app.tracking.domain.journeyreplay.JourneyReplayModels.QualityFlag;
+import com.transportlogistics.app.tracking.domain.journeyreplay.JourneyReplayModels.StopEvidenceQuality;
+import com.transportlogistics.app.tracking.domain.journeyreplay.JourneyReplayModels.Trust;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;

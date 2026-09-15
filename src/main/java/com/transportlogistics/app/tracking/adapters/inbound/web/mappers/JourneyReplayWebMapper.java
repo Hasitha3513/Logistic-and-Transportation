@@ -1,7 +1,20 @@
 package com.transportlogistics.app.tracking.adapters.inbound.web.mappers;
 
-import com.transportlogistics.app.tracking.adapters.inbound.web.dto.response.JourneyReplayResponses.*;
-import com.transportlogistics.app.tracking.domain.journeyreplay.JourneyReplayModels.*;
+import com.transportlogistics.app.tracking.adapters.inbound.web.dto.response.JourneyReplayResponses.Gap;
+import com.transportlogistics.app.tracking.adapters.inbound.web.dto.response.JourneyReplayResponses.Incident;
+import com.transportlogistics.app.tracking.adapters.inbound.web.dto.response.JourneyReplayResponses.Point;
+import com.transportlogistics.app.tracking.adapters.inbound.web.dto.response.JourneyReplayResponses.PointAttribution;
+import com.transportlogistics.app.tracking.adapters.inbound.web.dto.response.JourneyReplayResponses.Points;
+import com.transportlogistics.app.tracking.adapters.inbound.web.dto.response.JourneyReplayResponses.Range;
+import com.transportlogistics.app.tracking.adapters.inbound.web.dto.response.JourneyReplayResponses.Stop;
+import com.transportlogistics.app.tracking.adapters.inbound.web.dto.response.JourneyReplayResponses.Stops;
+import com.transportlogistics.app.tracking.domain.journeyreplay.JourneyReplayModels.ConfirmedStop;
+import com.transportlogistics.app.tracking.domain.journeyreplay.JourneyReplayModels.DataGap;
+import com.transportlogistics.app.tracking.domain.journeyreplay.JourneyReplayModels.IncidentOverlay;
+import com.transportlogistics.app.tracking.domain.journeyreplay.JourneyReplayModels.JourneyPoint;
+import com.transportlogistics.app.tracking.domain.journeyreplay.JourneyReplayModels.ReplayPage;
+import com.transportlogistics.app.tracking.domain.journeyreplay.JourneyReplayModels.StopPage;
+import com.transportlogistics.app.tracking.domain.journeyreplay.JourneyReplayModels.TimeRange;
 import java.util.List;
 import org.springframework.stereotype.Component;
 
