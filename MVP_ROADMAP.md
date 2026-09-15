@@ -28,7 +28,8 @@
 > - **US-52 State:** `IMPLEMENTATION_COMPLETE / ACCEPTANCE_BLOCKED_EXTERNAL_SYSTEM`; technical closure remains valid, but no physical device/provider field journey, real Dispatcher delivery or operator sign-off is available. Rerun final acceptance only when those external facts change.
 > - **US-53 State:** `TECHNICALLY_COMPLETE / IMPLEMENTATION_COMPLETE_ACCEPTANCE_BLOCKED_EXTERNAL_SYSTEM`; all remediation, prerequisite and CS01–CS07 contracts and consolidated technical gates pass, while genuine provider/device field evidence remains on a governed external hold.
 > - **Deferred Acceptance Queue:** `US-53-REPLAY-JOURNEYS-FINAL-ACCEPTANCE-001` resumes only when genuine retained provider/device journey evidence and operator sign-off are available.
-> - **Immediate Next Action:** Execute `US-54-VIEW-TRACKING-DASHBOARD-PRODUCT-DECISIONS-001` without inheriting physical acceptance from US-48, US-50, US-52 or US-53.
+> - **US-54 State:** `IMPLEMENTATION_IN_PROGRESS / PRODUCT_DECISIONS_COMPLETE`; the read-only bounded dashboard, source/acceptance labels, V94 permission-only expectation, privacy and controlled change sets are frozen.
+> - **Immediate Next Action:** Execute `US-54-VIEW-TRACKING-DASHBOARD-CS01-DOMAIN-QUERY-CONTRACTS-001` without inheriting physical acceptance from US-48, US-50, US-52 or US-53.
 
 ---
 
@@ -177,7 +178,7 @@ Development startup now consistently provisions the idempotent PostgreSQL sample
 | `US-51` | Monitor Idle Time | Engine-on versus movement duration and qualified fuel-waste estimates | 🟡 `WAVE C / BLOCKED_BY_REQUIRED_TELEMETRY_CAPABILITY` | Current FLESPI does not advertise IGNITION and no accepted alternate engine-state source exists |
 | `US-52` | Monitor Route Deviations | Planned-versus-actual comparison, severity and audited approval | 🔴 `IMPLEMENTATION_COMPLETE / ACCEPTANCE_BLOCKED_EXTERNAL_SYSTEM` | Technical closure PASS at V92; final acceptance stopped before field execution because physical provider/device route evidence, real Dispatcher delivery and operator sign-off are unavailable |
 | `US-53` | Replay Journeys | Historical journey replay, stop analysis and incident forensics | 🔴 `TECHNICALLY_COMPLETE / IMPLEMENTATION_COMPLETE_ACCEPTANCE_BLOCKED_EXTERNAL_SYSTEM` | Technical closure remains valid; final physical/provider journey evidence and operator sign-off are deferred under `US-53-REPLAY-JOURNEYS-FINAL-ACCEPTANCE-001` |
-| `US-54` | View Tracking Dashboard | Fleet overview, exceptions, heat maps, alerts and stale-state visibility | 🟡 `PRODUCT_DECISIONS_AUTHORIZED` | Execute the approved product-decision gate; consolidated consumer must not recreate detector logic or inherit producer acceptance |
+| `US-54` | View Tracking Dashboard | Fleet overview, exceptions, heat maps, alerts and stale-state visibility | 🟡 `IMPLEMENTATION_IN_PROGRESS / PRODUCT_DECISIONS_COMPLETE` | Frozen read-only aggregate, V94 permission-only seed and CS01–CS05 plan consume bounded producer contracts without acceptance inheritance |
 | `US-55` | Handle GPS Edge Cases | Signal loss, spoofing, tampering, delayed packets, battery drain and trusted-state protection | 🟡 `WAVE C / BLOCKED_BY_REQUIRED_TELEMETRY_AND_PRODUCT_DECISIONS` | Signal-loss/delay contracts exist, but spoofing/tamper/battery signals are not established |
 
 ---
@@ -242,7 +243,7 @@ Development startup now consistently provisions the idempotent PostgreSQL sample
 
 ```
 Current Status: 73 / 87 COMPLETE; 14 stories remain across Waves C–E
-Queue Head:     US-54-VIEW-TRACKING-DASHBOARD-PRODUCT-DECISIONS-001
+Queue Head:     US-54-VIEW-TRACKING-DASHBOARD-CS01-DOMAIN-QUERY-CONTRACTS-001
 Deferred:       US-53-REPLAY-JOURNEYS-FINAL-ACCEPTANCE-001
 ```
 
