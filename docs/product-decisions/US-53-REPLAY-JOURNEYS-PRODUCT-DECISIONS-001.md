@@ -286,4 +286,5 @@ Phase-1 non-goals, not unresolved items.
 8. `US-53-REPLAY-JOURNEYS-TECHNICAL-CLOSURE-001`
 9. `US-53-REPLAY-JOURNEYS-FINAL-ACCEPTANCE-001`
 
-The exact next queue is `US-53-REPLAY-JOURNEYS-CS01-DOMAIN-QUERY-CONTRACTS-001`.
+The exact next queue is `US-53-REPLAY-JOURNEYS-FINAL-ACCEPTANCE-001`; run it only when the required genuine
+retained provider/device journey evidence and operator sign-off are available.
