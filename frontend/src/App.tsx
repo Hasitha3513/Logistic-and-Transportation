@@ -70,6 +70,7 @@ import DeviationRuleFormPage from './features/tracking/routeDeviations/pages/Dev
 import DeviationRuleDetailPage from './features/tracking/routeDeviations/pages/DeviationRuleDetailPage';
 import DeviationStatePage from './features/tracking/routeDeviations/pages/DeviationStatePage';
 import DeviationEpisodePage from './features/tracking/routeDeviations/pages/DeviationEpisodePage';
+import JourneyReplayPage from './features/tracking/journeyReplay/JourneyReplayPage';
 
 function ProtectedRoute() {
   const { user, isLoading } = useAuth();
@@ -194,6 +195,7 @@ export default function App() {
         <Route path="tracking/route-deviations/states" element={<DeviationStatePage />} />
         <Route path="tracking/route-deviations/episodes" element={<DeviationEpisodePage />} />
         <Route path="tracking/route-deviations/episodes/:episodeId" element={<DeviationEpisodePage detail />} />
+        <Route path="tracking/journey-replay" element={<JourneyReplayPage />} />
         <Route path="workspace" element={<WorkspacePage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
