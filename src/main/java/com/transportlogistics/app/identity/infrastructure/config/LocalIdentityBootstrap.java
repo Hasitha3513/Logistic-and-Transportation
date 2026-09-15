@@ -80,7 +80,8 @@ class LocalIdentityBootstrap implements ApplicationRunner {
             "GEOFENCE_VIEW", "GEOFENCE_MANAGE", "GEOFENCE_EVENT_VIEW",
             "SPEED_MONITOR_VIEW", "SPEED_MONITOR_MANAGE", "SPEED_EVENT_VIEW",
             "ROUTE_DEVIATION_VIEW", "ROUTE_DEVIATION_MANAGE",
-            "ROUTE_DEVIATION_EVENT_VIEW", "ROUTE_DEVIATION_APPROVE"
+            "ROUTE_DEVIATION_EVENT_VIEW", "ROUTE_DEVIATION_APPROVE",
+            "JOURNEY_REPLAY_VIEW", "JOURNEY_REPLAY_INCIDENT_VIEW"
     );
 
     private final IdentityUseCase identities;
