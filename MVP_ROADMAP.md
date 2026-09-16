@@ -28,8 +28,9 @@
 > - **US-52 State:** `IMPLEMENTATION_COMPLETE / ACCEPTANCE_BLOCKED_EXTERNAL_SYSTEM`; technical closure remains valid, but no physical device/provider field journey, real Dispatcher delivery or operator sign-off is available. Rerun final acceptance only when those external facts change.
 > - **US-53 State:** `TECHNICALLY_COMPLETE / IMPLEMENTATION_COMPLETE_ACCEPTANCE_BLOCKED_EXTERNAL_SYSTEM`; all remediation, prerequisite and CS01–CS07 contracts and consolidated technical gates pass, while genuine provider/device field evidence remains on a governed external hold.
 > - **Deferred Acceptance Queue:** `US-53-REPLAY-JOURNEYS-FINAL-ACCEPTANCE-001` resumes only when genuine retained provider/device journey evidence and operator sign-off are available.
-> - **US-54 State:** `TECHNICALLY_COMPLETE / ACCEPTANCE_PENDING`; independent closure passes at V95 across backend, PostgreSQL/Redis, architecture, frontend, Chromium and static-analysis gates; physical/operator acceptance remains separate.
-> - **Immediate Next Action:** Execute `US-54-VIEW-TRACKING-DASHBOARD-FINAL-ACCEPTANCE-001` without inheriting physical acceptance from US-48, US-50, US-52 or US-53.
+> - **US-54 State:** `TECHNICALLY_COMPLETE / IMPLEMENTATION_COMPLETE_ACCEPTANCE_BLOCKED_EXTERNAL_SYSTEM`; technical closure remains valid, while genuine device/provider telemetry, privacy review and operator sign-off are unavailable.
+> - **Deferred Acceptance Queue:** `US-54-VIEW-TRACKING-DASHBOARD-FINAL-ACCEPTANCE-001` resumes only when its genuine external prerequisites exist.
+> - **Immediate Next Action:** Execute `US-55-HANDLE-GPS-EDGE-CASES-PRODUCT-DECISIONS-001`.
 
 ---
 
@@ -178,7 +179,7 @@ Development startup now consistently provisions the idempotent PostgreSQL sample
 | `US-51` | Monitor Idle Time | Engine-on versus movement duration and qualified fuel-waste estimates | 🟡 `WAVE C / BLOCKED_BY_REQUIRED_TELEMETRY_CAPABILITY` | Current FLESPI does not advertise IGNITION and no accepted alternate engine-state source exists |
 | `US-52` | Monitor Route Deviations | Planned-versus-actual comparison, severity and audited approval | 🔴 `IMPLEMENTATION_COMPLETE / ACCEPTANCE_BLOCKED_EXTERNAL_SYSTEM` | Technical closure PASS at V92; final acceptance stopped before field execution because physical provider/device route evidence, real Dispatcher delivery and operator sign-off are unavailable |
 | `US-53` | Replay Journeys | Historical journey replay, stop analysis and incident forensics | 🔴 `TECHNICALLY_COMPLETE / IMPLEMENTATION_COMPLETE_ACCEPTANCE_BLOCKED_EXTERNAL_SYSTEM` | Technical closure remains valid; final physical/provider journey evidence and operator sign-off are deferred under `US-53-REPLAY-JOURNEYS-FINAL-ACCEPTANCE-001` |
-| `US-54` | View Tracking Dashboard | Fleet overview, exceptions, heat maps, alerts and stale-state visibility | 🟡 `TECHNICALLY_COMPLETE / ACCEPTANCE_PENDING` | Independent closure PASS at V95: focused 18/18, Maven 1,838/1,838, architecture 59/59, Vitest 330/330 and Chromium 6/6; final physical/operator acceptance is next |
+| `US-54` | View Tracking Dashboard | Fleet overview, exceptions, heat maps, alerts and stale-state visibility | 🔴 `TECHNICALLY_COMPLETE / IMPLEMENTATION_COMPLETE_ACCEPTANCE_BLOCKED_EXTERNAL_SYSTEM` | Independent closure remains PASS at V95; final acceptance is held for genuine device/provider telemetry, privacy review and operator sign-off; no producer acceptance is inherited |
 | `US-55` | Handle GPS Edge Cases | Signal loss, spoofing, tampering, delayed packets, battery drain and trusted-state protection | 🟡 `WAVE C / BLOCKED_BY_REQUIRED_TELEMETRY_AND_PRODUCT_DECISIONS` | Signal-loss/delay contracts exist, but spoofing/tamper/battery signals are not established |
 
 ---
@@ -243,13 +244,13 @@ Development startup now consistently provisions the idempotent PostgreSQL sample
 
 ```
 Current Status: 73 / 87 COMPLETE; 14 stories remain across Waves C–E
-Queue Head:     US-54-VIEW-TRACKING-DASHBOARD-FINAL-ACCEPTANCE-001
-Deferred:       US-53-REPLAY-JOURNEYS-FINAL-ACCEPTANCE-001
+Queue Head:     US-55-HANDLE-GPS-EDGE-CASES-PRODUCT-DECISIONS-001
+Deferred:       US-53-REPLAY-JOURNEYS-FINAL-ACCEPTANCE-001; US-54-VIEW-TRACKING-DASHBOARD-FINAL-ACCEPTANCE-001
 ```
 
 1. **Wave A — Integration and exception-control foundations:** 2 / 2 COMPLETE / CLOSED (US-73 and US-78).
 2. **Wave B — Fuel control and financial links:** 5 / 5 COMPLETE / CLOSED (US-35, US-37, US-38, US-46, US-47).
-3. **Wave C — GPS and telematics:** US-48, US-50, US-52 and US-53 physical acceptance are on independent external-prerequisite holds; US-49 is accepted; US-54 is technically complete at V95 and final acceptance is next. US-51 and full US-55 still require telemetry/product decisions.
+3. **Wave C — GPS and telematics:** US-48, US-50, US-52, US-53 and US-54 physical acceptance are on independent external-prerequisite holds; US-49 is accepted; execute US-55 product decisions. US-51 remains blocked by the missing engine-state capability.
 4. **Wave D — Compliance and field mobility:** US-72, US-76.
 5. **Wave E — Analytics, integrity, resilience, disruption and user risk:** US-85, US-84, US-87, US-82, US-86.
 6. After 87/87: `FULL-SOURCE-PARITY-AUDIT-001`, then `FULL-PLATFORM-END-TO-END-ACCEPTANCE-001` after authorized parity disposition.
