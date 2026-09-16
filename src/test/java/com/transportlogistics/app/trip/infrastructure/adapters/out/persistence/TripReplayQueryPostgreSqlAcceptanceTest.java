@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.transportlogistics.app.support.PostgreSqlIntegrationTest;
 import com.transportlogistics.app.support.ReferenceFixtures;
 import com.transportlogistics.app.trip.TripReplayQuery;
+import com.transportlogistics.app.trip.TripDashboardQuery;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.UUID;
@@ -22,6 +23,7 @@ class TripReplayQueryPostgreSqlAcceptanceTest extends PostgreSqlIntegrationTest 
     @Autowired Flyway flyway;
     @Autowired JdbcTemplate jdbc;
     @Autowired TripReplayQuery replay;
+    @Autowired TripDashboardQuery dashboard;
 
     @BeforeEach
     void reset() {
@@ -105,6 +107,33 @@ class TripReplayQueryPostgreSqlAcceptanceTest extends PostgreSqlIntegrationTest 
 
         assertThat(plan).contains("idx_trip_tenant_vehicle_source_assignment");
         assertThat(plan).doesNotContain("Seq Scan on trip");
+    }
+
+    @Test
+    void dashboardBulkLookupReturnsOneActiveSameTenantContextPerVehicle() {
+        UUID vehicle = UUID.randomUUID();
+        UUID otherVehicle = UUID.randomUUID();
+        UUID older = insertTrip(TENANT, vehicle, START.minusSeconds(300), null,
+                "IN_PROGRESS", UUID.randomUUID(), "REVISION:2");
+        UUID latest = insertTrip(TENANT, vehicle, START.minusSeconds(60), null,
+                "DISPATCHED", UUID.randomUUID(), "REVISION:3");
+        insertTrip(TENANT, otherVehicle, START.minusSeconds(60), START,
+                "COMPLETED", null, null);
+        insertTrip(TENANT, vehicle, START.minusSeconds(30), null,
+                "CANCELLED", null, null);
+
+        var result = dashboard.findActiveContexts(
+                TENANT, java.util.Set.of(vehicle, otherVehicle), START);
+
+        assertThat(result).singleElement().satisfies(context -> {
+            assertThat(context.tripId()).isEqualTo(latest);
+            assertThat(context.tripId()).isNotEqualTo(older);
+            assertThat(context.vehicleId()).isEqualTo(vehicle);
+            assertThat(context.lifecycle()).isEqualTo("DISPATCHED");
+            assertThat(context.routeVersion()).isEqualTo("REVISION:3");
+        });
+        assertThat(dashboard.findActiveContexts(
+                UUID.randomUUID(), java.util.Set.of(vehicle), START)).isEmpty();
     }
 
     private UUID insertTrip(UUID tenant, UUID vehicle, Instant from, Instant to,

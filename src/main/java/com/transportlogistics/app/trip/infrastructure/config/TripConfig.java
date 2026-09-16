@@ -5,6 +5,7 @@ import com.transportlogistics.app.trip.DriverAssignmentLookup;
 import com.transportlogistics.app.trip.TripFuelContextLookup;
 import com.transportlogistics.app.trip.TripFuelPerformanceLookup;
 import com.transportlogistics.app.trip.TripReplayQuery;
+import com.transportlogistics.app.trip.TripDashboardQuery;
 import com.transportlogistics.app.trip.application.ports.in.TripUseCase;
 import com.transportlogistics.app.trip.application.ports.out.TripRepository;
 import com.transportlogistics.app.trip.application.ports.out.VehicleEligibilityPort;
@@ -15,7 +16,9 @@ import com.transportlogistics.app.trip.application.ports.out.TripTransaction;
 import com.transportlogistics.app.trip.application.ports.out.TripDispatchRepository;
 import com.transportlogistics.app.trip.application.service.TripService;
 import com.transportlogistics.app.trip.application.service.TripReplayQueryService;
+import com.transportlogistics.app.trip.application.service.TripDashboardQueryService;
 import com.transportlogistics.app.trip.application.ports.out.TripReplayRepository;
+import com.transportlogistics.app.trip.application.ports.out.TripDashboardRepository;
 import com.transportlogistics.app.trip.application.ports.out.TripActorPort;
 import com.transportlogistics.app.trip.application.ports.out.TripVehicleReadingPort;
 import org.springframework.context.annotation.Bean;
@@ -64,5 +67,10 @@ class TripConfig {
     @Bean
     TripReplayQuery tripReplayQuery(TripReplayRepository repository) {
         return new TripReplayQueryService(repository);
+    }
+
+    @Bean
+    TripDashboardQuery tripDashboardQuery(TripDashboardRepository repository) {
+        return new TripDashboardQueryService(repository);
     }
 }
