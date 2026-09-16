@@ -1,6 +1,7 @@
 package com.transportlogistics.app.tracking.domain.gpsedge;
 
 import java.time.Instant;
+import java.math.BigDecimal;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
@@ -79,7 +80,7 @@ public final class GpsReliabilityModels {
             Instant sourceTimestamp,
             Instant receivedAt,
             SignalState tamperState,
-            Integer batteryPercentage) {
+            BigDecimal batteryPercentage) {
         public Observation {
             Objects.requireNonNull(tenantId, "tenantId is required");
             Objects.requireNonNull(deviceId, "deviceId is required");
@@ -92,7 +93,9 @@ public final class GpsReliabilityModels {
                     || accuracyMeters <= 0 || accuracyMeters > 10_000)) {
                 throw new GpsEdgeCaseException("INVALID_ACCURACY", "Accuracy must be greater than zero and at most 10000 metres");
             }
-            if (batteryPercentage != null && (batteryPercentage < 0 || batteryPercentage > 100)) {
+            if (batteryPercentage != null && (batteryPercentage.compareTo(BigDecimal.ZERO) < 0
+                    || batteryPercentage.compareTo(BigDecimal.valueOf(100)) > 0
+                    || Math.max(batteryPercentage.scale(), 0) > 3)) {
                 throw new GpsEdgeCaseException("INVALID_BATTERY", "Battery percentage must be between zero and 100");
             }
         }

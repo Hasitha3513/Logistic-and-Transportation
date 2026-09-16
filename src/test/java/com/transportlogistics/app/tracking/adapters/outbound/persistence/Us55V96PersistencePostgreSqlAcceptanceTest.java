@@ -51,7 +51,7 @@ class Us55V96PersistencePostgreSqlAcceptanceTest {
     void cleanV1ToV96CreatesOnlyTheAuthorizedPersistenceFoundation() {
         cleanAndMigrate();
 
-        assertThat(version()).isEqualTo("96");
+        assertThat(version()).isEqualTo("97");
         assertThat(jdbc.queryForList("""
                 SELECT column_name FROM information_schema.columns
                 WHERE table_schema='public' AND table_name='tracking_position_history'
@@ -95,7 +95,7 @@ class Us55V96PersistencePostgreSqlAcceptanceTest {
 
         flyway.migrate();
 
-        assertThat(version()).isEqualTo("96");
+        assertThat(version()).isEqualTo("97");
         assertThat(jdbc.queryForMap("SELECT event_version,tamper_state,battery_level_percent,"
                 + "battery_voltage_volts,external_power_state,battery_charging_state "
                 + "FROM tracking_position_history WHERE tenant_id=? AND id=?", tenant, history))
@@ -120,7 +120,7 @@ class Us55V96PersistencePostgreSqlAcceptanceTest {
         jdbc.execute("DROP TABLE tracking_device_telemetry_capability");
 
         flyway.migrate();
-        assertThat(version()).isEqualTo("96");
+        assertThat(version()).isEqualTo("97");
     }
 
     @Test

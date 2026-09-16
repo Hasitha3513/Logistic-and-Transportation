@@ -8,6 +8,7 @@ import static org.mockito.Mockito.when;
 
 import com.transportlogistics.app.shared.domain.DependencyUnavailableException;
 import com.transportlogistics.app.tracking.application.telemetry.LiveTelemetryProjection;
+import com.transportlogistics.app.tracking.application.GpsReliabilityEvaluationService;
 import com.transportlogistics.app.tracking.application.telemetry.TrackingTelemetryIngestedV1;
 import com.transportlogistics.app.tracking.domain.TrackingModels.EngineState;
 import com.transportlogistics.app.tracking.ports.outbound.LiveTelemetryProjectionPort;
@@ -18,6 +19,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.UUID;
+import java.util.Set;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.header.internals.RecordHeader;
 import org.apache.kafka.common.header.internals.RecordHeaders;
@@ -62,8 +64,23 @@ class TrackingLiveTelemetryProjectorTest {
     }
 
     private static TrackingLiveTelemetryProjector projector(LiveTelemetryProjectionPort port) {
-        return new TrackingLiveTelemetryProjector(port, new SimpleMeterRegistry(),
-                Clock.fixed(now(), ZoneOffset.UTC));
+        var reliability = mock(GpsReliabilityEvaluationService.class);
+        when(reliability.evaluateAndRecord(org.mockito.ArgumentMatchers.any(),
+                org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any()))
+                .thenReturn(eligible());
+        return new TrackingLiveTelemetryProjector(port, reliability, new SimpleMeterRegistry(),
+                Clock.fixed(now(), ZoneOffset.UTC), "tracking.telemetry.ingested.v1",
+                "tracking.telemetry.ingested.v2");
+    }
+
+    private static com.transportlogistics.app.tracking.domain.gpsedge.GpsReliabilityModels.Assessment eligible() {
+        return new com.transportlogistics.app.tracking.domain.gpsedge.GpsReliabilityModels.Assessment(
+                com.transportlogistics.app.tracking.domain.gpsedge.GpsReliabilityModels.Trust.TRUSTED,
+                com.transportlogistics.app.tracking.domain.gpsedge.GpsReliabilityModels.Ordering.IN_ORDER,
+                com.transportlogistics.app.tracking.domain.gpsedge.GpsReliabilityModels.Connectivity.LIVE,
+                com.transportlogistics.app.tracking.domain.gpsedge.GpsReliabilityModels.ReliabilityState.NORMAL,
+                Set.of(com.transportlogistics.app.tracking.domain.gpsedge.GpsReliabilityModels.Quality.NORMAL),
+                true, true);
     }
 
     private static ConsumerRecord<String, TrackingTelemetryIngestedV1> record(

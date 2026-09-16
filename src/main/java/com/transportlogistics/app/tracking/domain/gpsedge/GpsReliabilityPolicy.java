@@ -11,6 +11,7 @@ import com.transportlogistics.app.tracking.domain.gpsedge.GpsReliabilityModels.S
 import com.transportlogistics.app.tracking.domain.gpsedge.GpsReliabilityModels.Trust;
 import java.time.Duration;
 import java.time.Instant;
+import java.math.BigDecimal;
 import java.util.EnumSet;
 import java.util.Objects;
 
@@ -74,16 +75,16 @@ public final class GpsReliabilityPolicy {
     }
 
     public static boolean isRapidBatteryDrain(
-            Integer previousPercentage,
+            BigDecimal previousPercentage,
             Instant previousAt,
-            Integer currentPercentage,
+            BigDecimal currentPercentage,
             Instant currentAt) {
         if (previousPercentage == null || currentPercentage == null || previousAt == null || currentAt == null
                 || currentAt.isBefore(previousAt)) {
             return false;
         }
         return Duration.between(previousAt, currentAt).compareTo(Duration.ofMinutes(30)) <= 0
-                && previousPercentage - currentPercentage >= 20;
+                && previousPercentage.subtract(currentPercentage).compareTo(BigDecimal.valueOf(20)) >= 0;
     }
 
     public static boolean isImpossibleMovement(Observation previous, Observation current) {
@@ -149,10 +150,10 @@ public final class GpsReliabilityPolicy {
         }
     }
 
-    private static void classifyBattery(Integer battery, EnumSet<Quality> qualities) {
-        if (battery != null && battery <= 10) {
+    private static void classifyBattery(BigDecimal battery, EnumSet<Quality> qualities) {
+        if (battery != null && battery.compareTo(BigDecimal.TEN) <= 0) {
             qualities.add(Quality.BATTERY_CRITICAL);
-        } else if (battery != null && battery <= 20) {
+        } else if (battery != null && battery.compareTo(BigDecimal.valueOf(20)) <= 0) {
             qualities.add(Quality.BATTERY_LOW);
         }
     }

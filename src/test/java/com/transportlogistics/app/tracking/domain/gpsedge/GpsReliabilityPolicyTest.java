@@ -105,8 +105,10 @@ class GpsReliabilityPolicyTest {
         assertThat(low.qualities()).contains(Quality.BATTERY_LOW);
         assertThat(low.trust()).isEqualTo(Trust.TRUSTED);
         assertThat(critical.qualities()).contains(Quality.BATTERY_CRITICAL);
-        assertThat(GpsReliabilityPolicy.isRapidBatteryDrain(70, NOW.minusSeconds(1_800), 50, NOW)).isTrue();
-        assertThat(GpsReliabilityPolicy.isRapidBatteryDrain(70, NOW.minusSeconds(1_801), 50, NOW)).isFalse();
+        assertThat(GpsReliabilityPolicy.isRapidBatteryDrain(BigDecimal.valueOf(70), NOW.minusSeconds(1_800),
+                BigDecimal.valueOf(50), NOW)).isTrue();
+        assertThat(GpsReliabilityPolicy.isRapidBatteryDrain(BigDecimal.valueOf(70), NOW.minusSeconds(1_801),
+                BigDecimal.valueOf(50), NOW)).isFalse();
     }
 
     @Test
@@ -131,7 +133,7 @@ class GpsReliabilityPolicyTest {
             Integer battery) {
         return new Observation(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(),
                 coordinate("6.9271", "79.8612"), accuracy, sourceTimestamp, receivedAt,
-                SignalState.UNKNOWN, battery);
+                SignalState.UNKNOWN, battery == null ? null : BigDecimal.valueOf(battery));
     }
 
     private static EvaluationContext context(Observation latestTrusted) {

@@ -10,6 +10,9 @@ import com.transportlogistics.app.tracking.domain.TrackingModels.Trust;
 import com.transportlogistics.app.tracking.ports.outbound.HistoricalTelemetryStorePort;
 import com.transportlogistics.app.tracking.ports.outbound.HistoricalTelemetryLookupPort;
 import com.transportlogistics.app.tracking.ports.outbound.TelemetryEvaluationDispatchPort;
+import com.transportlogistics.app.tracking.ports.outbound.TelemetryCapabilityLookupPort;
+import com.transportlogistics.app.tracking.application.provider.TelemetryCapabilityState;
+import com.transportlogistics.app.tracking.application.provider.TelemetrySignalCapability;
 import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -33,17 +36,24 @@ public final class JdbcHistoricalTelemetryStore implements HistoricalTelemetrySt
     private final JdbcTemplate jdbc;
     private final TransactionTemplate transactions;
     private final TelemetryEvaluationDispatchPort dispatch;
+    private final TelemetryCapabilityLookupPort capabilities;
 
     public JdbcHistoricalTelemetryStore(JdbcTemplate jdbc, TransactionTemplate transactions) {
-        this(jdbc, transactions, new NoDispatch());
+        this(jdbc, transactions, new NoDispatch(), new NoCapabilities());
+    }
+
+    public JdbcHistoricalTelemetryStore(JdbcTemplate jdbc, TransactionTemplate transactions,
+            TelemetryEvaluationDispatchPort dispatch) {
+        this(jdbc, transactions, dispatch, new NoCapabilities());
     }
 
     @org.springframework.beans.factory.annotation.Autowired
     public JdbcHistoricalTelemetryStore(JdbcTemplate jdbc, TransactionTemplate transactions,
-            TelemetryEvaluationDispatchPort dispatch) {
+            TelemetryEvaluationDispatchPort dispatch, TelemetryCapabilityLookupPort capabilities) {
         this.jdbc = jdbc;
         this.transactions = transactions;
         this.dispatch = dispatch;
+        this.capabilities = capabilities;
     }
 
     @Override
@@ -120,11 +130,16 @@ public final class JdbcHistoricalTelemetryStore implements HistoricalTelemetrySt
                                 ? Ordering.CLOCK_SKEW
                                 : currentTrusted != null && event.recordedAt().isBefore(currentTrusted)
                                         ? Ordering.OUT_OF_ORDER : Ordering.IN_ORDER;
-        Trust trust = ordering == Ordering.LATE || ordering == Ordering.FUTURE
+        boolean nullIsland = event.latitude().compareTo(BigDecimal.ZERO) == 0
+                && event.longitude().compareTo(BigDecimal.ZERO) == 0;
+        boolean supportedTamper = event instanceof TrackingTelemetryIngestedV2 v2
+                && v2.tamperState() == TrackingTelemetryIngestedV2.TamperState.DETECTED
+                && capability(event, TelemetrySignalCapability.TAMPER) == TelemetryCapabilityState.SUPPORTED;
+        Trust trust = ordering != Ordering.IN_ORDER || nullIsland || supportedTamper
                 ? Trust.UNTRUSTED
                 : event.horizontalAccuracyMeters() == null
                         ? Trust.UNKNOWN
-                        : event.horizontalAccuracyMeters().compareTo(BigDecimal.valueOf(1000)) <= 0
+                        : event.horizontalAccuracyMeters().compareTo(BigDecimal.valueOf(100)) <= 0
                                 ? Trust.TRUSTED : Trust.UNTRUSTED;
         String quality = event.horizontalAccuracyMeters() == null
                 ? "ACCURACY_UNKNOWN" : trust == Trust.UNTRUSTED ? "POOR_ACCURACY" : "ACCEPTABLE";
@@ -139,6 +154,15 @@ public final class JdbcHistoricalTelemetryStore implements HistoricalTelemetrySt
                 event instanceof TrackingTelemetryIngestedV2 v2 ? v2.batteryVoltageVolts() : null,
                 event instanceof TrackingTelemetryIngestedV2 v2 ? v2.externalPowerState() : null,
                 event instanceof TrackingTelemetryIngestedV2 v2 ? v2.batteryChargingState() : null);
+    }
+
+    private TelemetryCapabilityState capability(
+            CanonicalTelemetryEvent event, TelemetrySignalCapability capability) {
+        try {
+            return capabilities.resolve(event.tenantId(), event.deviceId(), capability, event.recordedAt());
+        } catch (RuntimeException exception) {
+            return TelemetryCapabilityState.UNKNOWN;
+        }
     }
 
     private boolean reducible(HistoricalTelemetry candidate, HistoricalTelemetry previous) {
@@ -259,5 +283,13 @@ public final class JdbcHistoricalTelemetryStore implements HistoricalTelemetrySt
         @Override public void complete(UUID id, String owner, Instant now) { }
         @Override public void retry(UUID id, String owner, Instant now, Instant next, String code) { }
         @Override public void fail(UUID id, String owner, Instant now, String code) { }
+    }
+
+    private static final class NoCapabilities implements TelemetryCapabilityLookupPort {
+        @Override
+        public TelemetryCapabilityState resolve(UUID tenantId, UUID deviceId,
+                TelemetrySignalCapability capability, Instant sourceTimestamp) {
+            return TelemetryCapabilityState.UNKNOWN;
+        }
     }
 }

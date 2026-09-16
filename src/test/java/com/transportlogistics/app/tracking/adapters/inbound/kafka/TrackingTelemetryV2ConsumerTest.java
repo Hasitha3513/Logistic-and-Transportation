@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.transportlogistics.app.tracking.application.telemetry.LiveTelemetryProjection;
+import com.transportlogistics.app.tracking.application.GpsReliabilityEvaluationService;
 import com.transportlogistics.app.tracking.application.telemetry.TrackingTelemetryIngestedV2;
 import com.transportlogistics.app.tracking.domain.TrackingModels.EngineState;
 import com.transportlogistics.app.tracking.ports.outbound.HistoricalTelemetryStorePort;
@@ -17,6 +18,7 @@ import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.Set;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.junit.jupiter.api.Test;
 import org.springframework.kafka.support.Acknowledgment;
@@ -33,7 +35,11 @@ class TrackingTelemetryV2ConsumerTest {
         var persister = new TrackingHistoricalTelemetryPersister(
                 history, new SimpleMeterRegistry(), "tracking.telemetry.ingested.v1",
                 "tracking.telemetry.ingested.v2");
-        var projector = new TrackingLiveTelemetryProjector(live, new SimpleMeterRegistry(),
+        var reliability = org.mockito.Mockito.mock(GpsReliabilityEvaluationService.class);
+        org.mockito.Mockito.when(reliability.evaluateAndRecord(org.mockito.ArgumentMatchers.any(),
+                org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any()))
+                .thenReturn(eligible());
+        var projector = new TrackingLiveTelemetryProjector(live, reliability, new SimpleMeterRegistry(),
                 Clock.fixed(event.receivedAt(), ZoneOffset.UTC), "tracking.telemetry.ingested.v1",
                 "tracking.telemetry.ingested.v2");
 
@@ -45,6 +51,16 @@ class TrackingTelemetryV2ConsumerTest {
         assertThat(event.tamperState()).isEqualTo(TrackingTelemetryIngestedV2.TamperState.CLEAR);
         assertThat(historyAck.acknowledged).isTrue();
         assertThat(liveAck.acknowledged).isTrue();
+    }
+
+    private static com.transportlogistics.app.tracking.domain.gpsedge.GpsReliabilityModels.Assessment eligible() {
+        return new com.transportlogistics.app.tracking.domain.gpsedge.GpsReliabilityModels.Assessment(
+                com.transportlogistics.app.tracking.domain.gpsedge.GpsReliabilityModels.Trust.TRUSTED,
+                com.transportlogistics.app.tracking.domain.gpsedge.GpsReliabilityModels.Ordering.IN_ORDER,
+                com.transportlogistics.app.tracking.domain.gpsedge.GpsReliabilityModels.Connectivity.LIVE,
+                com.transportlogistics.app.tracking.domain.gpsedge.GpsReliabilityModels.ReliabilityState.NORMAL,
+                Set.of(com.transportlogistics.app.tracking.domain.gpsedge.GpsReliabilityModels.Quality.NORMAL),
+                true, true);
     }
 
     @Test

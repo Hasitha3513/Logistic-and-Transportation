@@ -9,6 +9,10 @@ import java.util.UUID;
 public interface GpsExceptionRepositoryPort {
     Optional<GpsExceptionEpisode> findActive(UUID tenantId, UUID deviceId, ExceptionType type);
 
+    Optional<GpsExceptionEpisode> findActiveForUpdate(UUID tenantId, UUID deviceId, ExceptionType type);
+
+    List<GpsExceptionEpisode> findActiveByDeviceForUpdate(UUID tenantId, UUID deviceId);
+
     Optional<GpsExceptionEpisode> findById(UUID tenantId, UUID episodeId);
 
     List<GpsExceptionEpisode> findByTenant(UUID tenantId, int limit);

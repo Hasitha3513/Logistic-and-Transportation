@@ -3,6 +3,7 @@ package com.transportlogistics.app.tracking.adapters.inbound.kafka;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -90,8 +91,19 @@ class KafkaRedisLiveProjectorIntegrationTest {
                     var records = consumer.poll(Duration.ofSeconds(10));
                     assertThat(records).hasSize(1);
                     var acknowledgment = mock(Acknowledgment.class);
-                    new TrackingLiveTelemetryProjector(liveState, new SimpleMeterRegistry(),
-                            Clock.fixed(Instant.parse("2026-09-13T12:00:10Z"), ZoneOffset.UTC))
+                    var reliability = mock(com.transportlogistics.app.tracking.application.GpsReliabilityEvaluationService.class);
+                    when(reliability.evaluateAndRecord(org.mockito.ArgumentMatchers.any(),
+                            org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any()))
+                            .thenReturn(new com.transportlogistics.app.tracking.domain.gpsedge.GpsReliabilityModels.Assessment(
+                                    com.transportlogistics.app.tracking.domain.gpsedge.GpsReliabilityModels.Trust.TRUSTED,
+                                    com.transportlogistics.app.tracking.domain.gpsedge.GpsReliabilityModels.Ordering.IN_ORDER,
+                                    com.transportlogistics.app.tracking.domain.gpsedge.GpsReliabilityModels.Connectivity.LIVE,
+                                    com.transportlogistics.app.tracking.domain.gpsedge.GpsReliabilityModels.ReliabilityState.NORMAL,
+                                    java.util.Set.of(com.transportlogistics.app.tracking.domain.gpsedge.GpsReliabilityModels.Quality.NORMAL),
+                                    true, true));
+                    new TrackingLiveTelemetryProjector(liveState, reliability, new SimpleMeterRegistry(),
+                            Clock.fixed(Instant.parse("2026-09-13T12:00:10Z"), ZoneOffset.UTC),
+                            "tracking.telemetry.ingested.v1", "tracking.telemetry.ingested.v2")
                             .consume(records.iterator().next(), acknowledgment);
                     verify(acknowledgment).acknowledge();
                     assertThat(liveState.find(event.tenantId(), event.vehicleId()))

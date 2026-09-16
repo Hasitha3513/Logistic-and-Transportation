@@ -16,6 +16,7 @@ public interface LiveTelemetryProjectionPort {
     enum ProjectionResult {
         UPDATED,
         DUPLICATE,
-        STALE
+        STALE,
+        REJECTED
     }
 }

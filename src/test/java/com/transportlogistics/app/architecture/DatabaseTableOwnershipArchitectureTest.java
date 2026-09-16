@@ -180,7 +180,8 @@ class DatabaseTableOwnershipArchitectureTest {
                 "tracking_vehicle_geofence_state", "tracking_geofence_transition",
                 "tracking_geofence_evaluation_job", "tracking_speed_rule", "tracking_speed_state",
                 "tracking_speed_episode", "tracking_speed_evaluation_job",
-                "tracking_telemetry_evaluation_dispatch");
+                "tracking_telemetry_evaluation_dispatch", "tracking_gps_exception_episode",
+                "tracking_gps_exception_evidence");
         own(ownership, "tracking", "tracking_route_deviation_rule",
                 "tracking_route_deviation_state", "tracking_route_deviation_episode",
                 "tracking_route_deviation_review");

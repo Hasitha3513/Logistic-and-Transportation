@@ -76,6 +76,11 @@ final class TelemetryEvaluationDispatchWorker {
 
     private void evaluate(TelemetryEvaluationDispatchPort.Evaluator evaluator,
             HistoricalTelemetry fact, Instant now) {
+        if (!detectorEligible(fact, now)) {
+            meters.counter("tracking.telemetry.evaluation.dispatch", "result", "guarded",
+                    "evaluator", evaluator.name()).increment();
+            return;
+        }
         switch(evaluator) {
             case GEOFENCE -> geofence.evaluate(new GeofencePosition(fact.tenantId(),fact.eventId(),
                     fact.vehicleId(),fact.recordedAt(),new Wgs84Coordinate(
@@ -93,6 +98,18 @@ final class TelemetryEvaluationDispatchWorker {
                     true,false,RouteDeviationPosition.Trust.valueOf(fact.trust().name()),true,
                     RouteDeviationPosition.Ordering.valueOf(fact.ordering().name())));
         }
+    }
+
+    private static boolean detectorEligible(HistoricalTelemetry fact, Instant now) {
+        Duration sourceAge = Duration.between(fact.recordedAt(), now);
+        return fact.trust() == com.transportlogistics.app.tracking.domain.TrackingModels.Trust.TRUSTED
+                && fact.ordering() == com.transportlogistics.app.tracking.domain.TrackingModels.Ordering.IN_ORDER
+                && fact.horizontalAccuracyMeters() != null
+                && fact.horizontalAccuracyMeters().signum() > 0
+                && fact.horizontalAccuracyMeters().compareTo(java.math.BigDecimal.valueOf(100)) <= 0
+                && !(fact.latitude().signum() == 0 && fact.longitude().signum() == 0)
+                && !sourceAge.isNegative()
+                && sourceAge.compareTo(Duration.ofMinutes(5)) <= 0;
     }
 
     private static Duration backoff(int attempts) { return Duration.ofSeconds(Math.min(300,5L<<Math.min(attempts,5))); }
