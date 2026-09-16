@@ -7,9 +7,12 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.DockerClientFactory;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.AfterEach;
 import org.flywaydb.core.Flyway;
 
+import javax.sql.DataSource;
+import java.sql.SQLException;
 import java.util.Locale;
 
 @SpringBootTest
@@ -18,6 +21,7 @@ public abstract class PostgreSqlIntegrationTest {
 
     private static final String MODE_ENV = "TRANSPORT_TEST_DB_MODE";
     private static final String LOCAL_MODE = "local";
+    private static final String ACCEPTANCE_DATABASE = AcceptanceDatabaseGuard.REQUIRED_DATABASE;
     private static final TestDatabaseConfig DATABASE = TestDatabaseConfig.resolve();
     protected static final PostgreSQLContainer<?> POSTGRES;
 
@@ -31,7 +35,7 @@ public abstract class PostgreSqlIntegrationTest {
                     throw new IllegalStateException("Docker is required for PostgreSQL integration tests");
                 }
                 container = new PostgreSQLContainer<>("postgres:16-alpine")
-                        .withDatabaseName("transport_integration")
+                        .withDatabaseName(ACCEPTANCE_DATABASE)
                         .withUsername("transport_test")
                         .withPassword("transport_test");
                 container.start();
@@ -64,6 +68,22 @@ public abstract class PostgreSqlIntegrationTest {
     }
     @Autowired
     private Flyway flyway;
+    @Autowired
+    private DataSource dataSource;
+
+    @BeforeEach
+    void verifyDestructiveAcceptanceDatabase() {
+        try (var connection = dataSource.getConnection();
+             var statement = connection.createStatement();
+             var result = statement.executeQuery("SELECT current_database()")) {
+            if (!result.next()) {
+                throw new IllegalStateException("Cannot verify the connected PostgreSQL database");
+            }
+            AcceptanceDatabaseGuard.requireConnectedDatabase(connection.getCatalog(), result.getString(1));
+        } catch (SQLException exception) {
+            throw new IllegalStateException("Cannot verify the connected PostgreSQL database", exception);
+        }
+    }
 
     @AfterEach
     void cleanDatabase() {
@@ -104,12 +124,11 @@ public abstract class PostgreSqlIntegrationTest {
             var username = required("TRANSPORT_TEST_DB_USERNAME");
             var password = required("TRANSPORT_TEST_DB_PASSWORD");
             var normalizedUrl = url.toLowerCase(Locale.ROOT);
-            var acknowledged = "true".equalsIgnoreCase(System.getenv("TRANSPORT_TEST_DB_ALLOW_DESTRUCTIVE"));
             if (!normalizedUrl.startsWith("jdbc:postgresql:")
-                    || (!normalizedUrl.contains("_test") && !normalizedUrl.contains("_acceptance")
-                    && !normalizedUrl.contains("_e2e") && !acknowledged)) {
-                throw new IllegalStateException("Local PostgreSQL test database must use a test-only name "
-                        + "(_test, _acceptance, or _e2e) or set TRANSPORT_TEST_DB_ALLOW_DESTRUCTIVE=true");
+                    || !normalizedUrl.matches("^jdbc:postgresql://[^/?#]+/"
+                    + ACCEPTANCE_DATABASE + "(?:[?].*)?$")) {
+                throw new IllegalStateException("Local PostgreSQL integration tests require database "
+                        + ACCEPTANCE_DATABASE);
             }
             return new TestDatabaseConfig(true, url, username, password);
         }
