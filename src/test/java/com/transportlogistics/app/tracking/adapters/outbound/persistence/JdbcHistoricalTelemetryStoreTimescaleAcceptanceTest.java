@@ -29,6 +29,7 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
+import com.transportlogistics.app.support.AcceptanceDatabaseGuard;
 
 @Testcontainers
 class JdbcHistoricalTelemetryStoreTimescaleAcceptanceTest {
@@ -36,7 +37,7 @@ class JdbcHistoricalTelemetryStoreTimescaleAcceptanceTest {
     static final PostgreSQLContainer<?> DATABASE = new PostgreSQLContainer<>(
             DockerImageName.parse("timescale/timescaledb:latest-pg16")
                     .asCompatibleSubstituteFor("postgres"))
-            .withDatabaseName("tracking_history_acceptance")
+            .withDatabaseName(AcceptanceDatabaseGuard.REQUIRED_DATABASE)
             .withUsername("transport_test")
             .withPassword("transport_test");
 
@@ -46,6 +47,9 @@ class JdbcHistoricalTelemetryStoreTimescaleAcceptanceTest {
 
     @BeforeAll
     static void migrate() {
+        var safetyDataSource = new DriverManagerDataSource(
+                DATABASE.getJdbcUrl(), DATABASE.getUsername(), DATABASE.getPassword());
+        AcceptanceDatabaseGuard.verify(safetyDataSource);
         Flyway.configure().dataSource(DATABASE.getJdbcUrl(), DATABASE.getUsername(), DATABASE.getPassword())
                 .placeholders(placeholders()).load().migrate();
         var dataSource = new DriverManagerDataSource(

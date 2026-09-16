@@ -40,6 +40,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.kafka.KafkaContainer;
 import org.testcontainers.utility.DockerImageName;
+import com.transportlogistics.app.support.AcceptanceDatabaseGuard;
 
 class KafkaTimescaleHistoricalTelemetryAcceptanceTest {
     @Test
@@ -48,10 +49,13 @@ class KafkaTimescaleHistoricalTelemetryAcceptanceTest {
                 .asCompatibleSubstituteFor("postgres");
         try (var kafka = new KafkaContainer(DockerImageName.parse("apache/kafka:3.7.2"));
                 var database = new PostgreSQLContainer<>(timescaleImage)
-                        .withDatabaseName("kafka_timescale_acceptance")
+                        .withDatabaseName(AcceptanceDatabaseGuard.REQUIRED_DATABASE)
                         .withUsername("transport_test").withPassword("transport_test")) {
             kafka.start();
             database.start();
+            var safetyDataSource = new DriverManagerDataSource(
+                    database.getJdbcUrl(), database.getUsername(), database.getPassword());
+            AcceptanceDatabaseGuard.verify(safetyDataSource);
             String topic = "tracking.telemetry.ingested.v1";
             try (var admin = AdminClient.create(Map.of(
                     AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, kafka.getBootstrapServers()))) {

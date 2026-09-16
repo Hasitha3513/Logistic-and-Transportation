@@ -1,8 +1,8 @@
 package com.transportlogistics.app.support;
 
-final class AcceptanceDatabaseGuard {
+public final class AcceptanceDatabaseGuard {
 
-    static final String REQUIRED_DATABASE = "transport_logistics_acceptance";
+    public static final String REQUIRED_DATABASE = "transport_logistics_acceptance";
 
     private AcceptanceDatabaseGuard() {
     }
@@ -12,6 +12,19 @@ final class AcceptanceDatabaseGuard {
                 || !REQUIRED_DATABASE.equals(queriedDatabase)) {
             throw new IllegalStateException("Destructive PostgreSQL integration tests require connected database "
                     + REQUIRED_DATABASE);
+        }
+    }
+
+    public static void verify(javax.sql.DataSource dataSource) {
+        try (var connection = dataSource.getConnection();
+             var statement = connection.createStatement();
+             var result = statement.executeQuery("SELECT current_database()")) {
+            if (!result.next()) {
+                throw new IllegalStateException("Cannot verify the connected PostgreSQL database");
+            }
+            requireConnectedDatabase(connection.getCatalog(), result.getString(1));
+        } catch (java.sql.SQLException exception) {
+            throw new IllegalStateException("Cannot verify the connected PostgreSQL database", exception);
         }
     }
 }

@@ -12,7 +12,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.flywaydb.core.Flyway;
 
 import javax.sql.DataSource;
-import java.sql.SQLException;
 import java.util.Locale;
 
 @SpringBootTest
@@ -73,16 +72,7 @@ public abstract class PostgreSqlIntegrationTest {
 
     @BeforeEach
     void verifyDestructiveAcceptanceDatabase() {
-        try (var connection = dataSource.getConnection();
-             var statement = connection.createStatement();
-             var result = statement.executeQuery("SELECT current_database()")) {
-            if (!result.next()) {
-                throw new IllegalStateException("Cannot verify the connected PostgreSQL database");
-            }
-            AcceptanceDatabaseGuard.requireConnectedDatabase(connection.getCatalog(), result.getString(1));
-        } catch (SQLException exception) {
-            throw new IllegalStateException("Cannot verify the connected PostgreSQL database", exception);
-        }
+        AcceptanceDatabaseGuard.verify(dataSource);
     }
 
     @AfterEach

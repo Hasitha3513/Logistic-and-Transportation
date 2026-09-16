@@ -9,6 +9,8 @@ import org.flywaydb.core.Flyway;
 import org.junit.jupiter.api.Test;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.utility.DockerImageName;
+import com.transportlogistics.app.support.AcceptanceDatabaseGuard;
+import org.springframework.jdbc.datasource.DriverManagerDataSource;
 
 public class HybridTelemetryTimescaleMigrationAcceptanceTest {
 
@@ -17,10 +19,12 @@ public class HybridTelemetryTimescaleMigrationAcceptanceTest {
         var image = DockerImageName.parse("timescale/timescaledb:latest-pg16")
                 .asCompatibleSubstituteFor("postgres");
         try (var database = new PostgreSQLContainer<>(image)
-                .withDatabaseName("transport_timescale_acceptance")
+                .withDatabaseName(AcceptanceDatabaseGuard.REQUIRED_DATABASE)
                 .withUsername("transport_test")
                 .withPassword("transport_test")) {
             database.start();
+            AcceptanceDatabaseGuard.verify(new DriverManagerDataSource(
+                    database.getJdbcUrl(), database.getUsername(), database.getPassword()));
             Flyway.configure()
                     .dataSource(database.getJdbcUrl(), database.getUsername(), database.getPassword())
                     .placeholders(placeholdersForTs04())
@@ -81,10 +85,12 @@ public class HybridTelemetryTimescaleMigrationAcceptanceTest {
         var image = DockerImageName.parse("timescale/timescaledb:latest-pg16")
                 .asCompatibleSubstituteFor("postgres");
         try (var database = new PostgreSQLContainer<>(image)
-                .withDatabaseName("transport_timescale_upgrade")
+                .withDatabaseName(AcceptanceDatabaseGuard.REQUIRED_DATABASE)
                 .withUsername("transport_test")
                 .withPassword("transport_test")) {
             database.start();
+            AcceptanceDatabaseGuard.verify(new DriverManagerDataSource(
+                    database.getJdbcUrl(), database.getUsername(), database.getPassword()));
             var configuration = Flyway.configure()
                     .dataSource(database.getJdbcUrl(), database.getUsername(), database.getPassword())
                     .placeholders(placeholdersForTs04());
