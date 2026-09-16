@@ -167,7 +167,7 @@ class RouteDeviationV88PostgreSqlAcceptanceTest extends PostgreSqlIntegrationTes
         assertThat(jdbc.queryForObject("""
                 SELECT version FROM flyway_schema_history WHERE success
                 ORDER BY installed_rank DESC LIMIT 1
-                """, String.class)).isEqualTo("94");
+                """, String.class)).isEqualTo("95");
         assertThat(jdbc.queryForObject("""
                 SELECT count(*) FROM information_schema.tables WHERE table_schema='public'
                 AND table_name IN ('route_revision_geometry','route_revision_geometry_point',
@@ -203,7 +203,7 @@ class RouteDeviationV88PostgreSqlAcceptanceTest extends PostgreSqlIntegrationTes
 
         flyway.migrate();
 
-        assertThat(flyway.info().current().getVersion().getVersion()).isEqualTo("94");
+        assertThat(flyway.info().current().getVersion().getVersion()).isEqualTo("95");
         assertThat(jdbc.queryForObject(
                 "SELECT count(*) FROM tracking_position_history WHERE id=?",
                 Integer.class, historyId)).isOne();

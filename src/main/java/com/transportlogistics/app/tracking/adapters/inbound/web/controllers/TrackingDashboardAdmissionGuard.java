@@ -4,6 +4,7 @@ import com.transportlogistics.app.shared.domain.TooManyRequestsException;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
 import java.time.Clock;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -39,10 +40,16 @@ final class TrackingDashboardAdmissionGuard {
         return Timer.start(meters);
     }
 
-    void complete(Timer.Sample sample, String outcome, int resultCount, String sourceStatus) {
+    void complete(Timer.Sample sample, String outcome, int resultCount, String sourceStatus,
+            Set<String> includedCategories) {
         sample.stop(meters.timer("tracking.dashboard.latency", "outcome", outcome,
                 "sourceStatus", sourceStatus));
         meters.summary("tracking.dashboard.result_size").record(resultCount);
+        includedCategories.forEach(category -> meters.counter(
+                "tracking.dashboard.included", "category", category).increment());
+        if ("DEGRADED".equals(sourceStatus)) {
+            meters.counter("tracking.dashboard.degraded", "reason", "REDIS_UNAVAILABLE").increment();
+        }
     }
 
     private record ActorWindow(UUID tenantId, UUID actorId, long minute) { }

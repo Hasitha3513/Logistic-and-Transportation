@@ -6,16 +6,22 @@ import static org.mockito.Mockito.when;
 import com.transportlogistics.app.shared.domain.DependencyUnavailableException;
 import com.transportlogistics.app.support.PostgreSqlIntegrationTest;
 import com.transportlogistics.app.tracking.domain.dashboard.TrackingDashboardModels.DashboardFilter;
+import com.transportlogistics.app.tracking.domain.dashboard.TrackingDashboardModels.DashboardQuery;
+import com.transportlogistics.app.tracking.domain.dashboard.TrackingDashboardModels.Disclosure;
 import com.transportlogistics.app.tracking.domain.dashboard.TrackingDashboardModels.SourceStatus;
+import com.transportlogistics.app.tracking.application.TrackingDashboardQueryService;
 import com.transportlogistics.app.tracking.ports.outbound.LiveTelemetryProjectionPort;
 import com.transportlogistics.app.tracking.ports.outbound.TrackingDashboardLiveStatePort;
 import com.transportlogistics.app.tracking.ports.outbound.TrackingDashboardIncidentPort;
 import java.math.BigDecimal;
+import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.Executors;
 import org.flywaydb.core.Flyway;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
@@ -33,6 +39,7 @@ class TrackingDashboardLiveStatePostgreSqlAcceptanceTest extends PostgreSqlInteg
     @Autowired JdbcTemplate jdbc;
     @Autowired TrackingDashboardLiveStatePort liveState;
     @Autowired TrackingDashboardIncidentPort incidents;
+    @Autowired TrackingDashboardQueryService dashboard;
     @MockBean LiveTelemetryProjectionPort redis;
 
     @BeforeEach
@@ -63,6 +70,23 @@ class TrackingDashboardLiveStatePostgreSqlAcceptanceTest extends PostgreSqlInteg
     }
 
     @Test
+    void recoversFromRedisFailureWithoutChangingDatabaseFallbackEvidence() {
+        UUID vehicle = UUID.randomUUID();
+        insert(vehicle, NOW.minusSeconds(30), NOW.minusSeconds(29), "TRUSTED", "6.927", "79.861", "8");
+        when(redis.findLive(TENANT, NOW, 500))
+                .thenThrow(new DependencyUnavailableException(
+                        "TRACKING_LIVE_PROJECTION_UNAVAILABLE", "unavailable", null))
+                .thenReturn(List.of());
+
+        var degraded = liveState.find(TENANT, emptyFilter(), null, 50, NOW);
+        var recovered = liveState.find(TENANT, emptyFilter(), null, 50, NOW);
+
+        assertThat(degraded.sourceStatus()).isEqualTo(SourceStatus.DEGRADED);
+        assertThat(recovered.sourceStatus()).isEqualTo(SourceStatus.AVAILABLE);
+        assertThat(recovered.items()).isEqualTo(degraded.items());
+    }
+
+    @Test
     void incidentSourcesRemainBoundedTenantScopedAndTruthfullyAvailableWhenEmpty() {
         var result = incidents.find(TENANT, Set.of(), Set.of(), NOW.minusSeconds(86_400), NOW, 20, 50);
         assertThat(result.items()).isEmpty();
@@ -78,6 +102,48 @@ class TrackingDashboardLiveStatePostgreSqlAcceptanceTest extends PostgreSqlInteg
                                 .IncidentType.ROUTE_DEVIATION, SourceStatus.AVAILABLE));
     }
 
+    @Test
+    void twentyConcurrentWarmSessionsRemainBoundedWithinControlledTarget() throws Exception {
+        List<UUID> vehicles = java.util.stream.IntStream.range(0, 100)
+                .mapToObj(ignored -> UUID.randomUUID()).toList();
+        for (int index = 0; index < vehicles.size(); index++) {
+            insert(vehicles.get(index), NOW.minusSeconds(index % 50), NOW.minusSeconds(index % 50),
+                    "TRUSTED", "6.927", "79.861", "8");
+        }
+        insertSpeedIncidents(vehicles);
+        when(redis.findLive(TENANT, NOW, 500)).thenReturn(List.of());
+        var request = new DashboardQuery(TENANT, new DashboardFilter(Set.of(), Set.of(), Set.of(),
+                Set.of(), Set.of(), true, true), null, 100);
+        var disclosure = new Disclosure(true, true, true, true, true);
+
+        long initialStarted = System.nanoTime();
+        var initial = dashboard.query(request, disclosure);
+        long initialMillis = java.util.concurrent.TimeUnit.NANOSECONDS.toMillis(
+                System.nanoTime() - initialStarted);
+        assertThat(initial.vehicles()).hasSize(100);
+        assertThat(initial.heatMapCells()).hasSizeLessThanOrEqualTo(100);
+        assertThat(initial.incidents()).hasSizeLessThanOrEqualTo(50);
+        assertThat(initialMillis).isLessThan(1_500);
+
+        var barrier = new CyclicBarrier(20);
+        try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
+            var futures = java.util.stream.IntStream.range(0, 20).mapToObj(ignored -> executor.submit(() -> {
+                barrier.await();
+                long started = System.nanoTime();
+                var result = dashboard.query(request, disclosure);
+                assertThat(result.vehicles()).hasSize(100);
+                return java.util.concurrent.TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - started);
+            })).toList();
+            List<Long> timings = new java.util.ArrayList<>();
+            for (var future : futures) timings.add(future.get());
+            timings.sort(Long::compareTo);
+            long p95 = timings.get((int) Math.ceil(timings.size() * 0.95) - 1);
+            System.out.println("US54_CS05_LOAD initialMs=" + initialMillis + " p95Ms=" + p95
+                    + " sessions=20 vehicles=100");
+            assertThat(p95).isLessThan(1_000);
+        }
+    }
+
     private void insert(
             UUID vehicleId, Instant source, Instant received, String trust,
             String latitude, String longitude, String speed) {
@@ -91,10 +157,30 @@ class TrackingDashboardLiveStatePostgreSqlAcceptanceTest extends PostgreSqlInteg
                 VALUES (?, ?, ?, ?, ?, 'ACCEPTANCE', ?, ?, ?, ?, 10, ?, 'UNKNOWN', ?,
                         'ACCEPTABLE', 'IN_ORDER', 'STANDARD', 'V1', ?)
                 """, TENANT, OffsetDateTime.ofInstant(source, java.time.ZoneOffset.UTC), id,
-                UUID.randomUUID(), vehicleId, "0".repeat(64),
+                UUID.randomUUID(), vehicleId, id.toString().replace("-", "").repeat(2),
                 OffsetDateTime.ofInstant(received, java.time.ZoneOffset.UTC),
                 new BigDecimal(latitude), new BigDecimal(longitude), new BigDecimal(speed), trust,
                 OffsetDateTime.ofInstant(source.plusSeconds(86_400), java.time.ZoneOffset.UTC));
+    }
+
+    private void insertSpeedIncidents(List<UUID> vehicles) {
+        for (int index = 0; index < 200; index++) {
+            UUID id = UUID.randomUUID();
+            Instant confirmation = NOW.minusSeconds(index * 60L);
+            jdbc.update("""
+                    INSERT INTO tracking_speed_episode(
+                      id,tenant_id,vehicle_id,rule_id,rule_version,threshold_source,
+                      effective_threshold_kph,start_source_timestamp,confirmation_source_timestamp,
+                      end_source_timestamp,max_observed_speed_kph,eligible_above_threshold_sample_count,
+                      severity,repeat_count,first_candidate_position_id,confirming_position_id)
+                    VALUES(?,?,?,?,1,'TENANT_CONFIG',80,?,?,?,90,2,?,0,?,?)
+                    """, id, TENANT, vehicles.get(index % vehicles.size()), UUID.randomUUID(),
+                    Timestamp.from(confirmation.minusSeconds(1)), Timestamp.from(confirmation),
+                    Timestamp.from(confirmation.plusSeconds(1)), index % 2 == 0 ? "WARNING" : "HIGH",
+                    UUID.randomUUID(), UUID.randomUUID());
+        }
+        jdbc.execute("ANALYZE tracking_position_history");
+        jdbc.execute("ANALYZE tracking_speed_episode");
     }
 
     private static DashboardFilter emptyFilter() {

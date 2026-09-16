@@ -90,10 +90,11 @@ public class TrackingDashboardController {
             throw exception;
         }
         var result = query.query(command, disclosure);
-        admission.complete(sample, "SUCCESS", result.vehicles().size(), result.sourceStatus().name());
+        Set<String> included = included(disclosure);
+        admission.complete(sample, "SUCCESS", result.vehicles().size(), result.sourceStatus().name(), included);
         if (request.cursor() == null) {
             audit(context, "TRACKING_DASHBOARD_VIEWED", filter, pageSize, result.vehicles().size(),
-                    included(disclosure), statuses(result));
+                    included, statuses(result));
         }
         return ResponseEntity.ok().cacheControl(CacheControl.noStore())
                 .header("Referrer-Policy", "no-referrer").body(mapper.response(result));
