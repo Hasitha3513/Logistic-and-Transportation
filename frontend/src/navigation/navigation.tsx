@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { journeyReplayEnabled } from '../features/tracking/journeyReplay/config';
+import { trackingDashboardEnabled } from '../features/tracking/dashboard/config';
 import {
   BellOutlined,
   CarOutlined,
@@ -136,6 +137,9 @@ export const navigation: NavigationItem[] = [
     label: 'Tracking',
     icon: <AimOutlined />,
     children: [
+      ...(trackingDashboardEnabled
+        ? [{ key: 'tracking-dashboard', label: 'Tracking Dashboard', route: '/tracking/dashboard', requiredPermission: 'TRACKING_DASHBOARD_VIEW' }]
+        : []),
       { key: 'tracking-vehicles', label: 'Live Vehicles', route: '/tracking/vehicles', requiredPermission: 'TRACKING_VIEW' },
       { key: 'tracking-devices', label: 'Devices', route: '/tracking/devices', requiredPermission: 'TRACKING_VIEW' },
       { key: 'tracking-provider-connections', label: 'Provider Connections', route: '/tracking/provider-connections', requiredPermission: 'TRACKING_DEVICE_MANAGE' },

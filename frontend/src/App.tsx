@@ -1,5 +1,6 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { journeyReplayEnabled } from './features/tracking/journeyReplay/config';
+import { trackingDashboardEnabled } from './features/tracking/dashboard/config';
 import AppLayout from './layout/AppLayout';
 import DashboardPage from './pages/DashboardPage';
 import WorkspacePage from './pages/WorkspacePage';
@@ -72,6 +73,7 @@ import DeviationRuleDetailPage from './features/tracking/routeDeviations/pages/D
 import DeviationStatePage from './features/tracking/routeDeviations/pages/DeviationStatePage';
 import DeviationEpisodePage from './features/tracking/routeDeviations/pages/DeviationEpisodePage';
 import JourneyReplayPage from './features/tracking/journeyReplay/JourneyReplayPage';
+import TrackingDashboardPage from './features/tracking/dashboard/TrackingDashboardPage';
 
 function ProtectedRoute() {
   const { user, isLoading } = useAuth();
@@ -176,6 +178,7 @@ export default function App() {
         <Route path="operations/exceptions" element={<OperationalExceptionQueuePage />} />
         <Route path="billing/records" element={<TransportBillingPage />} />
         <Route path="tracking/vehicles" element={<LiveTrackingPage />} />
+        {trackingDashboardEnabled && <Route path="tracking/dashboard" element={<TrackingDashboardPage />} />}
         <Route path="tracking/devices" element={<LiveTrackingPage initialTab="devices" />} />
         <Route path="tracking/provider-connections" element={<ProviderConnectionsPage />} />
         <Route path="tracking/geofences" element={<GeofenceListPage />} />
