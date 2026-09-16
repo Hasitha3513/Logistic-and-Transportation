@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Component;
 
@@ -44,7 +45,13 @@ final class TrackingDashboardLiveStateAdapter implements TrackingDashboardLiveSt
     @Override
     public LiveStatePage find(
             UUID tenantId, DashboardFilter filter, UUID afterVehicleId, int limit, Instant evaluatedAt) {
-        Map<UUID, PositionPair> database = databasePositions(tenantId);
+        Map<UUID, PositionPair> database;
+        try {
+            database = databasePositions(tenantId);
+        } catch (DataAccessException exception) {
+            throw new DependencyUnavailableException("TRACKING_DASHBOARD_LIVE_SOURCE_UNAVAILABLE",
+                    "Tracking dashboard live state is unavailable", exception);
+        }
         Map<UUID, TrackingTelemetryIngestedV1> projected = new HashMap<>();
         SourceStatus status = SourceStatus.AVAILABLE;
         try {

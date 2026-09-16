@@ -14,6 +14,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 
 import com.transportlogistics.app.tenancy.CurrentTenant;
 import com.transportlogistics.app.tenancy.TenantExecutionContext;
@@ -112,6 +113,27 @@ class TrackingSecurityIntegrationTest {
         mvc.perform(post("/api/v1/tracking/journey-replays/incidents/query").contextPath("/api")
                 .contentType(MediaType.APPLICATION_JSON).content("{}"))
                 .andExpect(status().isForbidden());
+        mvc.perform(post("/api/v1/tracking/dashboard/query").contextPath("/api")
+                .contentType(MediaType.APPLICATION_JSON).content("{}"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test @WithMockUser(authorities = "TRACKING_VIEW")
+    void broadTrackingViewDoesNotImplyLiteralDashboardAccess() throws Exception {
+        mvc.perform(post("/api/v1/tracking/dashboard/query").contextPath("/api")
+                .contentType(MediaType.APPLICATION_JSON).content("{}"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test @WithMockUser(authorities = "TRACKING_DASHBOARD_VIEW")
+    void narrowPermissionAllowsLiteralDashboardWithoutOptionalDisclosure() throws Exception {
+        mvc.perform(post("/api/v1/tracking/dashboard/query").contextPath("/api")
+                .contentType(MediaType.APPLICATION_JSON).content("{}"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Cache-Control", "no-store"))
+                .andExpect(header().string("Referrer-Policy", "no-referrer"))
+                .andExpect(jsonPath("$.vehicles").isArray())
+                .andExpect(jsonPath("$.heatMapCells").isEmpty());
     }
 
     @Test @WithMockUser(authorities = "JOURNEY_REPLAY_VIEW")

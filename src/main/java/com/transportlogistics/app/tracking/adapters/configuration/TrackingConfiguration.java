@@ -10,10 +10,12 @@ import com.transportlogistics.app.tracking.application.SpeedRuleManagementServic
 import com.transportlogistics.app.tracking.application.RouteDeviationEvaluationService;
 import com.transportlogistics.app.tracking.application.RouteDeviationManagementService;
 import com.transportlogistics.app.tracking.application.JourneyReplayQueryService;
+import com.transportlogistics.app.tracking.application.TrackingDashboardQueryService;
 import com.transportlogistics.app.tracking.adapters.inbound.security.SecuredGeofenceUseCases;
 import com.transportlogistics.app.tracking.adapters.inbound.security.SecuredSpeedMonitoringUseCases;
 import com.transportlogistics.app.tracking.adapters.inbound.security.SecuredRouteDeviationUseCases;
 import com.transportlogistics.app.tracking.adapters.inbound.security.SecuredJourneyReplayQueryUseCase;
+import com.transportlogistics.app.tracking.adapters.inbound.security.SecuredTrackingDashboardQueryUseCase;
 import com.transportlogistics.app.integration.IntegrationSecretResolver;
 import com.transportlogistics.app.tracking.application.provider.TrackingProviderAdapterRegistry;
 import com.transportlogistics.app.tracking.ports.outbound.TrackingProviderAdapter;
@@ -66,4 +68,6 @@ import org.springframework.context.annotation.*;
  @Bean @Primary SecuredRouteDeviationUseCases securedRouteDeviationUseCases(RouteDeviationManagementService service){return new SecuredRouteDeviationUseCases(service,service,service);}
  @Bean @org.springframework.boot.autoconfigure.condition.ConditionalOnProperty(name="app.tracking.hybrid-storage.enabled",havingValue="true") JourneyReplayQueryService journeyReplayQueryService(com.transportlogistics.app.tracking.ports.outbound.JourneyReplayHistoryPort history,com.transportlogistics.app.tracking.ports.outbound.JourneyReplayCursorPort cursors,com.transportlogistics.app.tracking.ports.outbound.JourneyReplayAttributionPort attribution,com.transportlogistics.app.tracking.ports.outbound.JourneyReplayRouteContextPort routes,com.transportlogistics.app.tracking.ports.outbound.JourneyReplayStopCursorPort stopCursors,com.transportlogistics.app.tracking.ports.outbound.JourneyReplayIncidentPort incidents,Clock clock){return new JourneyReplayQueryService(history,cursors,attribution,routes,stopCursors,incidents,clock);}
  @Bean @Primary @org.springframework.boot.autoconfigure.condition.ConditionalOnBean(JourneyReplayQueryService.class) SecuredJourneyReplayQueryUseCase securedJourneyReplayQueryUseCase(JourneyReplayQueryService service){return new SecuredJourneyReplayQueryUseCase(service);}
+ @Bean @org.springframework.boot.autoconfigure.condition.ConditionalOnProperty(name="app.tracking.dashboard.enabled",havingValue="true",matchIfMissing=true) TrackingDashboardQueryService trackingDashboardQueryService(com.transportlogistics.app.tracking.ports.outbound.TrackingDashboardLiveStatePort live,com.transportlogistics.app.tracking.ports.outbound.TrackingDashboardIncidentPort incidents,com.transportlogistics.app.tracking.ports.outbound.TrackingDashboardTripContextPort trips,com.transportlogistics.app.tracking.ports.outbound.TrackingDashboardCursorPort cursors,Clock clock){return new TrackingDashboardQueryService(live,incidents,trips,cursors,clock);}
+ @Bean @Primary @org.springframework.boot.autoconfigure.condition.ConditionalOnBean(TrackingDashboardQueryService.class) SecuredTrackingDashboardQueryUseCase securedTrackingDashboardQueryUseCase(TrackingDashboardQueryService service){return new SecuredTrackingDashboardQueryUseCase(service);}
 }

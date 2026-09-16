@@ -208,6 +208,10 @@ class SecurityConfig {
                                 "/api/v1/tracking/speed-monitoring/rules/*")
                         .hasAuthority("SPEED_MONITOR_MANAGE")
                         .requestMatchers(HttpMethod.POST,
+                                "/v1/tracking/dashboard/query",
+                                "/api/v1/tracking/dashboard/query")
+                        .hasAuthority("TRACKING_DASHBOARD_VIEW")
+                        .requestMatchers(HttpMethod.POST,
                                 "/v1/tracking/journey-replays/incidents/query",
                                 "/api/v1/tracking/journey-replays/incidents/query")
                         .access(new org.springframework.security.authorization.AuthorizationManager<org.springframework.security.web.access.intercept.RequestAuthorizationContext>() {
