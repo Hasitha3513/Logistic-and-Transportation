@@ -6,6 +6,7 @@ import static org.mockito.Mockito.mock;
 
 import com.transportlogistics.app.shared.domain.DependencyUnavailableException;
 import com.transportlogistics.app.tracking.application.telemetry.TrackingTelemetryIngestedV1;
+import com.transportlogistics.app.tracking.application.telemetry.TrackingTelemetryIngestedV2;
 import com.transportlogistics.app.tracking.domain.TrackingModels.EngineState;
 import com.transportlogistics.app.tracking.domain.journeyreplay.JourneyReplayModels.*;
 import com.transportlogistics.app.tracking.ports.outbound.JourneyReplayCursorPort;
@@ -91,6 +92,33 @@ class JdbcHistoricalTelemetryStoreTimescaleAcceptanceTest {
                 .hasSize(1).allMatch(fact -> fact.tenantId().equals(tenantA));
         assertThat(store.find(UUID.randomUUID(), vehicle, now.minusSeconds(1), now.plusSeconds(1), 10))
                 .isEmpty();
+    }
+
+    @Test
+    void v1AndV2ShareTheSameTenantScopedIngestionIdentity() {
+        UUID tenant = UUID.randomUUID();
+        UUID vehicle = UUID.randomUUID();
+        Instant source = Instant.now().minusSeconds(10);
+        String dedupe = "f".repeat(64);
+        var v1 = event(tenant, vehicle, dedupe, source, BigDecimal.ONE,
+                BigDecimal.TWO, BigDecimal.ZERO, EngineState.OFF, BigDecimal.ONE);
+        var v2 = new TrackingTelemetryIngestedV2(v1.eventId(), TrackingTelemetryIngestedV2.TYPE,
+                TrackingTelemetryIngestedV2.VERSION, tenant, vehicle, v1.deviceId(),
+                v1.providerAlias(), v1.providerMessageId(), dedupe, v1.latitude(), v1.longitude(),
+                v1.speedKph(), v1.headingDegrees(), v1.horizontalAccuracyMeters(),
+                v1.altitudeMeters(), v1.engineState(), v1.odometerKm(), v1.engineHours(),
+                v1.recordedAt(), v1.receivedAt(), TrackingTelemetryIngestedV2.TamperState.CLEAR,
+                BigDecimal.ZERO, new BigDecimal("3.920000"),
+                TrackingTelemetryIngestedV2.ExternalPowerState.CONNECTED,
+                TrackingTelemetryIngestedV2.BatteryChargingState.CHARGING);
+
+        assertThat(store.persist(List.of(v1)).persisted()).isOne();
+        assertThat(store.persist(List.of(v2)).duplicate()).isOne();
+        assertThat(jdbc.queryForObject("SELECT count(*) FROM tracking_position_history "
+                + "WHERE tenant_id=? AND dedupe_identity=?", Integer.class, tenant, dedupe))
+                .isOne();
+        assertThat(jdbc.queryForObject("SELECT count(*) FROM tracking_telemetry_evaluation_dispatch "
+                + "WHERE tenant_id=?", Integer.class, tenant)).isEqualTo(3);
     }
 
     @Test

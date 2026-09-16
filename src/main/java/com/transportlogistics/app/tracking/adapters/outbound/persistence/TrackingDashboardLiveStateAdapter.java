@@ -1,7 +1,7 @@
 package com.transportlogistics.app.tracking.adapters.outbound.persistence;
 
 import com.transportlogistics.app.shared.domain.DependencyUnavailableException;
-import com.transportlogistics.app.tracking.application.telemetry.TrackingTelemetryIngestedV1;
+import com.transportlogistics.app.tracking.application.telemetry.CanonicalTelemetryEvent;
 import com.transportlogistics.app.tracking.domain.dashboard.TrackingDashboardModels.Connectivity;
 import com.transportlogistics.app.tracking.domain.dashboard.TrackingDashboardModels.DashboardFilter;
 import com.transportlogistics.app.tracking.domain.dashboard.TrackingDashboardModels.Freshness;
@@ -52,7 +52,7 @@ final class TrackingDashboardLiveStateAdapter implements TrackingDashboardLiveSt
             throw new DependencyUnavailableException("TRACKING_DASHBOARD_LIVE_SOURCE_UNAVAILABLE",
                     "Tracking dashboard live state is unavailable", exception);
         }
-        Map<UUID, TrackingTelemetryIngestedV1> projected = new HashMap<>();
+        Map<UUID, CanonicalTelemetryEvent> projected = new HashMap<>();
         SourceStatus status = SourceStatus.AVAILABLE;
         try {
             redis.findLive(tenantId, evaluatedAt, 500).forEach(value ->
@@ -126,7 +126,7 @@ final class TrackingDashboardLiveStateAdapter implements TrackingDashboardLiveSt
     }
 
     private LiveVehicleState state(
-            UUID vehicleId, PositionPair pair, TrackingTelemetryIngestedV1 event, Instant evaluatedAt) {
+            UUID vehicleId, PositionPair pair, CanonicalTelemetryEvent event, Instant evaluatedAt) {
         Observation trusted = pair == null ? null : pair.trusted();
         Observation received = pair == null ? null : pair.received();
         if (event != null && (received == null || event.recordedAt().isAfter(received.sourceTimestamp()))) {
@@ -143,12 +143,12 @@ final class TrackingDashboardLiveStateAdapter implements TrackingDashboardLiveSt
                 connectivity(latestReceipt, evaluatedAt), POLICY_VERSION, evaluatedAt);
     }
 
-    private static Observation observation(TrackingTelemetryIngestedV1 event, Trust trust) {
+    private static Observation observation(CanonicalTelemetryEvent event, Trust trust) {
         return new Observation(event.recordedAt(), event.receivedAt(), trust, event.latitude(),
                 event.longitude(), event.horizontalAccuracyMeters(), event.speedKph());
     }
 
-    private static Trust trust(TrackingTelemetryIngestedV1 event, Observation currentTrusted) {
+    private static Trust trust(CanonicalTelemetryEvent event, Observation currentTrusted) {
         Duration age = Duration.between(event.recordedAt(), event.receivedAt());
         if (age.compareTo(Duration.ofHours(24)) > 0
                 || event.recordedAt().isAfter(event.receivedAt().plusSeconds(120))

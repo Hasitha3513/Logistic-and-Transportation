@@ -107,12 +107,14 @@ app:
   tracking:
     kafka:
       topic: ${TRACKING_KAFKA_TOPIC:tracking.telemetry.ingested.v1}
+      v2-topic: ${TRACKING_KAFKA_V2_TOPIC:tracking.telemetry.ingested.v2}
       partitions: ${TRACKING_KAFKA_PARTITIONS:6}
       acknowledgement-timeout: ${TRACKING_KAFKA_ACK_TIMEOUT:PT10S}
       manage-topic: ${TRACKING_KAFKA_MANAGE_TOPIC:false}
       live-projector-group: ${TRACKING_KAFKA_LIVE_PROJECTOR_GROUP:tracking-live-projector-v1}
       history-persister-group: ${TRACKING_KAFKA_HISTORY_PERSISTER_GROUP:tracking-telemetry-persister-group}
       dead-letter-topic: ${TRACKING_KAFKA_DLT_TOPIC:tracking.telemetry.ingested.v1.dlt}
+      v2-dead-letter-topic: ${TRACKING_KAFKA_V2_DLT_TOPIC:tracking.telemetry.ingested.v2.dlt}
     hybrid-storage:
       enabled: ${TRACKING_HYBRID_STORAGE_ENABLED:false}
       live-state-ttl: ${TRACKING_LIVE_STATE_TTL:PT24H}

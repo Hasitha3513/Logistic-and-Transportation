@@ -2,7 +2,7 @@ package com.transportlogistics.app.tracking.adapters.configuration;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.transportlogistics.app.tracking.application.telemetry.TrackingTelemetryIngestedV1;
+import com.transportlogistics.app.tracking.application.telemetry.TrackingTelemetryIngestedV2;
 import com.transportlogistics.app.tracking.domain.TrackingModels.EngineState;
 import java.math.BigDecimal;
 import java.time.Duration;
@@ -24,10 +24,10 @@ import org.testcontainers.utility.DockerImageName;
 
 class TrackingKafkaDeadLetterIntegrationTest {
     @Test
-    void poisonRecordReachesBoundedDeadLetterTopic() throws Exception {
+    void invalidV2RecordReachesVersionSpecificDeadLetterTopic() throws Exception {
         try (var broker = new KafkaContainer(DockerImageName.parse("apache/kafka:3.7.2"))) {
             broker.start();
-            String source = "tracking.telemetry.ingested.v1";
+            String source = "tracking.telemetry.ingested.v2";
             String deadLetter = source + ".dlt";
             try (var admin = AdminClient.create(Map.of(
                     AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, broker.getBootstrapServers()))) {
@@ -40,11 +40,11 @@ class TrackingKafkaDeadLetterIntegrationTest {
             var template = new TrackingKafkaConfiguration()
                     .trackingTelemetryKafkaTemplate(properties);
             var factory = new TrackingKafkaConsumerConfiguration()
-                    .trackingHistoryPersisterContainerFactory(properties, template, deadLetter, 500);
+                    .trackingHistoryPersisterV2ContainerFactory(properties, template, deadLetter, 500);
             var container = factory.createContainer(source);
             container.getContainerProperties().setGroupId("tracking-telemetry-persister-group");
             container.setupMessageListener((org.springframework.kafka.listener.BatchAcknowledgingMessageListener
-                    <String, TrackingTelemetryIngestedV1>) (records, acknowledgment) -> {
+                    <String, TrackingTelemetryIngestedV2>) (records, acknowledgment) -> {
                                 throw new IllegalArgumentException("poison telemetry contract");
                             });
             container.start();
@@ -56,9 +56,9 @@ class TrackingKafkaDeadLetterIntegrationTest {
                 }
                 assertThat(container.getAssignedPartitions()).isNotEmpty();
                 template.send(source, "invalid-authority", event()).get();
-                var deserializer = new JsonDeserializer<>(TrackingTelemetryIngestedV1.class);
-                deserializer.addTrustedPackages(TrackingTelemetryIngestedV1.class.getPackageName());
-                var consumers = new DefaultKafkaConsumerFactory<String, TrackingTelemetryIngestedV1>(
+                var deserializer = new JsonDeserializer<>(TrackingTelemetryIngestedV2.class);
+                deserializer.addTrustedPackages(TrackingTelemetryIngestedV2.class.getPackageName());
+                var consumers = new DefaultKafkaConsumerFactory<String, TrackingTelemetryIngestedV2>(
                         Map.of(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, broker.getBootstrapServers(),
                                 ConsumerConfig.GROUP_ID_CONFIG, "tracking-live-projector-dlt-observer",
                                 ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest"),
@@ -74,11 +74,14 @@ class TrackingKafkaDeadLetterIntegrationTest {
         }
     }
 
-    private static TrackingTelemetryIngestedV1 event() {
-        return new TrackingTelemetryIngestedV1(UUID.randomUUID(),
-                TrackingTelemetryIngestedV1.TYPE, 1, UUID.randomUUID(), UUID.randomUUID(),
+    private static TrackingTelemetryIngestedV2 event() {
+        return new TrackingTelemetryIngestedV2(UUID.randomUUID(),
+                TrackingTelemetryIngestedV2.TYPE, 2, UUID.randomUUID(), UUID.randomUUID(),
                 UUID.randomUUID(), "FLESPI", "message-1", "a".repeat(64),
                 new BigDecimal("6.9271"), new BigDecimal("79.8612"), null, null, null,
-                null, EngineState.UNKNOWN, null, null, Instant.now(), Instant.now());
+                null, EngineState.UNKNOWN, null, null, Instant.now(), Instant.now(),
+                TrackingTelemetryIngestedV2.TamperState.UNKNOWN, null, null,
+                TrackingTelemetryIngestedV2.ExternalPowerState.UNKNOWN,
+                TrackingTelemetryIngestedV2.BatteryChargingState.UNKNOWN);
     }
 }

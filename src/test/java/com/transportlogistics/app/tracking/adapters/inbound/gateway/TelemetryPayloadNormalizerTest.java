@@ -81,4 +81,42 @@ class TelemetryPayloadNormalizerTest {
         assertThat(registry.require(TelemetryGatewayType.GENERIC))
                 .isInstanceOf(GenericRestPayloadNormalizer.class);
     }
+
+    @Test
+    void mapsOnlyDocumentedFlespiSignalPaths() {
+        var point = new FlespiPayloadNormalizer(mapper).normalize("""
+                {"ident":"FMC130-FICTIONAL","timestamp":1789290000,
+                 "position":{"latitude":6.9,"longitude":79.8},
+                 "device":{"tampering":{"status":"detected"}},
+                 "battery":{"level":0.000,"voltage":3.920000,"charging":{"status":"charging"}},
+                 "external":{"power":{"status":"disconnected"}}}
+                """, TENANT_ID);
+
+        assertThat(point.tamperState().name()).isEqualTo("DETECTED");
+        assertThat(point.batteryLevelPercent()).isEqualByComparingTo("0.000");
+        assertThat(point.batteryVoltageVolts()).isEqualByComparingTo("3.920000");
+        assertThat(point.externalPowerState().name()).isEqualTo("DISCONNECTED");
+        assertThat(point.batteryChargingState().name()).isEqualTo("CHARGING");
+    }
+
+    @Test
+    void mapsDocumentedTraccarAttributesAndRejectsGenericSignalPassthrough() {
+        var traccar = new TraccarPayloadNormalizer(mapper).normalize("""
+                {"device":{"uniqueId":"TRACCAR-FICTIONAL"},"position":{"id":"1",
+                 "fixTime":"2026-09-16T10:00:00Z","latitude":6.9,"longitude":79.8,
+                 "attributes":{"alarm":"tampering","batteryLevel":74.5,"battery":3.92,
+                 "power":true,"charge":false}}}
+                """, TENANT_ID);
+        assertThat(traccar.tamperState().name()).isEqualTo("DETECTED");
+        assertThat(traccar.batteryLevelPercent()).isEqualByComparingTo("74.5");
+        assertThat(traccar.externalPowerState().name()).isEqualTo("CONNECTED");
+        assertThat(traccar.batteryChargingState().name()).isEqualTo("NOT_CHARGING");
+
+        var generic = new GenericRestPayloadNormalizer(mapper).normalize("""
+                {"deviceId":"GENERIC-FICTIONAL","sourceTimestamp":"2026-09-16T10:00:00Z",
+                 "latitude":6.9,"longitude":79.8,"tamperState":"DETECTED","batteryLevelPercent":80}
+                """, TENANT_ID);
+        assertThat(generic.tamperState()).isNull();
+        assertThat(generic.batteryLevelPercent()).isNull();
+    }
 }

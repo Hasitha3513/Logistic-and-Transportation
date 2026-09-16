@@ -5,7 +5,7 @@ import java.util.Objects;
 
 /** Rebuildable live-state projection of the canonical TS02 event. */
 public record LiveTelemetryProjection(
-        TrackingTelemetryIngestedV1 telemetry,
+        CanonicalTelemetryEvent telemetry,
         Instant projectedAt) {
     public LiveTelemetryProjection {
         Objects.requireNonNull(telemetry, "telemetry");

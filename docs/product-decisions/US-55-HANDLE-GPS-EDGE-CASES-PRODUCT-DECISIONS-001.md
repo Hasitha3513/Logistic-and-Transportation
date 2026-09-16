@@ -216,3 +216,9 @@ two-point recovery, episode dedupe, minimized evidence and fail-closed authority
 Exact first implementation queue:
 
 `US-55-HANDLE-GPS-EDGE-CASES-CS01-DOMAIN-TRUST-QUALITY-CONTRACTS-001`
+
+The canonical evolution is frozen by `US-55-CANONICAL-TELEMETRY-V2-CONTRACT-001`: V1 remains immutable,
+V2 uses a separate topic and DLT, consumer-first dual-version handling is mandatory, dual publication is prohibited,
+and optional tamper/battery observations retain explicit absent-versus-UNKNOWN semantics. The complete contract,
+provider mapping registry and rollback rules are recorded in
+`docs/architecture/US-55-CANONICAL-TELEMETRY-V2-CONTRACT-001.md`.

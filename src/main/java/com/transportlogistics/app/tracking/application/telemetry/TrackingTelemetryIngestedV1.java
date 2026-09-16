@@ -27,7 +27,7 @@ public record TrackingTelemetryIngestedV1(
         BigDecimal odometerKm,
         BigDecimal engineHours,
         Instant recordedAt,
-        Instant receivedAt) {
+        Instant receivedAt) implements CanonicalTelemetryEvent {
     public static final String TYPE = "TRACKING_TELEMETRY_INGESTED_V1";
     public static final int VERSION = 1;
 

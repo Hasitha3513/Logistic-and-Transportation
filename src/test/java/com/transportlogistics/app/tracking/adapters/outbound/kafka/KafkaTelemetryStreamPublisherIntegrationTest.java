@@ -3,6 +3,7 @@ package com.transportlogistics.app.tracking.adapters.outbound.kafka;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.transportlogistics.app.tracking.application.telemetry.TrackingTelemetryIngestedV1;
+import com.transportlogistics.app.tracking.application.telemetry.TrackingTelemetryIngestedV2;
 import com.transportlogistics.app.tracking.domain.TrackingModels.EngineState;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import java.math.BigDecimal;
@@ -30,9 +31,12 @@ class KafkaTelemetryStreamPublisherIntegrationTest {
         try (var kafka = new KafkaContainer(DockerImageName.parse("apache/kafka:3.7.2"))) {
             kafka.start();
             String topic = "tracking.telemetry.ingested.v1";
+            String v2Topic = "tracking.telemetry.ingested.v2";
             try (var admin = AdminClient.create(Map.of(
                     AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, kafka.getBootstrapServers()))) {
-                admin.createTopics(java.util.List.of(new NewTopic(topic, 6, (short) 1))).all().get();
+                admin.createTopics(java.util.List.of(
+                        new NewTopic(topic, 6, (short) 1),
+                        new NewTopic(v2Topic, 6, (short) 1))).all().get();
             }
             var producerFactory = new DefaultKafkaProducerFactory<String, TrackingTelemetryIngestedV1>(Map.of(
                     org.apache.kafka.clients.producer.ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafka.getBootstrapServers(),
@@ -41,7 +45,8 @@ class KafkaTelemetryStreamPublisherIntegrationTest {
                     org.apache.kafka.clients.producer.ProducerConfig.ACKS_CONFIG, "all",
                     org.apache.kafka.clients.producer.ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, true));
             var template = new KafkaTemplate<>(producerFactory);
-            var publisher = new KafkaTelemetryStreamPublisher(template, new SimpleMeterRegistry(), topic);
+            var publisher = new KafkaTelemetryStreamPublisher(
+                    template, new SimpleMeterRegistry(), topic, v2Topic);
             UUID tenant = UUID.randomUUID();
             UUID vehicle = UUID.randomUUID();
             UUID eventId = UUID.randomUUID();
@@ -74,6 +79,47 @@ class KafkaTelemetryStreamPublisherIntegrationTest {
                         .isEqualTo(tenant.toString());
             } finally {
                 template.destroy();
+            }
+
+            var v2ProducerFactory = new DefaultKafkaProducerFactory<String, Object>(Map.of(
+                    org.apache.kafka.clients.producer.ProducerConfig.BOOTSTRAP_SERVERS_CONFIG,
+                    kafka.getBootstrapServers(),
+                    org.apache.kafka.clients.producer.ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG,
+                    org.apache.kafka.common.serialization.StringSerializer.class,
+                    org.apache.kafka.clients.producer.ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG,
+                    JsonSerializer.class,
+                    org.apache.kafka.clients.producer.ProducerConfig.ACKS_CONFIG, "all",
+                    org.apache.kafka.clients.producer.ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, true));
+            var v2Template = new KafkaTemplate<>(v2ProducerFactory);
+            try {
+                var v2 = new TrackingTelemetryIngestedV2(UUID.randomUUID(),
+                        TrackingTelemetryIngestedV2.TYPE, 2, tenant, vehicle, UUID.randomUUID(),
+                        "TRACCAR", "message-2", "b".repeat(64), new BigDecimal("6.9272"),
+                        new BigDecimal("79.8613"), BigDecimal.ZERO, null, null, null,
+                        EngineState.UNKNOWN, null, null, Instant.parse("2026-09-13T12:00:02Z"),
+                        Instant.parse("2026-09-13T12:00:03Z"),
+                        TrackingTelemetryIngestedV2.TamperState.CLEAR, BigDecimal.ZERO,
+                        new BigDecimal("3.920000"),
+                        TrackingTelemetryIngestedV2.ExternalPowerState.CONNECTED,
+                        TrackingTelemetryIngestedV2.BatteryChargingState.CHARGING);
+                var v2Publisher = new KafkaTelemetryStreamPublisher(
+                        v2Template, new SimpleMeterRegistry(), topic, v2Topic);
+                assertThat(v2Publisher.publishDurably(
+                        tenant + ":" + vehicle, v2, "correlation-2", Duration.ofSeconds(10)).offset())
+                        .isNotNegative();
+                var v2Deserializer = new JsonDeserializer<>(TrackingTelemetryIngestedV2.class);
+                v2Deserializer.addTrustedPackages(TrackingTelemetryIngestedV2.class.getPackageName());
+                var v2Consumers = new DefaultKafkaConsumerFactory<String, TrackingTelemetryIngestedV2>(
+                        Map.of(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafka.getBootstrapServers(),
+                                ConsumerConfig.GROUP_ID_CONFIG, "us55-v2-contract-test",
+                                ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest"),
+                        new StringDeserializer(), v2Deserializer);
+                try (var consumer = v2Consumers.createConsumer()) {
+                    consumer.subscribe(java.util.List.of(v2Topic));
+                    assertThat(consumer.poll(Duration.ofSeconds(10)).iterator().next().value()).isEqualTo(v2);
+                }
+            } finally {
+                v2Template.destroy();
             }
         }
     }

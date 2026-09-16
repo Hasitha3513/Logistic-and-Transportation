@@ -2,7 +2,7 @@ package com.transportlogistics.app.tracking.adapters.outbound.persistence;
 
 import com.transportlogistics.app.shared.domain.DependencyUnavailableException;
 import com.transportlogistics.app.tracking.application.telemetry.HistoricalTelemetry;
-import com.transportlogistics.app.tracking.application.telemetry.TrackingTelemetryIngestedV1;
+import com.transportlogistics.app.tracking.application.telemetry.CanonicalTelemetryEvent;
 import com.transportlogistics.app.tracking.domain.TrackingModels.EngineState;
 import com.transportlogistics.app.tracking.domain.TrackingModels.Ordering;
 import com.transportlogistics.app.tracking.domain.TrackingModels.Trust;
@@ -46,7 +46,7 @@ public final class JdbcHistoricalTelemetryStore implements HistoricalTelemetrySt
     }
 
     @Override
-    public BatchResult persist(List<TrackingTelemetryIngestedV1> telemetry) {
+    public BatchResult persist(List<? extends CanonicalTelemetryEvent> telemetry) {
         if (telemetry.isEmpty() || telemetry.size() > 500) {
             throw new IllegalArgumentException("Historical telemetry batch size must be 1..500");
         }
@@ -58,7 +58,7 @@ public final class JdbcHistoricalTelemetryStore implements HistoricalTelemetrySt
         }
     }
 
-    private BatchResult persistAtomically(List<TrackingTelemetryIngestedV1> telemetry) {
+    private BatchResult persistAtomically(List<? extends CanonicalTelemetryEvent> telemetry) {
         int persisted = 0;
         int duplicate = 0;
         int reduced = 0;
@@ -99,7 +99,7 @@ public final class JdbcHistoricalTelemetryStore implements HistoricalTelemetrySt
                 row -> { }, tenantId.toString(), vehicleId.toString());
     }
 
-    private boolean exists(TrackingTelemetryIngestedV1 event) {
+    private boolean exists(CanonicalTelemetryEvent event) {
         Integer count = jdbc.queryForObject(
                 "SELECT count(*) FROM tracking_position_history "
                         + "WHERE tenant_id=? AND source_timestamp=? AND "
@@ -109,7 +109,7 @@ public final class JdbcHistoricalTelemetryStore implements HistoricalTelemetrySt
         return count != null && count > 0;
     }
 
-    private HistoricalTelemetry classify(TrackingTelemetryIngestedV1 event, Instant currentTrusted) {
+    private HistoricalTelemetry classify(CanonicalTelemetryEvent event, Instant currentTrusted) {
         Duration age = Duration.between(event.recordedAt(), event.receivedAt());
         Ordering ordering = age.compareTo(Duration.ofHours(24)) > 0
                 ? Ordering.LATE

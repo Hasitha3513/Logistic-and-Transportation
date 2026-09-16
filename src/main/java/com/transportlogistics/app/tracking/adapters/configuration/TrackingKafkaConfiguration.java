@@ -1,6 +1,5 @@
 package com.transportlogistics.app.tracking.adapters.configuration;
 
-import com.transportlogistics.app.tracking.application.telemetry.TrackingTelemetryIngestedV1;
 import java.util.Map;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.producer.ProducerConfig;
@@ -18,7 +17,7 @@ import org.springframework.kafka.support.serializer.JsonSerializer;
 @Configuration(proxyBeanMethods = false)
 class TrackingKafkaConfiguration {
     @Bean
-    KafkaTemplate<String, TrackingTelemetryIngestedV1> trackingTelemetryKafkaTemplate(
+    KafkaTemplate<String, Object> trackingTelemetryKafkaTemplate(
             KafkaProperties properties) {
         Map<String, Object> producer = properties.buildProducerProperties(null);
         producer.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
@@ -37,6 +36,14 @@ class TrackingKafkaConfiguration {
 
     @Bean
     @ConditionalOnProperty(name = "app.tracking.kafka.manage-topic", havingValue = "true")
+    NewTopic trackingTelemetryV2Topic(
+            @Value("${app.tracking.kafka.v2-topic:tracking.telemetry.ingested.v2}") String topic,
+            @Value("${app.tracking.kafka.partitions:6}") int partitions) {
+        return TopicBuilder.name(topic).partitions(partitions).replicas(1).build();
+    }
+
+    @Bean
+    @ConditionalOnProperty(name = "app.tracking.kafka.manage-topic", havingValue = "true")
     NewTopic trackingTelemetryDeadLetterTopic(
             @Value("${app.tracking.kafka.dead-letter-topic:tracking.telemetry.ingested.v1.dlt}")
                     String topic,
@@ -44,6 +51,17 @@ class TrackingKafkaConfiguration {
         return TopicBuilder.name(topic)
                 .partitions(partitions)
                 .replicas(1)
+                .config("retention.ms", Long.toString(java.time.Duration.ofDays(7).toMillis()))
+                .build();
+    }
+
+    @Bean
+    @ConditionalOnProperty(name = "app.tracking.kafka.manage-topic", havingValue = "true")
+    NewTopic trackingTelemetryV2DeadLetterTopic(
+            @Value("${app.tracking.kafka.v2-dead-letter-topic:tracking.telemetry.ingested.v2.dlt}")
+                    String topic,
+            @Value("${app.tracking.kafka.partitions:6}") int partitions) {
+        return TopicBuilder.name(topic).partitions(partitions).replicas(1)
                 .config("retention.ms", Long.toString(java.time.Duration.ofDays(7).toMillis()))
                 .build();
     }

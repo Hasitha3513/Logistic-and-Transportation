@@ -1,6 +1,8 @@
 package com.transportlogistics.app.tracking.adapters.inbound.kafka;
 
+import com.transportlogistics.app.tracking.application.telemetry.CanonicalTelemetryEvent;
 import com.transportlogistics.app.tracking.application.telemetry.TrackingTelemetryIngestedV1;
+import com.transportlogistics.app.tracking.application.telemetry.TrackingTelemetryIngestedV2;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.UUID;
@@ -15,12 +17,15 @@ final class TrackingTelemetryContractValidator {
     }
 
     static void validate(
-            ConsumerRecord<String, TrackingTelemetryIngestedV1> record,
-            TrackingTelemetryIngestedV1 event,
-            String expectedTopic) {
+            ConsumerRecord<String, ?> record,
+            CanonicalTelemetryEvent event,
+            String expectedTopic,
+            int expectedVersion) {
         if (!expectedTopic.equals(record.topic()) || event == null
                 || !TrackingTelemetryIngestedV1.TYPE.equals(event.eventType())
-                || event.eventVersion() != TrackingTelemetryIngestedV1.VERSION) {
+                || event.eventVersion() != expectedVersion
+                || expectedVersion != TrackingTelemetryIngestedV1.VERSION
+                && expectedVersion != TrackingTelemetryIngestedV2.VERSION) {
             throw invalid("Unsupported telemetry event contract");
         }
         String expectedKey = event.tenantId() + ":" + event.vehicleId();
@@ -49,6 +54,12 @@ final class TrackingTelemetryContractValidator {
                 || event.recordedAt().equals(Instant.MIN) || event.receivedAt().equals(Instant.MIN)) {
             throw invalid("Invalid normalized telemetry fact");
         }
+    }
+
+    static void validate(
+            ConsumerRecord<String, TrackingTelemetryIngestedV1> record,
+            TrackingTelemetryIngestedV1 event, String expectedTopic) {
+        validate(record, event, expectedTopic, TrackingTelemetryIngestedV1.VERSION);
     }
 
     private static UUID uuidHeader(ConsumerRecord<?, ?> record, String name) {

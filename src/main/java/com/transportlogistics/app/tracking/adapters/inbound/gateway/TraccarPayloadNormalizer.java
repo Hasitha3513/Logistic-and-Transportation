@@ -5,6 +5,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.transportlogistics.app.tracking.application.provider.NormalizedTelemetryPoint;
 import com.transportlogistics.app.tracking.application.provider.TelemetryGatewayType;
 import com.transportlogistics.app.tracking.domain.TrackingModels.EngineState;
+import com.transportlogistics.app.tracking.application.telemetry.TrackingTelemetryIngestedV2.BatteryChargingState;
+import com.transportlogistics.app.tracking.application.telemetry.TrackingTelemetryIngestedV2.ExternalPowerState;
+import com.transportlogistics.app.tracking.application.telemetry.TrackingTelemetryIngestedV2.TamperState;
 import java.math.BigDecimal;
 import java.util.UUID;
 import org.springframework.stereotype.Component;
@@ -45,6 +48,30 @@ public final class TraccarPayloadNormalizer extends AbstractJsonTelemetryPayload
                 decimal(at(position, "/course", false), false),
                 decimal(at(position, "/accuracy", false), false),
                 decimal(at(position, "/attributes/totalDistance", false), false),
-                ignition);
+                ignition,
+                tamper(text(at(position, "/attributes/alarm", false), false)),
+                decimal(at(position, "/attributes/batteryLevel", false), false),
+                decimal(at(position, "/attributes/battery", false), false),
+                power(at(position, "/attributes/power", false)),
+                charging(at(position, "/attributes/charge", false)));
+    }
+
+    private static TamperState tamper(String alarm) {
+        if (alarm == null) return null;
+        return "tampering".equalsIgnoreCase(alarm) ? TamperState.DETECTED : TamperState.UNKNOWN;
+    }
+
+    private static ExternalPowerState power(JsonNode value) {
+        if (value == null || value.isMissingNode() || value.isNull()) return null;
+        if (value.isBoolean()) return value.booleanValue()
+                ? ExternalPowerState.CONNECTED : ExternalPowerState.DISCONNECTED;
+        return ExternalPowerState.UNKNOWN;
+    }
+
+    private static BatteryChargingState charging(JsonNode value) {
+        if (value == null || value.isMissingNode() || value.isNull()) return null;
+        if (value.isBoolean()) return value.booleanValue()
+                ? BatteryChargingState.CHARGING : BatteryChargingState.NOT_CHARGING;
+        return BatteryChargingState.UNKNOWN;
     }
 }

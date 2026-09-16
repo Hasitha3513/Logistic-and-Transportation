@@ -1,7 +1,9 @@
 package com.transportlogistics.app.tracking.adapters.outbound.kafka;
 
 import com.transportlogistics.app.shared.domain.DependencyUnavailableException;
+import com.transportlogistics.app.tracking.application.telemetry.CanonicalTelemetryEvent;
 import com.transportlogistics.app.tracking.application.telemetry.TrackingTelemetryIngestedV1;
+import com.transportlogistics.app.tracking.application.telemetry.TrackingTelemetryIngestedV2;
 import com.transportlogistics.app.tracking.ports.outbound.TelemetryStreamPublisherPort;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
@@ -17,26 +19,45 @@ import org.springframework.stereotype.Component;
 
 @Component
 final class KafkaTelemetryStreamPublisher implements TelemetryStreamPublisherPort {
-    private final KafkaTemplate<String, TrackingTelemetryIngestedV1> kafka;
+    private final KafkaTemplate<String, Object> kafka;
     private final MeterRegistry meters;
-    private final String topic;
+    private final String v1Topic;
+    private final String v2Topic;
+
+    @org.springframework.beans.factory.annotation.Autowired
+    KafkaTelemetryStreamPublisher(
+            KafkaTemplate<String, ?> kafka,
+            MeterRegistry meters,
+            @Value("${app.tracking.kafka.topic:tracking.telemetry.ingested.v1}") String v1Topic,
+            @Value("${app.tracking.kafka.v2-topic:tracking.telemetry.ingested.v2}") String v2Topic) {
+        this.kafka = cast(kafka);
+        this.meters = meters;
+        this.v1Topic = v1Topic;
+        this.v2Topic = v2Topic;
+    }
 
     KafkaTelemetryStreamPublisher(
-            KafkaTemplate<String, TrackingTelemetryIngestedV1> kafka,
-            MeterRegistry meters,
-            @Value("${app.tracking.kafka.topic:tracking.telemetry.ingested.v1}") String topic) {
-        this.kafka = kafka;
-        this.meters = meters;
-        this.topic = topic;
+            KafkaTemplate<String, ?> kafka, MeterRegistry meters, String topic) {
+        this(kafka, meters, topic, "tracking.telemetry.ingested.v2");
+    }
+
+    @SuppressWarnings("unchecked")
+    private static KafkaTemplate<String, Object> cast(KafkaTemplate<String, ?> kafka) {
+        return (KafkaTemplate<String, Object>) kafka;
     }
 
     @Override
     public Publication publishDurably(
             String key,
-            TrackingTelemetryIngestedV1 event,
+            CanonicalTelemetryEvent event,
             String correlationId,
             Duration timeout) {
-        var record = new ProducerRecord<String, TrackingTelemetryIngestedV1>(topic, key, event);
+        String topic = switch (event.eventVersion()) {
+            case TrackingTelemetryIngestedV1.VERSION -> v1Topic;
+            case TrackingTelemetryIngestedV2.VERSION -> v2Topic;
+            default -> throw new IllegalArgumentException("Unsupported telemetry event version");
+        };
+        var record = new ProducerRecord<String, Object>(topic, key, event);
         header(record, "tenantId", event.tenantId().toString());
         header(record, "eventType", event.eventType());
         header(record, "eventVersion", Integer.toString(event.eventVersion()));

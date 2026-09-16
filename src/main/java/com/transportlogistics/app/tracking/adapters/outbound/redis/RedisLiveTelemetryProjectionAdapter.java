@@ -4,6 +4,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.transportlogistics.app.shared.domain.DependencyUnavailableException;
 import com.transportlogistics.app.tracking.application.telemetry.LiveTelemetryProjection;
+import com.transportlogistics.app.tracking.application.telemetry.TrackingTelemetryIngestedV1;
+import com.transportlogistics.app.tracking.application.telemetry.TrackingTelemetryIngestedV2;
 import com.transportlogistics.app.tracking.ports.outbound.LiveTelemetryProjectionPort;
 import java.time.Duration;
 import java.time.Instant;
@@ -155,7 +157,18 @@ public final class RedisLiveTelemetryProjectionAdapter implements LiveTelemetryP
 
     private LiveTelemetryProjection read(String value) {
         try {
-            return json.readValue(value, LiveTelemetryProjection.class);
+            var root = json.readTree(value);
+            var telemetry = root.required("telemetry");
+            int version = telemetry.required("eventVersion").intValue();
+            var event = switch (version) {
+                case TrackingTelemetryIngestedV1.VERSION ->
+                    json.treeToValue(telemetry, TrackingTelemetryIngestedV1.class);
+                case TrackingTelemetryIngestedV2.VERSION ->
+                    json.treeToValue(telemetry, TrackingTelemetryIngestedV2.class);
+                default -> throw new IllegalStateException("Stored live projection version is unsupported");
+            };
+            return new LiveTelemetryProjection(event,
+                    json.treeToValue(root.required("projectedAt"), Instant.class));
         } catch (JsonProcessingException exception) {
             throw new IllegalStateException("Stored live projection is invalid", exception);
         }
