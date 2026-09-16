@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 
 import com.transportlogistics.app.shared.domain.DependencyUnavailableException;
+import com.transportlogistics.app.tracking.application.telemetry.HistoricalTelemetry;
 import com.transportlogistics.app.tracking.application.telemetry.TrackingTelemetryIngestedV1;
 import com.transportlogistics.app.tracking.application.telemetry.TrackingTelemetryIngestedV2;
 import com.transportlogistics.app.tracking.domain.TrackingModels.EngineState;
@@ -63,8 +64,7 @@ class JdbcHistoricalTelemetryStoreTimescaleAcceptanceTest {
 
     @BeforeEach
     void clear() {
-        jdbc.update("DELETE FROM tracking_telemetry_evaluation_dispatch");
-        jdbc.update("DELETE FROM tracking_position_history");
+        jdbc.execute("TRUNCATE tracking_telemetry_evaluation_dispatch,tracking_position_history");
     }
 
     @Test
@@ -119,6 +119,48 @@ class JdbcHistoricalTelemetryStoreTimescaleAcceptanceTest {
                 .isOne();
         assertThat(jdbc.queryForObject("SELECT count(*) FROM tracking_telemetry_evaluation_dispatch "
                 + "WHERE tenant_id=?", Integer.class, tenant)).isEqualTo(3);
+    }
+
+    @Test
+    void persistsV2OptionalEvidenceAndDistinguishesAbsentFromExplicitUnknown() {
+        UUID tenant = UUID.randomUUID();
+        UUID vehicle = UUID.randomUUID();
+        Instant source = Instant.now().minusSeconds(10);
+        var base = event(tenant, vehicle, "9".repeat(64), source, BigDecimal.ONE,
+                BigDecimal.TWO, BigDecimal.ZERO, EngineState.OFF, BigDecimal.ONE);
+        var explicit = new TrackingTelemetryIngestedV2(base.eventId(), TrackingTelemetryIngestedV2.TYPE,
+                TrackingTelemetryIngestedV2.VERSION, tenant, vehicle, base.deviceId(), "FLESPI",
+                "v2-explicit", base.dedupeIdentity(), base.latitude(), base.longitude(),
+                base.speedKph(), base.headingDegrees(), base.horizontalAccuracyMeters(),
+                base.altitudeMeters(), base.engineState(), base.odometerKm(), base.engineHours(),
+                base.recordedAt(), base.receivedAt(), TrackingTelemetryIngestedV2.TamperState.UNKNOWN,
+                new BigDecimal("0.000"), new BigDecimal("1000.000000"),
+                TrackingTelemetryIngestedV2.ExternalPowerState.UNKNOWN,
+                TrackingTelemetryIngestedV2.BatteryChargingState.UNKNOWN);
+        var absent = new TrackingTelemetryIngestedV2(UUID.randomUUID(), TrackingTelemetryIngestedV2.TYPE,
+                TrackingTelemetryIngestedV2.VERSION, tenant, vehicle, UUID.randomUUID(), "TRACCAR",
+                "v2-absent", "8".repeat(64), base.latitude(), base.longitude(), base.speedKph(),
+                null, base.horizontalAccuracyMeters(), null, EngineState.UNKNOWN, null, null,
+                source.plusSeconds(1), source.plusSeconds(2), null, null, null, null, null);
+
+        assertThat(store.persist(List.of(explicit, absent)).persisted()).isEqualTo(2);
+        assertThat(jdbc.queryForMap("SELECT event_version,tamper_state,battery_level_percent,"
+                + "battery_voltage_volts,external_power_state,battery_charging_state "
+                + "FROM tracking_position_history WHERE tenant_id=? AND id=?", tenant,
+                explicit.eventId()))
+                .containsEntry("event_version", 2)
+                .containsEntry("tamper_state", "UNKNOWN")
+                .containsEntry("battery_level_percent", new BigDecimal("0.000"))
+                .containsEntry("battery_voltage_volts", new BigDecimal("1000.000000"))
+                .containsEntry("external_power_state", "UNKNOWN")
+                .containsEntry("battery_charging_state", "UNKNOWN");
+        HistoricalTelemetry absentFact = store.findExact(tenant, absent.recordedAt(), absent.eventId())
+                .orElseThrow();
+        assertThat(absentFact.tamperState()).isNull();
+        assertThat(absentFact.batteryLevelPercent()).isNull();
+        assertThat(absentFact.batteryVoltageVolts()).isNull();
+        assertThat(absentFact.externalPowerState()).isNull();
+        assertThat(absentFact.batteryChargingState()).isNull();
     }
 
     @Test

@@ -30,8 +30,8 @@
 > - **Deferred Acceptance Queue:** `US-53-REPLAY-JOURNEYS-FINAL-ACCEPTANCE-001` resumes only when genuine retained provider/device journey evidence and operator sign-off are available.
 > - **US-54 State:** `TECHNICALLY_COMPLETE / IMPLEMENTATION_COMPLETE_ACCEPTANCE_BLOCKED_EXTERNAL_SYSTEM`; technical closure remains valid, while genuine device/provider telemetry, privacy review and operator sign-off are unavailable.
 > - **Deferred Acceptance Queue:** `US-54-VIEW-TRACKING-DASHBOARD-FINAL-ACCEPTANCE-001` resumes only when its genuine external prerequisites exist.
-> - **US-55 State:** `IMPLEMENTATION_IN_PROGRESS / CS02_COMPLETE`; canonical telemetry V2 signals, dual-version consumers, provider mappings and cross-version idempotency are verified while V1 remains immutable.
-> - **Immediate Next Action:** Execute `US-55-HANDLE-GPS-EDGE-CASES-CS03-PERSISTENCE-AUTHORIZATION-001`.
+> - **US-55 State:** `IMPLEMENTATION_IN_PROGRESS / CS03_COMPLETE`; V96 persists nullable canonical V2 evidence and effective-dated device capabilities while reusing existing provider, binding, watermark and cross-version dedupe authority.
+> - **Immediate Next Action:** Execute `US-55-HANDLE-GPS-EDGE-CASES-CS04-EVALUATION-REDIS-DETECTOR-GUARDS-001`.
 
 ---
 
@@ -181,7 +181,7 @@ Development startup now consistently provisions the idempotent PostgreSQL sample
 | `US-52` | Monitor Route Deviations | Planned-versus-actual comparison, severity and audited approval | 🔴 `IMPLEMENTATION_COMPLETE / ACCEPTANCE_BLOCKED_EXTERNAL_SYSTEM` | Technical closure PASS at V92; final acceptance stopped before field execution because physical provider/device route evidence, real Dispatcher delivery and operator sign-off are unavailable |
 | `US-53` | Replay Journeys | Historical journey replay, stop analysis and incident forensics | 🔴 `TECHNICALLY_COMPLETE / IMPLEMENTATION_COMPLETE_ACCEPTANCE_BLOCKED_EXTERNAL_SYSTEM` | Technical closure remains valid; final physical/provider journey evidence and operator sign-off are deferred under `US-53-REPLAY-JOURNEYS-FINAL-ACCEPTANCE-001` |
 | `US-54` | View Tracking Dashboard | Fleet overview, exceptions, heat maps, alerts and stale-state visibility | 🔴 `TECHNICALLY_COMPLETE / IMPLEMENTATION_COMPLETE_ACCEPTANCE_BLOCKED_EXTERNAL_SYSTEM` | Independent closure remains PASS at V95; final acceptance is held for genuine device/provider telemetry, privacy review and operator sign-off; no producer acceptance is inherited |
-| `US-55` | Handle GPS Edge Cases | Provider-independent signal quality, tamper/battery/power evidence, invalid/poor coordinates, duplicate/late/out-of-order/clock drift, outages, disconnection, stale state, recovery and cross-provider/version dedupe | 🟡 `IMPLEMENTATION_IN_PROGRESS / CS02_COMPLETE` | Canonical V2 is complete; credentials/provider administration remain adapter-platform concerns; CS03 persistence authorization is next |
+| `US-55` | Handle GPS Edge Cases | Provider-independent signal quality, tamper/battery/power evidence, invalid/poor coordinates, duplicate/late/out-of-order/clock drift, outages, disconnection, stale state, recovery and cross-provider/version dedupe | 🟡 `IMPLEMENTATION_IN_PROGRESS / CS03_COMPLETE` | V96 nullable V2 history evidence, append-only enforcement and effective-dated capability registry are verified; CS04 evaluation/Redis detector guards are next |
 
 ---
 
@@ -245,13 +245,13 @@ Development startup now consistently provisions the idempotent PostgreSQL sample
 
 ```
 Current Status: 73 / 87 COMPLETE; 14 stories remain across Waves C–E
-Queue Head:     US-55-HANDLE-GPS-EDGE-CASES-CS03-PERSISTENCE-AUTHORIZATION-001
+Queue Head:     US-55-HANDLE-GPS-EDGE-CASES-CS04-EVALUATION-REDIS-DETECTOR-GUARDS-001
 Deferred:       US-53-REPLAY-JOURNEYS-FINAL-ACCEPTANCE-001; US-54-VIEW-TRACKING-DASHBOARD-FINAL-ACCEPTANCE-001
 ```
 
 1. **Wave A — Integration and exception-control foundations:** 2 / 2 COMPLETE / CLOSED (US-73 and US-78).
 2. **Wave B — Fuel control and financial links:** 5 / 5 COMPLETE / CLOSED (US-35, US-37, US-38, US-46, US-47).
-3. **Wave C — GPS and telematics:** US-48, US-50, US-52, US-53 and US-54 physical acceptance are on independent external-prerequisite holds; US-49 is accepted; US-55 CS02 is complete and CS03 persistence authorization is next. US-51 remains blocked by the missing engine-state capability.
+3. **Wave C — GPS and telematics:** US-48, US-50, US-52, US-53 and US-54 physical acceptance are on independent external-prerequisite holds; US-49 is accepted; US-55 CS03 is complete at V96 and CS04 evaluation/Redis detector guards are next. US-51 remains blocked by the missing engine-state capability.
 4. **Wave D — Compliance and field mobility:** US-72, US-76.
 5. **Wave E — Analytics, integrity, resilience, disruption and user risk:** US-85, US-84, US-87, US-82, US-86.
 6. After 87/87: `FULL-SOURCE-PARITY-AUDIT-001`, then `FULL-PLATFORM-END-TO-END-ACCEPTANCE-001` after authorized parity disposition.

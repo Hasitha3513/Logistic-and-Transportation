@@ -176,7 +176,7 @@ class DatabaseTableOwnershipArchitectureTest {
         own(ownership, "tracking", "tracking_device", "tracking_vehicle_device_assignment", "tracking_position",
                 "tracking_position_history", "tracking_vehicle_latest", "tracking_ingest_nonce", "tracking_audit_event",
                 "tracking_provider_binding", "tracking_provider_ingest_nonce", "tracking_retention_policy",
-                "tracking_device_provider_binding", "tracking_geofence",
+                "tracking_device_provider_binding", "tracking_device_telemetry_capability", "tracking_geofence",
                 "tracking_vehicle_geofence_state", "tracking_geofence_transition",
                 "tracking_geofence_evaluation_job", "tracking_speed_rule", "tracking_speed_state",
                 "tracking_speed_episode", "tracking_speed_evaluation_job",

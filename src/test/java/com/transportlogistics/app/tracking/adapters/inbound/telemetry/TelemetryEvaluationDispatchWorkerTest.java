@@ -135,6 +135,6 @@ class TelemetryEvaluationDispatchWorkerTest {
                 "GENERIC", "message-1", "a".repeat(64), new BigDecimal("6.9271"),
                 new BigDecimal("79.8612"), new BigDecimal("42.5"), new BigDecimal("90"),
                 new BigDecimal("5"), null, EngineState.ON, null, null, NOW.minusSeconds(1), NOW,
-                Trust.TRUSTED, "GOOD", Ordering.IN_ORDER);
+                Trust.TRUSTED, "GOOD", Ordering.IN_ORDER, null, null, null, null, null);
     }
 }

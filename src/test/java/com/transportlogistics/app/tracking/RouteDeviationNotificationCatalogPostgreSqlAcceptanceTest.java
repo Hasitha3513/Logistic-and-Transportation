@@ -32,7 +32,7 @@ class RouteDeviationNotificationCatalogPostgreSqlAcceptanceTest extends PostgreS
 
         flyway.migrate();
 
-        assertThat(flyway.info().current().getVersion().getVersion()).isEqualTo("95");
+        assertThat(flyway.info().current().getVersion().getVersion()).isEqualTo("96");
         assertThat(jdbc.queryForObject("""
                 SELECT count(*) FROM notification_template
                 WHERE code IN ('TRACKING_ROUTE_DEVIATION_DETECTED_V1',

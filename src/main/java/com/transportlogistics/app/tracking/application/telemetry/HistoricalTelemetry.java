@@ -30,5 +30,10 @@ public record HistoricalTelemetry(
         Instant receivedAt,
         Trust trust,
         String quality,
-        Ordering ordering) {
+        Ordering ordering,
+        TrackingTelemetryIngestedV2.TamperState tamperState,
+        BigDecimal batteryLevelPercent,
+        BigDecimal batteryVoltageVolts,
+        TrackingTelemetryIngestedV2.ExternalPowerState externalPowerState,
+        TrackingTelemetryIngestedV2.BatteryChargingState batteryChargingState) {
 }

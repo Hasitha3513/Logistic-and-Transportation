@@ -3,6 +3,7 @@ package com.transportlogistics.app.tracking.adapters.outbound.persistence;
 import com.transportlogistics.app.shared.domain.DependencyUnavailableException;
 import com.transportlogistics.app.tracking.application.telemetry.HistoricalTelemetry;
 import com.transportlogistics.app.tracking.application.telemetry.CanonicalTelemetryEvent;
+import com.transportlogistics.app.tracking.application.telemetry.TrackingTelemetryIngestedV2;
 import com.transportlogistics.app.tracking.domain.TrackingModels.EngineState;
 import com.transportlogistics.app.tracking.domain.TrackingModels.Ordering;
 import com.transportlogistics.app.tracking.domain.TrackingModels.Trust;
@@ -132,7 +133,12 @@ public final class JdbcHistoricalTelemetryStore implements HistoricalTelemetrySt
                 event.dedupeIdentity(), event.latitude(), event.longitude(), event.speedKph(),
                 event.headingDegrees(), event.horizontalAccuracyMeters(), event.altitudeMeters(),
                 event.engineState(), event.odometerKm(), event.engineHours(), event.recordedAt(),
-                event.receivedAt(), trust, quality, ordering);
+                event.receivedAt(), trust, quality, ordering,
+                event instanceof TrackingTelemetryIngestedV2 v2 ? v2.tamperState() : null,
+                event instanceof TrackingTelemetryIngestedV2 v2 ? v2.batteryLevelPercent() : null,
+                event instanceof TrackingTelemetryIngestedV2 v2 ? v2.batteryVoltageVolts() : null,
+                event instanceof TrackingTelemetryIngestedV2 v2 ? v2.externalPowerState() : null,
+                event instanceof TrackingTelemetryIngestedV2 v2 ? v2.batteryChargingState() : null);
     }
 
     private boolean reducible(HistoricalTelemetry candidate, HistoricalTelemetry previous) {
@@ -182,8 +188,10 @@ public final class JdbcHistoricalTelemetryStore implements HistoricalTelemetrySt
                   provider_message_id,dedupe_identity,received_at,latitude,longitude,
                   horizontal_accuracy_meters,speed_kph,heading_degrees,altitude_meters,engine_state,
                   odometer_km,engine_hours,trust,quality,ordering_classification,retention_policy,
-                  retention_policy_version,retain_until,safe_metadata)
-                VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,'{}'::jsonb)
+                  retention_policy_version,retain_until,safe_metadata,tamper_state,
+                  battery_level_percent,battery_voltage_volts,external_power_state,
+                  battery_charging_state)
+                VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,'{}'::jsonb,?,?,?,?,?)
                 ON CONFLICT DO NOTHING
                 """, fact.tenantId(), Timestamp.from(fact.recordedAt()), fact.eventId(),
                 fact.eventVersion(), fact.deviceId(), fact.vehicleId(), fact.providerAlias(),
@@ -193,7 +201,9 @@ public final class JdbcHistoricalTelemetryStore implements HistoricalTelemetrySt
                 fact.engineState() == null ? EngineState.UNKNOWN.name() : fact.engineState().name(),
                 fact.odometerKm(), fact.engineHours(), fact.trust().name(), fact.quality(),
                 fact.ordering().name(), RETENTION_POLICY, RETENTION_VERSION,
-                Timestamp.from(fact.recordedAt().plus(RETENTION)));
+                Timestamp.from(fact.recordedAt().plus(RETENTION)),
+                name(fact.tamperState()), fact.batteryLevelPercent(), fact.batteryVoltageVolts(),
+                name(fact.externalPowerState()), name(fact.batteryChargingState()));
     }
 
     @Override
@@ -224,7 +234,21 @@ public final class JdbcHistoricalTelemetryStore implements HistoricalTelemetrySt
                 row.getBigDecimal("odometer_km"), row.getBigDecimal("engine_hours"),
                 row.getTimestamp("source_timestamp").toInstant(), row.getTimestamp("received_at").toInstant(),
                 Trust.valueOf(row.getString("trust")), row.getString("quality"),
-                Ordering.valueOf(row.getString("ordering_classification")));
+                Ordering.valueOf(row.getString("ordering_classification")),
+                enumValue(TrackingTelemetryIngestedV2.TamperState.class, row.getString("tamper_state")),
+                row.getBigDecimal("battery_level_percent"), row.getBigDecimal("battery_voltage_volts"),
+                enumValue(TrackingTelemetryIngestedV2.ExternalPowerState.class,
+                        row.getString("external_power_state")),
+                enumValue(TrackingTelemetryIngestedV2.BatteryChargingState.class,
+                        row.getString("battery_charging_state")));
+    }
+
+    private static String name(Enum<?> value) {
+        return value == null ? null : value.name();
+    }
+
+    private static <E extends Enum<E>> E enumValue(Class<E> type, String value) {
+        return value == null ? null : Enum.valueOf(type, value);
     }
 
     private static final class NoDispatch implements TelemetryEvaluationDispatchPort {

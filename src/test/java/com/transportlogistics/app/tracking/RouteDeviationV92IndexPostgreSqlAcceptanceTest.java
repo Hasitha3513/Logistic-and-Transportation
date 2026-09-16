@@ -28,7 +28,7 @@ class RouteDeviationV92IndexPostgreSqlAcceptanceTest extends PostgreSqlIntegrati
 
     @Test
     void v92IsTransactionalExactEfficientAndTenantSafeAtTenThousandRows() throws Exception {
-        assertThat(flyway.info().current().getVersion().getVersion()).isEqualTo("95");
+        assertThat(flyway.info().current().getVersion().getVersion()).isEqualTo("96");
         assertThat(jdbc.queryForObject(
                 "SELECT count(*) FROM flyway_schema_history WHERE version='92' AND success",
                 Integer.class)).isOne();
