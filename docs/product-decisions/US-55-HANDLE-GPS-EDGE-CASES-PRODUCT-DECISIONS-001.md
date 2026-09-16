@@ -149,6 +149,25 @@ failure) publish one minimized `OperationalExceptionFactV1` through P1-01 to the
 IN_APP Dispatcher notification. No email/SMS is approved. Repeated evidence updates one episode without duplicate
 logical delivery. Operations owns case workflow; Tracking retains detection and correction ownership.
 
+The CS05 delivery contract is frozen as follows. The first episode opening emits
+`TRACKING_GPS_EXCEPTION_OPENED` to active same-Tenant `DISPATCHER` users over `IN_APP` using
+`TRACKING_GPS_EXCEPTION_ALERT_V1`. Domain WARNING maps to Notification WARNING; domain HIGH maps to
+the platform's existing Notification CRITICAL storage value while template variable `severity` remains
+the truthful user-facing value `HIGH`. A direct HIGH opening emits that one Notification fact and one
+HIGH Operations fact. A later WARNING-to-HIGH transition emits only the Operations fact. Repeated
+evidence, escalation, recovery and resolution emit no further CS05 Notification. HIGH Operations facts
+use source module `TRACKING`, summary `TRACKING_GPS_EXCEPTION_HIGH`, and the frozen category mapping:
+signal loss to `TRACKING_CONNECTIVITY`; battery conditions to `TRACKING_DEVICE_HEALTH`; tamper/binding
+violations to `TRACKING_DEVICE_SECURITY`; and invalid telemetry, clock, accuracy, movement and
+`PROCESSING_FAILURE` to `TRACKING_DATA_QUALITY`. The safe label for `PROCESSING_FAILURE` is
+`Telemetry processing failure`; diagnostic error text is never event metadata.
+
+V98 is authorized to extend only the existing Operations constraints and seed the one exact template,
+Dispatcher IN_APP rule and non-escalating policy for tenants that exist when V98 executes. Automatic
+defaults for tenants created later are explicitly frozen as
+`DEFERRED_PENDING_GOVERNED_TENANT_CREATION_WORKFLOW`. No database trigger, speculative tenant event,
+tenant API, tenant repository interception, scheduler or backfill workflow is authorized by CS05.
+
 ## API, RBAC and frontend
 
 Phase 1 adds a distinct operator workflow because the source story requires review/escalation. Proposed APIs are

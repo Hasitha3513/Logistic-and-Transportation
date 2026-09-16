@@ -106,7 +106,7 @@ class NotificationPersistenceIntegrationTest {
 
         assertThat(template).isPresent();
         assertThat(template.orElseThrow().version()).isEqualTo(1);
-        assertThat(templateAdapter.findActive(null, null)).hasSize(30);
+        assertThat(templateAdapter.findActive(null, null)).hasSize(31);
     }
 
     @Test

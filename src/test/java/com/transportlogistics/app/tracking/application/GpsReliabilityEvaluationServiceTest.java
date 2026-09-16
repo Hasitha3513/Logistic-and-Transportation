@@ -81,7 +81,8 @@ class GpsReliabilityEvaluationServiceTest {
                 return operation.get();
             }
         };
-        return new GpsReliabilityEvaluationService(capabilities, episodes, evidence, transaction);
+        return new GpsReliabilityEvaluationService(capabilities, episodes, evidence, transaction,
+                org.mockito.Mockito.mock(com.transportlogistics.app.tracking.ports.outbound.GpsExceptionEventPublisherPort.class));
     }
 
     private static TrackingTelemetryIngestedV2 event(

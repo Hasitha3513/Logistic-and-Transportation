@@ -91,6 +91,11 @@ public final class NotificationEventCatalogue {
             required("routeDeviationEpisodeId", "vehicleId", "routeId", "routeVersion", "severity",
                 "observedDistanceMeters", "effectiveToleranceMeters", "sourceTimestamp", "approvalRequired",
                 "escalationReason"), Set.of("tripId", "driverId"), 0, null));
+        definitions.put("TRACKING_GPS_EXCEPTION_OPENED", new NotificationEventDefinition(
+            "TRACKING_GPS_EXCEPTION_OPENED", "tracking", NotificationSeverity.WARNING,
+            Set.of(NotificationChannel.IN_APP), "TRACKING_GPS_EXCEPTION_ALERT_V1",
+            required("exceptionTypeLabel", "severity", "vehicleLabel", "observedAt"),
+            Set.of(), 0, null));
         return Collections.unmodifiableMap(new LinkedHashMap<>(definitions));
     }
 

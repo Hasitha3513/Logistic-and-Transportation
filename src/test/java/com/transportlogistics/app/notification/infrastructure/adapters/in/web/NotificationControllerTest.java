@@ -164,7 +164,7 @@ class NotificationControllerTest {
 
         configurationMvc.perform(get("/notification-event-catalogue"))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.length()").value(17))
+            .andExpect(jsonPath("$.length()").value(18))
             .andExpect(jsonPath("$[?(@.eventType == 'TRIP_DELAY_RECORDED')]").exists());
     }
 

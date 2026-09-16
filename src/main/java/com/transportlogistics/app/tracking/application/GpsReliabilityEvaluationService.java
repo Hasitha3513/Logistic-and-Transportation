@@ -20,6 +20,7 @@ import com.transportlogistics.app.tracking.ports.inbound.GpsReliabilityEvaluatio
 import com.transportlogistics.app.tracking.ports.outbound.GpsExceptionEvidenceRepositoryPort;
 import com.transportlogistics.app.tracking.ports.outbound.GpsExceptionRepositoryPort;
 import com.transportlogistics.app.tracking.ports.outbound.GpsExceptionTransactionPort;
+import com.transportlogistics.app.tracking.ports.outbound.GpsExceptionEventPublisherPort;
 import com.transportlogistics.app.tracking.ports.outbound.TelemetryCapabilityLookupPort;
 import com.transportlogistics.app.tracking.ports.outbound.GpsDeviceFreshnessPort.DeviceFreshness;
 import java.nio.charset.StandardCharsets;
@@ -46,14 +47,16 @@ public final class GpsReliabilityEvaluationService implements GpsReliabilityEval
     private final GpsExceptionRepositoryPort episodes;
     private final GpsExceptionEvidenceRepositoryPort evidence;
     private final GpsExceptionTransactionPort transactions;
+    private final GpsExceptionEventPublisherPort events;
 
     public GpsReliabilityEvaluationService(TelemetryCapabilityLookupPort capabilities,
             GpsExceptionRepositoryPort episodes, GpsExceptionEvidenceRepositoryPort evidence,
-            GpsExceptionTransactionPort transactions) {
+            GpsExceptionTransactionPort transactions, GpsExceptionEventPublisherPort events) {
         this.capabilities = capabilities;
         this.episodes = episodes;
         this.evidence = evidence;
         this.transactions = transactions;
+        this.events = events;
     }
 
     @Override
@@ -94,6 +97,7 @@ public final class GpsReliabilityEvaluationService implements GpsReliabilityEval
                     com.transportlogistics.app.tracking.domain.gpsedge.GpsReliabilityModels.Ordering.IN_ORDER,
                     com.transportlogistics.app.tracking.domain.gpsedge.GpsReliabilityModels.ReliabilityState.OFFLINE,
                     "SIGNAL_LOSS", GpsExceptionEvidence.Transition.OPENED, assessedAt));
+            events.publishOpened(episode);
             return Boolean.TRUE;
         });
     }
@@ -147,6 +151,12 @@ public final class GpsReliabilityEvaluationService implements GpsReliabilityEval
                 transition, assessedAt));
         if (previous != null && appended) {
             episodes.save(next);
+        }
+        if (appended && previous == null) {
+            events.publishOpened(next);
+        } else if (appended && previous.severity() == Severity.WARNING
+                && next.severity() == Severity.HIGH) {
+            events.publishHigh(next);
         }
     }
 

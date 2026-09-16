@@ -32,17 +32,23 @@ public record OperationalExceptionFactV1(
         SourceModule.DELIVERY, Set.of("DAMAGED_DELIVERY", "WRONG_ADDRESS", "PARTIAL_DELIVERY",
             "OTP_MISMATCH", "RECIPIENT_REFUSAL"),
         SourceModule.FUEL, Set.of("SUSPECTED_FUEL_LOSS", "INCORRECT_READING", "SUDDEN_PRICE_CHANGE",
-            "EMERGENCY_REFUEL", "FUEL_CARD_POLICY_DEVIATION", "NEGATIVE_BUNKER_BALANCE")
+            "EMERGENCY_REFUEL", "FUEL_CARD_POLICY_DEVIATION", "NEGATIVE_BUNKER_BALANCE"),
+        SourceModule.TRACKING, Set.of("INVALID_TELEMETRY", "CLOCK_ANOMALY", "LOW_ACCURACY",
+            "IMPOSSIBLE_MOVEMENT", "SIGNAL_LOSS", "DEVICE_TAMPER", "BATTERY_LOW",
+            "BATTERY_RAPID_DRAIN", "BINDING_VIOLATION", "PROCESSING_FAILURE")
     );
     private static final Map<SourceModule, String> SUMMARY_CODES = Map.of(
         SourceModule.ROUTING, "ROUTE_DISRUPTION_CREATED",
         SourceModule.DELIVERY, "DELIVERY_EXCEPTION_CREATED",
-        SourceModule.FUEL, "FUEL_EXCEPTION_ESCALATED"
+        SourceModule.FUEL, "FUEL_EXCEPTION_ESCALATED",
+        SourceModule.TRACKING, "TRACKING_GPS_EXCEPTION_HIGH"
     );
     private static final Map<SourceModule, Set<String>> METADATA_KEYS = Map.of(
         SourceModule.ROUTING, Set.of("routeId", "detourRouteId", "effectiveFrom", "effectiveUntil"),
         SourceModule.DELIVERY, Set.of("deliveryOrderId", "deliveryAttemptId"),
-        SourceModule.FUEL, Set.of("fuelExceptionId", "sourceType", "sourceId")
+        SourceModule.FUEL, Set.of("fuelExceptionId", "sourceType", "sourceId"),
+        SourceModule.TRACKING, Set.of("episodeId", "exceptionType", "severity", "deviceId",
+            "vehicleId", "openedAt", "lastObservedAt")
     );
 
     public OperationalExceptionFactV1 {
@@ -114,7 +120,8 @@ public record OperationalExceptionFactV1(
         return required(value, max, field);
     }
 
-    public enum SourceModule { ROUTING, DELIVERY, FUEL }
+    public enum SourceModule { ROUTING, DELIVERY, FUEL, TRACKING }
     public enum Severity { LOW, MEDIUM, HIGH, CRITICAL }
-    public enum Category { OPERATIONAL, SAFETY, COMPLIANCE, CUSTOMER, FINANCIAL, TECHNICAL, SECURITY }
+    public enum Category { OPERATIONAL, SAFETY, COMPLIANCE, CUSTOMER, FINANCIAL, TECHNICAL, SECURITY,
+        TRACKING_CONNECTIVITY, TRACKING_DEVICE_HEALTH, TRACKING_DEVICE_SECURITY, TRACKING_DATA_QUALITY }
 }

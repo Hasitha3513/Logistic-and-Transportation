@@ -298,8 +298,9 @@ public final class OperationalExceptionCase {
     public OffsetDateTime createdAt() { return createdAt; }
     public OffsetDateTime updatedAt() { return updatedAt; }
 
-    public enum SourceModule { ROUTING, DELIVERY, FUEL }
-    public enum Category { OPERATIONAL, SAFETY, COMPLIANCE, CUSTOMER, FINANCIAL, TECHNICAL, SECURITY }
+    public enum SourceModule { ROUTING, DELIVERY, FUEL, TRACKING }
+    public enum Category { OPERATIONAL, SAFETY, COMPLIANCE, CUSTOMER, FINANCIAL, TECHNICAL, SECURITY,
+        TRACKING_CONNECTIVITY, TRACKING_DEVICE_HEALTH, TRACKING_DEVICE_SECURITY, TRACKING_DATA_QUALITY }
     public enum Severity { LOW, MEDIUM, HIGH, CRITICAL }
     public enum Status { OPEN, ACKNOWLEDGED, IN_PROGRESS, RESOLVED, CLOSED }
     public enum SlaStatus { ON_TRACK, AT_RISK, BREACHED, MET }

@@ -26,7 +26,7 @@ class TrackingDashboardV95IndexPostgreSqlAcceptanceTest extends PostgreSqlIntegr
 
     @Test
     void cleanV95HasExactlyOneReadyTenantLeadingDashboardIndex() throws Exception {
-        assertThat(flyway.info().current().getVersion().getVersion()).isEqualTo("97");
+        assertThat(flyway.info().current().getVersion().getVersion()).isEqualTo("98");
         assertThat(jdbc.queryForObject(
                 "SELECT count(*) FROM flyway_schema_history WHERE version='95' AND success",
                 Integer.class)).isOne();
@@ -76,7 +76,7 @@ class TrackingDashboardV95IndexPostgreSqlAcceptanceTest extends PostgreSqlIntegr
         assertThat(beforePlan).contains("Seq Scan on tracking_speed_episode", "Sort");
 
         flyway.migrate();
-        assertThat(flyway.info().current().getVersion().getVersion()).isEqualTo("97");
+        assertThat(flyway.info().current().getVersion().getVersion()).isEqualTo("98");
         jdbc.execute("ANALYZE tracking_speed_episode");
         List<Map<String, Object>> after = query(TENANT_A, vehicles);
         String afterPlan = plan(TENANT_A, vehicles, "US54_V95_PLAN_AFTER");

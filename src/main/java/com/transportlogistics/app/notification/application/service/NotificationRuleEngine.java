@@ -148,7 +148,7 @@ public class NotificationRuleEngine {
         NotificationTemplateRenderer.RenderedNotification rendered;
         try {
             variables.put("eventTime", event.occurredAt().toString());
-            variables.put("severity", event.severity().name());
+            variables.putIfAbsent("severity", event.severity().name());
             rendered = templateRenderer.render(template, variables);
         } catch (IllegalArgumentException exception) {
             for (String recipient : recipients) record(event, rule, recipient,

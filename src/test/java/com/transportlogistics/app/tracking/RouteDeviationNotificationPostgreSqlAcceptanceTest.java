@@ -102,7 +102,7 @@ class RouteDeviationNotificationPostgreSqlAcceptanceTest extends PostgreSqlInteg
         insertMembership(UUID.fromString("51000000-0000-0000-0000-000000000021"), TENANT_A, userA, role);
         insertMembership(UUID.fromString("51000000-0000-0000-0000-000000000022"), TENANT_B, userB, role);
         flyway.migrate();
-        assertThat(flyway.info().current().getVersion().getVersion()).isEqualTo("97");
+        assertThat(flyway.info().current().getVersion().getVersion()).isEqualTo("98");
     }
 
     private void insertUser(UUID id, String username) {

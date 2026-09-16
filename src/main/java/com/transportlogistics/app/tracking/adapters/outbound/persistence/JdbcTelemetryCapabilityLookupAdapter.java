@@ -63,7 +63,7 @@ final class JdbcTelemetryCapabilityLookupAdapter implements TelemetryCapabilityL
                   AND effective_from<=?
                   AND (effective_to IS NULL OR effective_to>?)
                 ORDER BY capability,effective_from DESC,id DESC
-                """.formatted(placeholders), (org.springframework.jdbc.core.RowCallbackHandler) row -> result.put(
+                """.replace("%s", placeholders), (org.springframework.jdbc.core.RowCallbackHandler) row -> result.put(
                     TelemetrySignalCapability.valueOf(row.getString(1)),
                     TelemetryCapabilityState.valueOf(row.getString(2))), parameters.toArray());
         return Map.copyOf(result);

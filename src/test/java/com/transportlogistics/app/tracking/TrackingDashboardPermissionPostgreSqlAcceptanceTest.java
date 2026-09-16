@@ -14,7 +14,7 @@ class TrackingDashboardPermissionPostgreSqlAcceptanceTest extends PostgreSqlInte
     void v94SeedsOnlyDashboardViewAndGrantsExistingOperatorRoles() {
         assertThat(jdbc.queryForObject(
                 "SELECT version FROM flyway_schema_history WHERE success ORDER BY installed_rank DESC LIMIT 1",
-                String.class)).isEqualTo("97");
+                String.class)).isEqualTo("98");
         assertThat(jdbc.queryForList(
                 "SELECT code FROM app_permission WHERE code='TRACKING_DASHBOARD_VIEW'", String.class))
                 .containsExactly("TRACKING_DASHBOARD_VIEW");

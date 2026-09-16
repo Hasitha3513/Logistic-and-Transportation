@@ -109,8 +109,8 @@ class PostgreSqlProductionInvariantIntegrationTest extends PostgreSqlIntegration
         var applied = List.of(flyway.info().applied());
 // assertEquals(18, applied.size()); // size check removed
 
-        assertEquals("97", applied.getLast().getVersion().getVersion());
-        assertEquals("97", jdbc.queryForObject(
+        assertEquals("98", applied.getLast().getVersion().getVersion());
+        assertEquals("98", jdbc.queryForObject(
                 "SELECT version FROM flyway_schema_history WHERE success = TRUE ORDER BY installed_rank DESC LIMIT 1",
                 String.class));
         assertTrue(entityManagerFactory.isOpen());
@@ -187,7 +187,7 @@ class PostgreSqlProductionInvariantIntegrationTest extends PostgreSqlIntegration
 
         flyway.migrate();
 
-        assertEquals("97", flyway.info().current().getVersion().getVersion());
+        assertEquals("98", flyway.info().current().getVersion().getVersion());
         assertEquals(0, jdbc.queryForObject("SELECT count(*) FROM trip WHERE route_version IS NOT NULL",
                 Integer.class));
     }

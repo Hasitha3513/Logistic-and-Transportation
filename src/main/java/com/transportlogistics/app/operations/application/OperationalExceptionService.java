@@ -364,6 +364,9 @@ public final class OperationalExceptionService implements OperationalExceptionUs
             case FINANCIAL -> "OPERATIONS_FINANCIAL_QUEUE";
             case TECHNICAL -> "OPERATIONS_TECHNICAL_QUEUE";
             case SECURITY -> "OPERATIONS_SECURITY_QUEUE";
+            case TRACKING_CONNECTIVITY, TRACKING_DEVICE_HEALTH, TRACKING_DATA_QUALITY ->
+                    "OPERATIONS_TECHNICAL_QUEUE";
+            case TRACKING_DEVICE_SECURITY -> "OPERATIONS_SECURITY_QUEUE";
             case OPERATIONAL -> "OPERATIONS_QUEUE";
         };
     }

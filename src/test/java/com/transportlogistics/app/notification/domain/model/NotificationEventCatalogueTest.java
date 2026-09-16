@@ -17,8 +17,8 @@ class NotificationEventCatalogueTest {
                 "DELIVERY_ETA_RISK_CHANGED", "DELIVERY_COMPLETED", "DELIVERY_FAILED_ATTEMPT_RECORDED",
                 "DELIVERY_REDELIVERY_SCHEDULED", "VEHICLE_GEOFENCE_TRANSITIONED_V1",
                 "VEHICLE_SPEEDING_DETECTED_V1", "VEHICLE_ROUTE_DEVIATION_DETECTED_V1",
-                "VEHICLE_ROUTE_DEVIATION_ESCALATED_V1");
-        assertThat(NotificationEventCatalogue.all()).hasSize(17);
+                "VEHICLE_ROUTE_DEVIATION_ESCALATED_V1", "TRACKING_GPS_EXCEPTION_OPENED");
+        assertThat(NotificationEventCatalogue.all()).hasSize(18);
     }
 
     @Test

@@ -5,5 +5,5 @@ import com.transportlogistics.app.tracking.domain.gpsedge.GpsExceptionEpisode;
 public interface GpsExceptionEventPublisherPort {
     void publishOpened(GpsExceptionEpisode episode);
 
-    void publishResolved(GpsExceptionEpisode episode);
+    void publishHigh(GpsExceptionEpisode episode);
 }

@@ -25,15 +25,17 @@ class NotificationProducerCoverageTest {
         "VEHICLE_GEOFENCE_TRANSITIONED_V1",
         "VEHICLE_SPEEDING_DETECTED_V1",
         "VEHICLE_ROUTE_DEVIATION_DETECTED_V1",
-        "VEHICLE_ROUTE_DEVIATION_ESCALATED_V1"
+        "VEHICLE_ROUTE_DEVIATION_ESCALATED_V1",
+        "TRACKING_GPS_EXCEPTION_OPENED"
     );
 
     @Test void everyActiveProductionEventHasProducerEvidence() {
         var catalogueEvents = NotificationEventCatalogue.all().stream()
             .map(NotificationEventDefinition::eventType).collect(Collectors.toSet());
-        assertThat(catalogueEvents).hasSize(17).contains(
+        assertThat(catalogueEvents).hasSize(18).contains(
                 "VEHICLE_GEOFENCE_TRANSITIONED_V1", "VEHICLE_SPEEDING_DETECTED_V1",
-                "VEHICLE_ROUTE_DEVIATION_DETECTED_V1", "VEHICLE_ROUTE_DEVIATION_ESCALATED_V1");
+                "VEHICLE_ROUTE_DEVIATION_DETECTED_V1", "VEHICLE_ROUTE_DEVIATION_ESCALATED_V1",
+                "TRACKING_GPS_EXCEPTION_OPENED");
         assertThat(catalogueEvents).filteredOn(PRODUCTION_PRODUCERS::contains)
             .containsExactlyInAnyOrderElementsOf(PRODUCTION_PRODUCERS);
         assertThat(catalogueEvents).doesNotContain("DRIVER_DRUG_TEST_EXPIRING", "FUEL_LIMIT_EXCEEDED", "FUEL_EXCEPTION");

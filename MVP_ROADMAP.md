@@ -6,7 +6,7 @@
 ![Completed](https://img.shields.io/badge/Completed-73%20%2F%2087-2da44e.svg?style=for-the-badge&logo=checkmarx)
 ![Progress](https://img.shields.io/badge/Progress-83.9%25-brightgreen.svg?style=for-the-badge&logo=speedtest)
 ![MVP 1.4 Closed](https://img.shields.io/badge/MVP%201.4%20Last--Mile-8%20%2F%208-2da44e.svg?style=for-the-badge&logo=pinboard)
-![Database](https://img.shields.io/badge/TimescaleDB%20%2F%20Flyway-V97-8a63d2.svg?style=for-the-badge&logo=postgresql)
+![Database](https://img.shields.io/badge/TimescaleDB%20%2F%20Flyway-V98-8a63d2.svg?style=for-the-badge&logo=postgresql)
 
 </div>
 
@@ -30,8 +30,8 @@
 > - **Deferred Acceptance Queue:** `US-53-REPLAY-JOURNEYS-FINAL-ACCEPTANCE-001` resumes only when genuine retained provider/device journey evidence and operator sign-off are available.
 > - **US-54 State:** `TECHNICALLY_COMPLETE / IMPLEMENTATION_COMPLETE_ACCEPTANCE_BLOCKED_EXTERNAL_SYSTEM`; technical closure remains valid, while genuine device/provider telemetry, privacy review and operator sign-off are unavailable.
 > - **Deferred Acceptance Queue:** `US-54-VIEW-TRACKING-DASHBOARD-FINAL-ACCEPTANCE-001` resumes only when its genuine external prerequisites exist.
-> - **US-55 State:** `IMPLEMENTATION_IN_PROGRESS / CS04_COMPLETE`; V97 adds Tenant-safe authoritative GPS-exception episodes and append-only minimized evidence, while detector evaluation, trusted live-state guards and downstream detector eligibility are wired without changing public contracts.
-> - **Immediate Next Action:** Execute `US-55-HANDLE-GPS-EDGE-CASES-CS05-OPERATIONS-NOTIFICATION-INTEGRATION-001`.
+> - **US-55 State:** `IMPLEMENTATION_IN_PROGRESS / CS05_COMPLETE`; V98 adds the existing-Tenant Dispatcher IN_APP catalogue and bounded Tracking Operations intake, with durable idempotent first-open/HIGH facts and no future-Tenant automation.
+> - **Immediate Next Action:** Execute `US-55-HANDLE-GPS-EDGE-CASES-CS06-APIS-RBAC-AUDIT-001`.
 
 ---
 
@@ -181,7 +181,7 @@ Development startup now consistently provisions the idempotent PostgreSQL sample
 | `US-52` | Monitor Route Deviations | Planned-versus-actual comparison, severity and audited approval | 🔴 `IMPLEMENTATION_COMPLETE / ACCEPTANCE_BLOCKED_EXTERNAL_SYSTEM` | Technical closure PASS at V92; final acceptance stopped before field execution because physical provider/device route evidence, real Dispatcher delivery and operator sign-off are unavailable |
 | `US-53` | Replay Journeys | Historical journey replay, stop analysis and incident forensics | 🔴 `TECHNICALLY_COMPLETE / IMPLEMENTATION_COMPLETE_ACCEPTANCE_BLOCKED_EXTERNAL_SYSTEM` | Technical closure remains valid; final physical/provider journey evidence and operator sign-off are deferred under `US-53-REPLAY-JOURNEYS-FINAL-ACCEPTANCE-001` |
 | `US-54` | View Tracking Dashboard | Fleet overview, exceptions, heat maps, alerts and stale-state visibility | 🔴 `TECHNICALLY_COMPLETE / IMPLEMENTATION_COMPLETE_ACCEPTANCE_BLOCKED_EXTERNAL_SYSTEM` | Independent closure remains PASS at V95; final acceptance is held for genuine device/provider telemetry, privacy review and operator sign-off; no producer acceptance is inherited |
-| `US-55` | Handle GPS Edge Cases | Provider-independent signal quality, tamper/battery/power evidence, invalid/poor coordinates, duplicate/late/out-of-order/clock drift, outages, disconnection, stale state, recovery and cross-provider/version dedupe | 🟡 `IMPLEMENTATION_IN_PROGRESS / CS04_COMPLETE` | V97 authoritative Tenant-safe episodes/evidence, restart-safe evaluation, trusted Redis projection guards and downstream detector eligibility are verified; CS05 Operations/Notification integration is next |
+| `US-55` | Handle GPS Edge Cases | Provider-independent signal quality, tamper/battery/power evidence, invalid/poor coordinates, duplicate/late/out-of-order/clock drift, outages, disconnection, stale state, recovery and cross-provider/version dedupe | 🟡 `IMPLEMENTATION_IN_PROGRESS / CS05_COMPLETE` | V98 durable first-open Dispatcher notification and exactly-once HIGH Operations integration are verified; future-Tenant default provisioning remains governed-deferred; CS06 API/RBAC/audit is next |
 
 ---
 
@@ -245,13 +245,13 @@ Development startup now consistently provisions the idempotent PostgreSQL sample
 
 ```
 Current Status: 73 / 87 COMPLETE; 14 stories remain across Waves C–E
-Queue Head:     US-55-HANDLE-GPS-EDGE-CASES-CS05-OPERATIONS-NOTIFICATION-INTEGRATION-001
+Queue Head:     US-55-HANDLE-GPS-EDGE-CASES-CS06-APIS-RBAC-AUDIT-001
 Deferred:       US-53-REPLAY-JOURNEYS-FINAL-ACCEPTANCE-001; US-54-VIEW-TRACKING-DASHBOARD-FINAL-ACCEPTANCE-001
 ```
 
 1. **Wave A — Integration and exception-control foundations:** 2 / 2 COMPLETE / CLOSED (US-73 and US-78).
 2. **Wave B — Fuel control and financial links:** 5 / 5 COMPLETE / CLOSED (US-35, US-37, US-38, US-46, US-47).
-3. **Wave C — GPS and telematics:** US-48, US-50, US-52, US-53 and US-54 physical acceptance are on independent external-prerequisite holds; US-49 is accepted; US-55 CS04 is complete at V97 and CS05 Operations/Notification integration is next. US-51 remains blocked by the missing engine-state capability.
+3. **Wave C — GPS and telematics:** US-48, US-50, US-52, US-53 and US-54 physical acceptance are on independent external-prerequisite holds; US-49 is accepted; US-55 CS05 is complete at V98 and CS06 API/RBAC/audit is next. US-51 remains blocked by the missing engine-state capability.
 4. **Wave D — Compliance and field mobility:** US-72, US-76.
 5. **Wave E — Analytics, integrity, resilience, disruption and user risk:** US-85, US-84, US-87, US-82, US-86.
 6. After 87/87: `FULL-SOURCE-PARITY-AUDIT-001`, then `FULL-PLATFORM-END-TO-END-ACCEPTANCE-001` after authorized parity disposition.
