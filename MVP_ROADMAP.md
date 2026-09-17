@@ -32,7 +32,7 @@
 > - **Deferred Acceptance Queue:** `US-54-VIEW-TRACKING-DASHBOARD-FINAL-ACCEPTANCE-001` resumes only when its genuine external prerequisites exist.
 > - **US-55 State:** `TECHNICALLY_COMPLETE / IMPLEMENTATION_COMPLETE_ACCEPTANCE_BLOCKED_EXTERNAL_SYSTEM`; final acceptance has 0 PASS, 0 FAIL and 9 externally blocked field requirements; genuine physical/provider evidence remains mandatory.
 > - **Open Acceptance Queue:** Resume `US-55-HANDLE-GPS-EDGE-CASES-FINAL-ACCEPTANCE-001` only when the physical/provider/operator prerequisites materially change.
-> - **Immediate Next Action:** Execute `US-55-TRACCAR-ADAPTER`; canonical Kafka polling remediation is complete, while physical acceptance remains independently open.
+> - **Immediate Next Action:** Execute `US-55-PROVIDER-UI`; canonical polling and the bounded Traccar production adapter are complete, while guided onboarding and physical acceptance remain open.
 
 ---
 
@@ -175,7 +175,7 @@ Development startup now consistently provisions the idempotent PostgreSQL sample
 | ID | User Story Title | Scope / Feature | Status | Verification Evidence |
 | :---: | :--- | :--- | :---: | :--- |
 | `US-47` | Manage Transport Billing | Trip/freight costing, charges, adjustments, cost centres and operational billing finalization | 🟢 `COMPLETE` | Final acceptance PASS; V72; focused 17/17; concurrency 9/9; Maven 1,398/0/0/15 in 06:38; architecture 46/46; Chromium 7/7; `US-47-TRANSPORT-BILLING-FINAL-ACCEPTANCE-001.md` |
-| `US-48` | Track Vehicles Live | Provider-neutral Flespi, Traccar and Generic ingestion; plug-and-play onboarding and Vehicle binding; live freshness and safe provider health | 🔴 `IMPLEMENTATION_COMPLETE / ACCEPTANCE_BLOCKED_EXTERNAL_SYSTEM` | Existing Flespi/Generic foundations retained; Traccar production polling authorized but pending; final acceptance still requires genuine telemetry from at least one supported physical GPS device and operator sign-off |
+| `US-48` | Track Vehicles Live | Provider-neutral Flespi, Traccar and Generic ingestion; plug-and-play onboarding and Vehicle binding; live freshness and safe provider health | 🔴 `IMPLEMENTATION_COMPLETE / ACCEPTANCE_BLOCKED_EXTERNAL_SYSTEM` | Flespi, Generic and bounded Traccar 6.15.3 production paths implemented; guided Traccar onboarding evidence and genuine supported physical telemetry/operator sign-off remain pending |
 | `US-49` | Manage Geofences | Depot, customer-site and unauthorized-zone entry/exit detection | ✅ `COMPLETE / ACCEPTED` | Final acceptance PASS at V80: focused 76/76, Maven 1,595/0/0/15, architecture 52/52, Vitest 299/299 and Chromium 7/7; no US-48 acceptance inheritance |
 | `US-50` | Monitor Speed | Threshold, road-rule and repeat-speed monitoring | 🔴 `IMPLEMENTATION_COMPLETE / ACCEPTANCE_BLOCKED_EXTERNAL_SYSTEM` | Final acceptance blocked only by physical provider/device speed field, native-unit and normalization evidence; technical evidence PASS; no US-48 acceptance inheritance |
 | `US-51` | Monitor Idle Time | Engine-on versus movement duration and qualified fuel-waste estimates | 🟡 `WAVE C / BLOCKED_BY_REQUIRED_TELEMETRY_CAPABILITY` | Current FLESPI does not advertise IGNITION and no accepted alternate engine-state source exists |
@@ -246,7 +246,7 @@ Development startup now consistently provisions the idempotent PostgreSQL sample
 
 ```
 Current Status: 73 / 87 COMPLETE; 14 stories remain across Waves C–E
-Queue Head:     US-55-TRACCAR-ADAPTER
+Queue Head:     US-55-PROVIDER-UI
 Open Acceptance: US-55-HANDLE-GPS-EDGE-CASES-FINAL-ACCEPTANCE-001
 Deferred:       US-53-REPLAY-JOURNEYS-FINAL-ACCEPTANCE-001; US-54-VIEW-TRACKING-DASHBOARD-FINAL-ACCEPTANCE-001
 ```

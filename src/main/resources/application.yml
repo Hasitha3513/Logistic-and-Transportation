@@ -121,6 +121,8 @@ app:
       maximum-live-index-size: ${TRACKING_MAXIMUM_LIVE_INDEX_SIZE:10000}
       stream-batch-size: ${TRACKING_STREAM_BATCH_SIZE:500}
       stream-consumer-delay: ${TRACKING_STREAM_CONSUMER_DELAY:PT1S}
+    traccar:
+      private-endpoint-allowlist: ${TRACKING_TRACCAR_PRIVATE_ENDPOINT_ALLOWLIST:}
   integration:
     exchange:
       enabled: ${INTEGRATION_EXCHANGE_ENABLED:true}
