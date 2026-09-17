@@ -13,12 +13,13 @@ test('accepts 200 msg/s sustained and a 1,000 msg/s burst through signed HTTP in
   const categories = entities(await ok(api.get('/api/vehicle-categories')));
   const types = entities(await ok(api.get('/api/vehicle-types')));
   const connections = await ok(api.get('/api/v1/tracking/provider-connections?page=0&size=100')) as {
-    items: Array<{ id: string; providerAlias: string; lifecycle: string }>;
+    items: Array<{ id: string; providerAlias: string; displayName: string; lifecycle: string }>;
   };
   const fixtureConnectionId = connections.items.find(item => item.providerAlias === provider
+    && item.displayName === provider
     && item.lifecycle === 'ACTIVE')?.id;
   expect(fixtureConnectionId).toBeTruthy();
-  const devices: string[] = [];
+  const providerDeviceReferences: string[] = [];
   const vehicles: string[] = [];
   for (let index = 0; index < 2; index++) {
     const vehicleResponse = await api.post('/api/vehicles', { data: {
@@ -50,23 +51,33 @@ test('accepts 200 msg/s sustained and a 1,000 msg/s burst through signed HTTP in
       data: { version: createdDevice.version },
     });
     expect(activated.status(), await activated.text()).toBe(200);
-    devices.push(deviceId);
+    providerDeviceReferences.push(`${suffix}-${index}`);
     vehicles.push(vehicleId);
   }
 
   const sustainedStart = performance.now();
-  const sustained = await signed(batch(devices[0], 0, 200));
+  const sustained = await signed(batch(providerDeviceReferences[0], 0, 200));
   const sustainedMillis = performance.now() - sustainedStart;
   console.log(`US48_SUSTAINED messages=200 elapsedMs=${sustainedMillis.toFixed(1)} rate=${(200 / (sustainedMillis / 1000)).toFixed(1)}msg/s`);
-  expect(sustained.status(), await sustained.text()).toBe(200);
+  expect(sustained.status(), await sustained.text()).toBe(202);
   expect(200 / (sustainedMillis / 1000)).toBeGreaterThanOrEqual(200);
 
   const burstStart = performance.now();
-  const burst = await Promise.all([signed(batch(devices[0], 200, 500)), signed(batch(devices[1], 700, 500))]);
+  const burst = await Promise.all([
+    signed(batch(providerDeviceReferences[0], 200, 500)),
+    signed(batch(providerDeviceReferences[1], 700, 500)),
+  ]);
   const burstMillis = performance.now() - burstStart;
   console.log(`US48_BURST messages=1000 elapsedMs=${burstMillis.toFixed(1)} rate=${(1000 / (burstMillis / 1000)).toFixed(1)}msg/s`);
-  for (const response of burst) expect(response.status(), await response.text()).toBe(200);
+  for (const response of burst) expect(response.status(), await response.text()).toBe(202);
   expect(1000 / (burstMillis / 1000)).toBeGreaterThanOrEqual(1000);
+
+  await expect.poll(async () => {
+    const response = await api.get(`/api/v1/tracking/vehicles/${vehicles[0]}/latest`);
+    const status = response.status();
+    await response.dispose();
+    return status;
+  }, { timeout: 15_000, intervals: [100, 200, 500] }).toBe(200);
 
   const latestLatencies = await measure(20, async () => api.get(`/api/v1/tracking/vehicles/${vehicles[0]}/latest`));
   const from = encodeURIComponent(new Date(Date.now() - 23 * 60 * 60_000).toISOString());

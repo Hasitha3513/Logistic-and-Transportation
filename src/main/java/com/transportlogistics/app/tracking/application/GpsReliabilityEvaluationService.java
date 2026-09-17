@@ -82,6 +82,7 @@ public final class GpsReliabilityEvaluationService implements GpsReliabilityEval
 
     public void recordSignalLoss(DeviceFreshness candidate, Instant assessedAt) {
         transactions.execute(() -> {
+            episodes.serializeDevice(candidate.tenantId(), candidate.deviceId());
             if (episodes.findActiveForUpdate(candidate.tenantId(), candidate.deviceId(),
                     ExceptionType.SIGNAL_LOSS).isPresent()) {
                 return Boolean.FALSE;
@@ -104,6 +105,7 @@ public final class GpsReliabilityEvaluationService implements GpsReliabilityEval
 
     private void apply(CanonicalTelemetryEvent event, Assessment assessment,
             Map<ExceptionType, Severity> detected, Instant assessedAt) {
+        episodes.serializeDevice(event.tenantId(), event.deviceId());
         Map<ExceptionType, GpsExceptionEpisode> active = new EnumMap<>(ExceptionType.class);
         episodes.findActiveByDeviceForUpdate(event.tenantId(), event.deviceId())
                 .forEach(episode -> active.put(episode.type(), episode));

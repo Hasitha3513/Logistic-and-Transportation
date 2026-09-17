@@ -41,6 +41,7 @@ class GpsReliabilityEvaluationServiceTest {
                 TrackingTelemetryIngestedV2.TamperState.DETECTED), Optional.empty(), NOW);
 
         assertThat(assessment.latestTrustedEligible()).isTrue();
+        verify(episodes).serializeDevice(any(), any());
         verify(episodes, never()).save(any());
         verify(evidence, never()).append(any());
     }
@@ -67,6 +68,7 @@ class GpsReliabilityEvaluationServiceTest {
 
         assertThat(assessment.latestTrustedEligible()).isFalse();
         assertThat(saved.get().type()).isEqualTo(ExceptionType.DEVICE_TAMPER);
+        verify(episodes).serializeDevice(any(), any());
         assertThat(saved.get().severity()).isEqualTo(
                 com.transportlogistics.app.tracking.domain.gpsedge.GpsReliabilityModels.Severity.HIGH);
         verify(evidence).append(any());

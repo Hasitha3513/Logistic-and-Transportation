@@ -31,6 +31,12 @@ final class JdbcGpsExceptionRepositoryAdapter
     }
 
     @Override
+    public void serializeDevice(UUID tenantId, UUID deviceId) {
+        jdbc.query("SELECT pg_advisory_xact_lock(hashtextextended(?,0))", result -> null,
+                tenantId + "|GPS_EXCEPTION_DEVICE|" + deviceId);
+    }
+
+    @Override
     public Optional<GpsExceptionEpisode> findActive(
             UUID tenantId, UUID deviceId, ExceptionType type) {
         return active(tenantId, deviceId, type, false);

@@ -10,6 +10,8 @@ import com.transportlogistics.app.tracking.domain.gpsedge.GpsReliabilityModels.E
 import com.transportlogistics.app.tracking.domain.gpsedge.GpsReliabilityModels.Severity;
 
 public interface GpsExceptionRepositoryPort {
+    void serializeDevice(UUID tenantId, UUID deviceId);
+
     Optional<GpsExceptionEpisode> findActive(UUID tenantId, UUID deviceId, ExceptionType type);
 
     Optional<GpsExceptionEpisode> findActiveForUpdate(UUID tenantId, UUID deviceId, ExceptionType type);
