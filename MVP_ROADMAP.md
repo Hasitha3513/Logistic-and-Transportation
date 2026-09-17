@@ -32,7 +32,7 @@
 > - **Deferred Acceptance Queue:** `US-54-VIEW-TRACKING-DASHBOARD-FINAL-ACCEPTANCE-001` resumes only when its genuine external prerequisites exist.
 > - **US-55 State:** `TECHNICALLY_COMPLETE / IMPLEMENTATION_COMPLETE_ACCEPTANCE_BLOCKED_EXTERNAL_SYSTEM`; final acceptance has 0 PASS, 0 FAIL and 9 externally blocked field requirements; genuine physical/provider evidence remains mandatory.
 > - **Open Acceptance Queue:** Resume `US-55-HANDLE-GPS-EDGE-CASES-FINAL-ACCEPTANCE-001` only when the physical/provider/operator prerequisites materially change.
-> - **Immediate Next Action:** Execute the independent approved `US-55-TRACCAR-ADAPTER` task; it does not change story accounting or imply provider acceptance.
+> - **Immediate Next Action:** Authorize `US-55-PROVIDER-POLLING-CANONICAL-KAFKA-REMEDIATION-001`, then execute `US-55-TRACCAR-ADAPTER`; neither changes story accounting or implies provider acceptance.
 
 ---
 
@@ -246,14 +246,14 @@ Development startup now consistently provisions the idempotent PostgreSQL sample
 
 ```
 Current Status: 73 / 87 COMPLETE; 14 stories remain across Waves C–E
-Queue Head:     US-55-TRACCAR-ADAPTER
+Queue Head:     US-55-PROVIDER-POLLING-CANONICAL-KAFKA-REMEDIATION-001
 Open Acceptance: US-55-HANDLE-GPS-EDGE-CASES-FINAL-ACCEPTANCE-001
 Deferred:       US-53-REPLAY-JOURNEYS-FINAL-ACCEPTANCE-001; US-54-VIEW-TRACKING-DASHBOARD-FINAL-ACCEPTANCE-001
 ```
 
 1. **Wave A — Integration and exception-control foundations:** 2 / 2 COMPLETE / CLOSED (US-73 and US-78).
 2. **Wave B — Fuel control and financial links:** 5 / 5 COMPLETE / CLOSED (US-35, US-37, US-38, US-46, US-47).
-3. **Wave C — GPS and telematics:** US-48, US-50, US-52, US-53, US-54 and US-55 physical acceptance are on independent external-prerequisite holds; US-49 is accepted; the approved Traccar production-adapter task is the independent queue. US-51 remains blocked by the missing engine-state capability.
+3. **Wave C — GPS and telematics:** US-48, US-50, US-52, US-53, US-54 and US-55 physical acceptance are on independent external-prerequisite holds; US-49 is accepted; canonicalizing the current provider-polling path onto Kafka is the required bounded prerequisite to the approved Traccar adapter. US-51 remains blocked by the missing engine-state capability.
 4. **Wave D — Compliance and field mobility:** US-72, US-76.
 5. **Wave E — Analytics, integrity, resilience, disruption and user risk:** US-85, US-84, US-87, US-82, US-86.
 6. After 87/87: `FULL-SOURCE-PARITY-AUDIT-001`, then `FULL-PLATFORM-END-TO-END-ACCEPTANCE-001` after authorized parity disposition.
