@@ -10,6 +10,7 @@ import com.transportlogistics.app.tracking.domain.TrackingModels.EngineState;
 import com.transportlogistics.app.tracking.ports.inbound.TrackingProviderIngestionPort;
 import com.transportlogistics.app.tracking.ports.outbound.TrackingDeviceProviderBindingStore;
 import com.transportlogistics.app.tracking.ports.outbound.TrackingProviderExecutionStore;
+import com.transportlogistics.app.tracking.ports.outbound.TelemetryStreamPublisherPort;
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.Instant;
@@ -21,13 +22,36 @@ import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Primary;
+import org.springframework.context.annotation.Import;
+import org.junit.jupiter.api.BeforeEach;
+import static org.mockito.Mockito.reset;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.when;
+import org.mockito.ArgumentCaptor;
 
+@Import(ProviderCoordinatorPostgreSqlAcceptanceTest.KafkaStubConfiguration.class)
 class ProviderCoordinatorPostgreSqlAcceptanceTest extends PostgreSqlIntegrationTest {
     private static final UUID ACTOR = UUID.fromString("00000000-0000-0000-0000-000000000048");
     @Autowired private TrackingProviderExecutionStore executions;
     @Autowired private TrackingDeviceProviderBindingStore bindings;
     @Autowired private TrackingProviderIngestionPort ingestion;
     @Autowired private JdbcTemplate jdbc;
+    @Autowired private TelemetryStreamPublisherPort stream;
+
+    @BeforeEach
+    void resetStream() {
+        reset(stream);
+        when(stream.publishBatchDurably(org.mockito.ArgumentMatchers.any(),
+                org.mockito.ArgumentMatchers.any())).thenAnswer(invocation -> {
+                    java.util.List<?> requests = invocation.getArgument(0);
+                    return requests.stream().map(ignored ->
+                            new TelemetryStreamPublisherPort.Publication(0, 1)).toList();
+                });
+    }
 
     @Test
     void skipLockedClaimIsUniqueAcrossInstancesAndExpiredLeaseIsRecoverable() throws Exception {
@@ -74,7 +98,7 @@ class ProviderCoordinatorPostgreSqlAcceptanceTest extends PostgreSqlIntegrationT
     }
 
     @Test
-    void internalIngestionReloadsLeaseTenantBindingAndDeviceAndPreservesDedupe() {
+    void internalIngestionReloadsLeaseTenantBindingAndPublishesDeterministicCanonicalEvents() {
         disableExistingProviders();
         Fixture fixture = fixture("INGEST", 1);
         Instant now = Instant.now();
@@ -87,14 +111,20 @@ class ProviderCoordinatorPostgreSqlAcceptanceTest extends PostgreSqlIntegrationT
         assertThat(accepted).extracting(outcome -> outcome.result()).containsExactly(Result.ACCEPTED);
         var duplicate = ingestion.ingest(
                 claimed.id(), "ingest-owner", java.util.List.of(candidate), now.plusMillis(1));
-        assertThat(duplicate).extracting(outcome -> outcome.result()).containsExactly(Result.DUPLICATE);
+        assertThat(duplicate).extracting(outcome -> outcome.result()).containsExactly(Result.ACCEPTED);
+        var requests = ArgumentCaptor.forClass(java.util.List.class);
+        verify(stream, times(2)).publishBatchDurably(requests.capture(), org.mockito.ArgumentMatchers.any());
+        var first = (TelemetryStreamPublisherPort.PublicationRequest) requests.getAllValues().get(0).get(0);
+        var second = (TelemetryStreamPublisherPort.PublicationRequest) requests.getAllValues().get(1).get(0);
+        assertThat(first.event().eventId()).isEqualTo(second.event().eventId());
+        assertThat(first.event().dedupeIdentity()).isEqualTo(second.event().dedupeIdentity());
         jdbc.update("UPDATE tracking_device_provider_binding SET lifecycle='DISABLED' WHERE id=?",
                 fixture.bindingId());
         assertThat(ingestion.ingest(
                 claimed.id(), "ingest-owner", java.util.List.of(candidate("other", "message-2", now)),
                 now.plusMillis(2))).extracting(outcome -> outcome.result()).containsExactly(Result.REJECTED);
         assertThat(jdbc.queryForObject("SELECT count(*) FROM tracking_position", Integer.class))
-                .isEqualTo(1);
+                .isZero();
     }
 
     @Test
@@ -309,4 +339,13 @@ class ProviderCoordinatorPostgreSqlAcceptanceTest extends PostgreSqlIntegrationT
             String externalReference) { }
 
     private record AddedDevice(UUID deviceId, UUID bindingId, String externalReference) { }
+
+    @TestConfiguration
+    static class KafkaStubConfiguration {
+        @Bean
+        @Primary
+        TelemetryStreamPublisherPort providerPollingTestPublisher() {
+            return org.mockito.Mockito.mock(TelemetryStreamPublisherPort.class);
+        }
+    }
 }

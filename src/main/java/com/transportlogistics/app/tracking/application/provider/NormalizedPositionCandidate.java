@@ -1,6 +1,9 @@
 package com.transportlogistics.app.tracking.application.provider;
 
 import com.transportlogistics.app.tracking.domain.TrackingModels.EngineState;
+import com.transportlogistics.app.tracking.application.telemetry.TrackingTelemetryIngestedV2.BatteryChargingState;
+import com.transportlogistics.app.tracking.application.telemetry.TrackingTelemetryIngestedV2.ExternalPowerState;
+import com.transportlogistics.app.tracking.application.telemetry.TrackingTelemetryIngestedV2.TamperState;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Objects;
@@ -18,7 +21,24 @@ public record NormalizedPositionCandidate(
         BigDecimal odometerKm,
         BigDecimal engineHours,
         String providerMessageId,
-        Long providerSequence) {
+        Long providerSequence,
+        TamperState tamperState,
+        BigDecimal batteryLevelPercent,
+        BigDecimal batteryVoltageVolts,
+        ExternalPowerState externalPowerState,
+        BatteryChargingState batteryChargingState) {
+
+    public NormalizedPositionCandidate(
+            String externalDeviceReference, Instant sourceTimestamp, BigDecimal latitude,
+            BigDecimal longitude, BigDecimal horizontalAccuracyMeters, BigDecimal speedKph,
+            BigDecimal headingDegrees, BigDecimal altitudeMeters, EngineState engineState,
+            BigDecimal odometerKm, BigDecimal engineHours, String providerMessageId,
+            Long providerSequence) {
+        this(externalDeviceReference, sourceTimestamp, latitude, longitude,
+                horizontalAccuracyMeters, speedKph, headingDegrees, altitudeMeters, engineState,
+                odometerKm, engineHours, providerMessageId, providerSequence,
+                null, null, null, null, null);
+    }
 
     public NormalizedPositionCandidate {
         if (externalDeviceReference == null || externalDeviceReference.isBlank()
@@ -36,6 +56,8 @@ public record NormalizedPositionCandidate(
         }
         nonNegative(odometerKm, "odometerKm");
         nonNegative(engineHours, "engineHours");
+        validateSignal(batteryLevelPercent, new BigDecimal("100.0"), 3, "batteryLevelPercent");
+        validateSignal(batteryVoltageVolts, new BigDecimal("1000.0"), 6, "batteryVoltageVolts");
         if (providerMessageId != null && (providerMessageId.isBlank()
                 || providerMessageId.length() > 160)) {
             throw new IllegalArgumentException("providerMessageId is invalid");
@@ -54,6 +76,14 @@ public record NormalizedPositionCandidate(
     private static void nonNegative(BigDecimal value, String field) {
         if (value != null && value.signum() < 0) {
             throw new IllegalArgumentException(field + " cannot be negative");
+        }
+    }
+
+    private static void validateSignal(
+            BigDecimal value, BigDecimal maximum, int scale, String field) {
+        if (value != null && (value.signum() < 0 || value.compareTo(maximum) > 0
+                || Math.max(value.scale(), 0) > scale)) {
+            throw new IllegalArgumentException(field + " is invalid");
         }
     }
 }

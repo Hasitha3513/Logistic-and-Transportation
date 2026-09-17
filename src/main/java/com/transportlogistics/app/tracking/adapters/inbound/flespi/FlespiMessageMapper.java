@@ -3,6 +3,9 @@ package com.transportlogistics.app.tracking.adapters.inbound.flespi;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.transportlogistics.app.tracking.application.provider.NormalizedPositionCandidate;
 import com.transportlogistics.app.tracking.domain.TrackingModels.EngineState;
+import com.transportlogistics.app.tracking.application.telemetry.TrackingTelemetryIngestedV2.BatteryChargingState;
+import com.transportlogistics.app.tracking.application.telemetry.TrackingTelemetryIngestedV2.ExternalPowerState;
+import com.transportlogistics.app.tracking.application.telemetry.TrackingTelemetryIngestedV2.TamperState;
 import java.math.BigDecimal;
 import java.time.Instant;
 import org.springframework.stereotype.Component;
@@ -30,7 +33,13 @@ final class FlespiMessageMapper {
         return new NormalizedPositionCandidate(
                 externalDeviceReference, sourceTimestamp, latitude, longitude,
                 accuracy, speed, heading, null, EngineState.UNKNOWN,
-                null, null, null, null);
+                optionalNonNegative(source, "can.vehicle.mileage"), null,
+                text(source, "message.id"), null,
+                tamper(text(source, "device.tampering.status")),
+                optionalRange(source, "battery.level", BigDecimal.ZERO, new BigDecimal("100")),
+                optionalRange(source, "battery.voltage", BigDecimal.ZERO, new BigDecimal("1000")),
+                power(text(source, "external.power.status")),
+                charging(text(source, "battery.charging.status")));
     }
 
     private static Instant timestamp(JsonNode node) {
@@ -67,5 +76,29 @@ final class FlespiMessageMapper {
 
     private static FlespiFailure mapping(String category) {
         return new FlespiFailure(FlespiFailure.Kind.MAPPING, category, null);
+    }
+
+    private static TamperState tamper(String value) {
+        return value == null ? null : switch (value.toLowerCase(java.util.Locale.ROOT)) {
+            case "detected", "true" -> TamperState.DETECTED;
+            case "clear", "false" -> TamperState.CLEAR;
+            default -> TamperState.UNKNOWN;
+        };
+    }
+
+    private static ExternalPowerState power(String value) {
+        return value == null ? null : switch (value.toLowerCase(java.util.Locale.ROOT)) {
+            case "connected", "true" -> ExternalPowerState.CONNECTED;
+            case "disconnected", "false" -> ExternalPowerState.DISCONNECTED;
+            default -> ExternalPowerState.UNKNOWN;
+        };
+    }
+
+    private static BatteryChargingState charging(String value) {
+        return value == null ? null : switch (value.toLowerCase(java.util.Locale.ROOT)) {
+            case "charging", "true" -> BatteryChargingState.CHARGING;
+            case "not_charging", "false" -> BatteryChargingState.NOT_CHARGING;
+            default -> BatteryChargingState.UNKNOWN;
+        };
     }
 }

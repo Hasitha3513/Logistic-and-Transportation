@@ -153,6 +153,32 @@ class FlespiAdapterTest {
     }
 
     @Test
+    void mapsApprovedOptionalV2SignalsWhenProviderReportsThem() throws Exception {
+        JsonNode source = json.readTree("""
+                {"ident":"device-v2","timestamp":1788912000.125,
+                 "position.latitude":6.927079,"position.longitude":79.861244,
+                 "message.id":"provider-42","device.tampering.status":"detected",
+                 "battery.level":75.5,"battery.voltage":12.6,
+                 "external.power.status":"connected","battery.charging.status":"charging"}
+                """);
+
+        var mapped = new FlespiMessageMapper().map(source, "device-v2");
+
+        assertThat(mapped.providerMessageId()).isEqualTo("provider-42");
+        assertThat(mapped.tamperState())
+                .isEqualTo(com.transportlogistics.app.tracking.application.telemetry
+                        .TrackingTelemetryIngestedV2.TamperState.DETECTED);
+        assertThat(mapped.batteryLevelPercent()).isEqualByComparingTo("75.5");
+        assertThat(mapped.batteryVoltageVolts()).isEqualByComparingTo("12.6");
+        assertThat(mapped.externalPowerState())
+                .isEqualTo(com.transportlogistics.app.tracking.application.telemetry
+                        .TrackingTelemetryIngestedV2.ExternalPowerState.CONNECTED);
+        assertThat(mapped.batteryChargingState())
+                .isEqualTo(com.transportlogistics.app.tracking.application.telemetry
+                        .TrackingTelemetryIngestedV2.BatteryChargingState.CHARGING);
+    }
+
+    @Test
     void malformedMessageIsRejectedIndependently() throws Exception {
         var valid = fixture().path("result").get(0);
         var invalid = valid.deepCopy();

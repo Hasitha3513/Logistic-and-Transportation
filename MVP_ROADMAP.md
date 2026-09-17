@@ -32,7 +32,7 @@
 > - **Deferred Acceptance Queue:** `US-54-VIEW-TRACKING-DASHBOARD-FINAL-ACCEPTANCE-001` resumes only when its genuine external prerequisites exist.
 > - **US-55 State:** `TECHNICALLY_COMPLETE / IMPLEMENTATION_COMPLETE_ACCEPTANCE_BLOCKED_EXTERNAL_SYSTEM`; final acceptance has 0 PASS, 0 FAIL and 9 externally blocked field requirements; genuine physical/provider evidence remains mandatory.
 > - **Open Acceptance Queue:** Resume `US-55-HANDLE-GPS-EDGE-CASES-FINAL-ACCEPTANCE-001` only when the physical/provider/operator prerequisites materially change.
-> - **Immediate Next Action:** Authorize `US-55-PROVIDER-POLLING-CANONICAL-KAFKA-REMEDIATION-001`, then execute `US-55-TRACCAR-ADAPTER`; neither changes story accounting or implies provider acceptance.
+> - **Immediate Next Action:** Execute `US-55-TRACCAR-ADAPTER`; canonical Kafka polling remediation is complete, while physical acceptance remains independently open.
 
 ---
 
@@ -246,7 +246,7 @@ Development startup now consistently provisions the idempotent PostgreSQL sample
 
 ```
 Current Status: 73 / 87 COMPLETE; 14 stories remain across Waves C–E
-Queue Head:     US-55-PROVIDER-POLLING-CANONICAL-KAFKA-REMEDIATION-001
+Queue Head:     US-55-TRACCAR-ADAPTER
 Open Acceptance: US-55-HANDLE-GPS-EDGE-CASES-FINAL-ACCEPTANCE-001
 Deferred:       US-53-REPLAY-JOURNEYS-FINAL-ACCEPTANCE-001; US-54-VIEW-TRACKING-DASHBOARD-FINAL-ACCEPTANCE-001
 ```

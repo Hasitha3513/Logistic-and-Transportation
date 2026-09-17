@@ -52,7 +52,12 @@ public record NormalizedTelemetryPoint(
                 odometerKm,
                 null,
                 providerMessageId,
-                null);
+                null,
+                tamperState,
+                batteryLevelPercent,
+                batteryVoltageVolts,
+                externalPowerState,
+                batteryChargingState);
         externalDeviceReference = validated.externalDeviceReference();
         engineState = validated.engineState();
         validateSignal(batteryLevelPercent, new BigDecimal("100.0"), 3, "battery level");

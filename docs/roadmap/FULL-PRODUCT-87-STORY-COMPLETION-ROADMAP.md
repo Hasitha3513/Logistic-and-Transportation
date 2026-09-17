@@ -290,6 +290,6 @@ After 87/87 and disposition of parity findings, execute a real Tenant-isolated o
 
 Exactly one queue head is authorized by this roadmap:
 
-`US-55-PROVIDER-POLLING-CANONICAL-KAFKA-REMEDIATION-001`
+`US-55-TRACCAR-ADAPTER`
 
-US-48, US-50, US-52, US-53, US-54 and US-55 remain on independent external acceptance holds. US-49 is COMPLETE / ACCEPTED and accounting remains 73 / 87. US-55 field acceptance remains openly queued at `US-55-HANDLE-GPS-EDGE-CASES-FINAL-ACCEPTANCE-001` with 9 externally blocked requirements. The independent queue is the newly planned bounded `US-55-PROVIDER-POLLING-CANONICAL-KAFKA-REMEDIATION-001`, required before the already-approved `US-55-TRACCAR-ADAPTER`; Flyway is V100.
+US-48, US-50, US-52, US-53, US-54 and US-55 remain on independent external acceptance holds. US-49 is COMPLETE / ACCEPTED and accounting remains 73 / 87. US-55 field acceptance remains openly queued at `US-55-HANDLE-GPS-EDGE-CASES-FINAL-ACCEPTANCE-001` with 9 externally blocked requirements. Canonical provider polling now publishes server-authorized V2 observations durably through Kafka without legacy database writes; the independent queue is the approved `US-55-TRACCAR-ADAPTER`. Flyway is V100.
