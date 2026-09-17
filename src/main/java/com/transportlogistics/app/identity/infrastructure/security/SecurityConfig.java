@@ -265,6 +265,16 @@ class SecurityConfig {
                                 "/v1/tracking/route-deviations/rules/*",
                                 "/api/v1/tracking/route-deviations/rules/*")
                         .hasAuthority("ROUTE_DEVIATION_MANAGE")
+                        .requestMatchers(HttpMethod.POST,
+                                "/v1/tracking/gps-exceptions/*/acknowledge",
+                                "/api/v1/tracking/gps-exceptions/*/acknowledge")
+                        .hasAuthority("GPS_EXCEPTION_REVIEW")
+                        .requestMatchers(HttpMethod.GET,
+                                "/v1/tracking/gps-exceptions",
+                                "/v1/tracking/gps-exceptions/**",
+                                "/api/v1/tracking/gps-exceptions",
+                                "/api/v1/tracking/gps-exceptions/**")
+                        .hasAuthority("GPS_EXCEPTION_VIEW")
                         .requestMatchers(HttpMethod.GET, "/drivers", "/drivers/*", "/drivers/*/licenses",
                                 "/drivers/*/exceptions", "/drivers/*/exceptions/*",
                                 "/drivers/*/violations", "/drivers/*/violations/*",

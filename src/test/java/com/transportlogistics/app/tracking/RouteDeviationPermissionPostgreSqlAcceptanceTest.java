@@ -20,7 +20,7 @@ class RouteDeviationPermissionPostgreSqlAcceptanceTest extends PostgreSqlIntegra
 
     @Test
     void cleanV1ToV89SeedsExactlyFourPermissionsForAdministrativeRolesOnly() {
-        assertThat(flyway.info().current().getVersion().getVersion()).isEqualTo("98");
+        assertThat(flyway.info().current().getVersion().getVersion()).isEqualTo("100");
         assertThat(permissionCount()).isEqualTo(4);
         assertThat(jdbc.queryForObject("""
                 SELECT count(*) FROM app_role_permission grant_row

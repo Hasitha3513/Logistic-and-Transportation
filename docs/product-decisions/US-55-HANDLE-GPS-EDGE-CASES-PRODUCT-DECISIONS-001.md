@@ -170,10 +170,19 @@ tenant API, tenant repository interception, scheduler or backfill workflow is au
 
 ## API, RBAC and frontend
 
-Phase 1 adds a distinct operator workflow because the source story requires review/escalation. Proposed APIs are
-bounded Tenant-scoped list/detail and acknowledge endpoints under `/api/v1/tracking/gps-exceptions`; there is no
-manual create, delete, arbitrary status mutation or raw-payload endpoint. Permissions are exactly
-`GPS_EXCEPTION_VIEW` and `GPS_EXCEPTION_REVIEW`. Backend authorization is authoritative.
+Phase 1 adds a distinct operator workflow because the source story requires review/escalation. The implemented
+API consists of Tenant-scoped list, detail, immutable-evidence and acknowledgement endpoints under
+`/api/v1/tracking/gps-exceptions`; there is no manual create, delete, arbitrary status mutation or raw-payload
+endpoint. List queries require a UTC `[from,to)` range of at most seven days, use Tenant/filter-bound signed
+keyset cursors, default to 100 items, cap at 500 and order by `last_observed_at DESC, id DESC`. Evidence uses the
+same bounds and orders by `assessed_at DESC, id DESC`. Every response is `no-store`.
+
+Permissions are exactly `GPS_EXCEPTION_VIEW` for list/detail/evidence and `GPS_EXCEPTION_REVIEW` for
+acknowledgement. V99 grants both only to existing active `ADMIN`, `LOCAL_MVP_ADMIN` and `DISPATCHER` roles and
+does not create roles or future-Tenant provisioning. V100 retains completed acknowledgements by Tenant-qualified
+idempotency key. Replay reauthorizes the actor, returns the original allow-listed response snapshot and never
+reconstructs it from later episode state. Acknowledgement reason is trimmed, limited to 1–500 safe characters,
+stored only on the episode, and excluded from response snapshots and audit. Backend authorization is authoritative.
 
 The frontend adds one permission-gated Tracking GPS Exceptions page and adds reliability warnings to existing
 Live Tracking, Journey Replay and Dashboard surfaces. It shows last trusted/last known separately from rejected

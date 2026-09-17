@@ -14,6 +14,8 @@ import java.sql.Timestamp;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.time.Instant;
+import java.util.ArrayList;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
@@ -61,6 +63,27 @@ final class JdbcGpsExceptionRepositoryAdapter
     public Optional<GpsExceptionEpisode> findById(UUID tenantId, UUID episodeId) {
         return jdbc.query(SELECT + "WHERE tenant_id=? AND id=?", this::mapEpisode,
                 tenantId, episodeId).stream().findFirst();
+    }
+
+    @Override public Optional<GpsExceptionEpisode> findByIdForUpdate(UUID tenantId, UUID episodeId) {
+        return jdbc.query(SELECT + "WHERE tenant_id=? AND id=? FOR UPDATE", this::mapEpisode,
+                tenantId, episodeId).stream().findFirst();
+    }
+
+    @Override public List<GpsExceptionEpisode> search(UUID tenantId, Instant from, Instant to,
+            EpisodeStatus status, ExceptionType type, Severity severity, UUID vehicleId, UUID deviceId,
+            Instant afterTimestamp, UUID afterId, int limit) {
+        StringBuilder sql = new StringBuilder(SELECT).append("WHERE tenant_id=? AND last_observed_at>=? AND last_observed_at<? ");
+        List<Object> args = new ArrayList<>(List.of(tenantId, Timestamp.from(from), Timestamp.from(to)));
+        if (status != null) { sql.append("AND status=? "); args.add(status.name()); }
+        if (type != null) { sql.append("AND exception_type=? "); args.add(type.name()); }
+        if (severity != null) { sql.append("AND severity=? "); args.add(severity.name()); }
+        if (vehicleId != null) { sql.append("AND vehicle_id=? "); args.add(vehicleId); }
+        if (deviceId != null) { sql.append("AND tracking_device_id=? "); args.add(deviceId); }
+        if (afterTimestamp != null) { sql.append("AND (last_observed_at<? OR (last_observed_at=? AND id<?)) ");
+            args.add(Timestamp.from(afterTimestamp)); args.add(Timestamp.from(afterTimestamp)); args.add(afterId); }
+        sql.append("ORDER BY last_observed_at DESC,id DESC LIMIT ?"); args.add(limit);
+        return List.copyOf(jdbc.query(sql.toString(), this::mapEpisode, args.toArray()));
     }
 
     @Override
@@ -125,6 +148,25 @@ final class JdbcGpsExceptionRepositoryAdapter
                 evidence.qualityCodes(), evidence.transition().name(), Timestamp.from(evidence.createdAt())) == 1;
     }
 
+    @Override public List<GpsExceptionEvidence> findByEpisode(UUID tenantId, UUID episodeId,
+            Instant afterTimestamp, UUID afterId, int limit) {
+        String sql = "SELECT * FROM tracking_gps_exception_evidence WHERE tenant_id=? AND episode_id=? "
+                + (afterTimestamp == null ? "" : "AND (assessed_at<? OR (assessed_at=? AND id<?)) ")
+                + "ORDER BY assessed_at DESC,id DESC LIMIT ?";
+        Object[] args = afterTimestamp == null ? new Object[]{tenantId,episodeId,limit}
+                : new Object[]{tenantId,episodeId,Timestamp.from(afterTimestamp),Timestamp.from(afterTimestamp),afterId,limit};
+        return List.copyOf(jdbc.query(sql, (row,n) -> new GpsExceptionEvidence(
+                UUID.fromString(row.getString("id")), UUID.fromString(row.getString("tenant_id")),
+                UUID.fromString(row.getString("episode_id")), row.getString("evidence_identity"),
+                uuid(row.getString("telemetry_history_id")), instant(row.getTimestamp("telemetry_source_timestamp")),
+                row.getTimestamp("assessed_at").toInstant(),
+                com.transportlogistics.app.tracking.domain.gpsedge.GpsReliabilityModels.Trust.valueOf(row.getString("trust")),
+                com.transportlogistics.app.tracking.domain.gpsedge.GpsReliabilityModels.Ordering.valueOf(row.getString("ordering_classification")),
+                com.transportlogistics.app.tracking.domain.gpsedge.GpsReliabilityModels.ReliabilityState.valueOf(row.getString("reliability_state")),
+                row.getString("quality_codes"), GpsExceptionEvidence.Transition.valueOf(row.getString("transition")),
+                row.getTimestamp("created_at").toInstant()), args));
+    }
+
     @SuppressWarnings("PMD.UnusedFormalParameter")
     private GpsExceptionEpisode mapEpisode(ResultSet row, int ignoredRowNumber) throws SQLException {
         return new GpsExceptionEpisode(UUID.fromString(row.getString("id")),
@@ -138,11 +180,11 @@ final class JdbcGpsExceptionRepositoryAdapter
                 row.getString("acknowledgement_reason"));
     }
 
-    private static Timestamp timestamp(java.time.Instant value) {
+    private static Timestamp timestamp(Instant value) {
         return value == null ? null : Timestamp.from(value);
     }
 
-    private static java.time.Instant instant(Timestamp value) {
+    private static Instant instant(Timestamp value) {
         return value == null ? null : value.toInstant();
     }
 

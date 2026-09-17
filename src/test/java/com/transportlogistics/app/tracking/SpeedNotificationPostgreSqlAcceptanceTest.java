@@ -164,7 +164,7 @@ class SpeedNotificationPostgreSqlAcceptanceTest extends PostgreSqlIntegrationTes
         insertMembership(UUID.fromString("50000000-0000-0000-0000-000000000021"), tenantA, userA, role);
         insertMembership(UUID.fromString("50000000-0000-0000-0000-000000000022"), tenantB, userB, role);
         flyway.migrate();
-        assertThat(flyway.info().current().getVersion().getVersion()).isEqualTo("98");
+        assertThat(flyway.info().current().getVersion().getVersion()).isEqualTo("100");
     }
 
     private void insertUser(UUID id, String username) {
