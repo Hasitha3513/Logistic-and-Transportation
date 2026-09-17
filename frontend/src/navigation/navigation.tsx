@@ -150,6 +150,7 @@ export const navigation: NavigationItem[] = [
       ...(journeyReplayEnabled
         ? [{ key: 'tracking-journey-replay', label: 'Journey Replay', route: '/tracking/journey-replay', requiredPermission: 'JOURNEY_REPLAY_VIEW' }]
         : []),
+      { key: 'tracking-gps-exceptions', label: 'GPS Exceptions', route: '/tracking/gps-exceptions', requiredPermission: 'GPS_EXCEPTION_VIEW' },
     ],
   },
   {

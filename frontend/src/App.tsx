@@ -74,6 +74,7 @@ import DeviationStatePage from './features/tracking/routeDeviations/pages/Deviat
 import DeviationEpisodePage from './features/tracking/routeDeviations/pages/DeviationEpisodePage';
 import JourneyReplayPage from './features/tracking/journeyReplay/JourneyReplayPage';
 import TrackingDashboardPage from './features/tracking/dashboard/TrackingDashboardPage';
+import GpsExceptionsPage from './features/tracking/gpsExceptions/GpsExceptionsPage';
 
 function ProtectedRoute() {
   const { user, isLoading } = useAuth();
@@ -200,6 +201,7 @@ export default function App() {
         <Route path="tracking/route-deviations/episodes" element={<DeviationEpisodePage />} />
         <Route path="tracking/route-deviations/episodes/:episodeId" element={<DeviationEpisodePage detail />} />
         {journeyReplayEnabled && <Route path="tracking/journey-replay" element={<JourneyReplayPage />} />}
+        <Route path="tracking/gps-exceptions" element={<GpsExceptionsPage />} />
         <Route path="workspace" element={<WorkspacePage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
