@@ -3,6 +3,7 @@ package com.transportlogistics.app.tracking.adapters.inbound.kafka;
 import com.transportlogistics.app.tracking.application.telemetry.CanonicalTelemetryEvent;
 import com.transportlogistics.app.tracking.application.telemetry.TrackingTelemetryIngestedV1;
 import com.transportlogistics.app.tracking.application.telemetry.TrackingTelemetryIngestedV2;
+import com.transportlogistics.app.tracking.application.telemetry.TrackingTelemetryIngestedV3;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.UUID;
@@ -25,7 +26,8 @@ final class TrackingTelemetryContractValidator {
                 || !TrackingTelemetryIngestedV1.TYPE.equals(event.eventType())
                 || event.eventVersion() != expectedVersion
                 || expectedVersion != TrackingTelemetryIngestedV1.VERSION
-                && expectedVersion != TrackingTelemetryIngestedV2.VERSION) {
+                && expectedVersion != TrackingTelemetryIngestedV2.VERSION
+                && expectedVersion != TrackingTelemetryIngestedV3.VERSION) {
             throw invalid("Unsupported telemetry event contract");
         }
         String expectedKey = event.tenantId() + ":" + event.vehicleId();

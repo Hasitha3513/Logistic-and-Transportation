@@ -4,7 +4,7 @@
 
 **Identifier status:** NEWLY CREATED by the explicit US-51 workstream selection; not a prior approved task
 
-**Decision status:** PROPOSED / IMPLEMENTATION-READY FOR REVIEW — AUTHORIZATION REQUIRED
+**Decision status:** APPROVED 2026-09-18 / IMPLEMENTATION AUTHORIZED AS BOUNDED CHANGE SETS
 
 **Flyway:** V100; no migration is authorized by this decision package
 
@@ -26,8 +26,9 @@ history and optionally estimates fuel waste when a governed input exists. The or
 insufficient telemetry to produce `Unknown / Unconfirmed`; it does not authorize treating missing
 data as zero idle or synthesizing engine truth.
 
-This package reviews the full dependency chain and proposes one implementable contract. Every item
-marked **PROPOSED** requires one consolidated approval before implementation.
+This package reviews the full dependency chain and freezes one implementable contract. D1-D11 were
+explicitly approved on 2026-09-18. Their former **PROPOSED** labels record the reviewed state; the
+documented choices are now authoritative for bounded CS01-CS07 delivery.
 
 ## Verified current implementation
 
@@ -66,7 +67,7 @@ Therefore provider support and device support are separate:
 
 ## Consolidated proposed decisions
 
-### D1 — Operational definition and supported vehicles — PROPOSED
+### D1 — Operational definition and supported vehicles — APPROVED
 
 Phase 1 supports internal-combustion and hybrid Vehicles only when the bound telemetry device has
 an effective `ENGINE_RUNNING=SUPPORTED` capability and reports explicit engine-running truth.
@@ -87,7 +88,7 @@ The movement condition passes only when adjusted displacement is at most
 50 m. Missing, negative, over-100 m or invalid accuracy makes the observation `UNKNOWN`; speed
 alone cannot confirm stationary state.
 
-### D2 — Signals, provenance and capability eligibility — PROPOSED
+### D2 — Signals, provenance and capability eligibility — APPROVED
 
 Introduce separate canonical `ignitionState` and `engineRunningState` values, each
 `ON/OFF/UNKNOWN` or `RUNNING/NOT_RUNNING/UNKNOWN` as appropriate. Preserve the current legacy
@@ -99,7 +100,7 @@ is eligible only if its expression consumes that approved native engine fact—n
 motion or connectivity. Provenance must retain provider type, device binding, source time,
 capability interval and canonical event identity without storing raw payloads or credentials.
 
-### D3 — Freshness, ordering, gaps and unknown state — PROPOSED
+### D3 — Freshness, ordering, gaps and unknown state — APPROVED
 
 - Evaluate source-time order from immutable Timescale history, not Redis arrival order.
 - Require trusted, non-suspect telemetry with `ENGINE_RUNNING=SUPPORTED` at source time.
@@ -111,7 +112,7 @@ capability interval and canonical event identity without storing raw payloads or
 - A gap stops credited duration at the last qualifying source timestamp and closes a confirmed
   episode with `EVIDENCE_GAP`; the gap duration is not counted.
 
-### D4 — Confirmation and recovery — PROPOSED
+### D4 — Confirmation and recovery — APPROVED
 
 - Candidate requires at least two eligible observations.
 - Confirm after **5 continuous minutes** of qualifying evidence.
@@ -130,7 +131,7 @@ capability interval and canonical event identity without storing raw payloads or
 - For hybrids, an engine-off/traction-ready condition is `NOT_RUNNING` and cannot be idle. Engine
   restarts begin a new candidate.
 
-### D5 — Episode identity, retries and restart safety — PROPOSED
+### D5 — Episode identity, retries and restart safety — APPROVED
 
 Tracking owns one open idle episode per `(tenant_id, vehicle_id)`. PostgreSQL advisory locking is
 Tenant/Vehicle-qualified. Immutable evidence uses the canonical dedupe identity; duplicate Kafka
@@ -148,7 +149,7 @@ produce immutable `CONFLICTING_EVIDENCE`, advance neither candidate nor recovery
 state as `UNKNOWN`. Deterministic event UUID order is used only for storage order, never to choose
 which contradictory fact is true.
 
-### D6 — Canonical compatibility — PROPOSED
+### D6 — Canonical compatibility — APPROVED
 
 Create additive canonical telemetry **V3** on a new governed topic/DLT pair. V3 preserves V1/V2
 identity, Tenant, Vehicle, Device, position, time and dedupe semantics; it adds separated ignition
@@ -171,7 +172,7 @@ identity. V3 producers publish exactly one version per observation. V1/V2 fields
 immutable; their legacy `engineState` is treated as ignition-compatible history and is never
 eligible for US-51.
 
-### D7 — Persistence and proposed migration boundaries — PROPOSED
+### D7 — Persistence and migration boundaries — APPROVED
 
 These numbers describe reviewable boundaries only; they are not reserved or authorized:
 
@@ -205,13 +206,13 @@ Exact proposed objects and permitted changes:
   grants using idempotent business keys. It creates no role, Notification rule/template or
   Operations catalogue entry.
 
-### D8 — Notification and Operations — PROPOSED
+### D8 — Notification and Operations — APPROVED
 
 Phase 1 creates **no Notification and no Operations fact**. The authoritative story requires
 monitoring, recording and history, not escalation. This avoids inventing severity, recipients or
 operational policy. Future effects require a separate product decision and catalogue authorization.
 
-### D9 — API, RBAC, audit and UI — PROPOSED
+### D9 — API, RBAC, audit and UI — APPROVED
 
 - `IDLE_MONITOR_VIEW`: same-Tenant current state and availability.
 - `IDLE_EVENT_VIEW`: bounded episode/evidence history and detail.
@@ -240,14 +241,14 @@ operational policy. Future effects require a separate product decision and catal
   unavailable/unknown evidence, and distinguishes `UNSUPPORTED`, `NOT_REPORTED`, `STALE`,
   `CONFLICTING_EVIDENCE`, `CANDIDATE`, `IDLE` and `NORMAL` with accessible text, not colour alone.
 
-### D10 — Fuel estimate — PROPOSED
+### D10 — Fuel estimate — APPROVED
 
 Fuel waste remains `UNAVAILABLE` in Phase 1 because no approved effective-dated idle burn-rate
 contract exists. Do not derive it from general litres/engine-hour performance or a global constant.
 A later Fuel-published estimate must be labelled non-authoritative, versioned and effective-dated;
 Tracking may store the applied rate/version snapshot but must not query Fuel persistence.
 
-### D11 — Acceptance separation — PROPOSED
+### D11 — Acceptance separation — APPROVED
 
 Technical acceptance uses controlled canonical V3 events and a test-profile capability registry to prove logic, PostgreSQL/Kafka recovery,
 Tenant isolation and UI behavior. Final acceptance additionally requires a supported physical
@@ -281,7 +282,7 @@ acceptance and operator sign-off.
 | Change set | Scope | Dependencies | Completion criteria |
 | --- | --- | --- | --- |
 | CS01 canonical engine semantics | V3 contract, provider-neutral types and test-profile fixture producer; production mappings remain disabled | Approval of D1-D11; physical source not required | Contract/compatibility tests; no inference; V1/V2 unchanged; rollback disables V3 producer while dual consumers remain |
-| CS02 V101 history/capability | Immutable V3 storage and effective capability | CS01 and migration authorization | Clean V1→head and V100→head; exact constraints; append-only/Tenant tests; rollback leaves V3 producer disabled |
+| `US-51-MONITOR-IDLE-TIME-CS02-V101-HISTORY-CAPABILITY-001` | Immutable V3 storage and effective capability | CS01 and migration authorization | Clean V1→head and V100→head; exact constraints; append-only/Tenant tests; rollback leaves V3 producer disabled |
 | CS03 V102 idle persistence/dispatch | State, episode, evidence, idempotency, lease/claim support | CS02 and migration authorization | Deterministic concurrency, replay, restart, gap/order tests; application rollback retains additive schema |
 | CS04 evaluator | D1-D5 policy and estimate-unavailable result | CS03 | Threshold/recovery/property tests and retained detector regressions; feature flag disables claims |
 | CS05 V103 APIs/RBAC/audit | Two permissions and exact read-only bounded endpoints | CS03-CS04 and permission authorization | Literal HTTP allow/deny, Tenant A/B, cursor/privacy/audit tests; routes can be disabled without data loss |

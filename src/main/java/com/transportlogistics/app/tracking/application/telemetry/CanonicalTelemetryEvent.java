@@ -5,7 +5,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
 
-/** Provider-neutral position fact shared by retained V1 and additive V2 consumers. */
+/** Provider-neutral position fact shared by retained V1/V2 and gated additive V3 contracts. */
 public interface CanonicalTelemetryEvent {
     UUID eventId();
     String eventType();
