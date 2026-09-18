@@ -1,6 +1,8 @@
 package com.transportlogistics.app.tracking.adapters.inbound.flespi;
 
-final class FlespiFailure extends RuntimeException {
+import com.transportlogistics.app.tracking.application.provider.ProviderPollingFailure;
+
+final class FlespiFailure extends RuntimeException implements ProviderPollingFailure {
     enum Kind { AUTHENTICATION, TRANSIENT, PERMANENT, MAPPING, DOWNSTREAM }
     private final Kind kind;
     private final String safeCode;
@@ -12,7 +14,8 @@ final class FlespiFailure extends RuntimeException {
     }
 
     Kind kind() { return kind; }
-    String safeCode() { return safeCode; }
+    @Override
+    public String safeCode() { return safeCode; }
 
     FlespiAdapterState.FailureCategory healthCategory() {
         return switch (kind) {

@@ -1,6 +1,8 @@
 package com.transportlogistics.app.tracking.adapters.inbound.traccar;
 
-final class TraccarFailure extends RuntimeException {
+import com.transportlogistics.app.tracking.application.provider.ProviderPollingFailure;
+
+final class TraccarFailure extends RuntimeException implements ProviderPollingFailure {
     enum Kind { AUTHENTICATION, TRANSIENT, PERMANENT, MAPPING }
 
     private final Kind kind;
@@ -16,7 +18,8 @@ final class TraccarFailure extends RuntimeException {
         return kind;
     }
 
-    String safeCode() {
+    @Override
+    public String safeCode() {
         return safeCode;
     }
 

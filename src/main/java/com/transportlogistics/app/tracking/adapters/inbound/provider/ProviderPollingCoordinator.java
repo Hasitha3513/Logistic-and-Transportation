@@ -8,6 +8,7 @@ import com.transportlogistics.app.tracking.application.provider.ProviderDeviceCu
 import com.transportlogistics.app.tracking.application.provider.ProviderFetchRequest;
 import com.transportlogistics.app.tracking.application.provider.ProviderIngestionOutcome;
 import com.transportlogistics.app.tracking.application.provider.ProviderIngestionOutcome.Result;
+import com.transportlogistics.app.tracking.application.provider.ProviderPollingFailure;
 import com.transportlogistics.app.tracking.application.provider.ProviderType;
 import com.transportlogistics.app.tracking.application.provider.ProviderWatermark;
 import com.transportlogistics.app.tracking.application.provider.TrackingDeviceProviderBinding;
@@ -230,7 +231,9 @@ public final class ProviderPollingCoordinator {
             releaseFailure(connection, category(exception.code()), clock.instant());
             return false;
         } catch (RuntimeException exception) {
-            releaseFailure(connection, FAILURE_PROVIDER, clock.instant());
+            String failure = exception instanceof ProviderPollingFailure providerFailure
+                    ? category(providerFailure.safeCode()) : FAILURE_PROVIDER;
+            releaseFailure(connection, failure, clock.instant());
             return false;
         } finally {
             Arrays.fill(secret, '\0');
