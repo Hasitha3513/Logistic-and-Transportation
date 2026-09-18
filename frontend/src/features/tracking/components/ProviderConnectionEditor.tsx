@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Alert, Drawer, Input, InputNumber, Select } from 'antd';
+import { Alert, Drawer, Input, InputNumber, Select, Typography } from 'antd';
 import axios from 'axios';
-import { Controller, useForm } from 'react-hook-form';
+import { Controller, useForm, useWatch } from 'react-hook-form';
 import type { ProviderConnectionInput, ProviderConnectionUpdateInput, TrackingProviderConnection, TrackingProviderType } from '../types';
 import { providerConnectionSchema, type ProviderConnectionFormValues } from '../validation/providerConnectionSchema';
 
@@ -11,6 +11,7 @@ const initial=(connection?:TrackingProviderConnection):ProviderConnectionFormVal
 
 export function ProviderConnectionEditor({open,connection,providerTypes,loading,onClose,onCreate,onUpdate}:Props){
  const form=useForm<ProviderConnectionFormValues>({resolver:zodResolver(providerConnectionSchema),values:initial(connection)});
+ const providerType=useWatch({control:form.control,name:'providerType'});
  const submit=form.handleSubmit(async value=>{
   if(!connection&&!value.credentialReference){form.setError('credentialReference',{message:'Credential reference is required'});return;}
   const safeConfiguration=JSON.parse(value.safeConfigurationText||'{}') as Record<string,string>;
@@ -24,6 +25,8 @@ export function ProviderConnectionEditor({open,connection,providerTypes,loading,
   <form className="resource-editor-form" onSubmit={event=>void submit(event)}>
    {form.formState.errors.root&&<Alert type="error" showIcon message={form.formState.errors.root.message}/>} 
    {field('providerType','Provider type',<Controller name="providerType" control={form.control} render={({field:input})=><Select id="provider-providerType" {...input} disabled={Boolean(connection)} options={providerTypes.filter(item=>item.supported).map(item=>({value:item.providerType,label:item.providerType}))}/>}/>)}
+   {providerType==='FLESPI'&&<Alert type="info" showIcon message="Flespi Cloud polling" description="Create a scoped token outside this application, store it in the deployment secret resolver, and enter only its opaque reference here. Configure the physical device to send telemetry to its Flespi channel."/>}
+   {providerType==='TRACCAR'&&<Alert type="info" showIcon message="Traccar HTTPS polling" description="Use an ApiKey bearer token stored behind an opaque credential reference. Public HTTPS endpoints are accepted by default. Private or self-hosted endpoints require a deployment administrator to approve the exact destination and trusted CA; this screen cannot change that allowlist."/>}
    {field('displayName','Display name',<Controller name="displayName" control={form.control} render={({field:input})=><Input id="provider-displayName" {...input}/>}/>)}
    {!connection&&field('providerAlias','Provider alias',<Controller name="providerAlias" control={form.control} render={({field:input})=><Input id="provider-providerAlias" {...input}/>}/>)}
    {!connection&&field('providerKeyId','Provider key ID',<Controller name="providerKeyId" control={form.control} render={({field:input})=><Input id="provider-providerKeyId" {...input}/>}/>)}
@@ -32,6 +35,7 @@ export function ProviderConnectionEditor({open,connection,providerTypes,loading,
    {field('pollIntervalSeconds','Poll interval (seconds)',<Controller name="pollIntervalSeconds" control={form.control} render={({field:input})=><InputNumber id="provider-pollIntervalSeconds" min={5} max={86400} value={input.value} onChange={input.onChange} style={{width:'100%'}}/>}/>)}
    {field('pageSize','Page size',<Controller name="pageSize" control={form.control} render={({field:input})=><InputNumber id="provider-pageSize" min={1} max={500} value={input.value} onChange={input.onChange} style={{width:'100%'}}/>}/>)}
    {field('safeConfigurationText','Safe configuration (JSON)',<Controller name="safeConfigurationText" control={form.control} render={({field:input})=><Input.TextArea id="provider-safeConfigurationText" {...input} rows={6} maxLength={8192} showCount/>}/>, 'String values only; secret-like keys are rejected. Maximum 8 KiB.')}
+   {(providerType==='FLESPI'||providerType==='TRACCAR')&&<Typography.Text type="secondary">Supported optional setting: <code>overlapSeconds</code> from 0 to 300. Provider-specific tokens, device identifiers and allowlists do not belong in safe configuration.</Typography.Text>}
   </form>
  </Drawer>;
 }

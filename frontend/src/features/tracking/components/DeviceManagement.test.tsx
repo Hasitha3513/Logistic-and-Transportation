@@ -64,6 +64,15 @@ describe('DeviceManagement',()=>{
     expect(await screen.findByRole('button',{name:'Discover Devices'})).toBeInTheDocument();
   });
 
+  it('supports the governed Traccar manual identity and same-Tenant binding journey',async()=>{
+    api.providerConnections.mockResolvedValue({items:[{...provider,providerType:'TRACCAR',displayName:'Private Traccar'}],page:0,size:100,total:1});
+    api.providerTypes.mockResolvedValue([{providerType:'TRACCAR',capabilities:['POLLING','HISTORY'],supported:true}]);
+    view(true,{...draft,currentProviderBinding:null});await openDetails();fireEvent.click(screen.getByRole('button',{name:'Bind Provider'}));
+    expect(await screen.findByText('This provider requires manual device entry.')).toBeInTheDocument();
+    expect(screen.getByLabelText('External device reference')).toBeInTheDocument();
+    expect(screen.queryByRole('button',{name:'Discover Devices'})).not.toBeInTheDocument();
+  });
+
   it('renders RETIRED as terminal while preserving safe details',async()=>{
     view(true,{...draft,lifecycle:'RETIRED'});await openDetails();
     expect(screen.getByText('Retired device')).toBeInTheDocument();
