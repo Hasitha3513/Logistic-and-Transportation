@@ -34,7 +34,8 @@
 > - **Open Acceptance Queue:** Resume `US-55-HANDLE-GPS-EDGE-CASES-FINAL-ACCEPTANCE-001` only when the physical/provider/operator prerequisites materially change.
 > - **US-55 Provider UI:** `COMPLETE`; guided Flespi/Traccar setup now distinguishes saved, verified, bound, enabled and telemetry-received states while preserving Generic signed-HMAC ingress and the physical acceptance hold.
 > - **US-55 Post-Extension Closure:** `COMPLETE`; the original CS01-CS08 closure and the later canonical polling, Traccar, provider UI, health-recovery and idempotency work are consolidated without changing Flyway V100 or story accounting.
-> - **Immediate Next Action:** Review `docs/roadmap/remaining-mvp-implementation-authorization-proposal.md`. The roadmap recommends a governed US-72 product-decision task, but implementation remains unselected until policy authority and contracts are explicitly approved.
+> - **US-51 Selection:** `US-51-MONITOR-IDLE-TIME-PREREQUISITE-AND-PRODUCT-DECISIONS-001` is newly created and selected for prerequisite/product-decision review; all decisions remain proposed and no implementation or migration is authorized.
+> - **Immediate Next Action:** Review and approve, amend or reject the consolidated US-51 decisions and identify one authoritative device-native engine-running source before CS01 may begin.
 
 ---
 
@@ -248,7 +249,7 @@ Development startup now consistently provisions the idempotent PostgreSQL sample
 
 ```
 Current Status: 73 / 87 COMPLETE; 14 stories remain across Waves C–E
-Queue Head:     Authorization decision pending; no implementation task selected
+Queue Head:     US-51-MONITOR-IDLE-TIME-PREREQUISITE-AND-PRODUCT-DECISIONS-001
 Open Acceptance: US-55-HANDLE-GPS-EDGE-CASES-FINAL-ACCEPTANCE-001
 Deferred:       US-53-REPLAY-JOURNEYS-FINAL-ACCEPTANCE-001; US-54-VIEW-TRACKING-DASHBOARD-FINAL-ACCEPTANCE-001
 ```

@@ -16,7 +16,14 @@ an approved task identifier or treating an external acceptance hold as a technic
 - US-51 is blocked by the absence of an accepted engine-state source or proxy.
 - No existing task document authorizes the product decisions needed for US-72, US-76 or Wave E.
 
-## Recommended next decision track: US-72 Enforce Compliance
+## Superseded recommendation
+
+The prior recommendation to begin US-72 is superseded by the explicit selection of US-51.
+The active governance package is
+`docs/product-decisions/US-51-MONITOR-IDLE-TIME-PREREQUISITE-AND-PRODUCT-DECISIONS-001.md`.
+US-72 remains a later candidate with its policy-authority blocker unchanged.
+
+## Prior candidate analysis: US-72 Enforce Compliance
 
 The roadmap orders US-72 before US-76 and Wave E. US-47 already supplies the required billing/tax
 facts, but policy authority remains missing. Authorization should begin with product decisions,
