@@ -182,7 +182,8 @@ class DatabaseTableOwnershipArchitectureTest {
                 "tracking_speed_episode", "tracking_speed_evaluation_job",
                 "tracking_telemetry_evaluation_dispatch", "tracking_gps_exception_episode",
                 "tracking_gps_exception_evidence", "tracking_gps_exception_acknowledgement_command",
-                "tracking_idle_state", "tracking_idle_episode", "tracking_idle_episode_evidence");
+                "tracking_idle_state", "tracking_idle_episode", "tracking_idle_episode_evidence",
+                "tracking_idle_candidate_evidence");
         own(ownership, "tracking", "tracking_route_deviation_rule",
                 "tracking_route_deviation_state", "tracking_route_deviation_episode",
                 "tracking_route_deviation_review");

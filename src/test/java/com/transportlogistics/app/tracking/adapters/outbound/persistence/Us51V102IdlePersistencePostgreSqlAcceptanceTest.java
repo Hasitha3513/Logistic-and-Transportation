@@ -53,7 +53,7 @@ class Us51V102IdlePersistencePostgreSqlAcceptanceTest {
                 DATABASE.getJdbcUrl(), DATABASE.getUsername(), DATABASE.getPassword());
         AcceptanceDatabaseGuard.verify(dataSource);
         jdbc = new JdbcTemplate(dataSource);
-        flyway = Flyway.configure().dataSource(dataSource).cleanDisabled(false)
+        flyway = Flyway.configure().dataSource(dataSource).cleanDisabled(false).target("102")
                 .placeholders(HybridTelemetryTimescaleMigrationAcceptanceTest.placeholdersForTs04())
                 .load();
         persistence = new JdbcIdlePersistenceAdapter(jdbc,

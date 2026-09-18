@@ -183,7 +183,11 @@ These numbers describe reviewable boundaries only; they are not reserved or auth
   one-open-episode uniqueness; dedupe constraints; source-time/keyset indexes; extend the V91
   evaluator constraint with `IDLE`. Reuse the existing V91 due-work and Vehicle/source-time indexes;
   no redundant dispatch index is permitted.
-- **Proposed V103:** seed exactly `IDLE_MONITOR_VIEW` and `IDLE_EVENT_VIEW` and assign them to the
+- **V103 (implemented prerequisite):** correct candidate persistence so pre-confirmation work is
+  durable without creating an idle episode. It adds stable candidate identity/reference/recovery
+  state, append-only Tenant-qualified candidate evidence with deterministic deduplication and
+  180-day retention, and losslessly preserves V102 candidate rows.
+- **Proposed V104:** seed exactly `IDLE_MONITOR_VIEW` and `IDLE_EVENT_VIEW` and assign them to the
   existing same-Tenant Dispatcher/Admin role policy. No Notification catalogue entry is proposed.
 
 No migration may create engine facts, backfill legacy ignition as engine-running, mutate immutable
@@ -202,7 +206,7 @@ Exact proposed objects and permitted changes:
   canonical event/dedupe references, source timestamps, state/outcome, credited seconds,
   minimized speed/accuracy/adjusted-distance evidence, lifecycle/end reason, optimistic version and
   audit timestamps. Coordinates and raw provider facts are prohibited.
-- V103 inserts only the two permissions and their exact existing `DISPATCHER` and `ADMIN` role
+- V104 inserts only the two permissions and their exact existing `DISPATCHER` and `ADMIN` role
   grants using idempotent business keys. It creates no role, Notification rule/template or
   Operations catalogue entry.
 
@@ -271,7 +275,7 @@ acceptance and operator sign-off.
 | D4 | Two samples, five minutes; summed capped deltas; explicit engine stop immediate; movement needs two samples/30 seconds | Freezes confirmation/recovery/duration |
 | D5 | One Tenant/Vehicle open episode; canonical dedupe; advisory lock; durable leased `IDLE` dispatch; reassignment/capability boundaries close safely | Freezes idempotency/restart behavior |
 | D6 | Additive V3 with exact separated fields/topic/DLT; V1/V2 immutable and ineligible for idle | Authorizes compatible event evolution |
-| D7 | Proposed V101 history/capability, V102 idle/dispatch, V103 permissions only | Authorizes exact forward schema boundaries if versions remain free |
+| D7 | V101 history/capability, V102 idle/dispatch, V103 candidate correction, proposed V104 permissions only | V103 is the explicitly authorized prerequisite correction; the unchanged CS05 permission boundary is resequenced to V104 |
 | D8 | No Phase-1 Notification or Operations fact | Prevents invented escalation scope |
 | D9 | Four exact read-only routes, two permissions, 31-day range, 50/100 page limits, no-store/privacy/audit/UI rules | Freezes public/read security surface |
 | D10 | Fuel estimate `UNAVAILABLE`; no generic rate or cross-module persistence query | Prevents misleading waste claims |
@@ -284,8 +288,8 @@ acceptance and operator sign-off.
 | CS01 canonical engine semantics | V3 contract, provider-neutral types and test-profile fixture producer; production mappings remain disabled | Approval of D1-D11; physical source not required | Contract/compatibility tests; no inference; V1/V2 unchanged; rollback disables V3 producer while dual consumers remain |
 | `US-51-MONITOR-IDLE-TIME-CS02-V101-HISTORY-CAPABILITY-001` — COMPLETE | Immutable V3 storage and effective capability | CS01 and migration authorization | Clean V1→V101 and compressed V100→V101, exact constraints, append-only/Tenant, rollback and durable acknowledgement tests pass |
 | `US-51-MONITOR-IDLE-TIME-CS03-V102-IDLE-PERSISTENCE-DISPATCH-001` — COMPLETE | State, episode, evidence, idempotency, lease/claim support | CS02 and migration authorization | Deterministic concurrency, replay, restart, gap/order tests; application rollback retains additive schema |
-| `US-51-MONITOR-IDLE-TIME-CS04-EVALUATOR-001` | D1-D5 policy and estimate-unavailable result | CS03 | Threshold/recovery/property tests and retained detector regressions; feature flag disables claims |
-| CS05 V103 APIs/RBAC/audit | Two permissions and exact read-only bounded endpoints | CS03-CS04 and permission authorization | Literal HTTP allow/deny, Tenant A/B, cursor/privacy/audit tests; routes can be disabled without data loss |
+| `US-51-MONITOR-IDLE-TIME-CS04-EVALUATOR-001` — PREREQUISITE PERSISTENCE COMPLETE | V103 candidate persistence and conservative Fleet eligibility are complete; D1-D5 evaluator and worker activation remain pending | CS03 | V102→V103 populated upgrade, candidate restart/discard/promotion, append-only retention, dedupe, transaction and Tenant tests; normal IDLE claims remain disabled |
+| CS05 V104 APIs/RBAC/audit | Two permissions and exact read-only bounded endpoints | CS03-CS04 and permission authorization | Literal HTTP allow/deny, Tenant A/B, cursor/privacy/audit tests; routes can be disabled without data loss |
 | CS06 frontend | State/history/detail pages | CS05 | Component, accessibility, session-clearing, TypeScript/build and Chromium; hide navigation on rollback |
 | CS07 PostgreSQL/Kafka performance/recovery | Concurrency, leases, dedupe, query plans and bounded workload | CS01-CS06 | No deadlocks/duplicates/leaks; controlled measurements, not production SLOs; production capability still unavailable |
 | Technical closure | Consolidated mandatory gates and evidence | CS01-CS07 | Full backend, architecture/static, frontend and Chromium gates pass |
@@ -294,7 +298,8 @@ acceptance and operator sign-off.
 ## Consolidated implementation authorization request
 
 Approve D1-D11 and authorize CS01-CS07 as separate governed commits, including additive canonical
-V3 and proposed forward migrations V101-V103 **only if those versions remain free at each preflight**.
+V3 and forward migrations V101-V103 are implemented. V104 remains the proposed permission boundary
+and must be rechecked for availability at CS05 preflight.
 The first executable task will be newly identified as
 `US-51-MONITOR-IDLE-TIME-CS01-CANONICAL-ENGINE-SEMANTICS-001`. It may implement V3 contracts,
 dual-consumer compatibility and test-profile fixtures without a physical source. All production

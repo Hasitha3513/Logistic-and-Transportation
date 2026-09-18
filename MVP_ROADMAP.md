@@ -6,7 +6,7 @@
 ![Completed](https://img.shields.io/badge/Completed-73%20%2F%2087-2da44e.svg?style=for-the-badge&logo=checkmarx)
 ![Progress](https://img.shields.io/badge/Progress-83.9%25-brightgreen.svg?style=for-the-badge&logo=speedtest)
 ![MVP 1.4 Closed](https://img.shields.io/badge/MVP%201.4%20Last--Mile-8%20%2F%208-2da44e.svg?style=for-the-badge&logo=pinboard)
-![Database](https://img.shields.io/badge/TimescaleDB%20%2F%20Flyway-V100-8a63d2.svg?style=for-the-badge&logo=postgresql)
+![Database](https://img.shields.io/badge/TimescaleDB%20%2F%20Flyway-V103-8a63d2.svg?style=for-the-badge&logo=postgresql)
 
 </div>
 
@@ -34,8 +34,8 @@
 > - **Open Acceptance Queue:** Resume `US-55-HANDLE-GPS-EDGE-CASES-FINAL-ACCEPTANCE-001` only when the physical/provider/operator prerequisites materially change.
 > - **US-55 Provider UI:** `COMPLETE`; guided Flespi/Traccar setup now distinguishes saved, verified, bound, enabled and telemetry-received states while preserving Generic signed-HMAC ingress and the physical acceptance hold.
 > - **US-55 Post-Extension Closure:** `COMPLETE`; the original CS01-CS08 closure and the later canonical polling, Traccar, provider UI, health-recovery and idempotency work are consolidated without changing Flyway V100 or story accounting.
-> - **US-51 Selection:** D1–D11 and CS01–CS03 are complete. V102 adds Tenant-qualified idle state, episode, append-only evidence and staged durable `IDLE` dispatch while every production engine-running source remains gated.
-> - **Immediate Next Action:** Execute `US-51-MONITOR-IDLE-TIME-CS04-EVALUATOR-001`; consume staged IDLE work only with the approved D1–D5 evaluator and preserve all source-activation and physical-acceptance holds.
+> - **US-51 Selection:** D1–D11 and CS01–CS03 are complete. The verified CS04 prerequisite slice adds V103 restart-safe candidate persistence and a conservative Fleet powertrain query that returns `UNKNOWN` in production; normal `IDLE` claims remain disabled.
+> - **Immediate Next Action:** Resume `US-51-MONITOR-IDLE-TIME-CS04-EVALUATOR-001` to implement the approved D1–D5 evaluator and activate its worker only after it functions; preserve all source-activation and physical-acceptance holds.
 
 ---
 
@@ -181,7 +181,7 @@ Development startup now consistently provisions the idempotent PostgreSQL sample
 | `US-48` | Track Vehicles Live | Provider-neutral Flespi, Traccar and Generic ingestion; plug-and-play onboarding and Vehicle binding; live freshness and safe provider health | 🔴 `IMPLEMENTATION_COMPLETE / ACCEPTANCE_BLOCKED_EXTERNAL_SYSTEM` | Flespi, Generic and bounded Traccar 6.15.3 production paths implemented; guided Traccar onboarding evidence and genuine supported physical telemetry/operator sign-off remain pending |
 | `US-49` | Manage Geofences | Depot, customer-site and unauthorized-zone entry/exit detection | ✅ `COMPLETE / ACCEPTED` | Final acceptance PASS at V80: focused 76/76, Maven 1,595/0/0/15, architecture 52/52, Vitest 299/299 and Chromium 7/7; no US-48 acceptance inheritance |
 | `US-50` | Monitor Speed | Threshold, road-rule and repeat-speed monitoring | 🔴 `IMPLEMENTATION_COMPLETE / ACCEPTANCE_BLOCKED_EXTERNAL_SYSTEM` | Final acceptance blocked only by physical provider/device speed field, native-unit and normalization evidence; technical evidence PASS; no US-48 acceptance inheritance |
-| `US-51` | Monitor Idle Time | Authoritative engine-running versus movement duration; fuel estimate deferred | 🟡 `IMPLEMENTATION_IN_PROGRESS / CS03_COMPLETE` | V102 persistence and staged dispatch verified; production mappings and physical acceptance remain separately gated |
+| `US-51` | Monitor Idle Time | Authoritative engine-running versus movement duration; fuel estimate deferred | 🟡 `IMPLEMENTATION_IN_PROGRESS / CS04_PREREQUISITE_COMPLETE` | V103 candidate persistence verified; evaluator/worker activation, production mappings and physical acceptance remain separately gated |
 | `US-52` | Monitor Route Deviations | Planned-versus-actual comparison, severity and audited approval | 🔴 `IMPLEMENTATION_COMPLETE / ACCEPTANCE_BLOCKED_EXTERNAL_SYSTEM` | Technical closure PASS at V92; final acceptance stopped before field execution because physical provider/device route evidence, real Dispatcher delivery and operator sign-off are unavailable |
 | `US-53` | Replay Journeys | Historical journey replay, stop analysis and incident forensics | 🔴 `TECHNICALLY_COMPLETE / IMPLEMENTATION_COMPLETE_ACCEPTANCE_BLOCKED_EXTERNAL_SYSTEM` | Technical closure remains valid; final physical/provider journey evidence and operator sign-off are deferred under `US-53-REPLAY-JOURNEYS-FINAL-ACCEPTANCE-001` |
 | `US-54` | View Tracking Dashboard | Fleet overview, exceptions, heat maps, alerts and stale-state visibility | 🔴 `TECHNICALLY_COMPLETE / IMPLEMENTATION_COMPLETE_ACCEPTANCE_BLOCKED_EXTERNAL_SYSTEM` | Independent closure remains PASS at V95; final acceptance is held for genuine device/provider telemetry, privacy review and operator sign-off; no producer acceptance is inherited |
@@ -256,7 +256,7 @@ Deferred:       US-53-REPLAY-JOURNEYS-FINAL-ACCEPTANCE-001; US-54-VIEW-TRACKING-
 
 1. **Wave A — Integration and exception-control foundations:** 2 / 2 COMPLETE / CLOSED (US-73 and US-78).
 2. **Wave B — Fuel control and financial links:** 5 / 5 COMPLETE / CLOSED (US-35, US-37, US-38, US-46, US-47).
-3. **Wave C — GPS and telematics:** US-48, US-50, US-52, US-53, US-54 and US-55 physical acceptance are on independent external-prerequisite holds; US-49 is accepted. US-51 D1-D11 and CS01–CS03 are complete at V102; CS04 idle evaluation is next while production engine-running activation and physical acceptance remain separate gates.
+3. **Wave C — GPS and telematics:** US-48, US-50, US-52, US-53, US-54 and US-55 physical acceptance are on independent external-prerequisite holds; US-49 is accepted. US-51 D1-D11 and CS01–CS03 plus the CS04 V103 prerequisite persistence slice are complete; the CS04 evaluator is next while production engine-running activation and physical acceptance remain separate gates.
 4. **Wave D — Compliance and field mobility:** US-72, US-76.
 5. **Wave E — Analytics, integrity, resilience, disruption and user risk:** US-85, US-84, US-87, US-82, US-86.
 6. After 87/87: `FULL-SOURCE-PARITY-AUDIT-001`, then `FULL-PLATFORM-END-TO-END-ACCEPTANCE-001` after authorized parity disposition.
