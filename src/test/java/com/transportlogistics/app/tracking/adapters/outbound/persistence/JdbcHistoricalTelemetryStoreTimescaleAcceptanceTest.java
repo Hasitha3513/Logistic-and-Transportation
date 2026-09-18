@@ -188,6 +188,47 @@ class JdbcHistoricalTelemetryStoreTimescaleAcceptanceTest {
     }
 
     @Test
+    void enqueuesIdleOnlyForSupportedV3EngineRunningEvidence() {
+        UUID tenant = UUID.randomUUID();
+        UUID vehicle = UUID.randomUUID();
+        UUID unsupportedVehicle = UUID.randomUUID();
+        UUID supportedDevice = device(tenant, "idle-supported");
+        UUID unsupportedDevice = device(tenant, "idle-unsupported");
+        Instant source = Instant.now().minusSeconds(10);
+        jdbc.update("""
+                INSERT INTO tracking_device_telemetry_capability(
+                 id,tenant_id,tracking_device_id,capability,capability_state,effective_from,
+                 recorded_at,recorded_by)
+                VALUES(?,?,?,'ENGINE_RUNNING','SUPPORTED',?,?,?)
+                """, UUID.randomUUID(), tenant, supportedDevice, java.sql.Timestamp.from(source),
+                java.sql.Timestamp.from(source), UUID.randomUUID());
+        var supported = v3(tenant, vehicle, supportedDevice, "5".repeat(64), source,
+                TrackingTelemetryIngestedV3.EngineRunningState.RUNNING,
+                TrackingTelemetryIngestedV3.EngineRunningSource.DEVICE_NATIVE_CAN);
+        var unsupported = v3(tenant, unsupportedVehicle, unsupportedDevice, "4".repeat(64),
+                source.plusSeconds(1), TrackingTelemetryIngestedV3.EngineRunningState.RUNNING,
+                TrackingTelemetryIngestedV3.EngineRunningSource.DEVICE_NATIVE_CAN);
+
+        assertThat(store.persist(List.of(supported, unsupported)).persisted()).isEqualTo(2);
+        assertThat(jdbc.queryForList("SELECT evaluator_type FROM "
+                + "tracking_telemetry_evaluation_dispatch WHERE history_id=? ORDER BY evaluator_type",
+                String.class, supported.eventId())).containsExactly(
+                        "GEOFENCE", "IDLE", "ROUTE_DEVIATION", "SPEED");
+        assertThat(jdbc.queryForList("SELECT evaluator_type FROM "
+                + "tracking_telemetry_evaluation_dispatch WHERE history_id=? ORDER BY evaluator_type",
+                String.class, unsupported.eventId())).containsExactly(
+                        "GEOFENCE", "ROUTE_DEVIATION", "SPEED");
+        Instant claimTime = Instant.now();
+        assertThat(dispatches.claim("existing-worker", claimTime, claimTime.plusSeconds(30), 100))
+                .noneMatch(item -> item.evaluator()
+                        == com.transportlogistics.app.tracking.ports.outbound
+                                .TelemetryEvaluationDispatchPort.Evaluator.IDLE);
+        assertThat(dispatches.claimIdle("future-idle-worker", claimTime, claimTime.plusSeconds(30), 100))
+                .singleElement().satisfies(item -> assertThat(item.historyId())
+                        .isEqualTo(supported.eventId()));
+    }
+
+    @Test
     void preservesOutOfOrderAndDistinctSameTimestampEvents() {
         UUID tenant = UUID.randomUUID();
         UUID vehicle = UUID.randomUUID();
@@ -319,14 +360,33 @@ class JdbcHistoricalTelemetryStoreTimescaleAcceptanceTest {
             UUID tenant, UUID vehicle, String dedupe, Instant recordedAt,
             TrackingTelemetryIngestedV3.EngineRunningState running,
             TrackingTelemetryIngestedV3.EngineRunningSource source) {
+        return v3(tenant, vehicle, UUID.randomUUID(), dedupe, recordedAt, running, source);
+    }
+
+    private static TrackingTelemetryIngestedV3 v3(
+            UUID tenant, UUID vehicle, UUID device, String dedupe, Instant recordedAt,
+            TrackingTelemetryIngestedV3.EngineRunningState running,
+            TrackingTelemetryIngestedV3.EngineRunningSource source) {
         return new TrackingTelemetryIngestedV3(UUID.nameUUIDFromBytes(
                 (tenant + dedupe).getBytes(java.nio.charset.StandardCharsets.UTF_8)),
-                TrackingTelemetryIngestedV3.TYPE, 3, tenant, vehicle, UUID.randomUUID(),
+                TrackingTelemetryIngestedV3.TYPE, 3, tenant, vehicle, device,
                 "TEST_FIXTURE", null, dedupe, BigDecimal.ONE, BigDecimal.TWO, BigDecimal.ZERO,
                 null, BigDecimal.ONE, null, EngineState.ON, null, null, recordedAt,
                 recordedAt.plusSeconds(1), TrackingTelemetryIngestedV2.TamperState.UNKNOWN,
                 null, null, null, null, TrackingTelemetryIngestedV3.IgnitionState.ON,
                 running, source);
+    }
+
+    private static UUID device(UUID tenant, String reference) {
+        UUID id = UUID.randomUUID();
+        Instant now = Instant.now();
+        jdbc.update("""
+                INSERT INTO tracking_device(id,tenant_id,external_device_reference,provider_alias,
+                 lifecycle,registered_at,registered_by,version,created_at,updated_at)
+                VALUES(?,?,?,'TEST_FIXTURE','ACTIVE',?,?,0,?,?)
+                """, id, tenant, reference, java.sql.Timestamp.from(now), UUID.randomUUID(),
+                java.sql.Timestamp.from(now), java.sql.Timestamp.from(now));
+        return id;
     }
 
     private static Map<String, String> placeholders() {

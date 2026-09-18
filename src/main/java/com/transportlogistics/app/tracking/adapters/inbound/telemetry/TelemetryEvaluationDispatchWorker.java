@@ -97,6 +97,7 @@ final class TelemetryEvaluationDispatchWorker {
                             fact.horizontalAccuracyMeters().doubleValue()),
                     true,false,RouteDeviationPosition.Trust.valueOf(fact.trust().name()),true,
                     RouteDeviationPosition.Ordering.valueOf(fact.ordering().name())));
+            case IDLE -> throw new IllegalStateException("IDLE_EVALUATOR_NOT_ACTIVE");
         }
     }
 

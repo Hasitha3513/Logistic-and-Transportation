@@ -104,6 +104,22 @@ class TelemetryEvaluationDispatchConcurrencyPostgreSqlAcceptanceTest extends Pos
                 """, Integer.class, history)).isEqualTo(2);
     }
 
+    @Test
+    void stagedIdleClaimsAreIsolatedAndExpiredIdleLeaseRecovers() {
+        UUID tenant = UUID.randomUUID();
+        UUID history = UUID.randomUUID();
+        insert(tenant, history, UUID.randomUUID(), "IDLE", "b".repeat(64), 0);
+
+        assertThat(dispatches.claim("normal-worker", NOW, NOW.plusSeconds(30), 1)).isEmpty();
+        var idle = dispatches.claimIdle("idle-worker", NOW, NOW.plusSeconds(30), 1).getFirst();
+        assertThat(idle.evaluator()).isEqualTo(TelemetryEvaluationDispatchPort.Evaluator.IDLE);
+        assertThat(dispatches.claimIdle("idle-thief", NOW.plusSeconds(29), NOW.plusSeconds(59), 1))
+                .isEmpty();
+        assertThat(dispatches.claimIdle("idle-recovery", NOW.plusSeconds(31), NOW.plusSeconds(61), 1))
+                .singleElement().extracting(TelemetryEvaluationDispatchPort.Dispatch::id)
+                .isEqualTo(idle.id());
+    }
+
     private List<TelemetryEvaluationDispatchPort.Dispatch> claimAfter(
             CyclicBarrier barrier, String owner, int limit) throws Exception {
         barrier.await(5, TimeUnit.SECONDS);

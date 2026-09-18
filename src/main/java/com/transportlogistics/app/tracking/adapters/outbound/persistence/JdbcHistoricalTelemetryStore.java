@@ -328,6 +328,9 @@ public final class JdbcHistoricalTelemetryStore implements HistoricalTelemetrySt
         @Override public List<Dispatch> claim(String owner, Instant now, Instant until, int limit) {
             return List.of();
         }
+        @Override public List<Dispatch> claimIdle(String owner, Instant now, Instant until, int limit) {
+            return List.of();
+        }
         @Override public void complete(UUID id, String owner, Instant now) { }
         @Override public void retry(UUID id, String owner, Instant now, Instant next, String code) { }
         @Override public void fail(UUID id, String owner, Instant now, String code) { }
