@@ -291,4 +291,9 @@ After 87/87 and disposition of parity findings, execute a real Tenant-isolated o
 No independent implementation queue head is selected after the completed
 `US-55-TECHNICAL-CLOSURE` consolidation.
 
+The consolidated authorization proposal is
+`docs/roadmap/remaining-mvp-implementation-authorization-proposal.md`. It recommends beginning with
+governed US-72 product decisions because that is the next roadmap sequence, but it does not
+authorize an implementation task, migration, permission, API, event or product rule.
+
 US-48, US-50, US-52, US-53, US-54 and US-55 remain on independent external acceptance holds. US-49 is COMPLETE / ACCEPTED and accounting remains 73 / 87. US-55 field acceptance remains openly queued at `US-55-HANDLE-GPS-EDGE-CASES-FINAL-ACCEPTANCE-001` with 9 externally blocked requirements. Canonical polling, the bounded Traccar 6.15.3 adapter, guided Flespi/Traccar provider UI, safe provider health recovery, idempotency closure and post-extension technical closure are complete; Generic signed-HMAC continuity is preserved and real-provider evidence remains absent. Remaining independent candidates are not yet executable queue entries: US-51 requires engine-state telemetry, US-72 requires compliance-policy authority, US-76 requires mobile/device/push decisions and Wave E retains its recorded dependencies. Select the next governed task explicitly. Flyway is V100.

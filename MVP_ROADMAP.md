@@ -34,7 +34,7 @@
 > - **Open Acceptance Queue:** Resume `US-55-HANDLE-GPS-EDGE-CASES-FINAL-ACCEPTANCE-001` only when the physical/provider/operator prerequisites materially change.
 > - **US-55 Provider UI:** `COMPLETE`; guided Flespi/Traccar setup now distinguishes saved, verified, bound, enabled and telemetry-received states while preserving Generic signed-HMAC ingress and the physical acceptance hold.
 > - **US-55 Post-Extension Closure:** `COMPLETE`; the original CS01-CS08 closure and the later canonical polling, Traccar, provider UI, health-recovery and idempotency work are consolidated without changing Flyway V100 or story accounting.
-> - **Immediate Next Action:** No independent implementation task is currently selected. Keep the US-55 external acceptance queue open and explicitly select among the dependency-governed remaining roadmap candidates before implementation resumes.
+> - **Immediate Next Action:** Review `docs/roadmap/remaining-mvp-implementation-authorization-proposal.md`. The roadmap recommends a governed US-72 product-decision task, but implementation remains unselected until policy authority and contracts are explicitly approved.
 
 ---
 
@@ -248,7 +248,7 @@ Development startup now consistently provisions the idempotent PostgreSQL sample
 
 ```
 Current Status: 73 / 87 COMPLETE; 14 stories remain across Waves C–E
-Queue Head:     No independent implementation task selected
+Queue Head:     Authorization decision pending; no implementation task selected
 Open Acceptance: US-55-HANDLE-GPS-EDGE-CASES-FINAL-ACCEPTANCE-001
 Deferred:       US-53-REPLAY-JOURNEYS-FINAL-ACCEPTANCE-001; US-54-VIEW-TRACKING-DASHBOARD-FINAL-ACCEPTANCE-001
 ```
