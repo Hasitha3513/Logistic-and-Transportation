@@ -109,7 +109,7 @@ app:
       topic: ${TRACKING_KAFKA_TOPIC:tracking.telemetry.ingested.v1}
       v2-topic: ${TRACKING_KAFKA_V2_TOPIC:tracking.telemetry.ingested.v2}
       v3-topic: ${TRACKING_KAFKA_V3_TOPIC:tracking.telemetry.ingested.v3}
-      v3-enabled: false
+      v3-enabled: ${TRACKING_KAFKA_V3_ENABLED:true}
       partitions: ${TRACKING_KAFKA_PARTITIONS:6}
       acknowledgement-timeout: ${TRACKING_KAFKA_ACK_TIMEOUT:PT10S}
       manage-topic: ${TRACKING_KAFKA_MANAGE_TOPIC:false}

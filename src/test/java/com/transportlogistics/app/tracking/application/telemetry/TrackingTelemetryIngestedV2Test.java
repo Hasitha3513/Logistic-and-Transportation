@@ -72,6 +72,7 @@ class TrackingTelemetryIngestedV2Test {
                 TelemetrySignalCapability.ACCURACY,
                 TelemetrySignalCapability.HEADING,
                 TelemetrySignalCapability.IGNITION,
+                TelemetrySignalCapability.ENGINE_RUNNING,
                 TelemetrySignalCapability.TAMPER,
                 TelemetrySignalCapability.BATTERY_LEVEL,
                 TelemetrySignalCapability.BATTERY_VOLTAGE,

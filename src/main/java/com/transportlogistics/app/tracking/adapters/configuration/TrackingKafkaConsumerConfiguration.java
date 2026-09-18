@@ -3,6 +3,7 @@ package com.transportlogistics.app.tracking.adapters.configuration;
 import com.transportlogistics.app.shared.domain.DependencyUnavailableException;
 import com.transportlogistics.app.tracking.application.telemetry.TrackingTelemetryIngestedV1;
 import com.transportlogistics.app.tracking.application.telemetry.TrackingTelemetryIngestedV2;
+import com.transportlogistics.app.tracking.application.telemetry.TrackingTelemetryIngestedV3;
 import java.util.Map;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.KafkaException;
@@ -122,6 +123,37 @@ class TrackingKafkaConsumerConfiguration {
         Map<String, Object> consumer = consumerProperties(properties, TrackingTelemetryIngestedV2.class);
         consumer.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, batchSize);
         var factory = new ConcurrentKafkaListenerContainerFactory<String, TrackingTelemetryIngestedV2>();
+        factory.setConsumerFactory(new DefaultKafkaConsumerFactory<>(consumer));
+        factory.setBatchListener(true);
+        configure(factory, kafka, deadLetterTopic, "Historical telemetry storage remains unavailable");
+        return factory;
+    }
+
+    @Bean
+    ConcurrentKafkaListenerContainerFactory<String, TrackingTelemetryIngestedV3>
+            trackingLiveProjectorV3ContainerFactory(
+                    KafkaProperties properties,
+                    KafkaTemplate<String, Object> kafka,
+                    @Value("${app.tracking.kafka.v3-dead-letter-topic:tracking.telemetry.ingested.v3.dlt}")
+                            String deadLetterTopic) {
+        return singleFactory(properties, kafka, deadLetterTopic, TrackingTelemetryIngestedV3.class,
+                "Redis projection remains unavailable");
+    }
+
+    @Bean
+    ConcurrentKafkaListenerContainerFactory<String, TrackingTelemetryIngestedV3>
+            trackingHistoryPersisterV3ContainerFactory(
+                    KafkaProperties properties,
+                    KafkaTemplate<String, Object> kafka,
+                    @Value("${app.tracking.kafka.v3-dead-letter-topic:tracking.telemetry.ingested.v3.dlt}")
+                            String deadLetterTopic,
+                    @Value("${app.tracking.hybrid-storage.stream-batch-size:500}") int batchSize) {
+        if (batchSize < 1 || batchSize > 500) {
+            throw new IllegalArgumentException("Tracking history batch size must be 1..500");
+        }
+        Map<String, Object> consumer = consumerProperties(properties, TrackingTelemetryIngestedV3.class);
+        consumer.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, batchSize);
+        var factory = new ConcurrentKafkaListenerContainerFactory<String, TrackingTelemetryIngestedV3>();
         factory.setConsumerFactory(new DefaultKafkaConsumerFactory<>(consumer));
         factory.setBatchListener(true);
         configure(factory, kafka, deadLetterTopic, "Historical telemetry storage remains unavailable");

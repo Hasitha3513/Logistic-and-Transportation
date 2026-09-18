@@ -34,8 +34,8 @@
 > - **Open Acceptance Queue:** Resume `US-55-HANDLE-GPS-EDGE-CASES-FINAL-ACCEPTANCE-001` only when the physical/provider/operator prerequisites materially change.
 > - **US-55 Provider UI:** `COMPLETE`; guided Flespi/Traccar setup now distinguishes saved, verified, bound, enabled and telemetry-received states while preserving Generic signed-HMAC ingress and the physical acceptance hold.
 > - **US-55 Post-Extension Closure:** `COMPLETE`; the original CS01-CS08 closure and the later canonical polling, Traccar, provider UI, health-recovery and idempotency work are consolidated without changing Flyway V100 or story accounting.
-> - **US-51 Selection:** D1–D11 are approved and `US-51-MONITOR-IDLE-TIME-CS01-CANONICAL-ENGINE-SEMANTICS-001` is complete; canonical V3 is defined but production publication/consumption and every engine-running source remain gated at V100.
-> - **Immediate Next Action:** Execute `US-51-MONITOR-IDLE-TIME-CS02-V101-HISTORY-CAPABILITY-001`; verify V101 is free before creating immutable V3 history/capability persistence.
+> - **US-51 Selection:** D1–D11, CS01 and CS02 are complete. V101 durably retains canonical V3 and effective-dated `ENGINE_RUNNING` capability while every production engine-running source remains gated.
+> - **Immediate Next Action:** Execute `US-51-MONITOR-IDLE-TIME-CS03-V102-IDLE-PERSISTENCE-DISPATCH-001`; verify V102 is free before creating idle state, episode, evidence and durable dispatch persistence.
 
 ---
 
@@ -249,14 +249,14 @@ Development startup now consistently provisions the idempotent PostgreSQL sample
 
 ```
 Current Status: 73 / 87 COMPLETE; 14 stories remain across Waves C–E
-Queue Head:     US-51-MONITOR-IDLE-TIME-CS02-V101-HISTORY-CAPABILITY-001
+Queue Head:     US-51-MONITOR-IDLE-TIME-CS03-V102-IDLE-PERSISTENCE-DISPATCH-001
 Open Acceptance: US-55-HANDLE-GPS-EDGE-CASES-FINAL-ACCEPTANCE-001
 Deferred:       US-53-REPLAY-JOURNEYS-FINAL-ACCEPTANCE-001; US-54-VIEW-TRACKING-DASHBOARD-FINAL-ACCEPTANCE-001
 ```
 
 1. **Wave A — Integration and exception-control foundations:** 2 / 2 COMPLETE / CLOSED (US-73 and US-78).
 2. **Wave B — Fuel control and financial links:** 5 / 5 COMPLETE / CLOSED (US-35, US-37, US-38, US-46, US-47).
-3. **Wave C — GPS and telematics:** US-48, US-50, US-52, US-53, US-54 and US-55 physical acceptance are on independent external-prerequisite holds; US-49 is accepted. US-51 D1-D11 and CS01 are complete; CS02 V101 history/capability is next while production engine-running activation and physical acceptance remain separate gates.
+3. **Wave C — GPS and telematics:** US-48, US-50, US-52, US-53, US-54 and US-55 physical acceptance are on independent external-prerequisite holds; US-49 is accepted. US-51 D1-D11 and CS01–CS02 are complete at V101; CS03 V102 idle persistence/dispatch is next while production engine-running activation and physical acceptance remain separate gates.
 4. **Wave D — Compliance and field mobility:** US-72, US-76.
 5. **Wave E — Analytics, integrity, resilience, disruption and user risk:** US-85, US-84, US-87, US-82, US-86.
 6. After 87/87: `FULL-SOURCE-PARITY-AUDIT-001`, then `FULL-PLATFORM-END-TO-END-ACCEPTANCE-001` after authorized parity disposition.

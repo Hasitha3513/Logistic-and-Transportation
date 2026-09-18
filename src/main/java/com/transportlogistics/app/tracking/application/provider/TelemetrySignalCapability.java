@@ -6,6 +6,7 @@ public enum TelemetrySignalCapability {
     ACCURACY,
     HEADING,
     IGNITION,
+    ENGINE_RUNNING,
     TAMPER,
     BATTERY_LEVEL,
     BATTERY_VOLTAGE,

@@ -33,12 +33,13 @@ class TrackingKafkaConsumerProxyCompatibilityIntegrationTest {
                 .isEqualTo(TrackingHistoricalTelemetryPersister.class);
         assertThat(AopUtils.getTargetClass(live))
                 .isEqualTo(TrackingLiveTelemetryProjector.class);
-        assertThat(listeners.getListenerContainers()).hasSize(4);
+        assertThat(listeners.getListenerContainers()).hasSize(6);
         assertThat(listeners.getListenerContainers().stream()
                 .flatMap(container -> java.util.Arrays.stream(
                         container.getContainerProperties().getTopics()))
                 .toList()).containsExactlyInAnyOrder(
                         "tracking.telemetry.ingested.v1", "tracking.telemetry.ingested.v1",
-                        "tracking.telemetry.ingested.v2", "tracking.telemetry.ingested.v2");
+                        "tracking.telemetry.ingested.v2", "tracking.telemetry.ingested.v2",
+                        "tracking.telemetry.ingested.v3", "tracking.telemetry.ingested.v3");
     }
 }

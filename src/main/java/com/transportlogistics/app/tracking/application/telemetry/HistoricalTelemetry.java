@@ -35,5 +35,8 @@ public record HistoricalTelemetry(
         BigDecimal batteryLevelPercent,
         BigDecimal batteryVoltageVolts,
         TrackingTelemetryIngestedV2.ExternalPowerState externalPowerState,
-        TrackingTelemetryIngestedV2.BatteryChargingState batteryChargingState) {
+        TrackingTelemetryIngestedV2.BatteryChargingState batteryChargingState,
+        TrackingTelemetryIngestedV3.IgnitionState ignitionState,
+        TrackingTelemetryIngestedV3.EngineRunningState engineRunningState,
+        TrackingTelemetryIngestedV3.EngineRunningSource engineRunningSource) {
 }

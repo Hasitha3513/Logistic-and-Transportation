@@ -8,6 +8,7 @@ import com.transportlogistics.app.shared.domain.DependencyUnavailableException;
 import com.transportlogistics.app.tracking.application.telemetry.HistoricalTelemetry;
 import com.transportlogistics.app.tracking.application.telemetry.TrackingTelemetryIngestedV1;
 import com.transportlogistics.app.tracking.application.telemetry.TrackingTelemetryIngestedV2;
+import com.transportlogistics.app.tracking.application.telemetry.TrackingTelemetryIngestedV3;
 import com.transportlogistics.app.tracking.domain.TrackingModels.EngineState;
 import com.transportlogistics.app.tracking.domain.journeyreplay.JourneyReplayModels.*;
 import com.transportlogistics.app.tracking.ports.outbound.JourneyReplayCursorPort;
@@ -164,6 +165,29 @@ class JdbcHistoricalTelemetryStoreTimescaleAcceptanceTest {
     }
 
     @Test
+    void persistsAndRetrievesV3EngineSemanticsLosslesslyWithoutReducingDistinctEvidence() {
+        UUID tenant = UUID.randomUUID();
+        UUID vehicle = UUID.randomUUID();
+        Instant source = Instant.now().minusSeconds(10);
+        var running = v3(tenant, vehicle, "7".repeat(64), source,
+                TrackingTelemetryIngestedV3.EngineRunningState.RUNNING,
+                TrackingTelemetryIngestedV3.EngineRunningSource.DEVICE_NATIVE_RPM);
+        var stopped = v3(tenant, vehicle, "6".repeat(64), source.plusSeconds(1),
+                TrackingTelemetryIngestedV3.EngineRunningState.NOT_RUNNING,
+                TrackingTelemetryIngestedV3.EngineRunningSource.DEVICE_NATIVE_RPM);
+
+        assertThat(store.persist(List.of(running, stopped)).persisted()).isEqualTo(2);
+        HistoricalTelemetry fact = store.findExact(tenant, source, running.eventId()).orElseThrow();
+        assertThat(fact.eventVersion()).isEqualTo(3);
+        assertThat(fact.ignitionState()).isEqualTo(TrackingTelemetryIngestedV3.IgnitionState.ON);
+        assertThat(fact.engineRunningState())
+                .isEqualTo(TrackingTelemetryIngestedV3.EngineRunningState.RUNNING);
+        assertThat(fact.engineRunningSource())
+                .isEqualTo(TrackingTelemetryIngestedV3.EngineRunningSource.DEVICE_NATIVE_RPM);
+        assertThat(fact.tamperState()).isEqualTo(TrackingTelemetryIngestedV2.TamperState.UNKNOWN);
+    }
+
+    @Test
     void preservesOutOfOrderAndDistinctSameTimestampEvents() {
         UUID tenant = UUID.randomUUID();
         UUID vehicle = UUID.randomUUID();
@@ -289,6 +313,20 @@ class JdbcHistoricalTelemetryStoreTimescaleAcceptanceTest {
                 "GENERIC", null, dedupe, latitude, longitude, speed, null,
                 BigDecimal.ONE, null, engineState, odometer, null,
                 recordedAt, recordedAt.plusSeconds(1));
+    }
+
+    private static TrackingTelemetryIngestedV3 v3(
+            UUID tenant, UUID vehicle, String dedupe, Instant recordedAt,
+            TrackingTelemetryIngestedV3.EngineRunningState running,
+            TrackingTelemetryIngestedV3.EngineRunningSource source) {
+        return new TrackingTelemetryIngestedV3(UUID.nameUUIDFromBytes(
+                (tenant + dedupe).getBytes(java.nio.charset.StandardCharsets.UTF_8)),
+                TrackingTelemetryIngestedV3.TYPE, 3, tenant, vehicle, UUID.randomUUID(),
+                "TEST_FIXTURE", null, dedupe, BigDecimal.ONE, BigDecimal.TWO, BigDecimal.ZERO,
+                null, BigDecimal.ONE, null, EngineState.ON, null, null, recordedAt,
+                recordedAt.plusSeconds(1), TrackingTelemetryIngestedV2.TamperState.UNKNOWN,
+                null, null, null, null, TrackingTelemetryIngestedV3.IgnitionState.ON,
+                running, source);
     }
 
     private static Map<String, String> placeholders() {

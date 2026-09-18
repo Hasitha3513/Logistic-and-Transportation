@@ -75,11 +75,11 @@ class TrackingTelemetryIngestedV3Test {
     }
 
     @Test
-    void productionCapabilityVocabulariesCannotAdvertiseEngineRunningYet() {
+    void historyVocabularyAcceptsEngineRunningWithoutActivatingProviderSupport() {
         assertThat(ProviderCapability.values()).extracting(Enum::name)
                 .doesNotContain("ENGINE_RUNNING");
         assertThat(TelemetrySignalCapability.values()).extracting(Enum::name)
-                .doesNotContain("ENGINE_RUNNING");
+                .contains("ENGINE_RUNNING");
         assertThat(TrackingTelemetryIngestedV3.TOPIC)
                 .isEqualTo("tracking.telemetry.ingested.v3");
         assertThat(TrackingTelemetryIngestedV3.DEAD_LETTER_TOPIC)

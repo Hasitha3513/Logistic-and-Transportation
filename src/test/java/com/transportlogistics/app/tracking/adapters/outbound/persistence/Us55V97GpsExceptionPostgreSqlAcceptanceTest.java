@@ -48,7 +48,7 @@ class Us55V97GpsExceptionPostgreSqlAcceptanceTest {
     void cleanV1ToV97CreatesExactlyTheAuthorizedReadyTenantIndexes() {
         cleanAndMigrate();
 
-        assertThat(version()).isEqualTo("100");
+        assertThat(version()).isEqualTo("101");
         assertThat(jdbc.queryForList("SELECT tablename FROM pg_tables WHERE schemaname='public' "
                 + "AND tablename LIKE 'tracking_gps_exception_%' ORDER BY tablename", String.class))
                 .containsExactly("tracking_gps_exception_acknowledgement_command",
@@ -80,7 +80,7 @@ class Us55V97GpsExceptionPostgreSqlAcceptanceTest {
         jdbc.execute("DROP TABLE tracking_gps_exception_evidence");
 
         flyway.migrate();
-        assertThat(version()).isEqualTo("100");
+        assertThat(version()).isEqualTo("101");
         assertThat(jdbc.queryForObject("SELECT count(*) FROM flyway_schema_history "
                 + "WHERE version='97' AND success", Integer.class)).isOne();
     }

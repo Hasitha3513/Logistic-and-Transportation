@@ -2,7 +2,8 @@ package com.transportlogistics.app.tracking.adapters.outbound.kafka;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.argThat;
+import static org.mockito.Mockito.verify;
 
 import com.transportlogistics.app.tracking.application.telemetry.TrackingTelemetryIngestedV3;
 import com.transportlogistics.app.tracking.domain.TrackingModels.EngineState;
@@ -16,7 +17,7 @@ import org.springframework.kafka.core.KafkaTemplate;
 
 class KafkaTelemetryV3ActivationGateTest {
     @Test
-    void refusesV3BeforeDurablePersistenceIsReady() {
+    void routesV3OnlyToItsGovernedTopicAfterPersistenceIsReady() {
         @SuppressWarnings("unchecked")
         KafkaTemplate<String, Object> kafka = mock(KafkaTemplate.class);
         var publisher = new KafkaTelemetryStreamPublisher(kafka, new SimpleMeterRegistry(),
@@ -25,9 +26,11 @@ class KafkaTelemetryV3ActivationGateTest {
 
         assertThatThrownBy(() -> publisher.publishDurably(event.tenantId() + ":" + event.vehicleId(),
                 event, "test", Duration.ofSeconds(1)))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Unsupported telemetry event version");
-        verifyNoInteractions(kafka);
+                .isInstanceOf(com.transportlogistics.app.shared.domain.DependencyUnavailableException.class)
+                .hasMessage("Telemetry stream is unavailable");
+        verify(kafka).send(argThat((org.apache.kafka.clients.producer.ProducerRecord<String, Object> record)
+                -> TrackingTelemetryIngestedV3.TOPIC.equals(record.topic())
+                && event.equals(record.value())));
     }
 
     private static TrackingTelemetryIngestedV3 event() {

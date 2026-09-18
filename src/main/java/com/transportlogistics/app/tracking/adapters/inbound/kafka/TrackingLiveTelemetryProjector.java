@@ -3,6 +3,7 @@ package com.transportlogistics.app.tracking.adapters.inbound.kafka;
 import com.transportlogistics.app.tracking.application.telemetry.LiveTelemetryProjection;
 import com.transportlogistics.app.tracking.application.telemetry.TrackingTelemetryIngestedV1;
 import com.transportlogistics.app.tracking.application.telemetry.TrackingTelemetryIngestedV2;
+import com.transportlogistics.app.tracking.application.telemetry.TrackingTelemetryIngestedV3;
 import com.transportlogistics.app.tracking.application.GpsReliabilityEvaluationService;
 import com.transportlogistics.app.tracking.ports.outbound.LiveTelemetryProjectionPort;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -24,6 +25,7 @@ class TrackingLiveTelemetryProjector {
     private final Clock clock;
     private final String topic;
     private final String v2Topic;
+    private final String v3Topic;
 
     @Autowired
     TrackingLiveTelemetryProjector(
@@ -33,8 +35,10 @@ class TrackingLiveTelemetryProjector {
             @org.springframework.beans.factory.annotation.Value(
                     "${app.tracking.kafka.topic:tracking.telemetry.ingested.v1}") String topic,
             @org.springframework.beans.factory.annotation.Value(
-                    "${app.tracking.kafka.v2-topic:tracking.telemetry.ingested.v2}") String v2Topic) {
-        this(liveState, reliability, meters, Clock.systemUTC(), topic, v2Topic);
+                    "${app.tracking.kafka.v2-topic:tracking.telemetry.ingested.v2}") String v2Topic,
+            @org.springframework.beans.factory.annotation.Value(
+                    "${app.tracking.kafka.v3-topic:tracking.telemetry.ingested.v3}") String v3Topic) {
+        this(liveState, reliability, meters, Clock.systemUTC(), topic, v2Topic, v3Topic);
     }
 
     TrackingLiveTelemetryProjector(
@@ -44,12 +48,25 @@ class TrackingLiveTelemetryProjector {
             Clock clock,
             String topic,
             String v2Topic) {
+        this(liveState, reliability, meters, clock, topic, v2Topic,
+                "tracking.telemetry.ingested.v3");
+    }
+
+    TrackingLiveTelemetryProjector(
+            LiveTelemetryProjectionPort liveState,
+            GpsReliabilityEvaluationService reliability,
+            MeterRegistry meters,
+            Clock clock,
+            String topic,
+            String v2Topic,
+            String v3Topic) {
         this.liveState = liveState;
         this.reliability = reliability;
         this.meters = meters;
         this.clock = clock;
         this.topic = topic;
         this.v2Topic = v2Topic;
+        this.v3Topic = v3Topic;
     }
 
     @KafkaListener(
@@ -61,6 +78,21 @@ class TrackingLiveTelemetryProjector {
             Acknowledgment acknowledgment) {
         TrackingTelemetryContractValidator.validate(
                 record, record.value(), v2Topic, TrackingTelemetryIngestedV2.VERSION);
+        var result = evaluateAndProject(record.value());
+        meters.counter("tracking.redis.live.projections", "result", result.name()).increment();
+        acknowledgment.acknowledge();
+    }
+
+    @KafkaListener(
+            topics = "${app.tracking.kafka.v3-topic:tracking.telemetry.ingested.v3}",
+            groupId = "${app.tracking.kafka.live-projector-group:tracking-live-projector-v1}",
+            containerFactory = "trackingLiveProjectorV3ContainerFactory",
+            autoStartup = "${app.tracking.kafka.v3-enabled:false}")
+    void consumeV3(
+            ConsumerRecord<String, TrackingTelemetryIngestedV3> record,
+            Acknowledgment acknowledgment) {
+        TrackingTelemetryContractValidator.validate(
+                record, record.value(), v3Topic, TrackingTelemetryIngestedV3.VERSION);
         var result = evaluateAndProject(record.value());
         meters.counter("tracking.redis.live.projections", "result", result.name()).increment();
         acknowledgment.acknowledge();

@@ -4,6 +4,7 @@ import com.transportlogistics.app.shared.domain.DependencyUnavailableException;
 import com.transportlogistics.app.tracking.application.telemetry.CanonicalTelemetryEvent;
 import com.transportlogistics.app.tracking.application.telemetry.TrackingTelemetryIngestedV1;
 import com.transportlogistics.app.tracking.application.telemetry.TrackingTelemetryIngestedV2;
+import com.transportlogistics.app.tracking.application.telemetry.TrackingTelemetryIngestedV3;
 import com.transportlogistics.app.tracking.ports.outbound.TelemetryStreamPublisherPort;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
@@ -26,22 +27,31 @@ final class KafkaTelemetryStreamPublisher implements TelemetryStreamPublisherPor
     private final MeterRegistry meters;
     private final String v1Topic;
     private final String v2Topic;
+    private final String v3Topic;
 
     @org.springframework.beans.factory.annotation.Autowired
     KafkaTelemetryStreamPublisher(
             KafkaTemplate<String, ?> kafka,
             MeterRegistry meters,
             @Value("${app.tracking.kafka.topic:tracking.telemetry.ingested.v1}") String v1Topic,
-            @Value("${app.tracking.kafka.v2-topic:tracking.telemetry.ingested.v2}") String v2Topic) {
+            @Value("${app.tracking.kafka.v2-topic:tracking.telemetry.ingested.v2}") String v2Topic,
+            @Value("${app.tracking.kafka.v3-topic:tracking.telemetry.ingested.v3}") String v3Topic) {
         this.kafka = cast(kafka);
         this.meters = meters;
         this.v1Topic = v1Topic;
         this.v2Topic = v2Topic;
+        this.v3Topic = v3Topic;
     }
 
     KafkaTelemetryStreamPublisher(
             KafkaTemplate<String, ?> kafka, MeterRegistry meters, String topic) {
-        this(kafka, meters, topic, "tracking.telemetry.ingested.v2");
+        this(kafka, meters, topic, "tracking.telemetry.ingested.v2",
+                "tracking.telemetry.ingested.v3");
+    }
+
+    KafkaTelemetryStreamPublisher(
+            KafkaTemplate<String, ?> kafka, MeterRegistry meters, String topic, String v2Topic) {
+        this(kafka, meters, topic, v2Topic, "tracking.telemetry.ingested.v3");
     }
 
     @SuppressWarnings("unchecked")
@@ -58,6 +68,7 @@ final class KafkaTelemetryStreamPublisher implements TelemetryStreamPublisherPor
         String topic = switch (event.eventVersion()) {
             case TrackingTelemetryIngestedV1.VERSION -> v1Topic;
             case TrackingTelemetryIngestedV2.VERSION -> v2Topic;
+            case TrackingTelemetryIngestedV3.VERSION -> v3Topic;
             default -> throw new IllegalArgumentException("Unsupported telemetry event version");
         };
         var record = new ProducerRecord<String, Object>(topic, key, event);
@@ -134,6 +145,7 @@ final class KafkaTelemetryStreamPublisher implements TelemetryStreamPublisherPor
         String topic = switch (event.eventVersion()) {
             case TrackingTelemetryIngestedV1.VERSION -> v1Topic;
             case TrackingTelemetryIngestedV2.VERSION -> v2Topic;
+            case TrackingTelemetryIngestedV3.VERSION -> v3Topic;
             default -> throw new IllegalArgumentException("Unsupported telemetry event version");
         };
         var record = new ProducerRecord<String, Object>(topic, key, event);
