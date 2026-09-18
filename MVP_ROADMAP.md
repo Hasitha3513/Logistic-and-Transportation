@@ -33,7 +33,7 @@
 > - **US-55 State:** `TECHNICALLY_COMPLETE / IMPLEMENTATION_COMPLETE_ACCEPTANCE_BLOCKED_EXTERNAL_SYSTEM`; final acceptance has 0 PASS, 0 FAIL and 9 externally blocked field requirements; genuine physical/provider evidence remains mandatory.
 > - **Open Acceptance Queue:** Resume `US-55-HANDLE-GPS-EDGE-CASES-FINAL-ACCEPTANCE-001` only when the physical/provider/operator prerequisites materially change.
 > - **US-55 Provider UI:** `COMPLETE`; guided Flespi/Traccar setup now distinguishes saved, verified, bound, enabled and telemetry-received states while preserving Generic signed-HMAC ingress and the physical acceptance hold.
-> - **Immediate Next Action:** Execute `US-55-IDEMPOTENCY-CLOSURE`; provider health recovery is complete, while physical acceptance remains open.
+> - **Immediate Next Action:** Execute `US-55-TECHNICAL-CLOSURE`; provider health recovery and idempotency closure are complete, while physical acceptance remains open.
 
 ---
 
@@ -247,14 +247,14 @@ Development startup now consistently provisions the idempotent PostgreSQL sample
 
 ```
 Current Status: 73 / 87 COMPLETE; 14 stories remain across Waves C–E
-Queue Head:     US-55-IDEMPOTENCY-CLOSURE
+Queue Head:     US-55-TECHNICAL-CLOSURE
 Open Acceptance: US-55-HANDLE-GPS-EDGE-CASES-FINAL-ACCEPTANCE-001
 Deferred:       US-53-REPLAY-JOURNEYS-FINAL-ACCEPTANCE-001; US-54-VIEW-TRACKING-DASHBOARD-FINAL-ACCEPTANCE-001
 ```
 
 1. **Wave A — Integration and exception-control foundations:** 2 / 2 COMPLETE / CLOSED (US-73 and US-78).
 2. **Wave B — Fuel control and financial links:** 5 / 5 COMPLETE / CLOSED (US-35, US-37, US-38, US-46, US-47).
-3. **Wave C — GPS and telematics:** US-48, US-50, US-52, US-53, US-54 and US-55 physical acceptance are on independent external-prerequisite holds; US-49 is accepted; canonical polling, Traccar polling, provider onboarding UI and provider health recovery are complete. `US-55-IDEMPOTENCY-CLOSURE` is next. US-51 remains blocked by the missing engine-state capability.
+3. **Wave C — GPS and telematics:** US-48, US-50, US-52, US-53, US-54 and US-55 physical acceptance are on independent external-prerequisite holds; US-49 is accepted; canonical polling, Traccar polling, provider onboarding UI, provider health recovery and idempotency closure are complete. `US-55-TECHNICAL-CLOSURE` is next. US-51 remains blocked by the missing engine-state capability.
 4. **Wave D — Compliance and field mobility:** US-72, US-76.
 5. **Wave E — Analytics, integrity, resilience, disruption and user risk:** US-85, US-84, US-87, US-82, US-86.
 6. After 87/87: `FULL-SOURCE-PARITY-AUDIT-001`, then `FULL-PLATFORM-END-TO-END-ACCEPTANCE-001` after authorized parity disposition.

@@ -88,6 +88,34 @@ class JdbcTrackingProviderIngestionAdapterTest {
     }
 
     @Test
+    void repeatedCandidateKeepsIdentityWhileDistinctProviderObservationDoesNotCollapse() {
+        arrangeAuthority();
+        NormalizedPositionCandidate first = candidate();
+        NormalizedPositionCandidate distinct = new NormalizedPositionCandidate("device-55", NOW,
+                first.latitude(), first.longitude(), first.horizontalAccuracyMeters(), first.speedKph(),
+                first.headingDegrees(), first.altitudeMeters(), first.engineState(), first.odometerKm(),
+                first.engineHours(), "message-56", 10L, first.tamperState(),
+                first.batteryLevelPercent(), first.batteryVoltageVolts(), first.externalPowerState(),
+                first.batteryChargingState());
+
+        adapter.ingest(new ProviderConnectionId(CONNECTION), "lease", List.of(first), NOW);
+        adapter.ingest(new ProviderConnectionId(CONNECTION), "lease", List.of(first), NOW.plusMillis(1));
+        adapter.ingest(new ProviderConnectionId(CONNECTION), "lease", List.of(distinct), NOW.plusMillis(2));
+
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<List<TelemetryStreamPublisherPort.PublicationRequest>> requests =
+                ArgumentCaptor.forClass(List.class);
+        verify(stream, org.mockito.Mockito.times(3)).publishBatchDurably(requests.capture(), any());
+        var original = requests.getAllValues().get(0).getFirst().event();
+        var replay = requests.getAllValues().get(1).getFirst().event();
+        var separate = requests.getAllValues().get(2).getFirst().event();
+        assertThat(replay.eventId()).isEqualTo(original.eventId());
+        assertThat(replay.dedupeIdentity()).isEqualTo(original.dedupeIdentity());
+        assertThat(separate.eventId()).isNotEqualTo(original.eventId());
+        assertThat(separate.dedupeIdentity()).isNotEqualTo(original.dedupeIdentity());
+    }
+
+    @Test
     void rejectsForeignOrMissingSourceTimeAuthorityWithoutPublication() {
         when(executions.reloadActive(any(), anyString(), any())).thenReturn(Optional.of(connection()));
         when(executions.lockActiveBindingForIngestion(any(), any(), anyString(), anyString(), any()))

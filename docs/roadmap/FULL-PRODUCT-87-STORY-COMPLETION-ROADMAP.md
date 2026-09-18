@@ -290,6 +290,6 @@ After 87/87 and disposition of parity findings, execute a real Tenant-isolated o
 
 Exactly one queue head is authorized by this roadmap:
 
-`US-55-IDEMPOTENCY-CLOSURE`
+`US-55-TECHNICAL-CLOSURE`
 
-US-48, US-50, US-52, US-53, US-54 and US-55 remain on independent external acceptance holds. US-49 is COMPLETE / ACCEPTED and accounting remains 73 / 87. US-55 field acceptance remains openly queued at `US-55-HANDLE-GPS-EDGE-CASES-FINAL-ACCEPTANCE-001` with 9 externally blocked requirements. Canonical polling, the bounded Traccar 6.15.3 adapter, guided Flespi/Traccar provider UI and safe provider health recovery are complete; Generic signed-HMAC continuity is preserved and real-provider evidence remains absent. The independent queue is `US-55-IDEMPOTENCY-CLOSURE`. Flyway is V100.
+US-48, US-50, US-52, US-53, US-54 and US-55 remain on independent external acceptance holds. US-49 is COMPLETE / ACCEPTED and accounting remains 73 / 87. US-55 field acceptance remains openly queued at `US-55-HANDLE-GPS-EDGE-CASES-FINAL-ACCEPTANCE-001` with 9 externally blocked requirements. Canonical polling, the bounded Traccar 6.15.3 adapter, guided Flespi/Traccar provider UI, safe provider health recovery and idempotency closure are complete; Generic signed-HMAC continuity is preserved and real-provider evidence remains absent. The independent queue is `US-55-TECHNICAL-CLOSURE`. Flyway is V100.

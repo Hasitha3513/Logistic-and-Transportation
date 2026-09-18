@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -72,6 +73,29 @@ class GpsReliabilityEvaluationServiceTest {
         assertThat(saved.get().severity()).isEqualTo(
                 com.transportlogistics.app.tracking.domain.gpsedge.GpsReliabilityModels.Severity.HIGH);
         verify(evidence).append(any());
+    }
+
+    @Test
+    void duplicateRecoveryObservationDoesNotAdvanceRecoveryCounterTwice() {
+        var capabilities = mock(TelemetryCapabilityLookupPort.class);
+        when(capabilities.resolveAll(any(), any(), any(), any())).thenReturn(Map.of());
+        var active = GpsExceptionEpisode.open(UUID.randomUUID(), UUID.randomUUID(),
+                UUID.randomUUID(), UUID.randomUUID(), ExceptionType.LOW_ACCURACY,
+                com.transportlogistics.app.tracking.domain.gpsedge.GpsReliabilityModels.Severity.WARNING,
+                NOW.minusSeconds(30));
+        var episodes = mock(GpsExceptionRepositoryPort.class);
+        when(episodes.findActiveByDeviceForUpdate(any(), any())).thenReturn(List.of(active));
+        var evidence = mock(GpsExceptionEvidenceRepositoryPort.class);
+        when(evidence.append(any())).thenReturn(true, false);
+        var service = service(capabilities, episodes, evidence);
+        var recovery = event("recovery", new BigDecimal("80"),
+                TrackingTelemetryIngestedV2.TamperState.CLEAR);
+
+        service.evaluateAndRecord(recovery, Optional.empty(), NOW);
+        service.evaluateAndRecord(recovery, Optional.empty(), NOW.plusSeconds(1));
+
+        verify(evidence, times(2)).append(any());
+        verify(episodes, times(1)).save(any());
     }
 
     private static GpsReliabilityEvaluationService service(
