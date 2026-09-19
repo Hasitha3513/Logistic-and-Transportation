@@ -27,6 +27,12 @@ No independently executable implementation task is authorized: product, security
 first-wave source owner must approve the proposed signal catalogue, exact fact, threshold, review authority
 and retention before proposed CS01 can start. No migration number is reserved.
 
+The concrete recommended first wave is now limited to four Identity permission-ceiling denials with one
+reason code. Three distinct facts for the same Tenant/actor/action family within 15 minutes create one
+MEDIUM advisory finding. The package proposes five minutes of delivery lateness, a minimized payload,
+distinct same-Tenant review, one internal 30-day appeal and 180-day retention. It adds no generic denial
+capture, Operations intake, MFA/session action or allegation of misconduct. These choices remain unapproved.
+
 ## Previously selected candidate: US-72 Enforce Compliance
 
 The roadmap orders US-72 before US-76 and Wave E. US-47 supplies the billing/tax fact boundary, and

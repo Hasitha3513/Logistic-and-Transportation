@@ -30,7 +30,7 @@ dependency, policy, or external-acceptance claim.
 | US-84 | Not started | Not started | Failure catalogue, responsibility matrix, degraded modes, monitoring/fault environment, RTO/RPO basis and integrity recovery evidence; US-85 is needed for complete recovery certification | No | None |
 | US-85 | Not started | Not started | Owner-specific invariant/correction catalogue and validators; complete GPS/trip mismatch acceptance depends on genuine US-48 evidence | No | None |
 | US-86 | Not started | Not started | Disruption catalogue, constraint/replan authority, scheduling/tracking/compliance contracts and optional advisory source | No | None |
-| US-87 | Prerequisite analysis complete; no runtime implementation | Not started | Approval of proposed D1–D20, exact first producer facts, thresholds, review authority, privacy/retention and any IdP action | No; proposed CS01–CS07 remain unapproved | None |
+| US-87 | First-wave approval package ready; no runtime implementation | Not started | Approval of the four Identity ceiling-denial actions, three-in-15 rule, MEDIUM advisory review, privacy/retention and usability path | No; proposed CS01–CS07 remain unapproved | None |
 
 Classification is deliberately split between technical completion and story acceptance. The seven
 Tracking stories do not become accepted from fixture or Testcontainers evidence, and no later story may
