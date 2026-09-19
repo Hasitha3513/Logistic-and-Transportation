@@ -14,7 +14,7 @@ class JourneyReplayPermissionPostgreSqlAcceptanceTest extends PostgreSqlIntegrat
     void v93SeedsOnlyTheTwoReplayPermissionsAndGrantsExistingOperatorRoles() {
         assertThat(jdbc.queryForObject(
                 "SELECT version FROM flyway_schema_history WHERE success ORDER BY installed_rank DESC LIMIT 1",
-                String.class)).isEqualTo("104");
+                String.class)).isEqualTo("105");
         assertThat(jdbc.queryForList(
                 "SELECT code FROM app_permission WHERE code LIKE 'JOURNEY_REPLAY_%' ORDER BY code",
                 String.class)).containsExactly("JOURNEY_REPLAY_INCIDENT_VIEW", "JOURNEY_REPLAY_VIEW");

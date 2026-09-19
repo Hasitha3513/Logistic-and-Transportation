@@ -23,7 +23,7 @@ class IdleMonitoringPermissionPostgreSqlAcceptanceTest extends PostgreSqlIntegra
         jdbc.update("INSERT INTO app_role(id,name,description,active) VALUES(?,'DISPATCHER','Dispatcher',TRUE)",UUID.randomUUID());
         jdbc.update("INSERT INTO app_role(id,name,description,active) VALUES(?,'LOCAL_MVP_ADMIN','Local admin',TRUE)",UUID.randomUUID());
         flyway.migrate();
-        assertThat(jdbc.queryForObject("SELECT max(version::integer) FROM flyway_schema_history WHERE success",Integer.class)).isEqualTo(104);
+        assertThat(jdbc.queryForObject("SELECT max(version::integer) FROM flyway_schema_history WHERE success",Integer.class)).isEqualTo(105);
         assertThat(jdbc.queryForObject("SELECT count(*) FROM app_permission WHERE code IN ('IDLE_MONITOR_VIEW','IDLE_EVENT_VIEW') AND active",Integer.class)).isEqualTo(2);
         assertThat(jdbc.queryForObject("SELECT count(*) FROM app_role_permission rp JOIN app_role r ON r.id=rp.role_id WHERE rp.permission_code IN ('IDLE_MONITOR_VIEW','IDLE_EVENT_VIEW') AND r.name IN ('ADMIN','DISPATCHER')",Integer.class)).isEqualTo(4);
         assertThat(jdbc.queryForObject("SELECT count(*) FROM app_role_permission rp JOIN app_role r ON r.id=rp.role_id WHERE rp.permission_code IN ('IDLE_MONITOR_VIEW','IDLE_EVENT_VIEW') AND r.name='LOCAL_MVP_ADMIN'",Integer.class)).isZero();

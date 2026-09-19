@@ -50,7 +50,7 @@ class Us51V101PersistencePostgreSqlAcceptanceTest {
     void cleanV1ToV101CreatesOnlyTheAuthorizedV3Boundary() {
         cleanAndMigrate();
 
-        assertThat(version()).isEqualTo("104");
+        assertThat(version()).isEqualTo("105");
         assertThat(jdbc.queryForList("""
                 SELECT column_name FROM information_schema.columns
                 WHERE table_schema='public' AND table_name='tracking_position_history'
@@ -75,7 +75,7 @@ class Us51V101PersistencePostgreSqlAcceptanceTest {
 
         flyway.migrate();
 
-        assertThat(version()).isEqualTo("104");
+        assertThat(version()).isEqualTo("105");
         assertThat(jdbc.queryForMap("SELECT event_version,engine_state,ignition_state,"
                 + "engine_running_state,engine_running_source FROM tracking_position_history "
                 + "WHERE tenant_id=? AND id=?", tenant, history))

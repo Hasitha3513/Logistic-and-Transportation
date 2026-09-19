@@ -275,7 +275,7 @@ acceptance and operator sign-off.
 | D4 | Two samples, five minutes; summed capped deltas; explicit engine stop immediate; movement needs two samples/30 seconds | Freezes confirmation/recovery/duration |
 | D5 | One Tenant/Vehicle open episode; canonical dedupe; advisory lock; durable leased `IDLE` dispatch; reassignment/capability boundaries close safely | Freezes idempotency/restart behavior |
 | D6 | Additive V3 with exact separated fields/topic/DLT; V1/V2 immutable and ineligible for idle | Authorizes compatible event evolution |
-| D7 | V101 history/capability, V102 idle/dispatch, V103 candidate correction, proposed V104 permissions only | V103 is the explicitly authorized prerequisite correction; the unchanged CS05 permission boundary is resequenced to V104 |
+| D7 | V101 history/capability, V102 idle/dispatch, V103 candidate correction, V104 permissions, V105 query-index hardening | V105 adds only the three Tenant-aligned state, episode and IDLE-dispatch indexes authorized for CS07 |
 | D8 | No Phase-1 Notification or Operations fact | Prevents invented escalation scope |
 | D9 | Four exact read-only routes, two permissions, 31-day range, 50/100 page limits, no-store/privacy/audit/UI rules | Freezes public/read security surface |
 | D10 | Fuel estimate `UNAVAILABLE`; no generic rate or cross-module persistence query | Prevents misleading waste claims |
@@ -291,15 +291,16 @@ acceptance and operator sign-off.
 | `US-51-MONITOR-IDLE-TIME-CS04-EVALUATOR-001` — COMPLETE | V103 candidate persistence plus the approved D1-D5 evaluator; durable IDLE claiming is active with committed effects before lease completion | CS03 | Threshold/gap/reassignment tests, V102→V103 populated upgrade, restart/discard/promotion, append-only retention, concurrent lease/retry, architecture and complete regression gates |
 | CS05 V104 APIs/RBAC/audit | **COMPLETE** — two permissions and exact read-only bounded endpoints | CS03-CS04 and permission authorization | Literal HTTP allow/deny, Tenant A/B, cursor/privacy/audit tests pass; routes can be disabled without data loss |
 | CS06 frontend — COMPLETE | Permission-aware state/history/detail/evidence pages with session-scoped caches and truthful unavailable states | CS05 | Component, accessibility, session-clearing, TypeScript/build and Chromium evidence recorded in the CS06 closure report |
-| CS07 PostgreSQL/Kafka performance/recovery | Concurrency, leases, dedupe, query plans and bounded workload | CS01-CS06 | No deadlocks/duplicates/leaks; controlled measurements, not production SLOs; production capability still unavailable |
+| CS07 PostgreSQL/Kafka performance/recovery — COMPLETE | V105 query indexes, concurrency, leases, dedupe, recovery, query plans and bounded workload | CS01-CS06 | Focused 26/26, Maven 1,952/1,952, architecture 59/59, frontend 346/346 and Chromium 4/4 pass; measurements are not production SLOs |
 | Technical closure | Consolidated mandatory gates and evidence | CS01-CS07 | Full backend, architecture/static, frontend and Chromium gates pass |
 | Final acceptance | Genuine engine-running field journey | Technical closure plus external prerequisites | Independent physical/provider/operator matrix passes |
 
 ## Consolidated implementation authorization request
 
 Approve D1-D11 and authorize CS01-CS07 as separate governed commits, including additive canonical
-V3 and forward migrations V101-V104 are implemented. V104 contains only the approved permission
-catalogue and existing ADMIN/DISPATCHER grants. CS06 frontend is complete; `CS07 PostgreSQL/Kafka performance/recovery` is the next approved change set.
+V3 and forward migrations V101-V105 are implemented. V104 contains only the approved permission
+catalogue and existing ADMIN/DISPATCHER grants. V105 contains only the three authorized CS07
+indexes. CS07 is complete; `US-51-MONITOR-IDLE-TIME-TECHNICAL-CLOSURE-001` is next.
 The first executable task will be newly identified as
 `US-51-MONITOR-IDLE-TIME-CS01-CANONICAL-ENGINE-SEMANTICS-001`. It may implement V3 contracts,
 dual-consumer compatibility and test-profile fixtures without a physical source. All production
