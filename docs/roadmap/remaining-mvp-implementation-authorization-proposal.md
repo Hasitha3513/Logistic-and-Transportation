@@ -15,18 +15,20 @@ an approved task identifier or treating an external acceptance hold as a technic
 - Other Tracking external holds: US-48, US-50, US-52, US-53 and US-54.
 - US-51 is technically complete; production engine-running source activation and physical acceptance remain
   separately pending.
-- US-72 has been selected for prerequisite analysis, but no implementation task is authorized.
+- US-72 CS01 inactive structural foundations are complete; D1–D11 and qualified policy authority still
+  block CS02 and all runtime behavior.
 
-## Current recommendation
+## Current recommendation after CS01
 
-US-51 technical closure is preserved at V105. The recommended next independent workstream is US-72,
-because its accepted platform prerequisites are present and its software does not depend on physical GPS
-evidence. The proposed decision package is
-`docs/product-decisions/US-72-ENFORCE-COMPLIANCE-PREREQUISITE-AND-PRODUCT-DECISIONS-001.md`.
-US-72 implementation remains unauthorized until product and qualified policy authorities approve the
-material decisions.
+US-51 technical closure and US-72 CS01 are preserved at V105. No independently executable implementation
+task is authorized. The 14-story evidence is reconciled in
+`docs/roadmap/REMAINING-MVP-DEPENDENCY-RECONCILIATION-001.md`. The recommended next governance workstream
+is the newly proposed, documentation-only
+`US-87-DETECT-USER-RISK-PREREQUISITE-AND-PRODUCT-DECISIONS-001`, because its accepted Identity, Audit,
+Workflow and Operations prerequisites allow decision analysis without physical Tracking evidence or active
+Compliance policy. It remains unapproved until the user authorizes that review.
 
-## Selected candidate analysis: US-72 Enforce Compliance
+## Previously selected candidate: US-72 Enforce Compliance
 
 The roadmap orders US-72 before US-76 and Wave E. US-47 supplies the billing/tax fact boundary, and
 US-74/75/77/80/81/83 plus Wave A foundations are complete. Externally blocked Tracking acceptances are not
@@ -105,6 +107,7 @@ contextual ABAC; and whether the requester may approve an override or appeal.
 
 ## Decision required
 
-Approve a governed US-72 product-decision task with the boundaries above and supply or designate
-the regulatory/tax policy authority. Until then, preserve the external acceptance queues and do
-not create a migration, permission, API, event or implementation task.
+Either approve the outstanding US-72 D1–D11 package with a qualified policy authority, or authorize the
+proposed US-87 prerequisite/product-decision review using the self-contained prompt in the reconciliation
+document. Until then, preserve all external acceptance queues and do not create a migration, permission,
+API, event or implementation task.

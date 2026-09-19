@@ -241,7 +241,7 @@ Development startup now consistently provisions the idempotent PostgreSQL sample
 | `US-84` | Handle Global System Failures | Outage, replication lag, third-party downtime, queue backlog, clock drift, degraded mode and verified recovery | 🟡 `WAVE E / LATER_WAVE` | Code + infrastructure + runbook evidence required |
 | `US-85` | Protect Data Integrity | Duplicate/orphan/mismatch/master-data detection, quarantine and audited owner correction | 🟡 `WAVE E / BLOCKED_BY_DEPENDENCY` | Requires US-48 for complete GPS/trip mismatch scope |
 | `US-86` | Handle Operational Disruptions | Disaster/restriction/strike/border/demand constraints and coordinated replanning | 🟡 `WAVE E / BLOCKED_BY_DEPENDENCY` | Requires US-78 and tracking/routing/scheduling contracts |
-| `US-87` | Detect User Risk | Explainable override, missing-field, fraud, shared-login and delayed-reporting controls | 🟡 `WAVE E / LATER_WAVE` | No opaque ML or automatic punitive decisions |
+| `US-87` | Detect User Risk | Explainable override, missing-field, fraud, shared-login and delayed-reporting controls | 🟡 `PREREQUISITE_REVIEW_PROPOSED / IMPLEMENTATION_NOT_AUTHORIZED` | Recommended independent governance candidate; deterministic signals, enforcement/review, IdP and privacy decisions remain unapproved |
 
 ---
 
@@ -249,7 +249,7 @@ Development startup now consistently provisions the idempotent PostgreSQL sample
 
 ```
 Current Status: 73 / 87 COMPLETE; 14 stories remain across Waves C–E
-Queue Head:     NONE AUTHORIZED — US-72 D1–D11 and qualified policy authority approval required before CS02
+Queue Head:     NONE AUTHORIZED — US-87 prerequisite/product-decision review is recommended but not approved
 Open Acceptance: US-55-HANDLE-GPS-EDGE-CASES-FINAL-ACCEPTANCE-001
 Deferred:       US-53-REPLAY-JOURNEYS-FINAL-ACCEPTANCE-001; US-54-VIEW-TRACKING-DASHBOARD-FINAL-ACCEPTANCE-001
 ```
@@ -258,7 +258,7 @@ Deferred:       US-53-REPLAY-JOURNEYS-FINAL-ACCEPTANCE-001; US-54-VIEW-TRACKING-
 2. **Wave B — Fuel control and financial links:** 5 / 5 COMPLETE / CLOSED (US-35, US-37, US-38, US-46, US-47).
 3. **Wave C — GPS and telematics:** US-48, US-50, US-51, US-52, US-53, US-54 and US-55 physical acceptance are on independent external-prerequisite holds; US-49 is accepted. US-51 technical closure passes at V105, while production engine-running activation and physical acceptance remain separate gates with no executable task identifier yet authorized.
 4. **Wave D — Compliance and field mobility:** US-72 CS01 inactive domain foundations are complete without schema, APIs, permissions, events or runtime activation. D1–D11 and qualified policy authority remain unapproved; physical Tracking holds are not dependencies for the non-telemetry Phase-1 catalogue. US-76 remains downstream.
-5. **Wave E — Analytics, integrity, resilience, disruption and user risk:** US-85, US-84, US-87, US-82, US-86.
+5. **Wave E — Analytics, integrity, resilience, disruption and user risk:** No implementation task is authorized. US-87 prerequisite/product-decision review is the recommended independent governance candidate because its core Identity/Audit/Workflow/Operations foundations are accepted; it remains proposed, not approved. US-85, US-84, US-82 and US-86 retain their documented dependencies.
 6. After 87/87: `FULL-SOURCE-PARITY-AUDIT-001`, then `FULL-PLATFORM-END-TO-END-ACCEPTANCE-001` after authorized parity disposition.
 
 Detailed dependencies, readiness/done gates, scores, rollback plans, source-parity links and exact 65→87 acceptance order are governed by `docs/roadmap/FULL-PRODUCT-87-STORY-COMPLETION-ROADMAP.md`.
