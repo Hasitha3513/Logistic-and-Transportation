@@ -4,12 +4,34 @@
 
 ```text
 Decision package: PROPOSED / NOT APPROVED
-Implementation: NOT AUTHORIZED
+CS01 inactive domain foundations: AUTHORIZED / COMPLETE
+Policy evaluation and production enforcement: NOT AUTHORIZED
 Migration: NOT AUTHORIZED OR RESERVED
 Permission/API/event activation: NOT AUTHORIZED
 Completed stories: 73 / 87
 Flyway head at review: V105
 ```
+
+## Narrow CS01 authorization
+
+`US-72-ENFORCE-COMPLIANCE-CS01-DOMAIN-PORTS-001` is authorized only for inactive,
+framework-neutral foundations. This authorization does not approve D1-D11, select a jurisdiction,
+designate policy authority, activate a policy, or establish legal, regulatory or tax meaning.
+
+CS01 may define Tenant-qualified policy/version references, opaque jurisdiction/scope references,
+effective-time values, the seven structural check identifiers, evidence-state vocabulary, minimized
+source-fact references, evaluation request/result structures, decision-effect vocabulary and only those
+owner-specific query ports whose current source facts are sufficiently defined.
+
+The following remain explicitly unapproved: mandatory/advisory classification, thresholds, aggregation
+precedence, operational enforcement, override/appeal behavior, retention duration, authority assignments,
+policy publication, persistence, migrations, APIs, permissions, events and frontend behavior. Missing policy
+authority or configuration can produce only an unavailable/unevaluated result; it cannot produce `ALLOW`
+or be translated into an operational block without a separately approved integration policy.
+
+Current source-contract review permits structural query ports for Fleet vehicle-document facts,
+Fleet-owned Driver eligibility facts, Freight cargo/hazmat facts and Billing supplied tax facts. Regional
+operation and retention-disposition source meanings are not sufficiently defined and remain deferred.
 
 This package selects US-72 as the recommended next independent MVP workstream and consolidates the
 material decisions that must be approved before implementation. It does not assert any jurisdictional
@@ -114,7 +136,8 @@ These are proposals, not authorized contracts.
 
 ## Proposed bounded implementation sequence
 
-These identifiers are newly proposed planning labels and are not authorized tasks.
+These identifiers are governed planning labels. Only CS01 has received a narrow authorization and is
+complete as inactive structure; CS02–CS07 remain unauthorized proposals.
 
 1. `US-72-ENFORCE-COMPLIANCE-CS01-DOMAIN-PORTS-001` — framework-neutral policy, evidence,
    decision and typed fact contracts; no schema, API, permission or activation.
@@ -133,18 +156,23 @@ These identifiers are newly proposed planning labels and are not authorized task
 
 ## Approval gate
 
-Before CS01 may execute, the product owner must approve D1-D11, identify the initial jurisdiction/policy
-scope and designate qualified regulatory/tax authority. The authority must approve the Phase-1 catalogue,
-mandatory/advisory classification, effects, overrideability and retention rules. Until then, US-72 remains
-`PREREQUISITE_DECISION_PACKAGE_PROPOSED / IMPLEMENTATION_NOT_AUTHORIZED`.
+The narrow CS01 authorization permits only the inactive structural foundations recorded above. Before
+CS02 or any policy evaluation, persistence, integration or production enforcement may execute, the product
+owner must approve D1-D11, identify the initial jurisdiction/policy scope and designate qualified
+regulatory/tax authority. That authority must approve the Phase-1 catalogue, mandatory/advisory
+classification, effects, overrideability and retention rules. Until then, US-72 remains
+`IMPLEMENTATION_IN_PROGRESS / CS01_COMPLETE_INACTIVE / POLICY_APPROVAL_PENDING`.
 
 Software implementation after approval does not require a physical GPS device because this Phase-1 package
 does not consume telemetry. All existing Tracking production-source and physical-acceptance holds remain
 unchanged and cannot be inherited as US-72 acceptance evidence.
 
-## Self-contained authorization prompt for the first slice
+## Historical full-package authorization proposal
 
 ```text
+The following original proposal is retained for traceability. Its full-package conditions were not used
+to infer approval from the narrower CS01 authorization:
+
 Approve D1-D11 in
 docs/product-decisions/US-72-ENFORCE-COMPLIANCE-PREREQUISITE-AND-PRODUCT-DECISIONS-001.md
 and execute the newly proposed first change set:

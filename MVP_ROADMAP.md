@@ -220,7 +220,7 @@ Development startup now consistently provisions the idempotent PostgreSQL sample
 | ID | User Story Title | Scope / Feature | Status | Verification Evidence |
 | :---: | :--- | :--- | :---: | :--- |
 | `US-71` | Support Offline Data Sync | Generic IndexedDB sync framework, idempotency | 🟢 `COMPLETE` | `OfflineSyncCoordinatorTest`, V29 |
-| `US-72` | Enforce Compliance | Vehicle, driver, cargo/hazmat, tax, regional and retention decisions | 🟡 `PREREQUISITE_DECISION_PACKAGE_PROPOSED / IMPLEMENTATION_NOT_AUTHORIZED` | US-47 and platform prerequisites are satisfied; D1–D11, initial jurisdiction and qualified policy authority still require approval |
+| `US-72` | Enforce Compliance | Vehicle, driver, cargo/hazmat, tax, regional and retention decisions | 🟡 `IMPLEMENTATION_IN_PROGRESS / CS01_COMPLETE_INACTIVE / POLICY_APPROVAL_PENDING` | Inactive framework-neutral foundations complete; D1–D11, initial jurisdiction and qualified policy authority still require approval before CS02 or runtime behavior |
 | `US-73` | Manage External Integrations | Provider-neutral endpoint/configuration, mapping, exchange, status, retry and error handling | 🟢 `COMPLETE` | Independent final acceptance PASS: V61, focused 24/24, regressions 40/40, Maven 1,276/0/0/15, architecture 44/44, real Chromium 6/6; controlled outbound JSON-file capability only |
 | `US-74` | Manage Security | JWT authentication, multi-tenant RBAC | 🟢 `COMPLETE` | `SecurityAccessTest`, `TenantFilterTest` |
 | `US-75` | Maintain Audit and Reports | Comprehensive audit log trail, CSV exports | 🟢 `COMPLETE` | `AuditLogTest`, `AuditReportTest` |
@@ -249,7 +249,7 @@ Development startup now consistently provisions the idempotent PostgreSQL sample
 
 ```
 Current Status: 73 / 87 COMPLETE; 14 stories remain across Waves C–E
-Queue Head:     NONE AUTHORIZED — US-72 prerequisite decision package awaits product/policy approval
+Queue Head:     NONE AUTHORIZED — US-72 D1–D11 and qualified policy authority approval required before CS02
 Open Acceptance: US-55-HANDLE-GPS-EDGE-CASES-FINAL-ACCEPTANCE-001
 Deferred:       US-53-REPLAY-JOURNEYS-FINAL-ACCEPTANCE-001; US-54-VIEW-TRACKING-DASHBOARD-FINAL-ACCEPTANCE-001
 ```
@@ -257,7 +257,7 @@ Deferred:       US-53-REPLAY-JOURNEYS-FINAL-ACCEPTANCE-001; US-54-VIEW-TRACKING-
 1. **Wave A — Integration and exception-control foundations:** 2 / 2 COMPLETE / CLOSED (US-73 and US-78).
 2. **Wave B — Fuel control and financial links:** 5 / 5 COMPLETE / CLOSED (US-35, US-37, US-38, US-46, US-47).
 3. **Wave C — GPS and telematics:** US-48, US-50, US-51, US-52, US-53, US-54 and US-55 physical acceptance are on independent external-prerequisite holds; US-49 is accepted. US-51 technical closure passes at V105, while production engine-running activation and physical acceptance remain separate gates with no executable task identifier yet authorized.
-4. **Wave D — Compliance and field mobility:** US-72 is selected as the next independent candidate. Its consolidated prerequisite package is proposed, not approved; physical Tracking holds are not dependencies for the non-telemetry Phase-1 catalogue. US-76 remains downstream.
+4. **Wave D — Compliance and field mobility:** US-72 CS01 inactive domain foundations are complete without schema, APIs, permissions, events or runtime activation. D1–D11 and qualified policy authority remain unapproved; physical Tracking holds are not dependencies for the non-telemetry Phase-1 catalogue. US-76 remains downstream.
 5. **Wave E — Analytics, integrity, resilience, disruption and user risk:** US-85, US-84, US-87, US-82, US-86.
 6. After 87/87: `FULL-SOURCE-PARITY-AUDIT-001`, then `FULL-PLATFORM-END-TO-END-ACCEPTANCE-001` after authorized parity disposition.
 
