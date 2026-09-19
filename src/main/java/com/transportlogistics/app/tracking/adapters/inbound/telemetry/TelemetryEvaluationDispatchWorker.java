@@ -11,6 +11,7 @@ import com.transportlogistics.app.tracking.domain.routedeviation.RoutePoint;
 import com.transportlogistics.app.tracking.domain.speed.SpeedKph;
 import com.transportlogistics.app.tracking.domain.speed.SpeedPosition;
 import com.transportlogistics.app.tracking.ports.inbound.GeofenceEvaluationUseCase;
+import com.transportlogistics.app.tracking.ports.inbound.IdleEvaluationUseCase;
 import com.transportlogistics.app.tracking.ports.inbound.RouteDeviationEvaluationUseCase;
 import com.transportlogistics.app.tracking.ports.inbound.SpeedEvaluationUseCase;
 import com.transportlogistics.app.tracking.ports.outbound.HistoricalTelemetryLookupPort;
@@ -34,6 +35,7 @@ final class TelemetryEvaluationDispatchWorker {
     private final GeofenceEvaluationUseCase geofence;
     private final SpeedEvaluationUseCase speed;
     private final RouteDeviationEvaluationUseCase routeDeviation;
+    private final IdleEvaluationUseCase idle;
     private final TenantContextExecutor tenantContexts;
     private final MeterRegistry meters;
     private final Clock clock;
@@ -42,15 +44,18 @@ final class TelemetryEvaluationDispatchWorker {
     TelemetryEvaluationDispatchWorker(TelemetryEvaluationDispatchPort dispatches,
             HistoricalTelemetryLookupPort history, GeofenceEvaluationUseCase geofence,
             SpeedEvaluationUseCase speed, RouteDeviationEvaluationUseCase routeDeviation,
-            TenantContextExecutor tenantContexts, MeterRegistry meters, Clock clock) {
+            IdleEvaluationUseCase idle, TenantContextExecutor tenantContexts,
+            MeterRegistry meters, Clock clock) {
         this.dispatches=dispatches;this.history=history;this.geofence=geofence;this.speed=speed;
-        this.routeDeviation=routeDeviation;this.tenantContexts=tenantContexts;this.meters=meters;this.clock=clock;
+        this.routeDeviation=routeDeviation;this.idle=idle;this.tenantContexts=tenantContexts;
+        this.meters=meters;this.clock=clock;
     }
 
     @Scheduled(fixedDelayString = "${app.tracking.hybrid-storage.evaluation-delay:1000}")
     void tick() {
         Instant now=clock.instant();
         for (var job:dispatches.claim(owner,now,now.plusSeconds(30),100)) process(job);
+        for (var job:dispatches.claimIdle(owner,now,now.plusSeconds(30),100)) process(job);
     }
 
     private void process(TelemetryEvaluationDispatchPort.Dispatch job) {
@@ -76,7 +81,8 @@ final class TelemetryEvaluationDispatchWorker {
 
     private void evaluate(TelemetryEvaluationDispatchPort.Evaluator evaluator,
             HistoricalTelemetry fact, Instant now) {
-        if (!detectorEligible(fact, now)) {
+        if (evaluator != TelemetryEvaluationDispatchPort.Evaluator.IDLE
+                && !detectorEligible(fact, now)) {
             meters.counter("tracking.telemetry.evaluation.dispatch", "result", "guarded",
                     "evaluator", evaluator.name()).increment();
             return;
@@ -97,7 +103,7 @@ final class TelemetryEvaluationDispatchWorker {
                             fact.horizontalAccuracyMeters().doubleValue()),
                     true,false,RouteDeviationPosition.Trust.valueOf(fact.trust().name()),true,
                     RouteDeviationPosition.Ordering.valueOf(fact.ordering().name())));
-            case IDLE -> throw new IllegalStateException("IDLE_EVALUATOR_NOT_ACTIVE");
+            case IDLE -> idle.evaluate(fact, now);
         }
     }
 

@@ -18,6 +18,7 @@ import com.transportlogistics.app.tracking.domain.geofence.GeofencePosition;
 import com.transportlogistics.app.tracking.domain.routedeviation.RouteDeviationPosition;
 import com.transportlogistics.app.tracking.domain.speed.SpeedPosition;
 import com.transportlogistics.app.tracking.ports.inbound.GeofenceEvaluationUseCase;
+import com.transportlogistics.app.tracking.ports.inbound.IdleEvaluationUseCase;
 import com.transportlogistics.app.tracking.ports.inbound.RouteDeviationEvaluationUseCase;
 import com.transportlogistics.app.tracking.ports.inbound.SpeedEvaluationUseCase;
 import com.transportlogistics.app.tracking.ports.outbound.HistoricalTelemetryLookupPort;
@@ -109,6 +110,26 @@ class TelemetryEvaluationDispatchWorkerTest {
         verify(dispatches, never()).complete(any(), anyString(), any());
     }
 
+    @Test
+    void idleReplayUsesItsSourceTimeRulesInsteadOfTheLiveDetectorAgeGuard() {
+        var dispatches = mock(TelemetryEvaluationDispatchPort.class);
+        var history = mock(HistoricalTelemetryLookupPort.class);
+        var idle = mock(IdleEvaluationUseCase.class);
+        var fact = fact(UUID.randomUUID());
+        var dispatch = job(fact, Evaluator.IDLE, 1);
+        when(dispatches.claimIdle(anyString(), any(), any(), anyInt()))
+                .thenReturn(List.of(dispatch));
+        when(history.findExact(fact.tenantId(), fact.recordedAt(), fact.eventId()))
+                .thenReturn(Optional.of(fact));
+
+        worker(dispatches, history, mock(GeofenceEvaluationUseCase.class),
+                mock(SpeedEvaluationUseCase.class), mock(RouteDeviationEvaluationUseCase.class),
+                idle).tick();
+
+        verify(idle).evaluate(org.mockito.ArgumentMatchers.eq(fact), any(Instant.class));
+        verify(dispatches).complete(org.mockito.ArgumentMatchers.eq(dispatch.id()), anyString(), any());
+    }
+
     private static TelemetryEvaluationDispatchWorker worker(
             TelemetryEvaluationDispatchPort dispatches, HistoricalTelemetryLookupPort history,
             GeofenceEvaluationUseCase geofence, SpeedEvaluationUseCase speed,
@@ -120,7 +141,23 @@ class TelemetryEvaluationDispatchWorkerTest {
             }
         };
         return new TelemetryEvaluationDispatchWorker(dispatches, history, geofence, speed,
-                routeDeviation, tenantContexts, new SimpleMeterRegistry(),
+                routeDeviation, (telemetry, evaluatedAt) -> { }, tenantContexts,
+                new SimpleMeterRegistry(),
+                Clock.fixed(NOW, ZoneOffset.UTC));
+    }
+
+    private static TelemetryEvaluationDispatchWorker worker(
+            TelemetryEvaluationDispatchPort dispatches, HistoricalTelemetryLookupPort history,
+            GeofenceEvaluationUseCase geofence, SpeedEvaluationUseCase speed,
+            RouteDeviationEvaluationUseCase routeDeviation, IdleEvaluationUseCase idle) {
+        TenantContextExecutor tenantContexts = new TenantContextExecutor() {
+            @Override
+            public <T> T within(TenantExecutionContext context, Supplier<T> work) {
+                return work.get();
+            }
+        };
+        return new TelemetryEvaluationDispatchWorker(dispatches, history, geofence, speed,
+                routeDeviation, idle, tenantContexts, new SimpleMeterRegistry(),
                 Clock.fixed(NOW, ZoneOffset.UTC));
     }
 

@@ -19,7 +19,8 @@ public final class IdlePersistenceModels {
     public record State(UUID tenantId, UUID vehicleId, UUID deviceId, StateValue state,
             CapabilityState capabilityState, Instant latestSourceTimestamp,
             Instant candidateStartedAt, Instant lastQualifyingAt, long creditedSeconds,
-            int evidenceCount, UUID openEpisodeId, String lastDedupeIdentity, long version) {
+            int evidenceCount, UUID openEpisodeId, UUID referenceHistoryId,
+            Instant recoveryStartedAt, String lastDedupeIdentity, long version) {
         public State {
             Objects.requireNonNull(tenantId); Objects.requireNonNull(vehicleId);
             Objects.requireNonNull(deviceId); Objects.requireNonNull(state);

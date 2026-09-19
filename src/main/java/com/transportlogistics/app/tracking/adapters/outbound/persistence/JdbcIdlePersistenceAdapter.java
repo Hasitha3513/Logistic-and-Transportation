@@ -36,6 +36,12 @@ final class JdbcIdlePersistenceAdapter implements IdlePersistencePort {
     }
 
     @Override
+    public Optional<Episode> findEpisode(UUID tenantId, UUID episodeId) {
+        return jdbc.query("SELECT * FROM tracking_idle_episode WHERE tenant_id=? AND id=?",
+                this::mapEpisode, tenantId, episodeId).stream().findFirst();
+    }
+
+    @Override
     public PersistResult persist(Mutation mutation) {
         return transactions.execute(status -> persistAtomically(mutation));
     }
@@ -114,12 +120,14 @@ final class JdbcIdlePersistenceAdapter implements IdlePersistencePort {
                     INSERT INTO tracking_idle_state(
                      tenant_id,vehicle_id,device_id,state,capability_state,latest_source_timestamp,
                      candidate_started_at,last_qualifying_at,credited_seconds,evidence_count,
-                     open_episode_id,last_dedupe_identity,version,created_at,updated_at)
-                    VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,now(),now())
+                     open_episode_id,reference_history_id,recovery_started_at,last_dedupe_identity,
+                     version,created_at,updated_at)
+                    VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,now(),now())
                     """, state.tenantId(), state.vehicleId(), state.deviceId(), state.state().name(),
                     state.capabilityState().name(), timestamp(state.latestSourceTimestamp()),
                     timestamp(state.candidateStartedAt()), timestamp(state.lastQualifyingAt()),
                     state.creditedSeconds(), state.evidenceCount(), state.openEpisodeId(),
+                    state.referenceHistoryId(), timestamp(state.recoveryStartedAt()),
                     state.lastDedupeIdentity(), state.version());
             changed(changed, "Idle state create conflict");
             return;
@@ -127,13 +135,15 @@ final class JdbcIdlePersistenceAdapter implements IdlePersistencePort {
         int changed = jdbc.update("""
                 UPDATE tracking_idle_state SET device_id=?,state=?,capability_state=?,
                  latest_source_timestamp=?,candidate_started_at=?,last_qualifying_at=?,
-                 credited_seconds=?,evidence_count=?,open_episode_id=?,last_dedupe_identity=?,
+                 credited_seconds=?,evidence_count=?,open_episode_id=?,reference_history_id=?,
+                 recovery_started_at=?,last_dedupe_identity=?,
                  version=version+1,updated_at=now()
                 WHERE tenant_id=? AND vehicle_id=? AND version=?
                 """, state.deviceId(), state.state().name(), state.capabilityState().name(),
                 timestamp(state.latestSourceTimestamp()), timestamp(state.candidateStartedAt()),
                 timestamp(state.lastQualifyingAt()), state.creditedSeconds(), state.evidenceCount(),
-                state.openEpisodeId(), state.lastDedupeIdentity(), state.tenantId(), state.vehicleId(),
+                state.openEpisodeId(), state.referenceHistoryId(), timestamp(state.recoveryStartedAt()),
+                state.lastDedupeIdentity(), state.tenantId(), state.vehicleId(),
                 mutation.expectedStateVersion());
         changed(changed, "Idle state optimistic conflict");
     }
@@ -149,8 +159,25 @@ final class JdbcIdlePersistenceAdapter implements IdlePersistencePort {
                 row.getTimestamp("latest_source_timestamp").toInstant(),
                 instant(row, "candidate_started_at"), instant(row, "last_qualifying_at"),
                 row.getLong("credited_seconds"), row.getInt("evidence_count"),
-                row.getObject("open_episode_id", UUID.class), row.getString("last_dedupe_identity"),
+                row.getObject("open_episode_id", UUID.class),
+                row.getObject("reference_history_id", UUID.class), instant(row, "recovery_started_at"),
+                row.getString("last_dedupe_identity"),
                 row.getLong("version"));
+    }
+
+    @SuppressWarnings("PMD.UnusedFormalParameter")
+    private Episode mapEpisode(ResultSet row, int number) throws SQLException {
+        String endReason = row.getString("end_reason");
+        return new Episode(row.getObject("id", UUID.class), row.getObject("tenant_id", UUID.class),
+                row.getObject("vehicle_id", UUID.class), row.getObject("device_id", UUID.class),
+                com.transportlogistics.app.tracking.domain.idle.IdlePersistenceModels.EpisodeLifecycle
+                        .valueOf(row.getString("lifecycle")),
+                row.getTimestamp("start_source_timestamp").toInstant(), instant(row, "confirmed_at"),
+                row.getTimestamp("last_source_timestamp").toInstant(), instant(row, "end_source_timestamp"),
+                endReason == null ? null
+                        : com.transportlogistics.app.tracking.domain.idle.IdlePersistenceModels.EndReason
+                                .valueOf(endReason),
+                row.getLong("credited_seconds"), row.getInt("evidence_count"), row.getLong("version"));
     }
 
     private static Instant instant(ResultSet row, String column) throws SQLException {

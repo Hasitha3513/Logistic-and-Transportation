@@ -23,7 +23,9 @@ import org.springframework.test.context.TestPropertySource;
         "app.tracking.hybrid-storage.evaluation-delay=3600000"
 })
 class TelemetryEvaluationDispatchConcurrencyPostgreSqlAcceptanceTest extends PostgreSqlIntegrationTest {
-    private static final Instant NOW = Instant.parse("2026-09-14T12:00:00Z");
+    // Keep fixtures ahead of the application scheduler's wall clock so only the explicit
+    // repository claims exercised by this test can acquire them.
+    private static final Instant NOW = Instant.parse("2099-09-14T12:00:00Z");
 
     @Autowired TelemetryEvaluationDispatchPort dispatches;
     @Autowired JdbcTemplate jdbc;

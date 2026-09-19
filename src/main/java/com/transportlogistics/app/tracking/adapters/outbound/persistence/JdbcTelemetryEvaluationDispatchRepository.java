@@ -87,7 +87,7 @@ final class JdbcTelemetryEvaluationDispatchRepository implements TelemetryEvalua
                 SET status='PROCESSING',attempt_count=attempt_count+1,lease_owner=?,lease_until=?,
                     completed_at=NULL,last_error_code=NULL,updated_at=?,version=version+1
                 FROM due WHERE d.dispatch_id=due.dispatch_id RETURNING d.*
-                """.formatted(evaluatorFilter);
+                """.replace("%s", evaluatorFilter);
         return transactions.execute(status -> List.copyOf(jdbc.query(sql, this::map,
                 ts(now), ts(now), limit, owner, ts(leaseUntil), ts(now))));
     }

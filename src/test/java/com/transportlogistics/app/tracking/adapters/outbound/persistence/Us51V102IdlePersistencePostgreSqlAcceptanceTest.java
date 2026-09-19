@@ -53,7 +53,7 @@ class Us51V102IdlePersistencePostgreSqlAcceptanceTest {
                 DATABASE.getJdbcUrl(), DATABASE.getUsername(), DATABASE.getPassword());
         AcceptanceDatabaseGuard.verify(dataSource);
         jdbc = new JdbcTemplate(dataSource);
-        flyway = Flyway.configure().dataSource(dataSource).cleanDisabled(false).target("102")
+        flyway = Flyway.configure().dataSource(dataSource).cleanDisabled(false).target("103")
                 .placeholders(HybridTelemetryTimescaleMigrationAcceptanceTest.placeholdersForTs04())
                 .load();
         persistence = new JdbcIdlePersistenceAdapter(jdbc,
@@ -74,13 +74,14 @@ class Us51V102IdlePersistencePostgreSqlAcceptanceTest {
 
     @Test
     void cleanMigrationCreatesExactAuthorizedBoundaryAndV101UpgradePreservesHistory() {
-        assertThat(version()).isEqualTo("102");
+        assertThat(version()).isEqualTo("103");
         assertThat(jdbc.queryForList("""
                 SELECT table_name FROM information_schema.tables
                 WHERE table_schema='public' AND table_name LIKE 'tracking_idle_%'
                 ORDER BY table_name
                 """, String.class)).containsExactly(
-                        "tracking_idle_episode", "tracking_idle_episode_evidence", "tracking_idle_state");
+                        "tracking_idle_candidate_evidence", "tracking_idle_episode",
+                        "tracking_idle_episode_evidence", "tracking_idle_state");
         assertThat(jdbc.queryForList("""
                 SELECT indexname FROM pg_indexes WHERE schemaname='public'
                  AND indexname IN ('uq_tracking_idle_episode_open',
@@ -106,7 +107,7 @@ class Us51V102IdlePersistencePostgreSqlAcceptanceTest {
                 """, UUID.randomUUID(), Timestamp.from(NOW), history, UUID.randomUUID(),
                 UUID.randomUUID(), "a".repeat(64), Timestamp.from(NOW.plusSeconds(1)));
         flyway.migrate();
-        assertThat(version()).isEqualTo("102");
+        assertThat(version()).isEqualTo("103");
         assertThat(jdbc.queryForObject("SELECT count(*) FROM tracking_position_history WHERE id=?",
                 Integer.class, history)).isOne();
     }
@@ -194,11 +195,11 @@ class Us51V102IdlePersistencePostgreSqlAcceptanceTest {
     private static Mutation mutation(UUID tenant, UUID vehicle, UUID device, UUID episodeId,
             UUID evidenceId, UUID historyId, String dedupe, long stateVersion, long episodeVersion,
             boolean create) {
-        State state = new State(tenant, vehicle, device, StateValue.CANDIDATE,
-                CapabilityState.SUPPORTED, NOW, NOW, NOW, 0, 1, episodeId, dedupe,
+        State state = new State(tenant, vehicle, device, StateValue.IDLE,
+                CapabilityState.SUPPORTED, NOW, NOW, NOW, 0, 1, episodeId, null, null, dedupe,
                 stateVersion < 0 ? 0 : stateVersion + 1);
         Episode episode = new Episode(episodeId, tenant, vehicle, device,
-                EpisodeLifecycle.CANDIDATE, NOW, null, NOW, null, null, 0, 1,
+                EpisodeLifecycle.CONFIRMED, NOW, NOW, NOW, null, null, 0, 1,
                 episodeVersion < 0 ? 0 : episodeVersion + 1);
         Evidence evidence = new Evidence(evidenceId, tenant, episodeId, vehicle, device, historyId,
                 NOW, dedupe, EvidenceOutcome.QUALIFYING, "RUNNING", "DEVICE_NATIVE_CAN",
