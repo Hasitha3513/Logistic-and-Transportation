@@ -10,24 +10,27 @@ an approved task identifier or treating an external acceptance hold as a technic
 ## Current governed state
 
 - Completed stories: 73/87; remaining: 14/87.
-- Flyway head: V100.
+- Flyway head: V105.
 - Open external acceptance: `US-55-HANDLE-GPS-EDGE-CASES-FINAL-ACCEPTANCE-001`.
 - Other Tracking external holds: US-48, US-50, US-52, US-53 and US-54.
-- US-51 is blocked by the absence of an accepted engine-state source or proxy.
-- No existing task document authorizes the product decisions needed for US-72, US-76 or Wave E.
+- US-51 is technically complete; production engine-running source activation and physical acceptance remain
+  separately pending.
+- US-72 has been selected for prerequisite analysis, but no implementation task is authorized.
 
-## Superseded recommendation
+## Current recommendation
 
-The prior recommendation to begin US-72 is superseded by the explicit selection of US-51.
-The active governance package is
-`docs/product-decisions/US-51-MONITOR-IDLE-TIME-PREREQUISITE-AND-PRODUCT-DECISIONS-001.md`.
-US-72 remains a later candidate with its policy-authority blocker unchanged.
+US-51 technical closure is preserved at V105. The recommended next independent workstream is US-72,
+because its accepted platform prerequisites are present and its software does not depend on physical GPS
+evidence. The proposed decision package is
+`docs/product-decisions/US-72-ENFORCE-COMPLIANCE-PREREQUISITE-AND-PRODUCT-DECISIONS-001.md`.
+US-72 implementation remains unauthorized until product and qualified policy authorities approve the
+material decisions.
 
-## Prior candidate analysis: US-72 Enforce Compliance
+## Selected candidate analysis: US-72 Enforce Compliance
 
-The roadmap orders US-72 before US-76 and Wave E. US-47 already supplies the required billing/tax
-facts, but policy authority remains missing. Authorization should begin with product decisions,
-not schema or implementation.
+The roadmap orders US-72 before US-76 and Wave E. US-47 supplies the billing/tax fact boundary, and
+US-74/75/77/80/81/83 plus Wave A foundations are complete. Externally blocked Tracking acceptances are not
+dependencies for the proposed non-telemetry Phase-1 catalogue. Policy authority remains the blocker.
 
 ### Scope requiring approval
 
@@ -66,7 +69,7 @@ No contract is authorized by this proposal. A product-decision task should freez
 No migration is authorized yet. After contracts freeze, one forward-only migration would likely be
 needed for Tenant-leading policy/version, decision/evidence, override/appeal, history and durable
 idempotency structures. The exact next migration must be determined from the then-current Flyway
-head and approved DDL; V101 must not be reserved merely by this proposal.
+head and approved DDL; no migration number is reserved by this proposal.
 
 ### Proposed RBAC/ABAC and segregation of duties
 
@@ -92,7 +95,7 @@ contextual ABAC; and whether the requester may approve an override or appeal.
 
 | Candidate | Missing authorization or prerequisite |
 | --- | --- |
-| US-51 Monitor Idle Time | Accepted engine-state signal/proxy, gap semantics and fuel-estimate ownership |
+| US-51 Monitor Idle Time | Technically complete; production source activation and physical acceptance remain separate gates |
 | US-76 Support Mobile Operations | PWA/native choice, role/workflow matrix, device binding, offline protection, push/background policy and physical-device plan |
 | US-85 Protect Data Integrity | Owner-by-owner invariant/correction catalogue, published validators and complete GPS/trip mismatch dependency |
 | US-84 Handle Global System Failures | Responsibility matrix, supported degraded modes, monitoring/fault environment and truthful RTO/RPO basis |
