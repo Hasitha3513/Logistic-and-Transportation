@@ -300,7 +300,8 @@ acceptance and operator sign-off.
 Approve D1-D11 and authorize CS01-CS07 as separate governed commits, including additive canonical
 V3 and forward migrations V101-V105 are implemented. V104 contains only the approved permission
 catalogue and existing ADMIN/DISPATCHER grants. V105 contains only the three authorized CS07
-indexes. CS07 is complete; `US-51-MONITOR-IDLE-TIME-TECHNICAL-CLOSURE-001` is next.
+indexes. CS07 and `US-51-MONITOR-IDLE-TIME-TECHNICAL-CLOSURE-001` are complete; production-source
+activation and physical acceptance remain separate pending gates with no executable identifier authorized.
 The first executable task will be newly identified as
 `US-51-MONITOR-IDLE-TIME-CS01-CANONICAL-ENGINE-SEMANTICS-001`. It may implement V3 contracts,
 dual-consumer compatibility and test-profile fixtures without a physical source. All production
