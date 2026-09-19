@@ -4,9 +4,9 @@
 
 **Task status:** `COMPLETE` (documentation and governance analysis only)
 
-**Decision package status:** `PROPOSED / PRODUCT_SECURITY_PRIVACY_APPROVAL_REQUIRED`
+**Decision package status:** `FIRST_WAVE_APPROVED / LATER_WAVES_UNRESOLVED`
 
-**Implementation status:** `NOT_AUTHORIZED`
+**Implementation status:** `IMPLEMENTATION_IN_PROGRESS / CS01_COMPLETE`
 
 **Baseline inspected:** application `52b748efe86e2bf8f7cc2bc434e02471ebd050bb`; Knowledge Base
 `60dad2048bf07a7422674f7eca87d1b82fb8e223`; Flyway V105
@@ -14,7 +14,7 @@
 **First-wave refinement baseline:** application `0ff49188889e9dfc9364683e7c0bfc133f3fe0e5`;
 Knowledge Base `c6253c7321214f5e4b5f086b47ea4cf70ecf2cb5`
 
-**First-wave approval status:** `CONCRETE_RECOMMENDATION_READY / NOT_APPROVED`
+**First-wave approval status:** `APPROVED_FOR_CS01`
 
 **Accounting:** 73 / 87 COMPLETE; 14 / 87 remaining
 
@@ -28,6 +28,20 @@ thresholds, evidence quality, review rights, retention or safe enforcement.
 This document turns that intent into a concrete Phase-1 proposal. Nothing here authorizes production code,
 schema, permissions, APIs, events, an Identity-provider integration or enforcement. Every choice marked
 **PROPOSED** requires the approvals listed in section 8.
+
+### 1.1 First-wave approval provenance
+
+On 2026-09-19, the project user explicitly approved the exact first-wave package recorded at application
+commit `c8e811f6c55ec91859680048c51b8e08b1ac4b35` and stated that they hold or have delegated approval
+authority for Product, Security, Privacy/records, Identity source ownership, and Architecture/data. This is
+one approval statement by the user; it does not assert separate named reviewers, signatures, or approvals.
+
+That approval is limited to the Identity permission-ceiling denial signal and its four action codes, three
+distinct facts per Tenant/actor/action family in 15 minutes, MEDIUM priority, five minutes of delivery
+lateness, `ADVISORY_REVIEW_ONLY`, the minimized payload and duplicate/conflict rules, distinct same-Tenant
+review, 180-day retention, and one internal appeal within 30 days. An indicator is not proof of malicious
+intent or misconduct. No automatic account/session restriction, permission change, MFA challenge, or
+Operations case is approved. D1-D20 choices outside this first wave remain proposed and unresolved.
 
 US-87 is independent of physical Tracking acceptance and inactive US-72 Compliance for prerequisite
 analysis. It may not inherit or clear either hold.
@@ -249,7 +263,7 @@ No named individual is inferred, and no approval is recorded by this refinement.
 
 ## 6. Proposed implementation sequence
 
-All identifiers below are **PROPOSED / NOT AUTHORIZED**.
+CS01 is approved and complete. CS02-CS07 remain **PROPOSED / NOT AUTHORIZED**.
 
 | Order | Proposed change set | Scope and dependencies | Completion criterion |
 | --- | --- | --- | --- |
@@ -278,7 +292,7 @@ lockout effect requires its own decision, supported IdP/session capability, roll
 - Operations: named reviewers exercise false-positive and appeal scenarios; retention/privacy owners approve.
 - IdP effects: not applicable until a real supported provider and capability have separate acceptance.
 
-## 8. Consolidated approvals required before CS01 is executable
+## 8. Approval disposition and remaining authority gates
 
 1. **Product owner:** D1–D12, including which signal types activate first, thresholds/windows, severity,
    review dispositions, HIGH dual-review and Phase-1 advisory-only effect.
@@ -291,9 +305,11 @@ lockout effect requires its own decision, supported IdP/session capability, roll
 5. **Architecture/data authority:** Identity ownership, P1-01-only asynchronous integration, no foreign
    persistence, proposed persistence boundary and migration authorization when DDL exists.
 
-Until these approvals exist, implementation and producer activation remain prohibited.
+The user approval recorded in section 1.1 satisfies these functions only for the exact first-wave choices
+and CS01 domain-contract scope. Producer activation remains prohibited. CS02 persistence requires a
+separate exact DDL and migration authorization; CS03-CS07 each require their own bounded authorization.
 
-## 9. First-slice authorization prompt (not yet executable)
+## 9. First-slice authorization prompt (executed for CS01)
 
 ```text
 Approve the US-87 first-wave D1–D20 mapping recorded in sections 5.1–5.3 of
@@ -335,5 +351,6 @@ Tracking activation/physical-acceptance holds.
 - Accounting remains 73 / 87.
 - US-72 remains `CS01_COMPLETE_INACTIVE / POLICY_APPROVAL_PENDING`.
 - All Tracking source-activation and physical-acceptance holds remain unchanged.
-- US-87 is neither implemented, technically complete, legally compliant nor approved for enforcement.
-- No production code, dependency, schema, permission, API, event producer or runtime behavior changed.
+- US-87 CS01 domain contracts are implemented; the story is neither technically complete, legally
+  compliant, usable end to end, nor approved for enforcement.
+- No dependency, schema, permission, API, event producer or runtime behavior changed.
