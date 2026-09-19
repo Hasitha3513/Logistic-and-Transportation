@@ -22,7 +22,7 @@ class Us55V99V100PostgreSqlAcceptanceTest extends PostgreSqlIntegrationTest {
     private final JdbcTemplate jdbc; private final Flyway flyway; private final GpsExceptionService service;
     @Autowired Us55V99V100PostgreSqlAcceptanceTest(DataSource ds,Flyway flyway,GpsExceptionService service){this.jdbc=new JdbcTemplate(ds);this.flyway=flyway;this.service=service;}
     @Test void currentHeadSeedsOnlyApprovedRolesAndCreatesDurableCommandTable(){
-        assertThat(flyway.info().current().getVersion().getVersion()).isEqualTo("103");
+        assertThat(flyway.info().current().getVersion().getVersion()).isEqualTo("104");
         assertThat(jdbc.queryForObject("SELECT count(*) FROM app_permission WHERE code IN ('GPS_EXCEPTION_VIEW','GPS_EXCEPTION_REVIEW') AND active",Integer.class)).isEqualTo(2);
         assertThat(jdbc.queryForObject("SELECT count(*) FROM app_role WHERE name IN ('ADMIN','LOCAL_MVP_ADMIN','DISPATCHER')",Integer.class)).isZero();
         assertThat(jdbc.queryForObject("SELECT count(*) FROM information_schema.tables WHERE table_name='tracking_gps_exception_acknowledgement_command'",Integer.class)).isOne();
@@ -37,7 +37,7 @@ class Us55V99V100PostgreSqlAcceptanceTest extends PostgreSqlIntegrationTest {
                 UUID.randomUUID(),"DISPATCHER","Dispatcher");
         int rolesAtV98=jdbc.queryForObject("SELECT count(*) FROM app_role",Integer.class);
         flyway.migrate();
-        assertThat(flyway.info().current().getVersion().getVersion()).isEqualTo("103");
+        assertThat(flyway.info().current().getVersion().getVersion()).isEqualTo("104");
         assertThat(jdbc.queryForObject("SELECT count(*) FROM app_role",Integer.class)).isEqualTo(rolesAtV98);
         assertThat(jdbc.queryForObject("SELECT count(*) FROM app_role_permission rp JOIN app_role r ON r.id=rp.role_id WHERE rp.permission_code IN ('GPS_EXCEPTION_VIEW','GPS_EXCEPTION_REVIEW') AND r.name IN ('ADMIN','LOCAL_MVP_ADMIN','DISPATCHER')",Integer.class)).isEqualTo(6);
         assertThat(flyway.migrate().migrationsExecuted).isZero();
@@ -46,7 +46,7 @@ class Us55V99V100PostgreSqlAcceptanceTest extends PostgreSqlIntegrationTest {
         Flyway.configure().configuration(flyway.getConfiguration()).target("99").load().migrate();
         assertThat(jdbc.queryForObject("SELECT to_regclass('tracking_gps_exception_acknowledgement_command')",String.class)).isNull();
         flyway.migrate();
-        assertThat(flyway.info().current().getVersion().getVersion()).isEqualTo("103");
+        assertThat(flyway.info().current().getVersion().getVersion()).isEqualTo("104");
     }
 
     @Test void concurrentRetryDifferentTenantAndStoredSnapshotAreDurable() throws Exception {

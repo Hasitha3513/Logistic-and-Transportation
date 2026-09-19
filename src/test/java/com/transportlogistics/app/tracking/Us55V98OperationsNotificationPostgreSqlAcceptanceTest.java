@@ -35,7 +35,7 @@ class Us55V98OperationsNotificationPostgreSqlAcceptanceTest extends PostgreSqlIn
                 """, tenant);
         flyway.migrate();
         assertThat(jdbc.queryForObject("SELECT version FROM flyway_schema_history WHERE success "
-                + "ORDER BY installed_rank DESC LIMIT 1", String.class)).isEqualTo("103");
+                + "ORDER BY installed_rank DESC LIMIT 1", String.class)).isEqualTo("104");
         assertThat(jdbc.queryForObject("SELECT count(*) FROM notification_template WHERE "
                 + "code='TRACKING_GPS_EXCEPTION_ALERT_V1' AND event_type='TRACKING_GPS_EXCEPTION_OPENED' "
                 + "AND channel='IN_APP' AND active", Integer.class)).isOne();

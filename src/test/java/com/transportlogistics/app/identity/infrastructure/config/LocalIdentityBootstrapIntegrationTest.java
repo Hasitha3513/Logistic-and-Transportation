@@ -37,7 +37,7 @@ class LocalIdentityBootstrapIntegrationTest {
         mvc.perform(get("/auth/me").header("Authorization", "Bearer " + accessToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.firstName").value("Local"))
-                .andExpect(jsonPath("$.permissions.length()").value(193))
+                .andExpect(jsonPath("$.permissions.length()").value(195))
                 .andExpect(jsonPath("$.permissions").value(org.hamcrest.Matchers.hasItem("DRIVER_PAYROLL_VIEW")))
                 .andExpect(jsonPath("$.permissions").value(org.hamcrest.Matchers.hasItem("DRIVER_PAYROLL_PREPARE")))
                 .andExpect(jsonPath("$.permissions").value(org.hamcrest.Matchers.hasItem("DRIVER_PAYROLL_APPROVE")))
@@ -45,7 +45,8 @@ class LocalIdentityBootstrapIntegrationTest {
                 .andExpect(jsonPath("$.permissions").value(org.hamcrest.Matchers.hasItems("BILLING_VIEW",
                         "BILLING_PREPARE", "BILLING_APPROVE", "BILLING_FINALIZE", "BILLING_EXPORT")))
                 .andExpect(jsonPath("$.permissions").value(org.hamcrest.Matchers.hasItems("TRACKING_VIEW",
-                        "TRACKING_HISTORY_VIEW", "TRACKING_DEVICE_MANAGE", "TRACKING_DASHBOARD_VIEW", "GPS_EXCEPTION_VIEW", "GPS_EXCEPTION_REVIEW")))
+                        "TRACKING_HISTORY_VIEW", "TRACKING_DEVICE_MANAGE", "TRACKING_DASHBOARD_VIEW", "GPS_EXCEPTION_VIEW", "GPS_EXCEPTION_REVIEW",
+                        "IDLE_MONITOR_VIEW", "IDLE_EVENT_VIEW")))
                 .andExpect(jsonPath("$.permissions").value(org.hamcrest.Matchers.hasItems("GEOFENCE_VIEW",
                         "GEOFENCE_MANAGE", "GEOFENCE_EVENT_VIEW")))
                 .andExpect(jsonPath("$.permissions").value(org.hamcrest.Matchers.hasItems("SPEED_MONITOR_VIEW",

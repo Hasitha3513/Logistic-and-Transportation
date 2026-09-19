@@ -187,7 +187,7 @@ These numbers describe reviewable boundaries only; they are not reserved or auth
   durable without creating an idle episode. It adds stable candidate identity/reference/recovery
   state, append-only Tenant-qualified candidate evidence with deterministic deduplication and
   180-day retention, and losslessly preserves V102 candidate rows.
-- **Proposed V104:** seed exactly `IDLE_MONITOR_VIEW` and `IDLE_EVENT_VIEW` and assign them to the
+- **Implemented V104:** seeds exactly `IDLE_MONITOR_VIEW` and `IDLE_EVENT_VIEW` and assigns them to the
   existing same-Tenant Dispatcher/Admin role policy. No Notification catalogue entry is proposed.
 
 No migration may create engine facts, backfill legacy ignition as engine-running, mutate immutable
@@ -289,7 +289,7 @@ acceptance and operator sign-off.
 | `US-51-MONITOR-IDLE-TIME-CS02-V101-HISTORY-CAPABILITY-001` — COMPLETE | Immutable V3 storage and effective capability | CS01 and migration authorization | Clean V1→V101 and compressed V100→V101, exact constraints, append-only/Tenant, rollback and durable acknowledgement tests pass |
 | `US-51-MONITOR-IDLE-TIME-CS03-V102-IDLE-PERSISTENCE-DISPATCH-001` — COMPLETE | State, episode, evidence, idempotency, lease/claim support | CS02 and migration authorization | Deterministic concurrency, replay, restart, gap/order tests; application rollback retains additive schema |
 | `US-51-MONITOR-IDLE-TIME-CS04-EVALUATOR-001` — COMPLETE | V103 candidate persistence plus the approved D1-D5 evaluator; durable IDLE claiming is active with committed effects before lease completion | CS03 | Threshold/gap/reassignment tests, V102→V103 populated upgrade, restart/discard/promotion, append-only retention, concurrent lease/retry, architecture and complete regression gates |
-| CS05 V104 APIs/RBAC/audit | Two permissions and exact read-only bounded endpoints | CS03-CS04 and permission authorization | Literal HTTP allow/deny, Tenant A/B, cursor/privacy/audit tests; routes can be disabled without data loss |
+| CS05 V104 APIs/RBAC/audit | **COMPLETE** — two permissions and exact read-only bounded endpoints | CS03-CS04 and permission authorization | Literal HTTP allow/deny, Tenant A/B, cursor/privacy/audit tests pass; routes can be disabled without data loss |
 | CS06 frontend | State/history/detail pages | CS05 | Component, accessibility, session-clearing, TypeScript/build and Chromium; hide navigation on rollback |
 | CS07 PostgreSQL/Kafka performance/recovery | Concurrency, leases, dedupe, query plans and bounded workload | CS01-CS06 | No deadlocks/duplicates/leaks; controlled measurements, not production SLOs; production capability still unavailable |
 | Technical closure | Consolidated mandatory gates and evidence | CS01-CS07 | Full backend, architecture/static, frontend and Chromium gates pass |
@@ -298,8 +298,8 @@ acceptance and operator sign-off.
 ## Consolidated implementation authorization request
 
 Approve D1-D11 and authorize CS01-CS07 as separate governed commits, including additive canonical
-V3 and forward migrations V101-V103 are implemented. V104 remains the proposed permission boundary
-and must be rechecked for availability at CS05 preflight.
+V3 and forward migrations V101-V104 are implemented. V104 contains only the approved permission
+catalogue and existing ADMIN/DISPATCHER grants. CS06 frontend is the next approved change set.
 The first executable task will be newly identified as
 `US-51-MONITOR-IDLE-TIME-CS01-CANONICAL-ENGINE-SEMANTICS-001`. It may implement V3 contracts,
 dual-consumer compatibility and test-profile fixtures without a physical source. All production

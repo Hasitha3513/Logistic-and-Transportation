@@ -275,6 +275,16 @@ class SecurityConfig {
                                 "/api/v1/tracking/gps-exceptions",
                                 "/api/v1/tracking/gps-exceptions/**")
                         .hasAuthority("GPS_EXCEPTION_VIEW")
+                        .requestMatchers(HttpMethod.GET,
+                                "/v1/tracking/idle-monitoring/states",
+                                "/api/v1/tracking/idle-monitoring/states")
+                        .hasAuthority("IDLE_MONITOR_VIEW")
+                        .requestMatchers(HttpMethod.GET,
+                                "/v1/tracking/idle-monitoring/episodes",
+                                "/v1/tracking/idle-monitoring/episodes/**",
+                                "/api/v1/tracking/idle-monitoring/episodes",
+                                "/api/v1/tracking/idle-monitoring/episodes/**")
+                        .hasAuthority("IDLE_EVENT_VIEW")
                         .requestMatchers(HttpMethod.GET, "/drivers", "/drivers/*", "/drivers/*/licenses",
                                 "/drivers/*/exceptions", "/drivers/*/exceptions/*",
                                 "/drivers/*/violations", "/drivers/*/violations/*",
