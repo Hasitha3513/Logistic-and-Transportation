@@ -30,7 +30,7 @@ dependency, policy, or external-acceptance claim.
 | US-84 | Not started | Not started | Failure catalogue, responsibility matrix, degraded modes, monitoring/fault environment, RTO/RPO basis and integrity recovery evidence; US-85 is needed for complete recovery certification | No | None |
 | US-85 | Not started | Not started | Owner-specific invariant/correction catalogue and validators; complete GPS/trip mismatch acceptance depends on genuine US-48 evidence | No | None |
 | US-86 | Not started | Not started | Disruption catalogue, constraint/replan authority, scheduling/tracking/compliance contracts and optional advisory source | No | None |
-| US-87 | Not started | Not started | Deterministic signal catalogue, severity/thresholds, enforcement and review/appeal boundaries, IdP/MFA scope, privacy/retention and acceptance | No; prerequisite review is proposed below | None |
+| US-87 | Prerequisite analysis complete; no runtime implementation | Not started | Approval of proposed D1–D20, exact first producer facts, thresholds, review authority, privacy/retention and any IdP action | No; proposed CS01–CS07 remain unapproved | None |
 
 Classification is deliberately split between technical completion and story acceptance. The seven
 Tracking stories do not become accepted from fixture or Testcontainers evidence, and no later story may
@@ -45,18 +45,17 @@ authority, exact source facts, mandatory/advisory classification, effects/preced
 publication, override/appeal/SoD, retention/privacy, public contracts/security and acceptance ownership.
 CS01 does not weaken or satisfy that gate. Compliance remains inactive.
 
-## Recommended next independent workstream
+## Completed recommended governance workstream
 
-No existing implementation task is authorized and independently executable. The recommended next
-governance workstream is a newly proposed planning task:
+No existing implementation task is authorized and independently executable. The selected governance task:
 
-`US-87-DETECT-USER-RISK-PREREQUISITE-AND-PRODUCT-DECISIONS-001` **(PROPOSED, NOT AUTHORIZED)**.
+`US-87-DETECT-USER-RISK-PREREQUISITE-AND-PRODUCT-DECISIONS-001` is **COMPLETE** as a documentation-only
+governance task. Its D1–D20 package and every proposed implementation change set remain unapproved.
 
-US-87 is the strongest independent candidate because Identity/Security (US-74), Audit (US-75), Workflow
-(US-80) and Operations (US-78) are accepted. Its prerequisite analysis does not need a physical GPS
-device, US-72 policy activation, or US-82 predictive analytics. An external IdP is required only if the
-eventual scope claims real MFA/SSO enforcement. Missing-field validation remains with each owning domain;
-US-87 must not become a cross-module validation or fraud “god engine.”
+was independent because Identity/Security (US-74), Audit (US-75), Workflow (US-80) and Operations (US-78)
+were accepted as stories. Inspection established that Audit and Workflow are feature-owned rather than
+generic reusable runtime services. The prerequisite analysis did not require physical GPS, US-72 policy
+activation or US-82 analytics. An IdP remains required only for real MFA/session-enforcement claims.
 
 US-76 product decisions can be studied independently, but its runtime delivery remains downstream of
 US-72 and requires a selected mobile/device/push path. US-85 remains incomplete without owner contracts
@@ -67,8 +66,8 @@ prerequisite analysis.
 
 ## Proposed first-slice boundary
 
-The proposed US-87 prerequisite review should inspect authoritative requirements and current Identity,
-Audit, Workflow, Operations, Tenant and domain validation contracts, then produce one decision matrix for:
+The completed US-87 prerequisite review inspected authoritative requirements and current Identity,
+feature-owned Audit/Workflow, Operations, Tenant and domain validation contracts. Its decision matrix covers:
 
 - exact deterministic Phase-1 signals and fact owners;
 - unauthorized-override semantics without duplicating domain authorization;
@@ -82,37 +81,34 @@ Audit, Workflow, Operations, Tenant and domain validation contracts, then produc
 - module ownership, published contracts, persistence/API/permission/frontend boundaries; and
 - technical versus external/operational acceptance.
 
-The review must recommend concrete options while labeling every unapproved choice `PROPOSED`. It must not
-create code, reserve a migration, seed permissions, activate enforcement or claim legal/fraud authority.
+The resulting D1–D20 recommendations are recorded in
+`docs/product-decisions/US-87-DETECT-USER-RISK-PREREQUISITE-AND-PRODUCT-DECISIONS-001.md`. They remain
+`PROPOSED`; no code, migration reservation, permission, enforcement or legal/fraud authority exists.
 
 ## Self-contained authorization prompt
 
 ```text
-Prepare the US-87 Detect User Risk prerequisite and product-decision package.
+Approve the US-87 D1–D20 product/security/privacy decisions recorded in
+docs/product-decisions/US-87-DETECT-USER-RISK-PREREQUISITE-AND-PRODUCT-DECISIONS-001.md and execute the
+proposed US-87-DETECT-USER-RISK-CS01-DOMAIN-SIGNAL-CONTRACTS-001.
 
-Verify the actual application and Knowledge Base baselines, repository instructions, both roadmaps,
-the original US-87 requirements, and current Identity/Security, Audit, Workflow, Operations, Tenancy
-and owner-domain validation contracts. Preserve all US-48/50/51/52/53/54/55 external holds and the
-US-72 policy-approval hold.
+Before implementation, record the approving product owner, security authority and privacy/records
+authority. Identify the first active signal type and provide its owning module, exact stable action/reason
+codes, safe fields, evidence threshold/window, clock authority and retention decision. Stop if any input is
+absent rather than converting a proposal into production policy.
 
-This authorizes analysis and documentation only. Produce one consolidated decision matrix covering:
-deterministic Phase-1 signal types and fact owners; unauthorized overrides; source-owned missing-field
-validation; bounded fraud indicators; shared-login evidence; delayed-reporting sources and thresholds;
-severity and unknown/conflicting evidence; false-positive review and appeal; advisory, reauthentication,
-session restriction, lockout and investigation effects; IdP/MFA boundaries; effective versions;
-Tenant isolation; privacy and retention; audit and segregation of duties; module/integration ownership;
-persistence, migration, API, event, permission and frontend boundaries; and technical versus operational
-acceptance.
+Implement only framework-neutral, Tenant-qualified Identity-owned rule/version, finding identity, evidence
+quality, advisory lifecycle and review value objects plus narrow producer-neutral signal ports. Source
+domains remain authoritative for validation and authorization. Use only the approved catalogue and
+minimized fact fields; no foreign repositories or generic activity/fraud engine.
 
-Do not introduce opaque ML, biometric/device fingerprinting, automatic punitive action, cross-module
-repository access, a generic fraud engine, legal conclusions or invented IdP capabilities. Missing fields
-must continue to fail at their owning command/API boundary rather than being repaired by US-87.
+Phase 1 is advisory-only. Do not add reauthentication, MFA, session restriction, token revocation, lockout,
+Operations cases, opaque ML, biometric/device fingerprinting or legal/fraud conclusions. Missing, stale,
+conflicting and unavailable evidence cannot produce an affirmative finding.
 
-Distinguish existing approved contracts, recommended choices and decisions requiring product/security/
-privacy authority. Break any future implementation into small ordered change sets, without reserving a
-migration or presenting proposed identifiers as authorized.
+Add structural, immutability, Tenant identity, effective-time, evidence-state, privacy and Modulith tests.
+Do not add persistence, a migration, REST API, permission, event producer, frontend or runtime activation.
 
-Update only planning and affected Knowledge Base documentation, commit and push documentation separately,
-and report one consolidated authorization request for the first implementation slice. Keep Flyway V105,
-accounting 73/87 and every existing activation/acceptance hold unchanged.
+Run focused/architecture gates and synchronize evidence, roadmaps and Knowledge Base after verification.
+Select no migration number. Keep Flyway V105, accounting 73/87, US-72 inactive and all Tracking holds open.
 ```

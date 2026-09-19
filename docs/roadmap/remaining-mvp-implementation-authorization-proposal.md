@@ -18,15 +18,14 @@ an approved task identifier or treating an external acceptance hold as a technic
 - US-72 CS01 inactive structural foundations are complete; D1–D11 and qualified policy authority still
   block CS02 and all runtime behavior.
 
-## Current recommendation after CS01
+## Current recommendation after US-87 prerequisite review
 
-US-51 technical closure and US-72 CS01 are preserved at V105. No independently executable implementation
-task is authorized. The 14-story evidence is reconciled in
-`docs/roadmap/REMAINING-MVP-DEPENDENCY-RECONCILIATION-001.md`. The recommended next governance workstream
-is the newly proposed, documentation-only
-`US-87-DETECT-USER-RISK-PREREQUISITE-AND-PRODUCT-DECISIONS-001`, because its accepted Identity, Audit,
-Workflow and Operations prerequisites allow decision analysis without physical Tracking evidence or active
-Compliance policy. It remains unapproved until the user authorizes that review.
+US-51 technical closure and US-72 CS01 are preserved at V105. The authorized documentation-only
+`US-87-DETECT-USER-RISK-PREREQUISITE-AND-PRODUCT-DECISIONS-001` is complete. Its advisory-first D1–D20
+package is recorded in `docs/product-decisions/US-87-DETECT-USER-RISK-PREREQUISITE-AND-PRODUCT-DECISIONS-001.md`.
+No independently executable implementation task is authorized: product, security, privacy/records and the
+first-wave source owner must approve the proposed signal catalogue, exact fact, threshold, review authority
+and retention before proposed CS01 can start. No migration number is reserved.
 
 ## Previously selected candidate: US-72 Enforce Compliance
 
@@ -101,13 +100,13 @@ contextual ABAC; and whether the requester may approve an override or appeal.
 | US-76 Support Mobile Operations | PWA/native choice, role/workflow matrix, device binding, offline protection, push/background policy and physical-device plan |
 | US-85 Protect Data Integrity | Owner-by-owner invariant/correction catalogue, published validators and complete GPS/trip mismatch dependency |
 | US-84 Handle Global System Failures | Responsibility matrix, supported degraded modes, monitoring/fault environment and truthful RTO/RPO basis |
-| US-87 Detect User Risk | Explainable signal/enforcement catalogue, IdP/MFA boundary, review/appeal and retention policy |
+| US-87 Detect User Risk | D1–D20 and the first exact source fact/threshold/reviewer/retention package require approval; proposed CS01–CS07 are not authorized |
 | US-82 Use Operational Analytics | Frozen KPI lineage, producer/data-quality gates and deterministic forecast/recommendation governance |
 | US-86 Handle Operational Disruptions | Disruption catalogue, constraint/replan authority and remaining scheduling/compliance dependencies |
 
 ## Decision required
 
-Either approve the outstanding US-72 D1–D11 package with a qualified policy authority, or authorize the
-proposed US-87 prerequisite/product-decision review using the self-contained prompt in the reconciliation
-document. Until then, preserve all external acceptance queues and do not create a migration, permission,
-API, event or implementation task.
+Either approve the outstanding US-72 D1–D11 package with a qualified policy authority, or approve the
+US-87 D1–D20 package with the named product, security, privacy/records and first-wave source authorities.
+Until then, preserve all external acceptance queues and do not create a migration, permission, API, event
+or implementation task.
