@@ -1,0 +1,5 @@
+import {beforeEach,describe,expect,it,vi} from 'vitest';
+import {idleMonitoringApi} from './api';
+const http=vi.hoisted(()=>({get:vi.fn()}));
+vi.mock('../../../api/client',()=>({api:http}));
+describe('idle monitoring API',()=>{beforeEach(()=>http.get.mockReset().mockResolvedValue({data:{items:[]}}));it('uses the four approved read-only routes and bounded parameters',async()=>{await idleMonitoringApi.states({vehicleId:'vehicle-1',state:'IDLE',cursor:'opaque',limit:50});expect(http.get).toHaveBeenCalledWith('/v1/tracking/idle-monitoring/states',expect.objectContaining({params:{vehicleId:'vehicle-1',state:'IDLE',cursor:'opaque',limit:50}}));await idleMonitoringApi.episodes({from:'2026-09-01T00:00:00Z',to:'2026-09-02T00:00:00Z',limit:100});await idleMonitoringApi.episode('episode-1');await idleMonitoringApi.evidence('episode-1','signed');expect(http.get).toHaveBeenCalledWith('/v1/tracking/idle-monitoring/episodes/episode-1/evidence',expect.objectContaining({params:{cursor:'signed',limit:100}}));expect(http.get).toHaveBeenCalledTimes(4)})});

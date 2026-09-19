@@ -1,0 +1,1 @@
+export function validateIdleRange(from:string,to:string){if(!from||!to)return 'Choose a start and end time.';const start=Date.parse(from),end=Date.parse(to);if(!Number.isFinite(start)||!Number.isFinite(end)||start>=end)return 'The end time must be after the start time.';if(end-start>31*86_400_000)return 'The range cannot exceed 31 days.';return undefined}

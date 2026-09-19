@@ -75,6 +75,7 @@ import DeviationEpisodePage from './features/tracking/routeDeviations/pages/Devi
 import JourneyReplayPage from './features/tracking/journeyReplay/JourneyReplayPage';
 import TrackingDashboardPage from './features/tracking/dashboard/TrackingDashboardPage';
 import GpsExceptionsPage from './features/tracking/gpsExceptions/GpsExceptionsPage';
+import IdleMonitoringPage from './features/tracking/idleMonitoring/IdleMonitoringPage';
 
 function ProtectedRoute() {
   const { user, isLoading } = useAuth();
@@ -202,6 +203,9 @@ export default function App() {
         <Route path="tracking/route-deviations/episodes/:episodeId" element={<DeviationEpisodePage detail />} />
         {journeyReplayEnabled && <Route path="tracking/journey-replay" element={<JourneyReplayPage />} />}
         <Route path="tracking/gps-exceptions" element={<GpsExceptionsPage />} />
+        <Route path="tracking/idle-monitoring" element={<IdleMonitoringPage />} />
+        <Route path="tracking/idle-monitoring/episodes" element={<IdleMonitoringPage />} />
+        <Route path="tracking/idle-monitoring/episodes/:episodeId" element={<IdleMonitoringPage />} />
         <Route path="workspace" element={<WorkspacePage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>

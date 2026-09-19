@@ -151,6 +151,7 @@ export const navigation: NavigationItem[] = [
         ? [{ key: 'tracking-journey-replay', label: 'Journey Replay', route: '/tracking/journey-replay', requiredPermission: 'JOURNEY_REPLAY_VIEW' }]
         : []),
       { key: 'tracking-gps-exceptions', label: 'GPS Exceptions', route: '/tracking/gps-exceptions', requiredPermission: 'GPS_EXCEPTION_VIEW' },
+      { key: 'tracking-idle-monitoring', label: 'Idle Monitoring', route: '/tracking/idle-monitoring', requiredAnyPermission: ['IDLE_MONITOR_VIEW', 'IDLE_EVENT_VIEW'] },
     ],
   },
   {

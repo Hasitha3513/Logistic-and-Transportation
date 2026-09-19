@@ -290,7 +290,7 @@ acceptance and operator sign-off.
 | `US-51-MONITOR-IDLE-TIME-CS03-V102-IDLE-PERSISTENCE-DISPATCH-001` — COMPLETE | State, episode, evidence, idempotency, lease/claim support | CS02 and migration authorization | Deterministic concurrency, replay, restart, gap/order tests; application rollback retains additive schema |
 | `US-51-MONITOR-IDLE-TIME-CS04-EVALUATOR-001` — COMPLETE | V103 candidate persistence plus the approved D1-D5 evaluator; durable IDLE claiming is active with committed effects before lease completion | CS03 | Threshold/gap/reassignment tests, V102→V103 populated upgrade, restart/discard/promotion, append-only retention, concurrent lease/retry, architecture and complete regression gates |
 | CS05 V104 APIs/RBAC/audit | **COMPLETE** — two permissions and exact read-only bounded endpoints | CS03-CS04 and permission authorization | Literal HTTP allow/deny, Tenant A/B, cursor/privacy/audit tests pass; routes can be disabled without data loss |
-| CS06 frontend | State/history/detail pages | CS05 | Component, accessibility, session-clearing, TypeScript/build and Chromium; hide navigation on rollback |
+| CS06 frontend — COMPLETE | Permission-aware state/history/detail/evidence pages with session-scoped caches and truthful unavailable states | CS05 | Component, accessibility, session-clearing, TypeScript/build and Chromium evidence recorded in the CS06 closure report |
 | CS07 PostgreSQL/Kafka performance/recovery | Concurrency, leases, dedupe, query plans and bounded workload | CS01-CS06 | No deadlocks/duplicates/leaks; controlled measurements, not production SLOs; production capability still unavailable |
 | Technical closure | Consolidated mandatory gates and evidence | CS01-CS07 | Full backend, architecture/static, frontend and Chromium gates pass |
 | Final acceptance | Genuine engine-running field journey | Technical closure plus external prerequisites | Independent physical/provider/operator matrix passes |
@@ -299,7 +299,7 @@ acceptance and operator sign-off.
 
 Approve D1-D11 and authorize CS01-CS07 as separate governed commits, including additive canonical
 V3 and forward migrations V101-V104 are implemented. V104 contains only the approved permission
-catalogue and existing ADMIN/DISPATCHER grants. CS06 frontend is the next approved change set.
+catalogue and existing ADMIN/DISPATCHER grants. CS06 frontend is complete; `CS07 PostgreSQL/Kafka performance/recovery` is the next approved change set.
 The first executable task will be newly identified as
 `US-51-MONITOR-IDLE-TIME-CS01-CANONICAL-ENGINE-SEMANTICS-001`. It may implement V3 contracts,
 dual-consumer compatibility and test-profile fixtures without a physical source. All production

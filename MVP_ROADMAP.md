@@ -35,7 +35,7 @@
 > - **US-55 Provider UI:** `COMPLETE`; guided Flespi/Traccar setup now distinguishes saved, verified, bound, enabled and telemetry-received states while preserving Generic signed-HMAC ingress and the physical acceptance hold.
 > - **US-55 Post-Extension Closure:** `COMPLETE`; the original CS01-CS08 closure and the later canonical polling, Traccar, provider UI, health-recovery and idempotency work are consolidated without changing Flyway V100 or story accounting.
 > - **US-51 Selection:** D1–D11 and CS01–CS05 are complete. V103 provides restart-safe candidate persistence, the approved evaluator owns normal durable `IDLE` claims, and V104 adds the governed read-only API/RBAC boundary; the Fleet query still returns `UNKNOWN` in production.
-> - **Immediate Next Action:** Execute the approved `CS06 frontend` boundary; preserve all source-activation and physical-acceptance holds.
+> - **Immediate Next Action:** Execute the approved `CS07 PostgreSQL/Kafka performance/recovery` boundary; preserve all source-activation and physical-acceptance holds.
 
 ---
 
@@ -249,14 +249,14 @@ Development startup now consistently provisions the idempotent PostgreSQL sample
 
 ```
 Current Status: 73 / 87 COMPLETE; 14 stories remain across Waves C–E
-Queue Head:     CS06 frontend
+Queue Head:     CS07 PostgreSQL/Kafka performance/recovery
 Open Acceptance: US-55-HANDLE-GPS-EDGE-CASES-FINAL-ACCEPTANCE-001
 Deferred:       US-53-REPLAY-JOURNEYS-FINAL-ACCEPTANCE-001; US-54-VIEW-TRACKING-DASHBOARD-FINAL-ACCEPTANCE-001
 ```
 
 1. **Wave A — Integration and exception-control foundations:** 2 / 2 COMPLETE / CLOSED (US-73 and US-78).
 2. **Wave B — Fuel control and financial links:** 5 / 5 COMPLETE / CLOSED (US-35, US-37, US-38, US-46, US-47).
-3. **Wave C — GPS and telematics:** US-48, US-50, US-52, US-53, US-54 and US-55 physical acceptance are on independent external-prerequisite holds; US-49 is accepted. US-51 D1-D11 and CS01–CS05 are complete; CS06 frontend is next while production engine-running activation and physical acceptance remain separate gates.
+3. **Wave C — GPS and telematics:** US-48, US-50, US-52, US-53, US-54 and US-55 physical acceptance are on independent external-prerequisite holds; US-49 is accepted. US-51 D1-D11 and CS01–CS06 are complete; CS07 PostgreSQL/Kafka performance/recovery is next while production engine-running activation and physical acceptance remain separate gates.
 4. **Wave D — Compliance and field mobility:** US-72, US-76.
 5. **Wave E — Analytics, integrity, resilience, disruption and user risk:** US-85, US-84, US-87, US-82, US-86.
 6. After 87/87: `FULL-SOURCE-PARITY-AUDIT-001`, then `FULL-PLATFORM-END-TO-END-ACCEPTANCE-001` after authorized parity disposition.
